@@ -31,6 +31,9 @@ namespace CommonFeature
             _externalEvent = externalEvent;
             _handler = handler;
 
+            // Set ExternalEvent reference in handler for async operations (e.g., parameter update)
+            _handler.SetExternalEvent(externalEvent);
+
             // Subscribe to handler callbacks
             _handler.OnOperationCompleted += HandleOperationCompleted;
             _handler.OnError += HandleError;

@@ -39,6 +39,29 @@
                                Margin="0,4,0,0"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="AddParamButton"
+                            Padding="12,8"
+                            Margin="0,0,8,0"
+                            Background="#4CAF50"
+                            Foreground="White"
+                            BorderThickness="0"
+                            ToolTip="Add parameter columns from selected elements"
+                            Click="AddParamButton_Click"
+                            Cursor="Hand">
+                        <TextBlock Text="Add Param"/>
+                    </Button>
+                    <Button x:Name="UpdateValueButton"
+                            Padding="12,8"
+                            Margin="0,0,8,0"
+                            Background="#FF9800"
+                            Foreground="White"
+                            BorderThickness="0"
+                            ToolTip="Update modified values to Revit model"
+                            Click="UpdateValueButton_Click"
+                            Cursor="Hand"
+                            IsEnabled="False">
+                        <TextBlock Text="Update Value"/>
+                    </Button>
                     <Button x:Name="ClearFilterButton"
                             Padding="12,8"
                             Margin="0,0,8,0"
@@ -75,7 +98,7 @@
             </Grid>
         </Border>
 
-        <!-- DataGrid - Simple columns without filters -->
+        <!-- DataGrid with horizontal scroll -->
         <DataGrid x:Name="InfoDataGrid"
                   Grid.Row="1"
                   Margin="16,8,16,8"
@@ -85,16 +108,22 @@
                   CanUserReorderColumns="True"
                   CanUserResizeColumns="True"
                   CanUserSortColumns="True"
-                  IsReadOnly="True"
+                  IsReadOnly="False"
                   SelectionMode="Extended"
-                  SelectionUnit="FullRow"
+                  SelectionUnit="Cell"
                   GridLinesVisibility="Horizontal"
                   HeadersVisibility="Column"
                   BorderThickness="1"
                   BorderBrush="#E0E0E0"
                   Background="White"
                   VirtualizingPanel.IsVirtualizing="True"
-                  VirtualizingPanel.VirtualizationMode="Recycling">
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                  ScrollViewer.CanContentScroll="True"
+                  CellEditEnding="InfoDataGrid_CellEditEnding"
+                  BeginningEdit="InfoDataGrid_BeginningEdit"
+                  MouseRightButtonUp="InfoDataGrid_MouseRightButtonUp">
             
             <DataGrid.ColumnHeaderStyle>
                 <Style TargetType="DataGridColumnHeader">
@@ -250,6 +279,78 @@
                 </DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
+
+        <!-- Parameter Selection Popup -->
+        <Popup x:Name="ParamPopup" 
+               StaysOpen="False" 
+               Placement="Bottom"
+               AllowsTransparency="True">
+            <Border Background="White"
+                    BorderBrush="#BDBDBD"
+                    BorderThickness="1"
+                    Padding="12"
+                    MinWidth="350"
+                    MaxHeight="450">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.25"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Title -->
+                    <TextBlock Grid.Row="0" Text="Select Parameters to Add" 
+                               FontWeight="SemiBold" FontSize="14" Margin="0,0,0,8"/>
+                    
+                    <!-- Search Box -->
+                    <TextBox x:Name="ParamSearchBox"
+                             Grid.Row="1"
+                             Margin="0,0,0,8"
+                             Padding="8,6"
+                             FontSize="12"
+                             BorderBrush="#BDBDBD"
+                             BorderThickness="1"
+                             TextChanged="ParamSearchBox_TextChanged"/>
+                    
+                    <!-- Select All / Clear All -->
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Content="Select All" FontSize="11" Padding="10,5" Margin="0,0,8,0"
+                                Background="#E8E8E8" BorderThickness="0" Cursor="Hand"
+                                Click="ParamSelectAllButton_Click"/>
+                        <Button Content="Clear All" FontSize="11" Padding="10,5"
+                                Background="#E8E8E8" BorderThickness="0" Cursor="Hand"
+                                Click="ParamClearAllButton_Click"/>
+                    </StackPanel>
+                    
+                    <!-- Parameter CheckBox List -->
+                    <ScrollViewer Grid.Row="3" MaxHeight="280" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="ParamItemsControl">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" Margin="0,3">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Name}" Width="200"/>
+                                            <TextBlock Text="{Binding TypeLabel}" Foreground="#757575" FontSize="11"
+                                                       FontStyle="Italic" Margin="8,0,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    
+                    <!-- Add Columns Button -->
+                    <Button Grid.Row="4" Content="Add Selected Columns" Margin="0,10,0,0" Padding="16,8"
+                            Background="#4CAF50" Foreground="White" BorderThickness="0" Cursor="Hand"
+                            Click="AddParamColumnsButton_Click"/>
+                </Grid>
+            </Border>
+        </Popup>
 
         <!-- Filter Popup -->
         <Popup x:Name="FilterPopup" 
