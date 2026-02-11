@@ -103,8 +103,8 @@
                     <Setter Property="FontWeight" Value="SemiBold"/>
                     <Setter Property="BorderBrush" Value="#E0E0E0"/>
                     <Setter Property="BorderThickness" Value="0,0,1,1"/>
-                    <Setter Property="Padding" Value="8,10"/>
-                    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                 </Style>
             </DataGrid.ColumnHeaderStyle>
             
@@ -114,9 +114,12 @@
                     <DataGridTextColumn.HeaderTemplate>
                         <DataTemplate>
                             <Grid>
-                                <TextBlock Text="ID" VerticalAlignment="Center"/>
-                                <Button HorizontalAlignment="Right" VerticalAlignment="Center"
-                                        Tag="Id" Padding="2" Width="20" Height="20"
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="ID" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                <Button Grid.Column="1" Tag="Id" Padding="4" Margin="0,0,2,0"
                                         Background="Transparent" BorderThickness="0"
                                         ToolTip="Filter" Click="FilterButton_Click" Cursor="Hand">
                                     <TextBlock Text="▼" FontSize="10" Foreground="#757575"/>
@@ -131,9 +134,12 @@
                     <DataGridTextColumn.HeaderTemplate>
                         <DataTemplate>
                             <Grid>
-                                <TextBlock Text="Family Name" VerticalAlignment="Center"/>
-                                <Button HorizontalAlignment="Right" VerticalAlignment="Center"
-                                        Tag="FamilyName" Padding="2" Width="20" Height="20"
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Family Name" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                <Button Grid.Column="1" Tag="FamilyName" Padding="4" Margin="0,0,2,0"
                                         Background="Transparent" BorderThickness="0"
                                         ToolTip="Filter" Click="FilterButton_Click" Cursor="Hand">
                                     <TextBlock Text="▼" FontSize="10" Foreground="#757575"/>
@@ -148,9 +154,12 @@
                     <DataGridTextColumn.HeaderTemplate>
                         <DataTemplate>
                             <Grid>
-                                <TextBlock Text="Family Type" VerticalAlignment="Center"/>
-                                <Button HorizontalAlignment="Right" VerticalAlignment="Center"
-                                        Tag="FamilyType" Padding="2" Width="20" Height="20"
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Family Type" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                <Button Grid.Column="1" Tag="FamilyType" Padding="4" Margin="0,0,2,0"
                                         Background="Transparent" BorderThickness="0"
                                         ToolTip="Filter" Click="FilterButton_Click" Cursor="Hand">
                                     <TextBlock Text="▼" FontSize="10" Foreground="#757575"/>
@@ -165,9 +174,12 @@
                     <DataGridTextColumn.HeaderTemplate>
                         <DataTemplate>
                             <Grid>
-                                <TextBlock Text="Category" VerticalAlignment="Center"/>
-                                <Button HorizontalAlignment="Right" VerticalAlignment="Center"
-                                        Tag="Category" Padding="2" Width="20" Height="20"
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Category" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                <Button Grid.Column="1" Tag="Category" Padding="4" Margin="0,0,2,0"
                                         Background="Transparent" BorderThickness="0"
                                         ToolTip="Filter" Click="FilterButton_Click" Cursor="Hand">
                                     <TextBlock Text="▼" FontSize="10" Foreground="#757575"/>
@@ -182,9 +194,12 @@
                     <DataGridTextColumn.HeaderTemplate>
                         <DataTemplate>
                             <Grid>
-                                <TextBlock Text="Workset" VerticalAlignment="Center"/>
-                                <Button HorizontalAlignment="Right" VerticalAlignment="Center"
-                                        Tag="Workset" Padding="2" Width="20" Height="20"
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Workset" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                <Button Grid.Column="1" Tag="Workset" Padding="4" Margin="0,0,2,0"
                                         Background="Transparent" BorderThickness="0"
                                         ToolTip="Filter" Click="FilterButton_Click" Cursor="Hand">
                                     <TextBlock Text="▼" FontSize="10" Foreground="#757575"/>
@@ -199,9 +214,12 @@
                     <DataGridTextColumn.HeaderTemplate>
                         <DataTemplate>
                             <Grid>
-                                <TextBlock Text="Created By" VerticalAlignment="Center"/>
-                                <Button HorizontalAlignment="Right" VerticalAlignment="Center"
-                                        Tag="CreatedBy" Padding="2" Width="20" Height="20"
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Created By" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                <Button Grid.Column="1" Tag="CreatedBy" Padding="4" Margin="0,0,2,0"
                                         Background="Transparent" BorderThickness="0"
                                         ToolTip="Filter" Click="FilterButton_Click" Cursor="Hand">
                                     <TextBlock Text="▼" FontSize="10" Foreground="#757575"/>
@@ -216,9 +234,12 @@
                     <DataGridTextColumn.HeaderTemplate>
                         <DataTemplate>
                             <Grid>
-                                <TextBlock Text="Edited By" VerticalAlignment="Center"/>
-                                <Button HorizontalAlignment="Right" VerticalAlignment="Center"
-                                        Tag="EditedBy" Padding="2" Width="20" Height="20"
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Edited By" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                <Button Grid.Column="1" Tag="EditedBy" Padding="4" Margin="0,0,2,0"
                                         Background="Transparent" BorderThickness="0"
                                         ToolTip="Filter" Click="FilterButton_Click" Cursor="Hand">
                                     <TextBlock Text="▼" FontSize="10" Foreground="#757575"/>
