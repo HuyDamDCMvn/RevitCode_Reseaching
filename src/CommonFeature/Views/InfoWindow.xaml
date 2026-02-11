@@ -39,6 +39,17 @@
                                Margin="0,4,0,0"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="ClearFilterButton"
+                            Padding="12,8"
+                            Margin="0,0,8,0"
+                            Background="#5C6BC0"
+                            Foreground="White"
+                            BorderThickness="0"
+                            ToolTip="Clear all filters"
+                            Click="ClearFilterButton_Click"
+                            Cursor="Hand">
+                        <TextBlock Text="Clear Filters"/>
+                    </Button>
                     <Button x:Name="ExportButton"
                             Padding="12,8"
                             Margin="0,0,8,0"
@@ -98,15 +109,189 @@
             </DataGrid.ColumnHeaderStyle>
             
             <DataGrid.Columns>
-                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="80" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Family Name" Binding="{Binding FamilyName}" Width="*" MinWidth="150" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Family Type" Binding="{Binding FamilyType}" Width="*" MinWidth="150" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="120" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Workset" Binding="{Binding Workset}" Width="120" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Created By" Binding="{Binding CreatedBy}" Width="110" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Edited By" Binding="{Binding EditedBy}" Width="110" IsReadOnly="True"/>
+                <!-- ID Column -->
+                <DataGridTextColumn Binding="{Binding Id}" Width="80" IsReadOnly="True">
+                    <DataGridTextColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <TextBlock Text="ID" VerticalAlignment="Center"/>
+                                <Button HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        Tag="Id" Padding="2" Width="20" Height="20"
+                                        Background="Transparent" BorderThickness="0"
+                                        ToolTip="Filter" Click="FilterButton_Click" Cursor="Hand">
+                                    <TextBlock Text="▼" FontSize="10" Foreground="#757575"/>
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTextColumn.HeaderTemplate>
+                </DataGridTextColumn>
+                
+                <!-- Family Name Column -->
+                <DataGridTextColumn Binding="{Binding FamilyName}" Width="*" MinWidth="150" IsReadOnly="True">
+                    <DataGridTextColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <TextBlock Text="Family Name" VerticalAlignment="Center"/>
+                                <Button HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        Tag="FamilyName" Padding="2" Width="20" Height="20"
+                                        Background="Transparent" BorderThickness="0"
+                                        ToolTip="Filter" Click="FilterButton_Click" Cursor="Hand">
+                                    <TextBlock Text="▼" FontSize="10" Foreground="#757575"/>
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTextColumn.HeaderTemplate>
+                </DataGridTextColumn>
+                
+                <!-- Family Type Column -->
+                <DataGridTextColumn Binding="{Binding FamilyType}" Width="*" MinWidth="150" IsReadOnly="True">
+                    <DataGridTextColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <TextBlock Text="Family Type" VerticalAlignment="Center"/>
+                                <Button HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        Tag="FamilyType" Padding="2" Width="20" Height="20"
+                                        Background="Transparent" BorderThickness="0"
+                                        ToolTip="Filter" Click="FilterButton_Click" Cursor="Hand">
+                                    <TextBlock Text="▼" FontSize="10" Foreground="#757575"/>
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTextColumn.HeaderTemplate>
+                </DataGridTextColumn>
+                
+                <!-- Category Column -->
+                <DataGridTextColumn Binding="{Binding Category}" Width="120" IsReadOnly="True">
+                    <DataGridTextColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <TextBlock Text="Category" VerticalAlignment="Center"/>
+                                <Button HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        Tag="Category" Padding="2" Width="20" Height="20"
+                                        Background="Transparent" BorderThickness="0"
+                                        ToolTip="Filter" Click="FilterButton_Click" Cursor="Hand">
+                                    <TextBlock Text="▼" FontSize="10" Foreground="#757575"/>
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTextColumn.HeaderTemplate>
+                </DataGridTextColumn>
+                
+                <!-- Workset Column -->
+                <DataGridTextColumn Binding="{Binding Workset}" Width="120" IsReadOnly="True">
+                    <DataGridTextColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <TextBlock Text="Workset" VerticalAlignment="Center"/>
+                                <Button HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        Tag="Workset" Padding="2" Width="20" Height="20"
+                                        Background="Transparent" BorderThickness="0"
+                                        ToolTip="Filter" Click="FilterButton_Click" Cursor="Hand">
+                                    <TextBlock Text="▼" FontSize="10" Foreground="#757575"/>
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTextColumn.HeaderTemplate>
+                </DataGridTextColumn>
+                
+                <!-- Created By Column -->
+                <DataGridTextColumn Binding="{Binding CreatedBy}" Width="110" IsReadOnly="True">
+                    <DataGridTextColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <TextBlock Text="Created By" VerticalAlignment="Center"/>
+                                <Button HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        Tag="CreatedBy" Padding="2" Width="20" Height="20"
+                                        Background="Transparent" BorderThickness="0"
+                                        ToolTip="Filter" Click="FilterButton_Click" Cursor="Hand">
+                                    <TextBlock Text="▼" FontSize="10" Foreground="#757575"/>
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTextColumn.HeaderTemplate>
+                </DataGridTextColumn>
+                
+                <!-- Edited By Column -->
+                <DataGridTextColumn Binding="{Binding EditedBy}" Width="110" IsReadOnly="True">
+                    <DataGridTextColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <TextBlock Text="Edited By" VerticalAlignment="Center"/>
+                                <Button HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        Tag="EditedBy" Padding="2" Width="20" Height="20"
+                                        Background="Transparent" BorderThickness="0"
+                                        ToolTip="Filter" Click="FilterButton_Click" Cursor="Hand">
+                                    <TextBlock Text="▼" FontSize="10" Foreground="#757575"/>
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTextColumn.HeaderTemplate>
+                </DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
+
+        <!-- Filter Popup -->
+        <Popup x:Name="FilterPopup" 
+               StaysOpen="False" 
+               Placement="Bottom"
+               AllowsTransparency="True">
+            <Border Background="White"
+                    BorderBrush="#BDBDBD"
+                    BorderThickness="1"
+                    Padding="12"
+                    MinWidth="200"
+                    MaxHeight="350">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.25"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Search Box -->
+                    <TextBox x:Name="PopupSearchBox"
+                             Grid.Row="0"
+                             Margin="0,0,0,8"
+                             Padding="8,6"
+                             FontSize="12"
+                             BorderBrush="#BDBDBD"
+                             BorderThickness="1"
+                             TextChanged="PopupSearchBox_TextChanged"/>
+                    
+                    <!-- Select All / Clear All -->
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Content="Select All" FontSize="11" Padding="10,5" Margin="0,0,8,0"
+                                Background="#E8E8E8" BorderThickness="0" Cursor="Hand"
+                                Click="SelectAllButton_Click"/>
+                        <Button Content="Clear All" FontSize="11" Padding="10,5"
+                                Background="#E8E8E8" BorderThickness="0" Cursor="Hand"
+                                Click="ClearAllButton_Click"/>
+                    </StackPanel>
+                    
+                    <!-- CheckBox List -->
+                    <ScrollViewer Grid.Row="2" MaxHeight="200" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="FilterItemsControl">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Value}"
+                                              IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                              Margin="0,3"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    
+                    <!-- Apply Button -->
+                    <Button Grid.Row="3" Content="Apply Filter" Margin="0,10,0,0" Padding="16,8"
+                            Background="#3F51B5" Foreground="White" BorderThickness="0" Cursor="Hand"
+                            Click="ApplyFilterButton_Click"/>
+                </Grid>
+            </Border>
+        </Popup>
 
         <!-- Footer -->
         <Border Grid.Row="2" 
