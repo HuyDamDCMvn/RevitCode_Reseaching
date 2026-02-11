@@ -213,11 +213,20 @@
                 
                 <!-- Loading Indicator -->
                 <ProgressBar Grid.Column="2"
-                             Style="{StaticResource MaterialDesignCircularProgressBar}"
                              Width="18" Height="18"
                              IsIndeterminate="True"
-                             Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"
-                             Margin="10,0,0,0"/>
+                             Margin="10,0,0,0">
+                    <ProgressBar.Style>
+                        <Style TargetType="ProgressBar">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ProgressBar.Style>
+                </ProgressBar>
             </Grid>
         </Border>
     </Grid>
