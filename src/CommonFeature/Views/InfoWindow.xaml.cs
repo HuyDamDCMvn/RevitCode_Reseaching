@@ -40,13 +40,23 @@ namespace CommonFeature.Views
         private ICollectionView _collectionView;
         private Action _refreshCallback;
         
-        // Filter states
+        // Filter text values (from column header TextBoxes)
+        private Dictionary<string, string> _textFilters = new()
+        {
+            { "Id", "" },
+            { "FamilyName", "" },
+            { "FamilyType", "" },
+            { "Category", "" },
+            { "Workset", "" }
+        };
+        
+        // Multi-select filter sets
         private HashSet<string> _selectedFamilyNames = new();
         private HashSet<string> _selectedFamilyTypes = new();
         private HashSet<string> _selectedCategories = new();
         private HashSet<string> _selectedWorksets = new();
         
-        // Current filter column
+        // Current filter column for popup
         private string _currentFilterColumn;
         private List<FilterItem> _currentFilterItems = new();
 
@@ -86,30 +96,28 @@ namespace CommonFeature.Views
         {
             if (obj is not ElementInfo info) return false;
 
-            // Text filters
-            var idFilter = IdFilterTextBox?.Text?.Trim() ?? "";
-            var familyNameFilter = FamilyNameFilterTextBox?.Text?.Trim() ?? "";
-            var familyTypeFilter = FamilyTypeFilterTextBox?.Text?.Trim() ?? "";
-            var categoryFilter = CategoryFilterTextBox?.Text?.Trim() ?? "";
-            var worksetFilter = WorksetFilterTextBox?.Text?.Trim() ?? "";
-
             // Check text filters (case-insensitive contains)
+            var idFilter = _textFilters["Id"];
             if (!string.IsNullOrEmpty(idFilter) && 
                 !info.Id.ToString().Contains(idFilter, StringComparison.OrdinalIgnoreCase))
                 return false;
 
+            var familyNameFilter = _textFilters["FamilyName"];
             if (!string.IsNullOrEmpty(familyNameFilter) && 
                 !info.FamilyName.Contains(familyNameFilter, StringComparison.OrdinalIgnoreCase))
                 return false;
 
+            var familyTypeFilter = _textFilters["FamilyType"];
             if (!string.IsNullOrEmpty(familyTypeFilter) && 
                 !info.FamilyType.Contains(familyTypeFilter, StringComparison.OrdinalIgnoreCase))
                 return false;
 
+            var categoryFilter = _textFilters["Category"];
             if (!string.IsNullOrEmpty(categoryFilter) && 
                 !info.Category.Contains(categoryFilter, StringComparison.OrdinalIgnoreCase))
                 return false;
 
+            var worksetFilter = _textFilters["Workset"];
             if (!string.IsNullOrEmpty(worksetFilter) && 
                 !info.Workset.Contains(worksetFilter, StringComparison.OrdinalIgnoreCase))
                 return false;
@@ -142,10 +150,53 @@ namespace CommonFeature.Views
             }
         }
 
-        private void FilterTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        /// <summary>
+        /// Handle TextChanged from column header filter TextBoxes
+        /// </summary>
+        private void ColumnFilterTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            _collectionView?.Refresh();
-            UpdateCounts();
+            if (sender is TextBox textBox && textBox.Tag is string columnName)
+            {
+                _textFilters[columnName] = textBox.Text?.Trim() ?? "";
+                _collectionView?.Refresh();
+                UpdateCounts();
+            }
+        }
+
+        /// <summary>
+        /// Handle Click from column header filter dropdown buttons
+        /// </summary>
+        private void ColumnFilterButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is string columnName)
+            {
+                IEnumerable<string> allValues;
+                HashSet<string> selectedValues;
+
+                switch (columnName)
+                {
+                    case "FamilyName":
+                        allValues = _allElementInfos.Select(x => x.FamilyName).Distinct();
+                        selectedValues = _selectedFamilyNames;
+                        break;
+                    case "FamilyType":
+                        allValues = _allElementInfos.Select(x => x.FamilyType).Distinct();
+                        selectedValues = _selectedFamilyTypes;
+                        break;
+                    case "Category":
+                        allValues = _allElementInfos.Select(x => x.Category).Distinct();
+                        selectedValues = _selectedCategories;
+                        break;
+                    case "Workset":
+                        allValues = _allElementInfos.Select(x => x.Workset).Distinct();
+                        selectedValues = _selectedWorksets;
+                        break;
+                    default:
+                        return;
+                }
+
+                ShowFilterPopup(button, columnName, selectedValues, allValues);
+            }
         }
 
         #region Multi-Select Filter Popup
@@ -169,30 +220,6 @@ namespace CommonFeature.Views
             
             FilterPopup.PlacementTarget = button;
             FilterPopup.IsOpen = true;
-        }
-
-        private void FamilyNameFilterButton_Click(object sender, RoutedEventArgs e)
-        {
-            var allValues = _allElementInfos.Select(x => x.FamilyName).Distinct();
-            ShowFilterPopup(sender as Button, "FamilyName", _selectedFamilyNames, allValues);
-        }
-
-        private void FamilyTypeFilterButton_Click(object sender, RoutedEventArgs e)
-        {
-            var allValues = _allElementInfos.Select(x => x.FamilyType).Distinct();
-            ShowFilterPopup(sender as Button, "FamilyType", _selectedFamilyTypes, allValues);
-        }
-
-        private void CategoryFilterButton_Click(object sender, RoutedEventArgs e)
-        {
-            var allValues = _allElementInfos.Select(x => x.Category).Distinct();
-            ShowFilterPopup(sender as Button, "Category", _selectedCategories, allValues);
-        }
-
-        private void WorksetFilterButton_Click(object sender, RoutedEventArgs e)
-        {
-            var allValues = _allElementInfos.Select(x => x.Workset).Distinct();
-            ShowFilterPopup(sender as Button, "Workset", _selectedWorksets, allValues);
         }
 
         private void PopupSearchBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -261,11 +288,13 @@ namespace CommonFeature.Views
         private void ClearFilterButton_Click(object sender, RoutedEventArgs e)
         {
             // Clear text filters
-            IdFilterTextBox.Text = "";
-            FamilyNameFilterTextBox.Text = "";
-            FamilyTypeFilterTextBox.Text = "";
-            CategoryFilterTextBox.Text = "";
-            WorksetFilterTextBox.Text = "";
+            foreach (var key in _textFilters.Keys.ToList())
+            {
+                _textFilters[key] = "";
+            }
+            
+            // Clear TextBoxes in column headers (find them in visual tree)
+            ClearColumnHeaderTextBoxes(InfoDataGrid);
             
             // Reset multi-select filters
             InitializeFilterSets();
@@ -273,6 +302,26 @@ namespace CommonFeature.Views
             _collectionView?.Refresh();
             UpdateCounts();
             StatusText.Text = "Filters cleared";
+        }
+
+        private void ClearColumnHeaderTextBoxes(DependencyObject parent)
+        {
+            if (parent == null) return;
+
+            int count = System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < count; i++)
+            {
+                var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
+                
+                if (child is TextBox textBox && textBox.Tag is string)
+                {
+                    textBox.Text = "";
+                }
+                else
+                {
+                    ClearColumnHeaderTextBoxes(child);
+                }
+            }
         }
 
         private void ExportButton_Click(object sender, RoutedEventArgs e)

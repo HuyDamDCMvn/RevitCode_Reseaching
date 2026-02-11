@@ -105,34 +105,22 @@ namespace CommonFeature
 
             var doc = uidoc.Document;
 
-            // Collect ALL elements from the project (filter meaningful elements only)
+            // Collect ALL elements from the project
             var elementInfos = new List<ElementInfo>();
 
-            // Use FilteredElementCollector to get elements efficiently
-            // Filter: Elements that have a valid Category (model elements, not system elements)
+            // Get all element instances (not types) that have a Category
             var collector = new FilteredElementCollector(doc)
-                .WhereElementIsNotElementType()
-                .WhereElementIsViewIndependent();
+                .WhereElementIsNotElementType();
 
             foreach (var element in collector)
             {
-                // Skip elements without category
+                // Only include elements with a valid Category
                 if (element.Category == null) continue;
                 
-                // Skip certain non-useful categories
-                var catId = element.Category.Id.Value;
-                
-                // Skip analytical, import, and internal categories
-                if (catId < 0) continue; // Built-in categories with negative IDs are often internal
-                
-                // Skip elements that are not user-visible model elements
-                if (!element.Category.HasMaterialQuantities && 
-                    element.Category.CategoryType != CategoryType.Model)
-                {
-                    // Allow some annotation categories if needed
-                    if (element.Category.CategoryType != CategoryType.Annotation)
-                        continue;
-                }
+                // Include Model and Annotation elements
+                var catType = element.Category.CategoryType;
+                if (catType != CategoryType.Model && catType != CategoryType.Annotation)
+                    continue;
 
                 var info = GetElementInfo(doc, element);
                 elementInfos.Add(info);

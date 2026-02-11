@@ -16,7 +16,6 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -76,137 +75,9 @@
             </Grid>
         </Border>
 
-        <!-- Filter Bar -->
-        <Border Grid.Row="1" Background="#FFFFFF" Padding="16,8" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="80"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="120"/>
-                    <ColumnDefinition Width="120"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- ID Filter -->
-                <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                    <TextBlock Text="ID" FontSize="11" Foreground="#757575" Margin="0,0,0,4"/>
-                    <TextBox x:Name="IdFilterTextBox"
-                             Padding="8,6"
-                             FontSize="12"
-                             BorderBrush="#BDBDBD"
-                             BorderThickness="1"
-                             TextChanged="FilterTextBox_TextChanged"/>
-                </StackPanel>
-
-                <!-- Family Name Filter -->
-                <StackPanel Grid.Column="1" Margin="4,0">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Family Name" FontSize="11" Foreground="#757575" Margin="0,0,0,4"/>
-                        <Button Grid.Column="1" 
-                                x:Name="FamilyNameFilterButton"
-                                Padding="2" MinWidth="20" Height="18"
-                                Background="Transparent" BorderThickness="0"
-                                ToolTip="Select values to filter"
-                                Click="FamilyNameFilterButton_Click"
-                                Cursor="Hand">
-                            <TextBlock Text="▼" FontSize="10" Foreground="#757575"/>
-                        </Button>
-                    </Grid>
-                    <TextBox x:Name="FamilyNameFilterTextBox"
-                             Padding="8,6"
-                             FontSize="12"
-                             BorderBrush="#BDBDBD"
-                             BorderThickness="1"
-                             TextChanged="FilterTextBox_TextChanged"/>
-                </StackPanel>
-
-                <!-- Family Type Filter -->
-                <StackPanel Grid.Column="2" Margin="4,0">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Family Type" FontSize="11" Foreground="#757575" Margin="0,0,0,4"/>
-                        <Button Grid.Column="1" 
-                                x:Name="FamilyTypeFilterButton"
-                                Padding="2" MinWidth="20" Height="18"
-                                Background="Transparent" BorderThickness="0"
-                                ToolTip="Select values to filter"
-                                Click="FamilyTypeFilterButton_Click"
-                                Cursor="Hand">
-                            <TextBlock Text="▼" FontSize="10" Foreground="#757575"/>
-                        </Button>
-                    </Grid>
-                    <TextBox x:Name="FamilyTypeFilterTextBox"
-                             Padding="8,6"
-                             FontSize="12"
-                             BorderBrush="#BDBDBD"
-                             BorderThickness="1"
-                             TextChanged="FilterTextBox_TextChanged"/>
-                </StackPanel>
-
-                <!-- Category Filter -->
-                <StackPanel Grid.Column="3" Margin="4,0">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Category" FontSize="11" Foreground="#757575" Margin="0,0,0,4"/>
-                        <Button Grid.Column="1" 
-                                x:Name="CategoryFilterButton"
-                                Padding="2" MinWidth="20" Height="18"
-                                Background="Transparent" BorderThickness="0"
-                                ToolTip="Select values to filter"
-                                Click="CategoryFilterButton_Click"
-                                Cursor="Hand">
-                            <TextBlock Text="▼" FontSize="10" Foreground="#757575"/>
-                        </Button>
-                    </Grid>
-                    <TextBox x:Name="CategoryFilterTextBox"
-                             Padding="8,6"
-                             FontSize="12"
-                             BorderBrush="#BDBDBD"
-                             BorderThickness="1"
-                             TextChanged="FilterTextBox_TextChanged"/>
-                </StackPanel>
-
-                <!-- Workset Filter -->
-                <StackPanel Grid.Column="4" Margin="4,0,0,0">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Workset" FontSize="11" Foreground="#757575" Margin="0,0,0,4"/>
-                        <Button Grid.Column="1" 
-                                x:Name="WorksetFilterButton"
-                                Padding="2" MinWidth="20" Height="18"
-                                Background="Transparent" BorderThickness="0"
-                                ToolTip="Select values to filter"
-                                Click="WorksetFilterButton_Click"
-                                Cursor="Hand">
-                            <TextBlock Text="▼" FontSize="10" Foreground="#757575"/>
-                        </Button>
-                    </Grid>
-                    <TextBox x:Name="WorksetFilterTextBox"
-                             Padding="8,6"
-                             FontSize="12"
-                             BorderBrush="#BDBDBD"
-                             BorderThickness="1"
-                             TextChanged="FilterTextBox_TextChanged"/>
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- DataGrid -->
+        <!-- DataGrid with integrated column header filters -->
         <DataGrid x:Name="InfoDataGrid"
-                  Grid.Row="2"
+                  Grid.Row="1"
                   Margin="16,8,16,8"
                   AutoGenerateColumns="False"
                   CanUserAddRows="False"
@@ -222,36 +93,168 @@
                   BorderThickness="1"
                   BorderBrush="#E0E0E0"
                   Background="White"
+                  ColumnHeaderHeight="70"
                   VirtualizingPanel.IsVirtualizing="True"
                   VirtualizingPanel.VirtualizationMode="Recycling">
+            
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="Background" Value="#F5F5F5"/>
+                    <Setter Property="Foreground" Value="#424242"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                    <Setter Property="BorderBrush" Value="#E0E0E0"/>
+                    <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                    <Setter Property="Padding" Value="8,4"/>
+                    <Setter Property="VerticalContentAlignment" Value="Top"/>
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+            
             <DataGrid.Columns>
-                <DataGridTextColumn Header="ID" 
-                                    Binding="{Binding Id}" 
-                                    Width="80"
-                                    IsReadOnly="True"/>
-                <DataGridTextColumn Header="Family Name" 
-                                    Binding="{Binding FamilyName}" 
-                                    Width="*"
-                                    MinWidth="150"
-                                    IsReadOnly="True"/>
-                <DataGridTextColumn Header="Family Type" 
-                                    Binding="{Binding FamilyType}" 
-                                    Width="*"
-                                    MinWidth="150"
-                                    IsReadOnly="True"/>
-                <DataGridTextColumn Header="Category" 
-                                    Binding="{Binding Category}" 
-                                    Width="120"
-                                    IsReadOnly="True"/>
-                <DataGridTextColumn Header="Workset" 
-                                    Binding="{Binding Workset}" 
-                                    Width="120"
-                                    IsReadOnly="True"/>
+                <!-- ID Column -->
+                <DataGridTextColumn Binding="{Binding Id}" Width="80" IsReadOnly="True">
+                    <DataGridTextColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="ID" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <TextBox x:Name="IdFilterTextBox"
+                                         Tag="Id"
+                                         Padding="4,3"
+                                         FontSize="11"
+                                         FontWeight="Normal"
+                                         BorderBrush="#BDBDBD"
+                                         BorderThickness="1"
+                                         Width="60"
+                                         HorizontalAlignment="Left"
+                                         TextChanged="ColumnFilterTextBox_TextChanged"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTextColumn.HeaderTemplate>
+                </DataGridTextColumn>
+                
+                <!-- Family Name Column -->
+                <DataGridTextColumn Binding="{Binding FamilyName}" Width="*" MinWidth="150" IsReadOnly="True">
+                    <DataGridTextColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <Grid>
+                                    <TextBlock Text="Family Name" FontWeight="SemiBold"/>
+                                    <Button HorizontalAlignment="Right"
+                                            Tag="FamilyName"
+                                            Padding="2" Width="18" Height="18"
+                                            Background="Transparent" BorderThickness="0"
+                                            ToolTip="Multi-select filter"
+                                            Click="ColumnFilterButton_Click"
+                                            Cursor="Hand">
+                                        <TextBlock Text="▼" FontSize="9" Foreground="#757575"/>
+                                    </Button>
+                                </Grid>
+                                <TextBox Tag="FamilyName"
+                                         Padding="4,3"
+                                         FontSize="11"
+                                         FontWeight="Normal"
+                                         BorderBrush="#BDBDBD"
+                                         BorderThickness="1"
+                                         Margin="0,4,0,0"
+                                         TextChanged="ColumnFilterTextBox_TextChanged"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTextColumn.HeaderTemplate>
+                </DataGridTextColumn>
+                
+                <!-- Family Type Column -->
+                <DataGridTextColumn Binding="{Binding FamilyType}" Width="*" MinWidth="150" IsReadOnly="True">
+                    <DataGridTextColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <Grid>
+                                    <TextBlock Text="Family Type" FontWeight="SemiBold"/>
+                                    <Button HorizontalAlignment="Right"
+                                            Tag="FamilyType"
+                                            Padding="2" Width="18" Height="18"
+                                            Background="Transparent" BorderThickness="0"
+                                            ToolTip="Multi-select filter"
+                                            Click="ColumnFilterButton_Click"
+                                            Cursor="Hand">
+                                        <TextBlock Text="▼" FontSize="9" Foreground="#757575"/>
+                                    </Button>
+                                </Grid>
+                                <TextBox Tag="FamilyType"
+                                         Padding="4,3"
+                                         FontSize="11"
+                                         FontWeight="Normal"
+                                         BorderBrush="#BDBDBD"
+                                         BorderThickness="1"
+                                         Margin="0,4,0,0"
+                                         TextChanged="ColumnFilterTextBox_TextChanged"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTextColumn.HeaderTemplate>
+                </DataGridTextColumn>
+                
+                <!-- Category Column -->
+                <DataGridTextColumn Binding="{Binding Category}" Width="120" IsReadOnly="True">
+                    <DataGridTextColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <Grid>
+                                    <TextBlock Text="Category" FontWeight="SemiBold"/>
+                                    <Button HorizontalAlignment="Right"
+                                            Tag="Category"
+                                            Padding="2" Width="18" Height="18"
+                                            Background="Transparent" BorderThickness="0"
+                                            ToolTip="Multi-select filter"
+                                            Click="ColumnFilterButton_Click"
+                                            Cursor="Hand">
+                                        <TextBlock Text="▼" FontSize="9" Foreground="#757575"/>
+                                    </Button>
+                                </Grid>
+                                <TextBox Tag="Category"
+                                         Padding="4,3"
+                                         FontSize="11"
+                                         FontWeight="Normal"
+                                         BorderBrush="#BDBDBD"
+                                         BorderThickness="1"
+                                         Margin="0,4,0,0"
+                                         TextChanged="ColumnFilterTextBox_TextChanged"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTextColumn.HeaderTemplate>
+                </DataGridTextColumn>
+                
+                <!-- Workset Column -->
+                <DataGridTextColumn Binding="{Binding Workset}" Width="120" IsReadOnly="True">
+                    <DataGridTextColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <Grid>
+                                    <TextBlock Text="Workset" FontWeight="SemiBold"/>
+                                    <Button HorizontalAlignment="Right"
+                                            Tag="Workset"
+                                            Padding="2" Width="18" Height="18"
+                                            Background="Transparent" BorderThickness="0"
+                                            ToolTip="Multi-select filter"
+                                            Click="ColumnFilterButton_Click"
+                                            Cursor="Hand">
+                                        <TextBlock Text="▼" FontSize="9" Foreground="#757575"/>
+                                    </Button>
+                                </Grid>
+                                <TextBox Tag="Workset"
+                                         Padding="4,3"
+                                         FontSize="11"
+                                         FontWeight="Normal"
+                                         BorderBrush="#BDBDBD"
+                                         BorderThickness="1"
+                                         Margin="0,4,0,0"
+                                         TextChanged="ColumnFilterTextBox_TextChanged"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTextColumn.HeaderTemplate>
+                </DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
 
         <!-- Footer -->
-        <Border Grid.Row="3" 
+        <Border Grid.Row="2" 
                 Background="#FAFAFA"
                 BorderBrush="#E0E0E0"
                 BorderThickness="0,1,0,0"
@@ -292,7 +295,6 @@
         
         <!-- Multi-Select Filter Popup -->
         <Popup x:Name="FilterPopup" 
-               Grid.Row="1"
                StaysOpen="False" 
                Placement="Bottom"
                AllowsTransparency="True">
