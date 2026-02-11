@@ -1,0 +1,43 @@
+---
+description: Build matrix and packaging rules for DLLs into pyRevit extension (no .addin)
+alwaysApply: true
+---
+
+# Build & Package — DLLs into pyRevit Extension
+
+## Build Matrix (Hard Rule)
+
+Always produce BOTH targets:
+
+| Target Framework | Revit Versions |
+|------------------|----------------|
+| `net48` | 2023–2024 |
+| `net8.0-windows` | 2025–2026 |
+
+## Packaging (Copy Step)
+
+Copy outputs to pyRevit extension lib folders:
+
+```
+<Ext>.extension/
+  lib/
+    net48/    # dll + all dependencies for Revit 2023–2024
+    net8/     # dll + all dependencies for Revit 2025–2026
+```
+
+## Dependency Rule
+
+If DLL has dependencies, place them alongside the DLL in the same lib folder.
+
+```
+lib/net48/
+  YourDll.dll
+  Newtonsoft.Json.dll   # dependency
+  OtherLib.dll          # dependency
+```
+
+## Never Do
+
+- Do NOT ship separate `.addin` manifests for this workflow.
+- Do NOT point pyRevit to `bin/Debug` or `bin/Release` paths in production builds.
+- Do NOT assume dependencies are shared — each lib folder must be self-contained.

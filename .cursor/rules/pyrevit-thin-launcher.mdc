@@ -1,0 +1,63 @@
+---
+description: pyRevit 6.0 thin launcher implementation rules (IronPython/CPython, DLL loading, error handling)
+alwaysApply: true
+---
+
+# pyRevit 6.0.0 — Thin Launcher Rules
+
+## Launcher Responsibilities Only
+
+Python script must do exactly four things:
+1. Detect Revit major version
+2. Select DLL path (`net48` vs `net8`)
+3. Load assembly
+4. Call DLL Entry method
+
+**No business logic in Python.** All logic lives in the C# DLL.
+
+## Engine Selection
+
+- **Default to IronPython** for stability and Revit API compatibility.
+- Use CPython only when required (numpy, pandas, etc.).
+- If CPython is used: **first line must be `#! python3`**.
+
+## DLL Loading (IronPython)
+
+```python
+import clr
+import os
+
+# Always use absolute path resolution
+dll_path = os.path.join(ext_lib_folder, framework_folder, "YourDll.dll")
+clr.AddReferenceToFileAndPath(dll_path)
+```
+
+## DLL Selection Mapping (Hard Rule)
+
+| Revit Version | Framework Folder | DLL Path |
+|---------------|------------------|----------|
+| 2023–2024 | `net48` | `<Ext>.extension/lib/net48/<YourDll>.dll` |
+| 2025–2026 | `net8` | `<Ext>.extension/lib/net8/<YourDll>.dll` |
+
+## Error Handling (Required)
+
+If loading fails, show actionable error with:
+- Detected Revit version
+- Attempted DLL path(s)
+- Next steps (missing file, wrong folder, dependency missing)
+
+```python
+# ❌ BAD
+clr.AddReferenceToFileAndPath(dll_path)
+
+# ✅ GOOD
+if not os.path.exists(dll_path):
+    forms.alert(
+        "DLL not found.\n\n"
+        f"Revit version: {revit_version}\n"
+        f"Expected path: {dll_path}\n\n"
+        "Check that the DLL was deployed to the correct lib folder.",
+        title="Load Error"
+    )
+    script.exit()
+```

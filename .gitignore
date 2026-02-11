@@ -1,0 +1,25 @@
+# Build outputs
+bin/
+obj/
+*.dll
+*.pdb
+*.exe
+
+# IDE
+.vs/
+.vscode/
+*.suo
+*.user
+
+# pyRevit lib folders (DLLs are built, not source)
+HD.extension/lib/net48/
+HD.extension/lib/net8/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,14 @@
+{
+    "include": [
+        "HD.extension"
+    ],
+    "extraPaths": [
+        "C:/Users/mrhuy/AppData/Roaming/pyRevit-Master/pyrevitlib",
+        "HD.extension/lib/PyRevitStub"
+    ],
+    "stubPath": "HD.extension/lib/PyRevitStub",
+    "pythonVersion": "3.10",
+    "typeCheckingMode": "basic",
+    "reportMissingImports": "warning",
+    "reportMissingTypeStubs": "none"
+}

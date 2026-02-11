@@ -1,0 +1,23 @@
+"""pyrevit.revit module stubs."""
+from typing import Any, Optional, List
+
+# Current document and app
+doc: Any  # Autodesk.Revit.DB.Document
+uidoc: Any  # Autodesk.Revit.UI.UIDocument
+app: Any  # Autodesk.Revit.ApplicationServices.Application
+uiapp: Any  # Autodesk.Revit.UI.UIApplication
+active_view: Any  # Autodesk.Revit.DB.View
+
+# db module (alias to Autodesk.Revit.DB)
+class db:
+    pass
+
+def get_selection() -> List[Any]: ...
+def pick_element(message: str = ...) -> Any: ...
+def pick_elements(message: str = ...) -> List[Any]: ...
+def pick_element_by_category(category: Any, message: str = ...) -> Any: ...
+
+class Transaction:
+    def __init__(self, name: str, doc: Any = ...) -> None: ...
+    def __enter__(self) -> 'Transaction': ...
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool: ...
