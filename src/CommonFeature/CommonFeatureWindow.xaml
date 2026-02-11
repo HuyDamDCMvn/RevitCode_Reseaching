@@ -1,0 +1,224 @@
+<Window x:Class="CommonFeature.CommonFeatureWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Common Feature" 
+        Height="420" 
+        Width="320"
+        MinHeight="380"
+        MinWidth="280"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResizeWithGrip"
+        ShowInTaskbar="True"
+        Topmost="False"
+        Background="#FAFAFA">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Indigo" SecondaryColor="Teal" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign2.Defaults.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header with gradient -->
+        <Border Grid.Row="0" Padding="20,16" Background="#3F51B5">
+            <StackPanel>
+                <TextBlock Text="Common Feature" 
+                           FontSize="20" 
+                           FontWeight="Medium"
+                           Foreground="White"/>
+                <TextBlock Text="Select a tool to get started" 
+                           FontSize="12" 
+                           Foreground="#BBDEFB"
+                           Margin="0,4,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Feature Buttons -->
+        <ScrollViewer Grid.Row="1" 
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="16,12">
+            <StackPanel>
+                <!-- Isolate Button -->
+                <Button Margin="0,4" Height="56" 
+                        HorizontalContentAlignment="Left"
+                        Command="{Binding IsolateCommand}"
+                        ToolTip="Isolate selected elements in current view">
+                    <Grid Margin="8,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" 
+                                Background="#E8EAF6" 
+                                CornerRadius="8" 
+                                Padding="10" 
+                                Margin="0,0,14,0">
+                            <materialDesign:PackIcon Kind="EyeOutline" 
+                                                     Width="24" Height="24"
+                                                     Foreground="#3F51B5"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Isolate" FontWeight="Medium" FontSize="14"/>
+                            <TextBlock Text="Hide other elements" 
+                                       FontSize="11" 
+                                       Foreground="#757575"/>
+                        </StackPanel>
+                        <materialDesign:PackIcon Grid.Column="2" 
+                                                 Kind="ChevronRight" 
+                                                 VerticalAlignment="Center"
+                                                 Foreground="#BDBDBD"/>
+                    </Grid>
+                </Button>
+
+                <!-- Get Information Button -->
+                <Button Margin="0,4" Height="56"
+                        HorizontalContentAlignment="Left"
+                        Command="{Binding GetInformationCommand}"
+                        ToolTip="Get detailed information about selected elements">
+                    <Grid Margin="8,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" 
+                                Background="#E3F2FD" 
+                                CornerRadius="8" 
+                                Padding="10" 
+                                Margin="0,0,14,0">
+                            <materialDesign:PackIcon Kind="InformationOutline" 
+                                                     Width="24" Height="24"
+                                                     Foreground="#1976D2"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Get Information" FontWeight="Medium" FontSize="14"/>
+                            <TextBlock Text="View element details" 
+                                       FontSize="11" 
+                                       Foreground="#757575"/>
+                        </StackPanel>
+                        <materialDesign:PackIcon Grid.Column="2" 
+                                                 Kind="ChevronRight" 
+                                                 VerticalAlignment="Center"
+                                                 Foreground="#BDBDBD"/>
+                    </Grid>
+                </Button>
+
+                <!-- Show Parameter Button -->
+                <Button Margin="0,4" Height="56"
+                        HorizontalContentAlignment="Left"
+                        Command="{Binding ShowParameterCommand}"
+                        ToolTip="Display all parameters of selected elements">
+                    <Grid Margin="8,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" 
+                                Background="#E8F5E9" 
+                                CornerRadius="8" 
+                                Padding="10" 
+                                Margin="0,0,14,0">
+                            <materialDesign:PackIcon Kind="FormatListBulleted" 
+                                                     Width="24" Height="24"
+                                                     Foreground="#388E3C"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Show Parameter" FontWeight="Medium" FontSize="14"/>
+                            <TextBlock Text="List all parameters" 
+                                       FontSize="11" 
+                                       Foreground="#757575"/>
+                        </StackPanel>
+                        <materialDesign:PackIcon Grid.Column="2" 
+                                                 Kind="ChevronRight" 
+                                                 VerticalAlignment="Center"
+                                                 Foreground="#BDBDBD"/>
+                    </Grid>
+                </Button>
+
+                <!-- Show Boundary Button -->
+                <Button Margin="0,4" Height="56"
+                        HorizontalContentAlignment="Left"
+                        Command="{Binding ShowBoundaryCommand}"
+                        ToolTip="Show bounding box of selected elements">
+                    <Grid Margin="8,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" 
+                                Background="#FFF3E0" 
+                                CornerRadius="8" 
+                                Padding="10" 
+                                Margin="0,0,14,0">
+                            <materialDesign:PackIcon Kind="VectorSquare" 
+                                                     Width="24" Height="24"
+                                                     Foreground="#F57C00"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Show Boundary" FontWeight="Medium" FontSize="14"/>
+                            <TextBlock Text="Display bounding box" 
+                                       FontSize="11" 
+                                       Foreground="#757575"/>
+                        </StackPanel>
+                        <materialDesign:PackIcon Grid.Column="2" 
+                                                 Kind="ChevronRight" 
+                                                 VerticalAlignment="Center"
+                                                 Foreground="#BDBDBD"/>
+                    </Grid>
+                </Button>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="2" 
+                Background="#FAFAFA"
+                BorderBrush="#E0E0E0"
+                BorderThickness="0,1,0,0"
+                Padding="16,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Status Icon -->
+                <materialDesign:PackIcon Grid.Column="0"
+                                         Kind="CheckCircleOutline" 
+                                         Width="18" Height="18"
+                                         VerticalAlignment="Center" 
+                                         Margin="0,0,10,0"
+                                         Foreground="#757575"/>
+                
+                <!-- Status Message -->
+                <TextBlock Grid.Column="1"
+                           Text="{Binding StatusMessage}" 
+                           FontSize="12"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           Foreground="#757575"/>
+                
+                <!-- Loading Indicator -->
+                <ProgressBar Grid.Column="2"
+                             Style="{StaticResource MaterialDesignCircularProgressBar}"
+                             Width="18" Height="18"
+                             IsIndeterminate="True"
+                             Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"
+                             Margin="10,0,0,0"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

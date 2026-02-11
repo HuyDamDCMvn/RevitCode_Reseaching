@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>CommonFeature</RootNamespace>
+    <AssemblyName>CommonFeature</AssemblyName>
+    <Description>Common Feature tools for Revit 2025+</Description>
+  </PropertyGroup>
+
+  <!-- Revit API References -->
+  <ItemGroup>
+    <Reference Include="RevitAPI">
+      <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="RevitAPIUI">
+      <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPIUI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- Copy dependencies to output folder -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <!-- Post-build: Copy DLLs to pyRevit lib folder -->
+  <Target Name="CopyToExtension" AfterTargets="Build">
+    <PropertyGroup>
+      <ExtLibNet8>$(ProjectDir)..\..\HD.extension\lib\net8\</ExtLibNet8>
+    </PropertyGroup>
+    
+    <MakeDir Directories="$(ExtLibNet8)" />
+    
+    <!-- Copy all DLLs from output -->
+    <ItemGroup>
+      <OutputDlls Include="$(OutputPath)*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(OutputDlls)" DestinationFolder="$(ExtLibNet8)" />
+    
+    <Message Text="Copied DLLs to $(ExtLibNet8)" Importance="high" />
+  </Target>
+
+</Project>
