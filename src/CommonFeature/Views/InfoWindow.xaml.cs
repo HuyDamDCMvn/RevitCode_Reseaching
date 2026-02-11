@@ -47,7 +47,9 @@ namespace CommonFeature.Views
             { "FamilyName", "" },
             { "FamilyType", "" },
             { "Category", "" },
-            { "Workset", "" }
+            { "Workset", "" },
+            { "CreatedBy", "" },
+            { "EditedBy", "" }
         };
         
         // Multi-select filter sets
@@ -55,6 +57,8 @@ namespace CommonFeature.Views
         private HashSet<string> _selectedFamilyTypes = new();
         private HashSet<string> _selectedCategories = new();
         private HashSet<string> _selectedWorksets = new();
+        private HashSet<string> _selectedCreatedBy = new();
+        private HashSet<string> _selectedEditedBy = new();
         
         // Current filter column for popup
         private string _currentFilterColumn;
@@ -90,6 +94,8 @@ namespace CommonFeature.Views
             _selectedFamilyTypes = new HashSet<string>(_allElementInfos.Select(e => e.FamilyType).Distinct());
             _selectedCategories = new HashSet<string>(_allElementInfos.Select(e => e.Category).Distinct());
             _selectedWorksets = new HashSet<string>(_allElementInfos.Select(e => e.Workset).Distinct());
+            _selectedCreatedBy = new HashSet<string>(_allElementInfos.Select(e => e.CreatedBy).Distinct());
+            _selectedEditedBy = new HashSet<string>(_allElementInfos.Select(e => e.EditedBy).Distinct());
         }
 
         private bool FilterPredicate(object obj)
@@ -122,11 +128,23 @@ namespace CommonFeature.Views
                 !info.Workset.Contains(worksetFilter, StringComparison.OrdinalIgnoreCase))
                 return false;
 
+            var createdByFilter = _textFilters["CreatedBy"];
+            if (!string.IsNullOrEmpty(createdByFilter) && 
+                !info.CreatedBy.Contains(createdByFilter, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            var editedByFilter = _textFilters["EditedBy"];
+            if (!string.IsNullOrEmpty(editedByFilter) && 
+                !info.EditedBy.Contains(editedByFilter, StringComparison.OrdinalIgnoreCase))
+                return false;
+
             // Check multi-select filters
             if (!_selectedFamilyNames.Contains(info.FamilyName)) return false;
             if (!_selectedFamilyTypes.Contains(info.FamilyType)) return false;
             if (!_selectedCategories.Contains(info.Category)) return false;
             if (!_selectedWorksets.Contains(info.Workset)) return false;
+            if (!_selectedCreatedBy.Contains(info.CreatedBy)) return false;
+            if (!_selectedEditedBy.Contains(info.EditedBy)) return false;
 
             return true;
         }
@@ -190,6 +208,14 @@ namespace CommonFeature.Views
                     case "Workset":
                         allValues = _allElementInfos.Select(x => x.Workset).Distinct();
                         selectedValues = _selectedWorksets;
+                        break;
+                    case "CreatedBy":
+                        allValues = _allElementInfos.Select(x => x.CreatedBy).Distinct();
+                        selectedValues = _selectedCreatedBy;
+                        break;
+                    case "EditedBy":
+                        allValues = _allElementInfos.Select(x => x.EditedBy).Distinct();
+                        selectedValues = _selectedEditedBy;
                         break;
                     default:
                         return;
@@ -273,6 +299,12 @@ namespace CommonFeature.Views
                     break;
                 case "Workset":
                     _selectedWorksets = selected;
+                    break;
+                case "CreatedBy":
+                    _selectedCreatedBy = selected;
+                    break;
+                case "EditedBy":
+                    _selectedEditedBy = selected;
                     break;
             }
 
@@ -364,12 +396,12 @@ namespace CommonFeature.Views
             var sb = new StringBuilder();
             
             // Header
-            sb.AppendLine("ID,Family Name,Family Type,Category,Workset");
+            sb.AppendLine("ID,Family Name,Family Type,Category,Workset,Created By,Edited By");
             
             // Data rows
             foreach (var info in data)
             {
-                sb.AppendLine($"\"{info.Id}\",\"{EscapeCsv(info.FamilyName)}\",\"{EscapeCsv(info.FamilyType)}\",\"{EscapeCsv(info.Category)}\",\"{EscapeCsv(info.Workset)}\"");
+                sb.AppendLine($"\"{info.Id}\",\"{EscapeCsv(info.FamilyName)}\",\"{EscapeCsv(info.FamilyType)}\",\"{EscapeCsv(info.Category)}\",\"{EscapeCsv(info.Workset)}\",\"{EscapeCsv(info.CreatedBy)}\",\"{EscapeCsv(info.EditedBy)}\"");
             }
 
             File.WriteAllText(filePath, sb.ToString(), Encoding.UTF8);

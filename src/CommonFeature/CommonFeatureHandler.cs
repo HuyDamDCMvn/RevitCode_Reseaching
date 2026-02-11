@@ -195,7 +195,36 @@ namespace CommonFeature
                 }
             }
 
-            return new ElementInfo(id, familyName, familyType, category, workset);
+            // Get Created By (EDITED_BY parameter stores last editor, CREATED_BY for creator)
+            string createdBy = "-";
+            string editedBy = "-";
+            
+            try
+            {
+                // Try to get Created By parameter
+                var createdByParam = element.get_Parameter(BuiltInParameter.EDITED_BY);
+                if (createdByParam != null && createdByParam.HasValue)
+                {
+                    editedBy = createdByParam.AsString() ?? "-";
+                }
+
+                // For worksharing, get the creator from WorksharingUtils
+                if (doc.IsWorkshared)
+                {
+                    var wsTooltipInfo = WorksharingUtils.GetWorksharingTooltipInfo(doc, element.Id);
+                    if (wsTooltipInfo != null)
+                    {
+                        createdBy = !string.IsNullOrEmpty(wsTooltipInfo.Creator) ? wsTooltipInfo.Creator : "-";
+                        editedBy = !string.IsNullOrEmpty(wsTooltipInfo.LastChangedBy) ? wsTooltipInfo.LastChangedBy : editedBy;
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore errors when getting user info
+            }
+
+            return new ElementInfo(id, familyName, familyType, category, workset, createdBy, editedBy);
         }
 
         private void ExecuteShowParameter(UIApplication app)

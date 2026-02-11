@@ -3,9 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Element Information" 
         Height="600" 
-        Width="950"
+        Width="1150"
         MinHeight="450"
-        MinWidth="750"
+        MinWidth="900"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResizeWithGrip"
         ShowInTaskbar="True"
@@ -222,7 +222,7 @@
                 </DataGridTextColumn>
                 
                 <!-- Workset Column -->
-                <DataGridTextColumn Binding="{Binding Workset}" Width="120" IsReadOnly="True">
+                <DataGridTextColumn Binding="{Binding Workset}" Width="100" IsReadOnly="True">
                     <DataGridTextColumn.HeaderTemplate>
                         <DataTemplate>
                             <StackPanel>
@@ -239,6 +239,66 @@
                                     </Button>
                                 </Grid>
                                 <TextBox Tag="Workset"
+                                         Padding="4,3"
+                                         FontSize="11"
+                                         FontWeight="Normal"
+                                         BorderBrush="#BDBDBD"
+                                         BorderThickness="1"
+                                         Margin="0,4,0,0"
+                                         TextChanged="ColumnFilterTextBox_TextChanged"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTextColumn.HeaderTemplate>
+                </DataGridTextColumn>
+                
+                <!-- Created By Column -->
+                <DataGridTextColumn Binding="{Binding CreatedBy}" Width="100" IsReadOnly="True">
+                    <DataGridTextColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <Grid>
+                                    <TextBlock Text="Created By" FontWeight="SemiBold"/>
+                                    <Button HorizontalAlignment="Right"
+                                            Tag="CreatedBy"
+                                            Padding="2" Width="18" Height="18"
+                                            Background="Transparent" BorderThickness="0"
+                                            ToolTip="Multi-select filter"
+                                            Click="ColumnFilterButton_Click"
+                                            Cursor="Hand">
+                                        <TextBlock Text="▼" FontSize="9" Foreground="#757575"/>
+                                    </Button>
+                                </Grid>
+                                <TextBox Tag="CreatedBy"
+                                         Padding="4,3"
+                                         FontSize="11"
+                                         FontWeight="Normal"
+                                         BorderBrush="#BDBDBD"
+                                         BorderThickness="1"
+                                         Margin="0,4,0,0"
+                                         TextChanged="ColumnFilterTextBox_TextChanged"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTextColumn.HeaderTemplate>
+                </DataGridTextColumn>
+                
+                <!-- Edited By Column -->
+                <DataGridTextColumn Binding="{Binding EditedBy}" Width="100" IsReadOnly="True">
+                    <DataGridTextColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <Grid>
+                                    <TextBlock Text="Edited By" FontWeight="SemiBold"/>
+                                    <Button HorizontalAlignment="Right"
+                                            Tag="EditedBy"
+                                            Padding="2" Width="18" Height="18"
+                                            Background="Transparent" BorderThickness="0"
+                                            ToolTip="Multi-select filter"
+                                            Click="ColumnFilterButton_Click"
+                                            Cursor="Hand">
+                                        <TextBlock Text="▼" FontSize="9" Foreground="#757575"/>
+                                    </Button>
+                                </Grid>
+                                <TextBox Tag="EditedBy"
                                          Padding="4,3"
                                          FontSize="11"
                                          FontWeight="Normal"
