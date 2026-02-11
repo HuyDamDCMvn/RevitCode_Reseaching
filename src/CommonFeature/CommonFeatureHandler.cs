@@ -104,21 +104,35 @@ namespace CommonFeature
             }
 
             var doc = uidoc.Document;
-            var selection = uidoc.Selection.GetElementIds();
 
-            if (selection.Count == 0)
-            {
-                OnError?.Invoke("Please select at least one element");
-                return;
-            }
-
-            // Collect element information
+            // Collect ALL elements from the project (filter meaningful elements only)
             var elementInfos = new List<ElementInfo>();
 
-            foreach (var elementId in selection)
+            // Use FilteredElementCollector to get elements efficiently
+            // Filter: Elements that have a valid Category (model elements, not system elements)
+            var collector = new FilteredElementCollector(doc)
+                .WhereElementIsNotElementType()
+                .WhereElementIsViewIndependent();
+
+            foreach (var element in collector)
             {
-                var element = doc.GetElement(elementId);
-                if (element == null) continue;
+                // Skip elements without category
+                if (element.Category == null) continue;
+                
+                // Skip certain non-useful categories
+                var catId = element.Category.Id.Value;
+                
+                // Skip analytical, import, and internal categories
+                if (catId < 0) continue; // Built-in categories with negative IDs are often internal
+                
+                // Skip elements that are not user-visible model elements
+                if (!element.Category.HasMaterialQuantities && 
+                    element.Category.CategoryType != CategoryType.Model)
+                {
+                    // Allow some annotation categories if needed
+                    if (element.Category.CategoryType != CategoryType.Annotation)
+                        continue;
+                }
 
                 var info = GetElementInfo(doc, element);
                 elementInfos.Add(info);
@@ -132,7 +146,7 @@ namespace CommonFeature
                 infoWindow.Show();
             });
 
-            OnOperationCompleted?.Invoke($"Loaded {elementInfos.Count} element(s)");
+            OnOperationCompleted?.Invoke($"Loaded {elementInfos.Count} element(s) from project");
         }
 
         private ElementInfo GetElementInfo(Document doc, Element element)
