@@ -208,7 +208,7 @@ namespace CommonFeature
                     var param = element.LookupParameter(paramName);
                     if (param != null)
                     {
-                        value = GetParameterValueAsString(param);
+                        value = GetParameterValueAsString(doc, param);
                         isReadOnly = IsParameterReadOnly(param);
                     }
                     else
@@ -223,7 +223,7 @@ namespace CommonFeature
                                 param = elementType.LookupParameter(paramName);
                                 if (param != null)
                                 {
-                                    value = GetParameterValueAsString(param);
+                                    value = GetParameterValueAsString(doc, param);
                                     isReadOnly = IsParameterReadOnly(param);
                                 }
                             }
@@ -268,7 +268,7 @@ namespace CommonFeature
             return false;
         }
 
-        private string GetParameterValueAsString(Parameter param)
+        private string GetParameterValueAsString(Document doc, Parameter param)
         {
             if (param == null || !param.HasValue) return "-";
 
@@ -288,6 +288,21 @@ namespace CommonFeature
                 case StorageType.ElementId:
                     var elemId = param.AsElementId();
                     if (elemId == ElementId.InvalidElementId) return "-";
+                    // Try to get element name instead of just ID
+                    if (doc != null)
+                    {
+                        var refElement = doc.GetElement(elemId);
+                        if (refElement != null)
+                        {
+                            // Return element name if available
+                            var name = refElement.Name;
+                            if (!string.IsNullOrEmpty(name))
+                            {
+                                return name;
+                            }
+                        }
+                    }
+                    // Fallback to ID if element not found or no name
                     return elemId.Value.ToString();
                 default:
                     return "-";
@@ -308,14 +323,10 @@ namespace CommonFeature
                 return;
             }
 
-            // Check if document is currently being modified by another transaction
-            // IsModifiable returns true when document CAN be modified (not in transaction)
-            // So we check if it's false, meaning a transaction is active
-            if (!doc.IsModifiable)
-            {
-                ShowError("Document is currently in another transaction. Please wait and try again.");
-                return;
-            }
+            // Note: We don't check IsModifiable here because:
+            // 1. When called from ExternalEvent handler, we're on Revit main thread
+            // 2. IsModifiable may return false during event handling but we can still create transactions
+            // 3. The Transaction.Start() will fail if there's a conflict, which we handle below
 
             int successCount = 0;
             int failCount = 0;

@@ -15,6 +15,28 @@ using Microsoft.Win32;
 
 namespace CommonFeature.Views
 {
+    #region Constants
+    
+    /// <summary>
+    /// Column name constants for fixed columns
+    /// </summary>
+    public static class ColumnNames
+    {
+        public const string Id = "Id";
+        public const string FamilyName = "FamilyName";
+        public const string FamilyType = "FamilyType";
+        public const string Category = "Category";
+        public const string Workset = "Workset";
+        public const string CreatedBy = "CreatedBy";
+        public const string EditedBy = "EditedBy";
+        
+        public static readonly string[] FixedColumns = { Id, FamilyName, FamilyType, Category, Workset, CreatedBy, EditedBy };
+    }
+    
+    #endregion
+
+    #region Filter Models
+    
     /// <summary>
     /// Filter item for multi-select popup
     /// </summary>
@@ -33,18 +55,27 @@ namespace CommonFeature.Views
         }
         public event PropertyChangedEventHandler PropertyChanged;
     }
+    
+    #endregion
 
     /// <summary>
     /// Code-behind for InfoWindow.xaml
+    /// Optimized with: Performance caching, Undo support, Robustness improvements
     /// </summary>
     public partial class InfoWindow : Window
     {
-        private List<ElementInfo> _allElementInfos;
+        #region Fields
+        
+        private List<ElementInfo> _allElementInfos = new();
         private ICollectionView _collectionView;
         private Action _refreshCallback;
         
         // Multi-select filter sets - stores currently selected values for each column
         private Dictionary<string, HashSet<string>> _selectedFilters = new();
+        
+        // PERFORMANCE: Cache for filter distinct values
+        private Dictionary<string, List<string>> _filterValuesCache = new();
+        private bool _filterCacheValid = false;
         
         // Current filter column for popup
         private string _currentFilterColumn;
@@ -57,24 +88,65 @@ namespace CommonFeature.Views
         // Track parameter metadata (isInstance)
         private Dictionary<string, bool> _parameterIsInstance = new();
         
+        // ROBUSTNESS: Track element being edited to prevent filter issues
+        private ElementInfo _editingElement = null;
+        private string _editingParamName = null;
+        
+        // UX: Undo stack for cell edits
+        private Stack<UndoItem> _undoStack = new();
+        private const int MaxUndoItems = 50;
+        
+        // Light green color for modified cells
+        private static readonly SolidColorBrush ModifiedCellBrush = new(Color.FromRgb(200, 230, 201));
+        
+        #endregion
+
+        #region Callbacks
+        
         // Callback to request parameters from Revit (synchronous, used during data loading)
         public Func<List<long>, List<ParameterInfo>> GetParametersCallback { get; set; }
         public Func<List<long>, List<string>, Dictionary<long, ParameterValuesResult>> GetParameterValuesCallback { get; set; }
         
         // ExternalEvent for update operations (asynchronous, Revit-safe)
         public Action<List<ParameterUpdateItem>> RaiseUpdateEvent { get; set; }
+        
+        #endregion
 
-        // Light green color for modified cells
-        private static readonly SolidColorBrush ModifiedCellBrush = new(Color.FromRgb(200, 230, 201)); // Light green
-
-        // Fixed column names
-        private static readonly string[] FixedColumns = { "Id", "FamilyName", "FamilyType", "Category", "Workset", "CreatedBy", "EditedBy" };
-
+        #region Constructor & Lifecycle
+        
         public InfoWindow()
         {
             InitializeComponent();
+            
+            // ROBUSTNESS: Wire up closing event for cleanup
+            Closing += InfoWindow_Closing;
+            
+            // PERFORMANCE: Wire up LoadingRow for highlight restoration
+            InfoDataGrid.LoadingRow += InfoDataGrid_LoadingRow;
         }
 
+        private void InfoWindow_Closing(object sender, CancelEventArgs e)
+        {
+            // ROBUSTNESS: Cleanup resources
+            try
+            {
+                _undoStack.Clear();
+                _filterValuesCache.Clear();
+                _editingElement = null;
+                
+                // Unsubscribe events
+                InfoDataGrid.LoadingRow -= InfoDataGrid_LoadingRow;
+            }
+            catch
+            {
+                // Ignore cleanup errors
+            }
+        }
+        
+        #endregion
+
+        #region Public Methods
+        
         /// <summary>
         /// Called by handler when update is completed (from Revit thread)
         /// </summary>
@@ -86,7 +158,11 @@ namespace CommonFeature.Views
                 info.ClearModifications();
             }
             
+            // Clear undo stack since changes are committed
+            _undoStack.Clear();
+            
             // Reset cell backgrounds and update UI
+            InvalidateFilterCache();
             UpdateCellBackgrounds();
             UpdateModifiedCount();
             UpdateValueButton.IsEnabled = false;
@@ -102,6 +178,7 @@ namespace CommonFeature.Views
             
             // Initialize filter sets with all values selected
             InitializeFilterSets();
+            InvalidateFilterCache();
             
             // Setup collection view for filtering
             _collectionView = CollectionViewSource.GetDefaultView(_allElementInfos);
@@ -110,23 +187,26 @@ namespace CommonFeature.Views
             InfoDataGrid.ItemsSource = _collectionView;
             UpdateCounts();
         }
+        
+        #endregion
 
+        #region Filter Logic
+        
         /// <summary>
         /// Initialize filter sets with ALL values selected (for clear filter)
         /// </summary>
         private void InitializeFilterSets()
         {
-            // Clear and reinitialize all filters
             _selectedFilters.Clear();
             
             // Fixed columns - select ALL values
-            _selectedFilters["Id"] = new HashSet<string>(_allElementInfos.Select(e => e.Id.ToString()).Distinct());
-            _selectedFilters["FamilyName"] = new HashSet<string>(_allElementInfos.Select(e => e.FamilyName).Distinct());
-            _selectedFilters["FamilyType"] = new HashSet<string>(_allElementInfos.Select(e => e.FamilyType).Distinct());
-            _selectedFilters["Category"] = new HashSet<string>(_allElementInfos.Select(e => e.Category).Distinct());
-            _selectedFilters["Workset"] = new HashSet<string>(_allElementInfos.Select(e => e.Workset).Distinct());
-            _selectedFilters["CreatedBy"] = new HashSet<string>(_allElementInfos.Select(e => e.CreatedBy).Distinct());
-            _selectedFilters["EditedBy"] = new HashSet<string>(_allElementInfos.Select(e => e.EditedBy).Distinct());
+            _selectedFilters[ColumnNames.Id] = new HashSet<string>(_allElementInfos.Select(e => e.Id.ToString()).Distinct());
+            _selectedFilters[ColumnNames.FamilyName] = new HashSet<string>(_allElementInfos.Select(e => e.FamilyName).Distinct());
+            _selectedFilters[ColumnNames.FamilyType] = new HashSet<string>(_allElementInfos.Select(e => e.FamilyType).Distinct());
+            _selectedFilters[ColumnNames.Category] = new HashSet<string>(_allElementInfos.Select(e => e.Category).Distinct());
+            _selectedFilters[ColumnNames.Workset] = new HashSet<string>(_allElementInfos.Select(e => e.Workset).Distinct());
+            _selectedFilters[ColumnNames.CreatedBy] = new HashSet<string>(_allElementInfos.Select(e => e.CreatedBy).Distinct());
+            _selectedFilters[ColumnNames.EditedBy] = new HashSet<string>(_allElementInfos.Select(e => e.EditedBy).Distinct());
             
             // Parameter columns - select ALL values
             foreach (var paramName in _addedParamColumns)
@@ -139,47 +219,38 @@ namespace CommonFeature.Views
         private bool FilterPredicate(object obj)
         {
             if (obj is not ElementInfo info) return false;
+            
+            // ROBUSTNESS: Always show the element being edited
+            if (_editingElement != null && info.Id == _editingElement.Id)
+            {
+                return true;
+            }
 
             // Check fixed column filters
-            if (_selectedFilters.TryGetValue("Id", out var idFilter) && idFilter.Count > 0)
-            {
-                if (!idFilter.Contains(info.Id.ToString())) return false;
-            }
-            if (_selectedFilters.TryGetValue("FamilyName", out var fnFilter) && fnFilter.Count > 0)
-            {
-                if (!fnFilter.Contains(info.FamilyName)) return false;
-            }
-            if (_selectedFilters.TryGetValue("FamilyType", out var ftFilter) && ftFilter.Count > 0)
-            {
-                if (!ftFilter.Contains(info.FamilyType)) return false;
-            }
-            if (_selectedFilters.TryGetValue("Category", out var catFilter) && catFilter.Count > 0)
-            {
-                if (!catFilter.Contains(info.Category)) return false;
-            }
-            if (_selectedFilters.TryGetValue("Workset", out var wsFilter) && wsFilter.Count > 0)
-            {
-                if (!wsFilter.Contains(info.Workset)) return false;
-            }
-            if (_selectedFilters.TryGetValue("CreatedBy", out var cbFilter) && cbFilter.Count > 0)
-            {
-                if (!cbFilter.Contains(info.CreatedBy)) return false;
-            }
-            if (_selectedFilters.TryGetValue("EditedBy", out var ebFilter) && ebFilter.Count > 0)
-            {
-                if (!ebFilter.Contains(info.EditedBy)) return false;
-            }
+            if (!CheckFilter(ColumnNames.Id, info.Id.ToString())) return false;
+            if (!CheckFilter(ColumnNames.FamilyName, info.FamilyName)) return false;
+            if (!CheckFilter(ColumnNames.FamilyType, info.FamilyType)) return false;
+            if (!CheckFilter(ColumnNames.Category, info.Category)) return false;
+            if (!CheckFilter(ColumnNames.Workset, info.Workset)) return false;
+            if (!CheckFilter(ColumnNames.CreatedBy, info.CreatedBy)) return false;
+            if (!CheckFilter(ColumnNames.EditedBy, info.EditedBy)) return false;
             
             // Check parameter column filters
             foreach (var paramName in _addedParamColumns)
             {
-                if (_selectedFilters.TryGetValue(paramName, out var paramFilter) && paramFilter.Count > 0)
-                {
-                    var value = info.GetParameterValue(paramName);
-                    if (!paramFilter.Contains(value)) return false;
-                }
+                var value = info.GetParameterValue(paramName);
+                if (!CheckFilter(paramName, value)) return false;
             }
 
+            return true;
+        }
+        
+        private bool CheckFilter(string columnName, string value)
+        {
+            if (_selectedFilters.TryGetValue(columnName, out var filter) && filter.Count > 0)
+            {
+                return filter.Contains(value);
+            }
             return true;
         }
 
@@ -190,7 +261,48 @@ namespace CommonFeature.Views
         {
             return _collectionView?.Cast<ElementInfo>().ToList() ?? new List<ElementInfo>();
         }
+        
+        /// <summary>
+        /// PERFORMANCE: Invalidate filter cache when data changes
+        /// </summary>
+        private void InvalidateFilterCache()
+        {
+            _filterCacheValid = false;
+            _filterValuesCache.Clear();
+        }
+        
+        /// <summary>
+        /// PERFORMANCE: Get cached distinct values for a column
+        /// </summary>
+        private List<string> GetCachedDistinctValues(string columnName)
+        {
+            if (_filterCacheValid && _filterValuesCache.TryGetValue(columnName, out var cached))
+            {
+                return cached;
+            }
+            
+            var visibleElements = GetFilteredElements();
+            var values = columnName switch
+            {
+                ColumnNames.Id => visibleElements.Select(x => x.Id.ToString()).Distinct(),
+                ColumnNames.FamilyName => visibleElements.Select(x => x.FamilyName).Distinct(),
+                ColumnNames.FamilyType => visibleElements.Select(x => x.FamilyType).Distinct(),
+                ColumnNames.Category => visibleElements.Select(x => x.Category).Distinct(),
+                ColumnNames.Workset => visibleElements.Select(x => x.Workset).Distinct(),
+                ColumnNames.CreatedBy => visibleElements.Select(x => x.CreatedBy).Distinct(),
+                ColumnNames.EditedBy => visibleElements.Select(x => x.EditedBy).Distinct(),
+                _ => visibleElements.Select(x => x.GetParameterValue(columnName)).Distinct()
+            };
+            
+            var list = values.OrderBy(v => v).ToList();
+            _filterValuesCache[columnName] = list;
+            return list;
+        }
+        
+        #endregion
 
+        #region UI Updates
+        
         private void UpdateCounts()
         {
             int totalCount = _allElementInfos?.Count ?? 0;
@@ -215,78 +327,197 @@ namespace CommonFeature.Views
             
             if (modifiedCount > 0)
             {
-                StatusText.Text = $"{modifiedCount} value(s) modified - Click 'Update Value' to apply";
+                StatusText.Text = $"{modifiedCount} value(s) modified - Click 'Update Value' to apply (Ctrl+Z to undo)";
             }
         }
+        
+        /// <summary>
+        /// PERFORMANCE: Handle row loading for virtualization - restore highlights
+        /// </summary>
+        private void InfoDataGrid_LoadingRow(object sender, DataGridRowEventArgs e)
+        {
+            if (e.Row.Item is not ElementInfo elementInfo) return;
+            
+            // Restore highlights for modified cells when row is recycled
+            Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, new Action(() =>
+            {
+                RestoreRowHighlights(e.Row, elementInfo);
+            }));
+        }
+        
+        private void RestoreRowHighlights(DataGridRow row, ElementInfo elementInfo)
+        {
+            if (row == null || elementInfo == null) return;
+            
+            foreach (var col in InfoDataGrid.Columns)
+            {
+                var paramName = GetParamNameFromColumnHeader(col);
+                if (string.IsNullOrEmpty(paramName)) continue;
+                
+                var cell = GetCell(row, col);
+                if (cell == null) continue;
+                
+                if (elementInfo.IsParameterModified(paramName))
+                {
+                    cell.Background = ModifiedCellBrush;
+                }
+                else
+                {
+                    cell.ClearValue(DataGridCell.BackgroundProperty);
+                }
+            }
+        }
+        
+        private void UpdateCellBackgrounds()
+        {
+            foreach (var item in InfoDataGrid.Items)
+            {
+                if (item is not ElementInfo elementInfo) continue;
+                
+                var row = InfoDataGrid.ItemContainerGenerator.ContainerFromItem(item) as DataGridRow;
+                if (row == null) continue;
+                
+                RestoreRowHighlights(row, elementInfo);
+            }
+        }
+        
+        #endregion
 
         #region Cell Editing
-
+        
         private void InfoDataGrid_BeginningEdit(object sender, DataGridBeginningEditEventArgs e)
         {
-            // Only allow editing for parameter columns (not the fixed columns)
-            var column = e.Column;
-            if (column == null) return;
-            
-            // Get column header text
-            var headerText = GetColumnHeaderText(column);
-            
-            // Check if this is a parameter column (contains "(I)" or "(T)")
-            if (!headerText.Contains("(I)") && !headerText.Contains("(T)"))
+            try
             {
-                e.Cancel = true;
-                return;
-            }
-            
-            // Extract parameter name
-            var paramName = headerText;
-            if (paramName.EndsWith(" (I)"))
-                paramName = paramName[..^4];
-            else if (paramName.EndsWith(" (T)"))
-                paramName = paramName[..^4];
-            
-            // Check if this element's parameter is read-only
-            if (e.Row.Item is ElementInfo elementInfo)
-            {
-                if (elementInfo.IsParameterReadOnly(paramName))
+                var column = e.Column;
+                if (column == null) return;
+                
+                var headerText = GetColumnHeaderText(column);
+                
+                // Only allow editing for parameter columns (contains "(I)" or "(T)")
+                if (!headerText.Contains("(I)") && !headerText.Contains("(T)"))
                 {
                     e.Cancel = true;
-                    StatusText.Text = $"Cannot edit value of BuiltInParameter or read-only parameter '{paramName}'";
                     return;
                 }
+                
+                // Extract parameter name
+                var paramName = ExtractParamName(headerText);
+                
+                // Check if this element's parameter is read-only
+                if (e.Row.Item is ElementInfo elementInfo)
+                {
+                    if (elementInfo.IsParameterReadOnly(paramName))
+                    {
+                        e.Cancel = true;
+                        StatusText.Text = $"Cannot edit: '{paramName}' is read-only (BuiltInParameter)";
+                        return;
+                    }
+                    
+                    // ROBUSTNESS: Track element being edited to bypass filter
+                    _editingElement = elementInfo;
+                    _editingParamName = paramName;
+                }
+            }
+            catch (Exception ex)
+            {
+                e.Cancel = true;
+                StatusText.Text = $"Edit error: {ex.Message}";
             }
         }
 
         private void InfoDataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
         {
-            if (e.EditAction == DataGridEditAction.Cancel) return;
-            
-            if (e.Row.Item is not ElementInfo elementInfo) return;
-            if (e.EditingElement is not TextBox textBox) return;
-            
-            var column = e.Column;
-            var headerText = GetColumnHeaderText(column);
-            
-            // Extract parameter name (remove " (I)" or " (T)" suffix)
-            var paramName = headerText;
-            if (paramName.EndsWith(" (I)"))
-                paramName = paramName[..^4];
-            else if (paramName.EndsWith(" (T)"))
-                paramName = paramName[..^4];
-            
-            var newValue = textBox.Text;
-            var oldValue = elementInfo.GetParameterValue(paramName);
-            
-            if (newValue != oldValue)
+            try
             {
-                elementInfo.SetParameterValue(paramName, newValue);
-                
-                // Update cell background color
-                Dispatcher.BeginInvoke(new Action(() =>
+                if (e.EditAction == DataGridEditAction.Cancel)
                 {
-                    UpdateCellBackgrounds();
-                    UpdateModifiedCount();
-                }));
+                    // Clear editing state on cancel
+                    _editingElement = null;
+                    _editingParamName = null;
+                    return;
+                }
+                
+                if (e.Row.Item is not ElementInfo elementInfo)
+                {
+                    _editingElement = null;
+                    _editingParamName = null;
+                    return;
+                }
+                if (e.EditingElement is not TextBox textBox)
+                {
+                    _editingElement = null;
+                    _editingParamName = null;
+                    return;
+                }
+                
+                var column = e.Column;
+                var headerText = GetColumnHeaderText(column);
+                var paramName = ExtractParamName(headerText);
+                
+                var newValue = textBox.Text;
+                var oldValue = elementInfo.GetParameterValue(paramName);
+                
+                // Store row reference for highlight
+                var row = e.Row;
+                
+                if (newValue != oldValue)
+                {
+                    // UX: Add to undo stack
+                    PushUndo(new UndoItem(elementInfo, paramName, oldValue, newValue));
+                    
+                    // Add new value to filter set so row stays visible BEFORE clearing _editingElement
+                    if (_selectedFilters.TryGetValue(paramName, out var filterSet) && filterSet.Count > 0)
+                    {
+                        filterSet.Add(newValue);
+                    }
+                    
+                    // Update the model (does NOT raise PropertyChanged)
+                    elementInfo.SetParameterValue(paramName, newValue);
+                    
+                    // Invalidate filter cache
+                    InvalidateFilterCache();
+                    
+                    // Update UI after edit mode ends - KEEP _editingElement until UI update completes
+                    Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, new Action(() =>
+                    {
+                        // Now safe to clear editing state
+                        _editingElement = null;
+                        _editingParamName = null;
+                        
+                        var cell = GetCell(row, column);
+                        if (cell != null)
+                        {
+                            cell.Background = ModifiedCellBrush;
+                        }
+                        
+                        UpdateModifiedCount();
+                        StatusText.Text = $"Modified: '{paramName}' = '{newValue}' (Ctrl+Z to undo)";
+                    }));
+                }
+                else
+                {
+                    // No change - clear editing state immediately
+                    _editingElement = null;
+                    _editingParamName = null;
+                }
             }
+            catch (Exception ex)
+            {
+                // Always clear editing state on error
+                _editingElement = null;
+                _editingParamName = null;
+                StatusText.Text = $"Edit error: {ex.Message}";
+            }
+        }
+        
+        private string ExtractParamName(string headerText)
+        {
+            if (headerText.EndsWith(" (I)"))
+                return headerText[..^4];
+            if (headerText.EndsWith(" (T)"))
+                return headerText[..^4];
+            return headerText;
         }
 
         private string GetColumnHeaderText(DataGridColumn column)
@@ -313,7 +544,6 @@ namespace CommonFeature.Views
                 if (binding != null)
                 {
                     var path = binding.Path?.Path ?? "";
-                    // Map binding path to display name
                     return path switch
                     {
                         "Id" => "ID",
@@ -331,14 +561,22 @@ namespace CommonFeature.Views
             
             return "";
         }
+        
+        private string GetParamNameFromColumnHeader(DataGridColumn column)
+        {
+            var headerText = GetColumnHeaderText(column);
+            if (headerText.Contains("(I)") || headerText.Contains("(T)"))
+            {
+                return ExtractParamName(headerText);
+            }
+            return null;
+        }
 
         private string ExtractParamNameFromPath(string path)
         {
-            // Extract "ParamName" from "Parameters[ParamName]"
             if (path.StartsWith("Parameters[") && path.EndsWith("]"))
             {
                 var paramName = path.Substring(11, path.Length - 12);
-                // Return with (I) or (T) suffix if it's a parameter column
                 if (_parameterIsInstance.TryGetValue(paramName, out var isInstance))
                 {
                     return $"{paramName} {(isInstance ? "(I)" : "(T)")}";
@@ -347,40 +585,107 @@ namespace CommonFeature.Views
             }
             return path;
         }
+        
+        #endregion
 
-        private void UpdateCellBackgrounds()
+        #region Undo Support
+        
+        private class UndoItem
         {
-            foreach (var item in InfoDataGrid.Items)
+            public ElementInfo Element { get; }
+            public string ParamName { get; }
+            public string OldValue { get; }
+            public string NewValue { get; }
+            
+            public UndoItem(ElementInfo element, string paramName, string oldValue, string newValue)
             {
-                if (item is not ElementInfo elementInfo) continue;
-                
-                var row = InfoDataGrid.ItemContainerGenerator.ContainerFromItem(item) as DataGridRow;
-                if (row == null) continue;
-                
-                foreach (var col in InfoDataGrid.Columns)
+                Element = element;
+                ParamName = paramName;
+                OldValue = oldValue;
+                NewValue = newValue;
+            }
+        }
+        
+        private void PushUndo(UndoItem item)
+        {
+            _undoStack.Push(item);
+            
+            // Limit undo stack size
+            if (_undoStack.Count > MaxUndoItems)
+            {
+                var tempStack = new Stack<UndoItem>(_undoStack.Take(MaxUndoItems).Reverse());
+                _undoStack = tempStack;
+            }
+        }
+        
+        /// <summary>
+        /// UX: Undo last edit (Ctrl+Z)
+        /// </summary>
+        public bool Undo()
+        {
+            if (_undoStack.Count == 0) return false;
+            
+            var undoItem = _undoStack.Pop();
+            
+            // Temporarily track element to prevent filter from hiding it
+            _editingElement = undoItem.Element;
+            
+            try
+            {
+                // Update filter set BEFORE changing value
+                if (_selectedFilters.TryGetValue(undoItem.ParamName, out var filterSet))
                 {
-                    var headerText = GetColumnHeaderText(col);
-                    var paramName = headerText;
-                    if (paramName.EndsWith(" (I)"))
-                        paramName = paramName[..^4];
-                    else if (paramName.EndsWith(" (T)"))
-                        paramName = paramName[..^4];
-                    
-                    var cell = GetCell(row, col);
-                    if (cell == null) continue;
-                    
-                    if (elementInfo.IsParameterModified(paramName))
+                    filterSet.Add(undoItem.OldValue);
+                }
+                
+                // Restore old value in Parameters dictionary directly
+                undoItem.Element.Parameters[undoItem.ParamName] = undoItem.OldValue;
+                
+                // Check if parameter is still modified (comparing to original)
+                if (undoItem.Element.OriginalParameters.TryGetValue(undoItem.ParamName, out var original))
+                {
+                    if (original == undoItem.OldValue)
                     {
-                        cell.Background = ModifiedCellBrush;
+                        undoItem.Element.ModifiedParameters.Remove(undoItem.ParamName);
                     }
                     else
                     {
-                        cell.ClearValue(DataGridCell.BackgroundProperty);
+                        undoItem.Element.ModifiedParameters.Add(undoItem.ParamName);
                     }
+                }
+                
+                InvalidateFilterCache();
+                _collectionView?.Refresh();
+                UpdateCellBackgrounds();
+                UpdateModifiedCount();
+                
+                StatusText.Text = $"Undone: '{undoItem.ParamName}' restored to '{undoItem.OldValue}'";
+                return true;
+            }
+            finally
+            {
+                _editingElement = null;
+            }
+        }
+        
+        // Handle Ctrl+Z in window
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            
+            if (e.Key == Key.Z && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                if (Undo())
+                {
+                    e.Handled = true;
                 }
             }
         }
+        
+        #endregion
 
+        #region Cell Helpers
+        
         private DataGridCell GetCell(DataGridRow row, DataGridColumn column)
         {
             if (row == null || column == null) return null;
@@ -411,7 +716,7 @@ namespace CommonFeature.Views
             }
             return null;
         }
-
+        
         #endregion
 
         #region Update Values
@@ -422,7 +727,6 @@ namespace CommonFeature.Views
             
             foreach (var info in _allElementInfos)
             {
-                // Create a copy of ModifiedParameters to avoid modification during iteration
                 var modifiedParams = info.ModifiedParameters.ToList();
                 foreach (var paramName in modifiedParams)
                 {
@@ -440,8 +744,8 @@ namespace CommonFeature.Views
             }
             
             var result = MessageBox.Show(
-                $"Do you want to update {updates.Count} parameter value(s) in the Revit model?\n\n" +
-                "Note: This will modify the Revit model. Make sure to save your work before proceeding.",
+                $"Update {updates.Count} parameter value(s) in Revit model?\n\n" +
+                "This will modify the model. Save your work first.",
                 "Confirm Update",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
@@ -450,17 +754,13 @@ namespace CommonFeature.Views
             
             if (RaiseUpdateEvent != null)
             {
-                // Disable button during update
                 UpdateValueButton.IsEnabled = false;
                 StatusText.Text = "Updating values... (waiting for Revit)";
-                
-                // Raise ExternalEvent to run update on Revit thread
-                // The handler will call OnUpdateCompleted() when done
                 RaiseUpdateEvent(updates);
             }
             else
             {
-                MessageBox.Show("Update event not available. Please close and reopen the window.", 
+                MessageBox.Show("Update event not available. Please reopen the window.", 
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -471,7 +771,6 @@ namespace CommonFeature.Views
 
         private void AddParamButton_Click(object sender, RoutedEventArgs e)
         {
-            // Get selected rows in DataGrid
             var selectedItems = InfoDataGrid.SelectedCells
                 .Select(c => c.Item)
                 .OfType<ElementInfo>()
@@ -480,27 +779,24 @@ namespace CommonFeature.Views
             
             if (selectedItems.Count == 0)
             {
-                MessageBox.Show("Please select at least one row in the table to get available parameters.", 
+                MessageBox.Show("Please select at least one row to get available parameters.", 
                     "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            // Get element IDs
             var elementIds = selectedItems.Select(x => x.Id).ToList();
 
-            // Request parameters from Revit via callback
             if (GetParametersCallback != null)
             {
                 _availableParameters = GetParametersCallback(elementIds);
                 
-                // Exclude already added parameters
                 _availableParameters = _availableParameters
                     .Where(p => !_addedParamColumns.Contains(p.Name))
                     .ToList();
                 
                 if (_availableParameters.Count == 0)
                 {
-                    MessageBox.Show("No additional parameters available for selected elements.", 
+                    MessageBox.Show("No additional parameters available.", 
                         "No Parameters", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
@@ -559,16 +855,13 @@ namespace CommonFeature.Views
                 return;
             }
 
-            // Get all element IDs
             var elementIds = _allElementInfos.Select(x => x.Id).ToList();
             var paramNames = selectedParams.Select(p => p.Name).ToList();
 
-            // Get parameter values from Revit
             if (GetParameterValuesCallback != null)
             {
                 var paramValues = GetParameterValuesCallback(elementIds, paramNames);
 
-                // Update ElementInfo with parameter values and read-only status
                 foreach (var info in _allElementInfos)
                 {
                     if (paramValues.TryGetValue(info.Id, out var result))
@@ -576,11 +869,9 @@ namespace CommonFeature.Views
                         foreach (var kvp in result.Values)
                         {
                             info.Parameters[kvp.Key] = kvp.Value;
-                            // Store original value
                             info.OriginalParameters[kvp.Key] = kvp.Value;
                         }
                         
-                        // Store read-only status
                         foreach (var readOnlyParam in result.ReadOnlyParams)
                         {
                             info.ReadOnlyParameters.Add(readOnlyParam);
@@ -588,19 +879,17 @@ namespace CommonFeature.Views
                     }
                 }
 
-                // Add columns to DataGrid and initialize filters
                 foreach (var param in selectedParams)
                 {
                     AddParameterColumn(param.Name, param.IsInstance);
                     _addedParamColumns.Add(param.Name);
                     _parameterIsInstance[param.Name] = param.IsInstance;
                     
-                    // Initialize filter for this parameter - select ALL values
                     _selectedFilters[param.Name] = new HashSet<string>(
                         _allElementInfos.Select(e => e.GetParameterValue(param.Name)).Distinct());
                 }
 
-                // Refresh DataGrid
+                InvalidateFilterCache();
                 InfoDataGrid.Items.Refresh();
                 
                 StatusText.Text = $"Added {selectedParams.Count} parameter column(s)";
@@ -613,7 +902,6 @@ namespace CommonFeature.Views
         {
             var headerText = $"{paramName} {(isInstance ? "(I)" : "(T)")}";
             
-            // Create the header content programmatically with event handler
             var headerGrid = new Grid();
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -648,16 +936,16 @@ namespace CommonFeature.Views
             headerGrid.Children.Add(textBlock);
             headerGrid.Children.Add(filterButton);
             
-            // Create editable text column with header content
+            // Create editable column - Use TwoWay with Explicit trigger
             var column = new DataGridTextColumn
             {
                 Header = headerGrid,
                 Binding = new Binding($"Parameters[{paramName}]")
                 {
                     Mode = BindingMode.TwoWay,
+                    UpdateSourceTrigger = UpdateSourceTrigger.LostFocus,
                     TargetNullValue = "-",
-                    FallbackValue = "-",
-                    UpdateSourceTrigger = UpdateSourceTrigger.LostFocus
+                    FallbackValue = "-"
                 },
                 Width = new DataGridLength(140),
                 IsReadOnly = false
@@ -676,7 +964,6 @@ namespace CommonFeature.Views
 
         private void RemoveParameterColumn(string paramName)
         {
-            // Find and remove the column
             DataGridColumn columnToRemove = null;
             foreach (var col in InfoDataGrid.Columns)
             {
@@ -695,23 +982,28 @@ namespace CommonFeature.Views
                 _parameterIsInstance.Remove(paramName);
                 _selectedFilters.Remove(paramName);
                 
-                // Clear parameter values from ElementInfo
                 foreach (var info in _allElementInfos)
                 {
                     info.Parameters.Remove(paramName);
                     info.OriginalParameters.Remove(paramName);
                     info.ModifiedParameters.Remove(paramName);
+                    info.ReadOnlyParameters.Remove(paramName); // Also clear read-only status
                 }
                 
+                // Clear related undo items
+                _undoStack = new Stack<UndoItem>(
+                    _undoStack.Where(u => u.ParamName != paramName).Reverse());
+                
+                InvalidateFilterCache();
                 _collectionView?.Refresh();
                 UpdateCounts();
+                UpdateModifiedCount();
                 StatusText.Text = $"Removed column '{paramName}'";
             }
         }
 
         private string GetParamNameFromColumn(DataGridColumn col)
         {
-            // Check if header is a Grid (programmatically created parameter column)
             if (col.Header is Grid headerGrid)
             {
                 foreach (var child in headerGrid.Children)
@@ -722,7 +1014,6 @@ namespace CommonFeature.Views
                     }
                 }
             }
-            // Check if header is a string (legacy format)
             else if (col.Header is string headerText)
             {
                 if (headerText.EndsWith(" (I)"))
@@ -735,7 +1026,6 @@ namespace CommonFeature.Views
 
         private void InfoDataGrid_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
-            // Check if right-click is on a column header
             var dep = (DependencyObject)e.OriginalSource;
             while (dep != null && !(dep is DataGridColumnHeader))
             {
@@ -744,12 +1034,10 @@ namespace CommonFeature.Views
             
             if (dep is DataGridColumnHeader header && header.Column != null)
             {
-                // Try to get param name from column (handles both Grid and string headers)
                 var paramName = GetParamNameFromColumn(header.Column);
                 
                 if (!string.IsNullOrEmpty(paramName) && _addedParamColumns.Contains(paramName))
                 {
-                    // Show context menu for parameter columns
                     var contextMenu = new ContextMenu();
                     
                     var filterItem = new MenuItem { Header = "Filter..." };
@@ -772,17 +1060,11 @@ namespace CommonFeature.Views
         {
             _currentFilterColumn = paramName;
             
-            // Get distinct values from CURRENTLY VISIBLE elements only
-            var visibleElements = GetFilteredElements();
-            var allValues = visibleElements
-                .Select(x => x.GetParameterValue(paramName))
-                .Distinct();
-
+            // PERFORMANCE: Use cached values
+            var allValues = GetCachedDistinctValues(paramName);
             var selectedValues = _selectedFilters.TryGetValue(paramName, out var set) ? set : new HashSet<string>();
 
-            // Create filter items
             _currentFilterItems = allValues
-                .OrderBy(v => v)
                 .Select(v => new FilterItem 
                 { 
                     Value = v, 
@@ -807,26 +1089,11 @@ namespace CommonFeature.Views
             {
                 _currentFilterColumn = columnName;
                 
-                // Get distinct values from CURRENTLY VISIBLE elements only
-                var visibleElements = GetFilteredElements();
-                
-                IEnumerable<string> allValues = columnName switch
-                {
-                    "Id" => visibleElements.Select(x => x.Id.ToString()).Distinct(),
-                    "FamilyName" => visibleElements.Select(x => x.FamilyName).Distinct(),
-                    "FamilyType" => visibleElements.Select(x => x.FamilyType).Distinct(),
-                    "Category" => visibleElements.Select(x => x.Category).Distinct(),
-                    "Workset" => visibleElements.Select(x => x.Workset).Distinct(),
-                    "CreatedBy" => visibleElements.Select(x => x.CreatedBy).Distinct(),
-                    "EditedBy" => visibleElements.Select(x => x.EditedBy).Distinct(),
-                    _ => visibleElements.Select(x => x.GetParameterValue(columnName)).Distinct()
-                };
-
+                // PERFORMANCE: Use cached values
+                var allValues = GetCachedDistinctValues(columnName);
                 var selectedValues = _selectedFilters.TryGetValue(columnName, out var set) ? set : new HashSet<string>();
 
-                // Create filter items
                 _currentFilterItems = allValues
-                    .OrderBy(v => v)
                     .Select(v => new FilterItem 
                     { 
                         Value = v, 
@@ -872,19 +1139,19 @@ namespace CommonFeature.Views
 
         private void ApplyFilterButton_Click(object sender, RoutedEventArgs e)
         {
-            // Update the corresponding filter set
             _selectedFilters[_currentFilterColumn] = new HashSet<string>(
                 _currentFilterItems.Where(f => f.IsSelected).Select(f => f.Value));
 
             FilterPopup.IsOpen = false;
+            InvalidateFilterCache();
             _collectionView?.Refresh();
             UpdateCounts();
         }
 
         private void ClearFilterButton_Click(object sender, RoutedEventArgs e)
         {
-            // Reset all filters to include ALL values
             InitializeFilterSets();
+            InvalidateFilterCache();
             _collectionView?.Refresh();
             UpdateCounts();
             StatusText.Text = "Filters cleared";
@@ -917,7 +1184,7 @@ namespace CommonFeature.Views
                 {
                     ExportToCsv(saveDialog.FileName, filteredData);
                     StatusText.Text = $"Exported {filteredData.Count} row(s)";
-                    MessageBox.Show($"Data exported successfully!\n\n{saveDialog.FileName}", 
+                    MessageBox.Show($"Exported successfully!\n\n{saveDialog.FileName}", 
                         "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
@@ -932,12 +1199,10 @@ namespace CommonFeature.Views
         {
             var sb = new StringBuilder();
             
-            // Build header with dynamic columns
             var headers = new List<string> { "ID", "Family Name", "Family Type", "Category", "Workset", "Created By", "Edited By" };
             headers.AddRange(_addedParamColumns);
             sb.AppendLine(string.Join(",", headers));
             
-            // Data rows
             foreach (var info in data)
             {
                 var row = new List<string>
@@ -951,7 +1216,6 @@ namespace CommonFeature.Views
                     $"\"{EscapeCsv(info.EditedBy)}\""
                 };
                 
-                // Add dynamic parameter values
                 foreach (var paramName in _addedParamColumns)
                 {
                     row.Add($"\"{EscapeCsv(info.GetParameterValue(paramName))}\"");

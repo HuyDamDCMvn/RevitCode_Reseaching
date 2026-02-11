@@ -60,7 +60,7 @@ namespace CommonFeature.Models
         }
         
         /// <summary>
-        /// Set parameter value and track modification
+        /// Set parameter value and track modification (does NOT raise PropertyChanged to avoid filter refresh)
         /// </summary>
         public void SetParameterValue(string paramName, string newValue)
         {
@@ -89,7 +89,9 @@ namespace CommonFeature.Models
                 ModifiedParameters.Add(paramName);
             }
             
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs($"Parameters[{paramName}]"));
+            // NOTE: We intentionally do NOT raise PropertyChanged here
+            // because it would trigger ICollectionView filter refresh and cause the row to disappear
+            // The cell display is updated manually via UpdateCellBackgrounds()
         }
         
         /// <summary>
