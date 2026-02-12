@@ -44,84 +44,105 @@ def get_element_info(doc, element):
     if element is None:
         return None
     
-    elem_id = element.Id.IntegerValue
-    
-    # Get Family Name and Type
-    family_name = "-"
-    family_type = "-"
-    
-    if isinstance(element, FamilyInstance):
-        symbol = element.Symbol
-        if symbol:
-            family_type = symbol.Name or "-"
-            family = symbol.Family
-            if family:
-                family_name = family.Name or "-"
-    else:
-        # For system families
-        type_id = element.GetTypeId()
-        if type_id != ElementId.InvalidElementId:
-            elem_type = doc.GetElement(type_id)
-            if elem_type:
-                family_type = elem_type.Name or "-"
-                # Try to get family name from type
-                family_param = elem_type.get_Parameter(BuiltInParameter.SYMBOL_FAMILY_NAME_PARAM)
-                if family_param and family_param.HasValue:
-                    family_name = family_param.AsString() or "-"
-                else:
-                    family_name = type(elem_type).__name__
-        else:
-            family_name = type(element).__name__
-            family_type = element.Name or "-"
-    
-    # Get Category
-    category = element.Category.Name if element.Category else "-"
-    
-    # Get Workset
-    workset = "-"
-    if doc.IsWorkshared:
-        workset_id = element.WorksetId
-        if workset_id and workset_id.IntegerValue > 0:
-            try:
-                ws = doc.GetWorksetTable().GetWorkset(workset_id)
-                workset = ws.Name if ws else "-"
-            except Exception:
-                pass
-    
-    # Get Created By / Edited By
-    created_by = "-"
-    edited_by = "-"
-    
     try:
-        edited_param = element.get_Parameter(BuiltInParameter.EDITED_BY)
-        if edited_param and edited_param.HasValue:
-            edited_by = edited_param.AsString() or "-"
+        elem_id = element.Id.IntegerValue
         
-        if doc.IsWorkshared:
-            tooltip_info = WorksharingUtils.GetWorksharingTooltipInfo(doc, element.Id)
-            if tooltip_info:
-                if tooltip_info.Creator:
-                    created_by = tooltip_info.Creator
-                if tooltip_info.LastChangedBy:
-                    edited_by = tooltip_info.LastChangedBy
+        # Get Family Name and Type
+        family_name = "-"
+        family_type = "-"
+        
+        if isinstance(element, FamilyInstance):
+            symbol = element.Symbol
+            if symbol:
+                try:
+                    family_type = symbol.Name or "-"
+                except Exception:
+                    family_type = "-"
+                family = symbol.Family
+                if family:
+                    try:
+                        family_name = family.Name or "-"
+                    except Exception:
+                        family_name = "-"
+        else:
+            # For system families
+            type_id = element.GetTypeId()
+            if type_id != ElementId.InvalidElementId:
+                elem_type = doc.GetElement(type_id)
+                if elem_type:
+                    try:
+                        family_type = elem_type.Name or "-"
+                    except Exception:
+                        family_type = "-"
+                    # Try to get family name from type
+                    try:
+                        family_param = elem_type.get_Parameter(BuiltInParameter.SYMBOL_FAMILY_NAME_PARAM)
+                        if family_param and family_param.HasValue:
+                            family_name = family_param.AsString() or "-"
+                        else:
+                            family_name = type(elem_type).__name__
+                    except Exception:
+                        family_name = type(elem_type).__name__
+            else:
+                family_name = type(element).__name__
+                try:
+                    family_type = element.Name or "-"
+                except Exception:
+                    family_type = "-"
+        
+        # Get Category
+        try:
+            category = element.Category.Name if element.Category else "-"
+        except Exception:
+            category = "-"
+        
+        # Get Workset
+        workset = "-"
+        try:
+            if doc.IsWorkshared:
+                workset_id = element.WorksetId
+                if workset_id and workset_id.IntegerValue > 0:
+                    ws = doc.GetWorksetTable().GetWorkset(workset_id)
+                    workset = ws.Name if ws else "-"
+        except Exception:
+            pass
+        
+        # Get Created By / Edited By
+        created_by = "-"
+        edited_by = "-"
+        
+        try:
+            edited_param = element.get_Parameter(BuiltInParameter.EDITED_BY)
+            if edited_param and edited_param.HasValue:
+                edited_by = edited_param.AsString() or "-"
+            
+            if doc.IsWorkshared:
+                tooltip_info = WorksharingUtils.GetWorksharingTooltipInfo(doc, element.Id)
+                if tooltip_info:
+                    if tooltip_info.Creator:
+                        created_by = tooltip_info.Creator
+                    if tooltip_info.LastChangedBy:
+                        edited_by = tooltip_info.LastChangedBy
+        except Exception:
+            pass
+        
+        return {
+            'id': elem_id,
+            'family_name': family_name,
+            'family_type': family_type,
+            'category': category,
+            'workset': workset,
+            'created_by': created_by,
+            'edited_by': edited_by,
+            'element': element,
+            'parameters': {},
+            'original_params': {},
+            'modified_params': set(),
+            'readonly_params': set(),
+            'param_types': {}
+        }
     except Exception:
-        pass
-    
-    return {
-        'id': elem_id,
-        'family_name': family_name,
-        'family_type': family_type,
-        'category': category,
-        'workset': workset,
-        'created_by': created_by,
-        'edited_by': edited_by,
-        'element': element,
-        'parameters': {},
-        'original_params': {},
-        'modified_params': set(),
-        'readonly_params': set(),
-        'param_types': {}
-    }
+        return None
 
 
 def collect_all_elements(doc):
