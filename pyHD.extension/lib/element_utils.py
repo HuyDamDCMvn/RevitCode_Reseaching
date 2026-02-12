@@ -14,11 +14,15 @@ from Autodesk.Revit.DB import (
 )
 
 # Try to import SpecTypeId (Revit 2022+)
+HAS_SPEC_TYPE_ID = False
+SpecTypeId = None
 try:
-    from Autodesk.Revit.DB import SpecTypeId
+    from Autodesk.Revit.DB import SpecTypeId as _SpecTypeId
+    SpecTypeId = _SpecTypeId
     HAS_SPEC_TYPE_ID = True
 except ImportError:
-    HAS_SPEC_TYPE_ID = False
+    pass
+
 
 def get_element_info(doc, element):
     """
@@ -75,7 +79,7 @@ def get_element_info(doc, element):
             try:
                 ws = doc.GetWorksetTable().GetWorkset(workset_id)
                 workset = ws.Name if ws else "-"
-            except:
+            except Exception:
                 pass
     
     # Get Created By / Edited By
@@ -94,7 +98,7 @@ def get_element_info(doc, element):
                     created_by = tooltip_info.Creator
                 if tooltip_info.LastChangedBy:
                     edited_by = tooltip_info.LastChangedBy
-    except:
+    except Exception:
         pass
     
     return {
@@ -143,6 +147,18 @@ def collect_all_elements(doc):
     return elements
 
 
+def _is_yes_no_param(param):
+    """Check if parameter is Yes/No type."""
+    if not HAS_SPEC_TYPE_ID or SpecTypeId is None:
+        return False
+    try:
+        if param.Definition and param.Definition.GetDataType() == SpecTypeId.Boolean.YesNo:
+            return True
+    except Exception:
+        pass
+    return False
+
+
 def get_parameter_value_as_string(doc, param):
     """
     Get parameter value as display string.
@@ -164,12 +180,8 @@ def get_parameter_value_as_string(doc, param):
     
     elif storage == StorageType.Integer:
         # Check for Yes/No
-        if HAS_SPEC_TYPE_ID:
-            try:
-                if param.Definition and param.Definition.GetDataType() == SpecTypeId.Boolean.YesNo:
-                    return "Yes" if param.AsInteger() == 1 else "No"
-            except:
-                pass
+        if _is_yes_no_param(param):
+            return "Yes" if param.AsInteger() == 1 else "No"
         return str(param.AsInteger())
     
     elif storage == StorageType.Double:
@@ -211,12 +223,8 @@ def get_parameter_data_type(param):
         return "String"
     
     elif storage == StorageType.Integer:
-        if HAS_SPEC_TYPE_ID:
-            try:
-                if param.Definition and param.Definition.GetDataType() == SpecTypeId.Boolean.YesNo:
-                    return "YesNo"
-            except:
-                pass
+        if _is_yes_no_param(param):
+            return "YesNo"
         return "Integer"
     
     elif storage == StorageType.Double:
@@ -250,7 +258,7 @@ def is_parameter_readonly(param):
         if hasattr(internal_def, 'BuiltInParameter'):
             if internal_def.BuiltInParameter != BuiltInParameter.INVALID:
                 return param.IsReadOnly
-    except:
+    except Exception:
         pass
     
     return False
@@ -369,13 +377,13 @@ def validate_parameter_value(data_type, value):
     if data_type == "Integer":
         try:
             int(value)
-        except:
+        except Exception:
             return "Expected integer value (e.g., 1, 2, 100)"
     
     elif data_type == "Double":
         try:
             float(value.replace(',', '.'))
-        except:
+        except Exception:
             return "Expected numeric value (e.g., 1.5, 100)"
     
     elif data_type == "YesNo":
@@ -386,7 +394,7 @@ def validate_parameter_value(data_type, value):
     elif data_type == "ElementId":
         try:
             int(value)
-        except:
+        except Exception:
             return "Expected Element ID (numeric)"
     
     return None
@@ -436,17 +444,13 @@ def set_parameter_value(doc, elem_id, param_name, new_value, is_instance=True):
         
         elif storage == StorageType.Integer:
             # Handle Yes/No
-            if HAS_SPEC_TYPE_ID:
-                try:
-                    if param.Definition and param.Definition.GetDataType() == SpecTypeId.Boolean.YesNo:
-                        lower = new_value.lower() if new_value else ""
-                        if lower in ["yes", "true", "1"]:
-                            param.Set(1)
-                        else:
-                            param.Set(0)
-                        return (True, None)
-                except:
-                    pass
+            if _is_yes_no_param(param):
+                lower = new_value.lower() if new_value else ""
+                if lower in ["yes", "true", "1"]:
+                    param.Set(1)
+                else:
+                    param.Set(0)
+                return (True, None)
             param.Set(int(new_value))
             return (True, None)
         
@@ -479,8 +483,8 @@ def select_elements(uidoc, element_ids):
         uidoc: UIDocument
         element_ids: List of element IDs (int)
     """
-    ids = [ElementId(eid) for eid in element_ids]
     from System.Collections.Generic import List
+    ids = [ElementId(eid) for eid in element_ids]
     id_list = List[ElementId](ids)
     uidoc.Selection.SetElementIds(id_list)
 
@@ -538,9 +542,9 @@ def create_section_box(uidoc, element_ids):
     section_box.Min = combined_min
     section_box.Max = combined_max
     
-    trans = Transaction(doc, "Create Section Box")
+    trans = Transaction(doc)
     try:
-        trans.Start()
+        trans.Start("Create Section Box")
         
         view3d = None
         
@@ -549,12 +553,10 @@ def create_section_box(uidoc, element_ids):
             view3d = uidoc.ActiveView
         else:
             # Create new 3D view
-            view_type = FilteredElementCollector(doc)\
-                .OfClass(ViewFamilyType)\
-                .ToElements()
+            view_types = FilteredElementCollector(doc).OfClass(ViewFamilyType).ToElements()
             
             view_type_3d = None
-            for vt in view_type:
+            for vt in view_types:
                 if vt.ViewFamily == ViewFamily.ThreeDimensional:
                     view_type_3d = vt
                     break
@@ -568,9 +570,7 @@ def create_section_box(uidoc, element_ids):
             view_name = base_name
             counter = 1
             
-            existing_views = FilteredElementCollector(doc)\
-                .OfClass(View3D)\
-                .ToElements()
+            existing_views = FilteredElementCollector(doc).OfClass(View3D).ToElements()
             existing_names = set(v.Name for v in existing_views)
             
             while view_name in existing_names:

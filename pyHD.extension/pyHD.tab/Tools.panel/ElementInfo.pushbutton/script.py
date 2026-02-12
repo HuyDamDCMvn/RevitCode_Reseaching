@@ -10,11 +10,10 @@ import sys
 import csv
 import codecs
 
+# pyRevit imports
 from pyrevit import script, forms, HOST_APP, EXEC_PARAMS
 from pyrevit import revit
 from pyrevit.forms import WPFWindow
-
-from Autodesk.Revit import DB
 
 # Add lib folder to path
 ext_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -22,6 +21,7 @@ lib_dir = os.path.join(ext_dir, "lib")
 if lib_dir not in sys.path:
     sys.path.insert(0, lib_dir)
 
+# Import element utilities
 from element_utils import (
     collect_all_elements, get_element_parameters, get_parameter_values,
     validate_parameter_value, set_parameter_value, select_elements,
@@ -30,18 +30,25 @@ from element_utils import (
 
 # .NET imports
 import clr
+clr.AddReference('RevitAPI')
 clr.AddReference('System.Windows.Forms')
-clr.AddReference('IronPython.Wpf')
 
-from System.Collections.ObjectModel import ObservableCollection
-from System.ComponentModel import INotifyPropertyChanged, PropertyChangedEventArgs
+# Try to add IronPython.Wpf reference
+try:
+    clr.AddReference('IronPython.Wpf')
+    import wpf
+except:
+    wpf = None
+
+# Revit API
+from Autodesk.Revit.DB import Transaction
+
+# WPF imports
 from System.Windows import MessageBox, MessageBoxButton, MessageBoxImage, Clipboard
 from System.Windows.Controls import DataGridTextColumn, ContextMenu, MenuItem, Separator
 from System.Windows.Data import Binding
-from System.Windows.Media import SolidColorBrush, Colors, Color
-from System.Windows.Input import Key, ModifierKeys, Keyboard
-
-import wpf
+from System.Windows.Media import SolidColorBrush, Color
+from System.Windows.Input import Key
 
 __title__ = "Element\nInfo"
 __doc__ = "View and edit element information with filtering and export capabilities."
@@ -214,10 +221,6 @@ class ElementInfoWindow(WPFWindow):
         col.Width = 140
         col.IsReadOnly = False
         
-        # We'll use a simple property accessor in get/set
-        # Note: WPF binding to dynamic properties is complex in IronPython
-        # So we'll handle cell editing manually
-        
         self.ElementsGrid.Columns.Add(col)
     
     def close_click(self, sender, args):
@@ -285,7 +288,7 @@ class ElementInfoWindow(WPFWindow):
         """Show parameter selection dialog."""
         # Get selected element IDs
         selected = self.ElementsGrid.SelectedItems
-        if not selected or len(selected) == 0:
+        if not selected or len(list(selected)) == 0:
             # Use all elements if none selected
             elem_ids = [e.id for e in self._all_elements[:100]]  # Limit for performance
         else:
@@ -379,9 +382,9 @@ class ElementInfoWindow(WPFWindow):
         error_count = 0
         errors = []
         
-        trans = DB.Transaction(self.doc, "Update Parameter Values")
+        trans = Transaction(self.doc)
         try:
-            trans.Start()
+            trans.Start("Update Parameter Values")
             
             for update in updates:
                 success, error = set_parameter_value(
@@ -457,8 +460,7 @@ class ElementInfoWindow(WPFWindow):
             if param_name in elem._readonly_params:
                 args.Cancel = True
                 MessageBox.Show(
-                    "Cannot edit parameter '{}'.\n\n"
-                    "This parameter is read-only.".format(param_name),
+                    "Cannot edit parameter '{}'.\n\nThis parameter is read-only.".format(param_name),
                     "Read-Only Parameter",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information
@@ -512,7 +514,7 @@ class ElementInfoWindow(WPFWindow):
                     elem.set_param(param_name, new_value)
                     self.update_modified_count()
                     self.StatusText.Text = "Modified: {} = '{}'".format(param_name, new_value)
-            except:
+            except Exception:
                 pass
     
     def grid_right_click(self, sender, args):
@@ -544,7 +546,7 @@ class ElementInfoWindow(WPFWindow):
         # Create Section Box
         section_item = MenuItem()
         section_item.Header = "Create Section Box ({})".format(len(elem_ids))
-        section_item.Click += lambda s, e: self.create_section_box(elem_ids)
+        section_item.Click += lambda s, e: self.create_section_box_action(elem_ids)
         menu.Items.Add(section_item)
         
         menu.IsOpen = True
@@ -566,7 +568,7 @@ class ElementInfoWindow(WPFWindow):
         except Exception as ex:
             self.StatusText.Text = "Select failed: {}".format(str(ex))
     
-    def create_section_box(self, elem_ids):
+    def create_section_box_action(self, elem_ids):
         """Create section box for elements."""
         try:
             success, msg = create_section_box(self.uidoc, elem_ids)
