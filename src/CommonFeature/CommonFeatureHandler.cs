@@ -4,8 +4,12 @@ using System.Linq;
 using System.Windows;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using Autodesk.Revit.UI.Selection;
 using HD.Core.Models;
 using HD.Core.Services;
+using CommonFeature.Graphics;
+using CommonFeature.Handlers;
+using CommonFeature.Models;
 using CommonFeature.Views;
 
 namespace CommonFeature
@@ -1582,8 +1586,129 @@ namespace CommonFeature
 
         private void ExecuteShowBoundary(UIApplication app)
         {
-            // TODO: Implement Show Boundary feature
-            OnOperationCompleted?.Invoke("Show Boundary: On Developing");
+            var uidoc = app.ActiveUIDocument;
+            if (uidoc == null)
+            {
+                OnError?.Invoke("No active document");
+                return;
+            }
+
+            var doc = uidoc.Document;
+
+            // Get current selection
+            var currentSelection = uidoc.Selection.GetElementIds()
+                .Select(id => id.Value)
+                .ToList();
+
+            // Create graphics server
+            var graphicsServer = new BoundaryGraphicsServer(doc);
+            graphicsServer.Register();
+
+            // Create external handler for boundary operations
+            var boundaryHandler = new BoundaryExternalHandler();
+            var boundaryEvent = ExternalEvent.Create(boundaryHandler);
+            boundaryHandler.GraphicsServer = graphicsServer;
+
+            // Show window on UI thread
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                var boundaryWindow = new BoundaryWindow();
+                boundaryHandler.Window = boundaryWindow;
+
+                // Store document path to detect document changes
+                string originalDocPath = doc.PathName ?? doc.Title;
+                
+                // Setup callbacks
+                boundaryWindow.GetCurrentSelectionCallback = () =>
+                {
+                    try
+                    {
+                        // Check if document has changed
+                        var currentDoc = uidoc.Document;
+                        if (currentDoc == null || !currentDoc.IsValidObject) return new List<long>();
+                        
+                        string currentPath = currentDoc.PathName ?? currentDoc.Title;
+                        if (currentPath != originalDocPath)
+                        {
+                            // Document changed - close window
+                            boundaryWindow.Dispatcher.BeginInvoke(new Action(() =>
+                            {
+                                System.Windows.MessageBox.Show(
+                                    "Document has changed. Closing Boundary window.",
+                                    "Document Changed", MessageBoxButton.OK, MessageBoxImage.Information);
+                                boundaryWindow.Close();
+                            }));
+                            return new List<long>();
+                        }
+                        
+                        return uidoc.Selection.GetElementIds()
+                            .Select(id => id.Value)
+                            .ToList();
+                    }
+                    catch { return new List<long>(); }
+                };
+
+                boundaryWindow.PickElementsCallback = () =>
+                {
+                    boundaryHandler.SetRequest(BoundaryExternalHandler.RequestType.PickElements);
+                    boundaryEvent.Raise();
+                };
+
+                boundaryWindow.UpdatePreviewCallback = (settings) =>
+                {
+                    boundaryHandler.SetRequest(BoundaryExternalHandler.RequestType.UpdatePreview, settings);
+                    boundaryEvent.Raise();
+                };
+
+                boundaryWindow.ClearPreviewCallback = () =>
+                {
+                    boundaryHandler.SetRequest(BoundaryExternalHandler.RequestType.ClearPreview);
+                    boundaryEvent.Raise();
+                };
+
+                boundaryWindow.GetViewNameCallback = () =>
+                {
+                    try { return uidoc.ActiveView?.Name ?? ""; }
+                    catch { return ""; }
+                };
+
+                // Cleanup when window closes
+                boundaryWindow.Closed += (s, e) =>
+                {
+                    try
+                    {
+                        graphicsServer.ClearData();
+                        graphicsServer.Unregister();
+                        
+                        // Only refresh if document is still valid
+                        if (uidoc != null && uidoc.Document != null && uidoc.Document.IsValidObject)
+                        {
+                            try
+                            {
+                                uidoc.RefreshActiveView();
+                            }
+                            catch
+                            {
+                                // View refresh failed - not critical
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors - this happens when Revit is closing
+                    }
+                };
+
+                // Set initial selection if any
+                if (currentSelection.Count > 0)
+                {
+                    boundaryWindow.SetInitialSelection(currentSelection);
+                }
+
+                boundaryWindow.Show();
+            });
+
+            OnOperationCompleted?.Invoke("Show Boundary window opened");
         }
         
         /// <summary>
