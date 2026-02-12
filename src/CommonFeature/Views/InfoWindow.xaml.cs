@@ -110,6 +110,12 @@ namespace CommonFeature.Views
         // ExternalEvent for update operations (asynchronous, Revit-safe)
         public Action<List<ParameterUpdateItem>> RaiseUpdateEvent { get; set; }
         
+        // ExternalEvent for select elements
+        public Action<List<long>> RaiseSelectElementsEvent { get; set; }
+        
+        // ExternalEvent for create section box
+        public Action<List<long>> RaiseCreateSectionBoxEvent { get; set; }
+        
         #endregion
 
         #region Constructor & Lifecycle
@@ -410,7 +416,17 @@ namespace CommonFeature.Views
                     if (elementInfo.IsParameterReadOnly(paramName))
                     {
                         e.Cancel = true;
-                        StatusText.Text = $"Cannot edit: '{paramName}' is read-only (BuiltInParameter)";
+                        
+                        // Show popup notification for read-only parameter
+                        MessageBox.Show(
+                            $"Cannot edit parameter '{paramName}'.\n\n" +
+                            "This parameter is read-only (BuiltInParameter or system parameter).\n" +
+                            "Read-only parameters cannot be modified through this interface.",
+                            "Read-Only Parameter",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+                        
+                        StatusText.Text = $"'{paramName}' is read-only";
                         return;
                     }
                     
@@ -463,6 +479,32 @@ namespace CommonFeature.Views
                 
                 if (newValue != oldValue)
                 {
+                    // VALIDATION: Check if value matches expected data type
+                    var validationError = elementInfo.ValidateValue(paramName, newValue);
+                    if (validationError != null)
+                    {
+                        // Show validation error and cancel the edit
+                        e.Cancel = true;
+                        
+                        // Get the expected data type for user-friendly message
+                        var dataType = elementInfo.GetParameterDataType(paramName);
+                        var dataTypeDisplay = GetDataTypeDisplayName(dataType);
+                        
+                        MessageBox.Show(
+                            $"Invalid value for parameter '{paramName}'.\n\n" +
+                            $"Expected: {dataTypeDisplay}\n" +
+                            $"Entered: '{newValue}'\n\n" +
+                            validationError,
+                            "Invalid Input",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        
+                        // Restore original value in textbox
+                        textBox.Text = oldValue;
+                        StatusText.Text = $"Invalid input for '{paramName}' - please enter a {dataTypeDisplay.ToLower()} value";
+                        return;
+                    }
+                    
                     // UX: Add to undo stack
                     PushUndo(new UndoItem(elementInfo, paramName, oldValue, newValue));
                     
@@ -509,6 +551,22 @@ namespace CommonFeature.Views
                 _editingParamName = null;
                 StatusText.Text = $"Edit error: {ex.Message}";
             }
+        }
+        
+        /// <summary>
+        /// Get user-friendly display name for data type
+        /// </summary>
+        private string GetDataTypeDisplayName(string dataType)
+        {
+            return dataType switch
+            {
+                ParameterDataType.Integer => "Integer (whole number)",
+                ParameterDataType.Double => "Number (decimal allowed)",
+                ParameterDataType.YesNo => "Yes/No",
+                ParameterDataType.ElementId => "Element ID",
+                ParameterDataType.String => "Text",
+                _ => "Text"
+            };
         }
         
         private string ExtractParamName(string headerText)
@@ -876,6 +934,12 @@ namespace CommonFeature.Views
                         {
                             info.ReadOnlyParameters.Add(readOnlyParam);
                         }
+                        
+                        // Store data types for validation
+                        foreach (var kvp in result.DataTypes)
+                        {
+                            info.ParameterDataTypes[kvp.Key] = kvp.Value;
+                        }
                     }
                 }
 
@@ -1027,12 +1091,15 @@ namespace CommonFeature.Views
         private void InfoDataGrid_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
             var dep = (DependencyObject)e.OriginalSource;
-            while (dep != null && !(dep is DataGridColumnHeader))
+            
+            // Check for column header first
+            var depForHeader = dep;
+            while (depForHeader != null && !(depForHeader is DataGridColumnHeader))
             {
-                dep = VisualTreeHelper.GetParent(dep);
+                depForHeader = VisualTreeHelper.GetParent(depForHeader);
             }
             
-            if (dep is DataGridColumnHeader header && header.Column != null)
+            if (depForHeader is DataGridColumnHeader header && header.Column != null)
             {
                 var paramName = GetParamNameFromColumn(header.Column);
                 
@@ -1052,7 +1119,265 @@ namespace CommonFeature.Views
                     
                     contextMenu.IsOpen = true;
                     e.Handled = true;
+                    return;
                 }
+            }
+            
+            // Check for cell (DataGridCell)
+            var depForCell = dep;
+            while (depForCell != null && !(depForCell is DataGridCell))
+            {
+                depForCell = VisualTreeHelper.GetParent(depForCell);
+            }
+            
+            if (depForCell is DataGridCell cell)
+            {
+                // Get the DataGridRow containing this cell
+                var row = DataGridRow.GetRowContainingElement(cell);
+                if (row?.Item is ElementInfo elementInfo)
+                {
+                    // Get selected elements (if multiple rows selected, use them; otherwise use clicked row)
+                    var selectedElements = GetSelectedElementInfos();
+                    if (selectedElements.Count == 0 || !selectedElements.Any(ei => ei.Id == elementInfo.Id))
+                    {
+                        selectedElements = new List<ElementInfo> { elementInfo };
+                    }
+                    
+                    // Get cell value for copy
+                    var column = cell.Column;
+                    string cellValue = GetCellValueForCopy(elementInfo, column);
+                    
+                    // Check if this is a modified parameter cell
+                    var paramName = GetParamNameFromColumn(column);
+                    bool isModifiedParamCell = !string.IsNullOrEmpty(paramName) && 
+                                                _addedParamColumns.Contains(paramName) && 
+                                                elementInfo.IsParameterModified(paramName);
+                    
+                    ShowCellContextMenu(selectedElements, cellValue, paramName, isModifiedParamCell, elementInfo);
+                    e.Handled = true;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Get selected ElementInfo objects from DataGrid
+        /// </summary>
+        private List<ElementInfo> GetSelectedElementInfos()
+        {
+            var selected = new List<ElementInfo>();
+            foreach (var item in InfoDataGrid.SelectedItems)
+            {
+                if (item is ElementInfo ei)
+                {
+                    selected.Add(ei);
+                }
+            }
+            return selected;
+        }
+        
+        /// <summary>
+        /// Get cell value for copy operation
+        /// </summary>
+        private string GetCellValueForCopy(ElementInfo elementInfo, DataGridColumn column)
+        {
+            if (column == null) return "";
+            
+            var headerText = GetColumnHeaderText(column);
+            
+            // Fixed columns
+            if (headerText == ColumnNames.Id) return elementInfo.Id.ToString();
+            if (headerText == ColumnNames.FamilyName) return elementInfo.FamilyName;
+            if (headerText == ColumnNames.FamilyType) return elementInfo.FamilyType;
+            if (headerText == ColumnNames.Category) return elementInfo.Category;
+            if (headerText == ColumnNames.Workset) return elementInfo.Workset;
+            if (headerText == ColumnNames.CreatedBy) return elementInfo.CreatedBy;
+            if (headerText == ColumnNames.EditedBy) return elementInfo.EditedBy;
+            
+            // Parameter columns
+            var paramName = ExtractParamName(headerText);
+            if (!string.IsNullOrEmpty(paramName))
+            {
+                return elementInfo.GetParameterValue(paramName);
+            }
+            
+            return "";
+        }
+        
+        /// <summary>
+        /// Show context menu for cell right-click
+        /// </summary>
+        private void ShowCellContextMenu(List<ElementInfo> selectedElements, string cellValue, 
+            string paramName, bool isModifiedParamCell, ElementInfo clickedElement)
+        {
+            var contextMenu = new ContextMenu();
+            
+            // Disabled style brush
+            var disabledBrush = new SolidColorBrush(Colors.Gray);
+            
+            // Check availability conditions
+            bool hasCellValue = !string.IsNullOrEmpty(cellValue) && cellValue != "-";
+            bool hasElements = selectedElements != null && selectedElements.Count > 0;
+            bool canRevert = isModifiedParamCell && !string.IsNullOrEmpty(paramName);
+            bool hasSelectCallback = RaiseSelectElementsEvent != null;
+            bool hasSectionBoxCallback = RaiseCreateSectionBoxEvent != null;
+            
+            // 1. Copy Value
+            var copyItem = new MenuItem 
+            { 
+                Header = "Copy Value",
+                IsEnabled = hasCellValue
+            };
+            if (!hasCellValue)
+            {
+                copyItem.Foreground = disabledBrush;
+                copyItem.ToolTip = "No value to copy (cell is empty or '-')";
+            }
+            copyItem.Click += (s, args) =>
+            {
+                try
+                {
+                    if (hasCellValue)
+                    {
+                        Clipboard.SetText(cellValue);
+                        StatusText.Text = $"Copied: '{cellValue}'";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    StatusText.Text = $"Copy failed: {ex.Message}";
+                }
+            };
+            contextMenu.Items.Add(copyItem);
+            
+            // 2. Revert to Original Value (always show, but disable if not applicable)
+            var revertItem = new MenuItem 
+            { 
+                Header = "Revert to Original Value",
+                IsEnabled = canRevert
+            };
+            if (!canRevert)
+            {
+                revertItem.Foreground = disabledBrush;
+                if (string.IsNullOrEmpty(paramName) || !_addedParamColumns.Contains(paramName ?? ""))
+                {
+                    revertItem.ToolTip = "Only available for parameter columns";
+                }
+                else
+                {
+                    revertItem.ToolTip = "Cell has not been modified";
+                }
+            }
+            else
+            {
+                revertItem.Click += (s, args) => RevertToOriginalValue(clickedElement, paramName);
+            }
+            contextMenu.Items.Add(revertItem);
+            
+            contextMenu.Items.Add(new Separator());
+            
+            // 3. Select Element
+            bool canSelect = hasElements && hasSelectCallback;
+            var selectItem = new MenuItem 
+            { 
+                Header = selectedElements.Count > 1 
+                    ? $"Select Elements ({selectedElements.Count})" 
+                    : "Select Element",
+                IsEnabled = canSelect
+            };
+            if (!canSelect)
+            {
+                selectItem.Foreground = disabledBrush;
+                selectItem.ToolTip = !hasElements 
+                    ? "No elements selected" 
+                    : "Select elements feature not available";
+            }
+            else
+            {
+                selectItem.Click += (s, args) =>
+                {
+                    var elementIds = selectedElements.Select(e => e.Id).ToList();
+                    RaiseSelectElementsEvent(elementIds);
+                    StatusText.Text = $"Selecting {elementIds.Count} element(s)...";
+                };
+            }
+            contextMenu.Items.Add(selectItem);
+            
+            // 4. Create Section Box
+            bool canCreateSectionBox = hasElements && hasSectionBoxCallback;
+            var sectionBoxItem = new MenuItem 
+            { 
+                Header = selectedElements.Count > 1 
+                    ? $"Create Section Box ({selectedElements.Count} elements)" 
+                    : "Create Section Box",
+                IsEnabled = canCreateSectionBox
+            };
+            if (!canCreateSectionBox)
+            {
+                sectionBoxItem.Foreground = disabledBrush;
+                sectionBoxItem.ToolTip = !hasElements 
+                    ? "No elements selected" 
+                    : "Create section box feature not available";
+            }
+            else
+            {
+                sectionBoxItem.Click += (s, args) =>
+                {
+                    var elementIds = selectedElements.Select(e => e.Id).ToList();
+                    RaiseCreateSectionBoxEvent(elementIds);
+                    StatusText.Text = $"Creating section box for {elementIds.Count} element(s)...";
+                };
+            }
+            contextMenu.Items.Add(sectionBoxItem);
+            
+            contextMenu.IsOpen = true;
+        }
+        
+        /// <summary>
+        /// Revert a modified parameter cell to its original value
+        /// </summary>
+        private void RevertToOriginalValue(ElementInfo elementInfo, string paramName)
+        {
+            if (elementInfo == null || string.IsNullOrEmpty(paramName)) return;
+            
+            // Check if we have original value
+            if (!elementInfo.OriginalParameters.TryGetValue(paramName, out var originalValue))
+            {
+                StatusText.Text = $"No original value stored for '{paramName}'";
+                return;
+            }
+            
+            // Temporarily track element to prevent filter issues
+            _editingElement = elementInfo;
+            
+            try
+            {
+                // Update filter set
+                if (_selectedFilters.TryGetValue(paramName, out var filterSet))
+                {
+                    filterSet.Add(originalValue);
+                }
+                
+                // Restore original value
+                elementInfo.Parameters[paramName] = originalValue;
+                elementInfo.ModifiedParameters.Remove(paramName);
+                
+                // Invalidate cache and refresh
+                InvalidateFilterCache();
+                _collectionView?.Refresh();
+                
+                // Update cell background
+                Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, new Action(() =>
+                {
+                    _editingElement = null;
+                    UpdateCellBackgrounds();
+                    UpdateModifiedCount();
+                    StatusText.Text = $"Reverted '{paramName}' to original value: '{originalValue}'";
+                }));
+            }
+            catch (Exception ex)
+            {
+                _editingElement = null;
+                StatusText.Text = $"Revert failed: {ex.Message}";
             }
         }
 

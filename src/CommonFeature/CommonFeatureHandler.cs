@@ -21,7 +21,9 @@ namespace CommonFeature
         ShowBoundary,
         GetParametersFromElements,
         GetParameterValues,
-        UpdateParameterValues
+        UpdateParameterValues,
+        SelectElements,
+        CreateSectionBox
     }
 
     /// <summary>
@@ -53,6 +55,10 @@ namespace CommonFeature
             => new(RequestType.GetParameterValues, elementIds, paramNames);
         public static CommonFeatureRequest UpdateParameterValues(List<ParameterUpdateItem> updates)
             => new(RequestType.UpdateParameterValues, updates: updates);
+        public static CommonFeatureRequest SelectElements(List<long> elementIds)
+            => new(RequestType.SelectElements, elementIds);
+        public static CommonFeatureRequest CreateSectionBox(List<long> elementIds)
+            => new(RequestType.CreateSectionBox, elementIds);
     }
 
     /// <summary>
@@ -117,6 +123,12 @@ namespace CommonFeature
                         break;
                     case RequestType.UpdateParameterValues:
                         ExecuteUpdateParameterValues(app, request.Updates);
+                        break;
+                    case RequestType.SelectElements:
+                        ExecuteSelectElements(app, request.ElementIds);
+                        break;
+                    case RequestType.CreateSectionBox:
+                        ExecuteCreateSectionBox(app, request.ElementIds);
                         break;
                 }
             }
@@ -203,6 +215,7 @@ namespace CommonFeature
                 {
                     string value = "-";
                     bool isReadOnly = true; // Default to read-only
+                    string dataType = ParameterDataType.String; // Default
                     
                     // Try instance parameter first
                     var param = element.LookupParameter(paramName);
@@ -210,6 +223,7 @@ namespace CommonFeature
                     {
                         value = GetParameterValueAsString(doc, param);
                         isReadOnly = IsParameterReadOnly(param);
+                        dataType = GetParameterDataType(param);
                     }
                     else
                     {
@@ -225,12 +239,14 @@ namespace CommonFeature
                                 {
                                     value = GetParameterValueAsString(doc, param);
                                     isReadOnly = IsParameterReadOnly(param);
+                                    dataType = GetParameterDataType(param);
                                 }
                             }
                         }
                     }
 
                     paramResult.Values[paramName] = value;
+                    paramResult.DataTypes[paramName] = dataType;
                     if (isReadOnly)
                     {
                         paramResult.ReadOnlyParams.Add(paramName);
@@ -266,6 +282,37 @@ namespace CommonFeature
             }
             
             return false;
+        }
+        
+        /// <summary>
+        /// Get the data type string for a parameter (for UI validation)
+        /// </summary>
+        private string GetParameterDataType(Parameter param)
+        {
+            if (param == null) return ParameterDataType.String;
+            
+            switch (param.StorageType)
+            {
+                case StorageType.String:
+                    return ParameterDataType.String;
+                    
+                case StorageType.Integer:
+                    // Check if it's a Yes/No parameter
+                    if (param.Definition?.GetDataType() == SpecTypeId.Boolean.YesNo)
+                    {
+                        return ParameterDataType.YesNo;
+                    }
+                    return ParameterDataType.Integer;
+                    
+                case StorageType.Double:
+                    return ParameterDataType.Double;
+                    
+                case StorageType.ElementId:
+                    return ParameterDataType.ElementId;
+                    
+                default:
+                    return ParameterDataType.String;
+            }
         }
 
         private string GetParameterValueAsString(Document doc, Parameter param)
@@ -923,6 +970,20 @@ namespace CommonFeature
                     _externalEvent?.Raise();
                 };
                 
+                // Setup async select elements callback
+                infoWindow.RaiseSelectElementsEvent = (elementIds) =>
+                {
+                    SetRequest(CommonFeatureRequest.SelectElements(elementIds));
+                    _externalEvent?.Raise();
+                };
+                
+                // Setup async create section box callback
+                infoWindow.RaiseCreateSectionBoxEvent = (elementIds) =>
+                {
+                    SetRequest(CommonFeatureRequest.CreateSectionBox(elementIds));
+                    _externalEvent?.Raise();
+                };
+                
                 infoWindow.SetData(elementInfos);
                 infoWindow.Show();
             });
@@ -1030,6 +1091,179 @@ namespace CommonFeature
         {
             // TODO: Implement Show Boundary feature
             OnOperationCompleted?.Invoke("Show Boundary: On Developing");
+        }
+        
+        /// <summary>
+        /// Select elements in Revit model
+        /// </summary>
+        private void ExecuteSelectElements(UIApplication app, List<long> elementIds)
+        {
+            var uidoc = app.ActiveUIDocument;
+            if (uidoc == null)
+            {
+                OnError?.Invoke("No active document");
+                return;
+            }
+            
+            if (elementIds == null || elementIds.Count == 0)
+            {
+                OnError?.Invoke("No elements to select");
+                return;
+            }
+            
+            try
+            {
+                var elemIds = elementIds.Select(id => new ElementId(id)).ToList();
+                uidoc.Selection.SetElementIds(elemIds);
+                OnOperationCompleted?.Invoke($"Selected {elemIds.Count} element(s)");
+            }
+            catch (Exception ex)
+            {
+                OnError?.Invoke($"Select elements failed: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Create section box for selected elements
+        /// </summary>
+        private void ExecuteCreateSectionBox(UIApplication app, List<long> elementIds)
+        {
+            var uidoc = app.ActiveUIDocument;
+            if (uidoc == null)
+            {
+                OnError?.Invoke("No active document");
+                return;
+            }
+            
+            var doc = uidoc.Document;
+            
+            if (elementIds == null || elementIds.Count == 0)
+            {
+                OnError?.Invoke("No elements selected for section box");
+                return;
+            }
+            
+            try
+            {
+                // Get bounding box of all selected elements
+                BoundingBoxXYZ combinedBounds = null;
+                
+                foreach (var id in elementIds)
+                {
+                    var elem = doc.GetElement(new ElementId(id));
+                    if (elem == null) continue;
+                    
+                    var bb = elem.get_BoundingBox(null);
+                    if (bb == null) continue;
+                    
+                    if (combinedBounds == null)
+                    {
+                        combinedBounds = new BoundingBoxXYZ
+                        {
+                            Min = bb.Min,
+                            Max = bb.Max
+                        };
+                    }
+                    else
+                    {
+                        combinedBounds.Min = new XYZ(
+                            Math.Min(combinedBounds.Min.X, bb.Min.X),
+                            Math.Min(combinedBounds.Min.Y, bb.Min.Y),
+                            Math.Min(combinedBounds.Min.Z, bb.Min.Z));
+                        combinedBounds.Max = new XYZ(
+                            Math.Max(combinedBounds.Max.X, bb.Max.X),
+                            Math.Max(combinedBounds.Max.Y, bb.Max.Y),
+                            Math.Max(combinedBounds.Max.Z, bb.Max.Z));
+                    }
+                }
+                
+                if (combinedBounds == null)
+                {
+                    OnError?.Invoke("Could not calculate bounding box for elements");
+                    return;
+                }
+                
+                // Add some padding (offset)
+                double offset = 1.0; // 1 foot padding
+                combinedBounds.Min = new XYZ(
+                    combinedBounds.Min.X - offset,
+                    combinedBounds.Min.Y - offset,
+                    combinedBounds.Min.Z - offset);
+                combinedBounds.Max = new XYZ(
+                    combinedBounds.Max.X + offset,
+                    combinedBounds.Max.Y + offset,
+                    combinedBounds.Max.Z + offset);
+                
+                using (var trans = new Transaction(doc, "Create Section Box"))
+                {
+                    trans.Start();
+                    
+                    View3D view3D = null;
+                    
+                    // Check if current view is 3D view
+                    if (uidoc.ActiveView is View3D activeView3D && !activeView3D.IsTemplate)
+                    {
+                        view3D = activeView3D;
+                    }
+                    else
+                    {
+                        // Create new 3D view
+                        var viewFamilyType = new FilteredElementCollector(doc)
+                            .OfClass(typeof(ViewFamilyType))
+                            .Cast<ViewFamilyType>()
+                            .FirstOrDefault(x => x.ViewFamily == ViewFamily.ThreeDimensional);
+                        
+                        if (viewFamilyType == null)
+                        {
+                            trans.RollBack();
+                            OnError?.Invoke("Cannot find 3D view family type");
+                            return;
+                        }
+                        
+                        // Generate unique view name
+                        string baseName = "Element Information View";
+                        string viewName = baseName;
+                        int counter = 1;
+                        
+                        // Check if view name already exists
+                        var existingViews = new FilteredElementCollector(doc)
+                            .OfClass(typeof(View3D))
+                            .Cast<View3D>()
+                            .Select(v => v.Name)
+                            .ToHashSet();
+                        
+                        while (existingViews.Contains(viewName))
+                        {
+                            viewName = $"{baseName} {counter}";
+                            counter++;
+                        }
+                        
+                        view3D = View3D.CreateIsometric(doc, viewFamilyType.Id);
+                        view3D.Name = viewName;
+                        
+                        // Set display style to Shaded
+                        view3D.DisplayStyle = DisplayStyle.Shading;
+                        
+                        // Set detail level to Fine
+                        view3D.DetailLevel = ViewDetailLevel.Fine;
+                    }
+                    
+                    // Set section box
+                    view3D.SetSectionBox(combinedBounds);
+                    view3D.IsSectionBoxActive = true;
+                    
+                    trans.Commit();
+                    
+                    // Activate the 3D view
+                    uidoc.ActiveView = view3D;
+                    
+                    OnOperationCompleted?.Invoke($"Section box created for {elementIds.Count} element(s) in '{view3D.Name}'");
+                }
+            }
+            catch (Exception ex)
+            {
+                OnError?.Invoke($"Create section box failed: {ex.Message}");
+            }
         }
 
         public string GetName() => "CommonFeature.Handler";

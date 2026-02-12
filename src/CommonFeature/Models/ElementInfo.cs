@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 
 namespace CommonFeature.Models
 {
@@ -35,6 +36,11 @@ namespace CommonFeature.Models
         /// Track which parameters are read-only (BuiltInParameter or non-editable)
         /// </summary>
         public HashSet<string> ReadOnlyParameters { get; set; } = new();
+        
+        /// <summary>
+        /// Store parameter data types for validation
+        /// </summary>
+        public Dictionary<string, string> ParameterDataTypes { get; set; } = new();
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -111,6 +117,75 @@ namespace CommonFeature.Models
         }
         
         /// <summary>
+        /// Get the data type of a parameter
+        /// </summary>
+        public string GetParameterDataType(string paramName)
+        {
+            return ParameterDataTypes.TryGetValue(paramName, out var dataType) ? dataType : ParameterDataType.String;
+        }
+        
+        /// <summary>
+        /// Validate a value against the parameter's data type
+        /// Returns null if valid, or an error message if invalid
+        /// </summary>
+        public string ValidateValue(string paramName, string newValue)
+        {
+            var dataType = GetParameterDataType(paramName);
+            
+            // Empty/null is generally allowed (will be converted appropriately)
+            if (string.IsNullOrWhiteSpace(newValue) || newValue == "-")
+            {
+                return null;
+            }
+            
+            switch (dataType)
+            {
+                case ParameterDataType.Integer:
+                    if (!int.TryParse(newValue, out _))
+                    {
+                        return $"'{paramName}' requires an integer value (e.g., 1, 2, 100)";
+                    }
+                    break;
+                    
+                case ParameterDataType.Double:
+                    // Allow numbers with optional decimal
+                    if (!double.TryParse(newValue, System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture, out _))
+                    {
+                        // Also try current culture
+                        if (!double.TryParse(newValue, out _))
+                        {
+                            return $"'{paramName}' requires a numeric value (e.g., 1.5, 100, 3.14)";
+                        }
+                    }
+                    break;
+                    
+                case ParameterDataType.YesNo:
+                    var lower = newValue.ToLower();
+                    var validValues = new[] { "yes", "no", "1", "0", "true", "false" };
+                    if (!validValues.Contains(lower))
+                    {
+                        return $"'{paramName}' requires Yes/No value (Yes, No, True, False, 1, 0)";
+                    }
+                    break;
+                    
+                case ParameterDataType.ElementId:
+                    if (!long.TryParse(newValue, out _))
+                    {
+                        return $"'{paramName}' requires an Element ID (numeric value)";
+                    }
+                    break;
+                    
+                case ParameterDataType.String:
+                default:
+                    // String accepts any value
+                    break;
+            }
+            
+            return null; // Valid
+        }
+        
+        /// <summary>
         /// Clear modification tracking after successful update
         /// </summary>
         public void ClearModifications()
@@ -164,5 +239,21 @@ namespace CommonFeature.Models
     {
         public Dictionary<string, string> Values { get; set; } = new();
         public HashSet<string> ReadOnlyParams { get; set; } = new();
+        /// <summary>
+        /// Parameter data types: "String", "Integer", "Double", "ElementId", "YesNo"
+        /// </summary>
+        public Dictionary<string, string> DataTypes { get; set; } = new();
+    }
+    
+    /// <summary>
+    /// Parameter data type constants
+    /// </summary>
+    public static class ParameterDataType
+    {
+        public const string String = "String";
+        public const string Integer = "Integer";
+        public const string Double = "Double";
+        public const string ElementId = "ElementId";
+        public const string YesNo = "YesNo";
     }
 }
