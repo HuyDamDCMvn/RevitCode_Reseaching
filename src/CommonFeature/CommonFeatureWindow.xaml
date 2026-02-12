@@ -1,7 +1,6 @@
 <Window x:Class="CommonFeature.CommonFeatureWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="Common Feature" 
         Height="420" 
         Width="320"
@@ -11,16 +10,9 @@
         ResizeMode="CanResizeWithGrip"
         ShowInTaskbar="True"
         Topmost="False"
-        Background="#FAFAFA">
-
-    <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Indigo" SecondaryColor="Teal" />
-                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign2.Defaults.xaml" />
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </Window.Resources>
+        Background="#FAFAFA"
+        FontFamily="Segoe UI"
+        FontSize="13">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -29,12 +21,12 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Header with gradient -->
+        <!-- Header -->
         <Border Grid.Row="0" Padding="20,16" Background="#3F51B5">
             <StackPanel>
                 <TextBlock Text="Common Feature" 
                            FontSize="20" 
-                           FontWeight="Medium"
+                           FontWeight="SemiBold"
                            Foreground="White"/>
                 <TextBlock Text="Select a tool to get started" 
                            FontSize="12" 
@@ -52,7 +44,7 @@
                 <Button Margin="0,4" Height="56" 
                         HorizontalContentAlignment="Left"
                         Command="{Binding IsolateCommand}"
-                        ToolTip="Isolate selected elements in current view">
+                        ToolTip="Isolate elements by category, family, type">
                     <Grid Margin="8,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -62,22 +54,20 @@
                         <Border Grid.Column="0" 
                                 Background="#E8EAF6" 
                                 CornerRadius="8" 
-                                Padding="10" 
+                                Width="44" Height="44"
                                 Margin="0,0,14,0">
-                            <materialDesign:PackIcon Kind="EyeOutline" 
-                                                     Width="24" Height="24"
-                                                     Foreground="#3F51B5"/>
+                            <TextBlock Text="👁" FontSize="20" 
+                                       HorizontalAlignment="Center" 
+                                       VerticalAlignment="Center"/>
                         </Border>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                            <TextBlock Text="Isolate" FontWeight="Medium" FontSize="14"/>
-                            <TextBlock Text="Hide other elements" 
+                            <TextBlock Text="Isolate" FontWeight="SemiBold" FontSize="14"/>
+                            <TextBlock Text="Filter and isolate elements" 
                                        FontSize="11" 
                                        Foreground="#757575"/>
                         </StackPanel>
-                        <materialDesign:PackIcon Grid.Column="2" 
-                                                 Kind="ChevronRight" 
-                                                 VerticalAlignment="Center"
-                                                 Foreground="#BDBDBD"/>
+                        <TextBlock Grid.Column="2" Text="›" FontSize="20" 
+                                   VerticalAlignment="Center" Foreground="#BDBDBD"/>
                     </Grid>
                 </Button>
 
@@ -85,7 +75,7 @@
                 <Button Margin="0,4" Height="56"
                         HorizontalContentAlignment="Left"
                         Command="{Binding GetInformationCommand}"
-                        ToolTip="Get detailed information about selected elements">
+                        ToolTip="View and edit element information">
                     <Grid Margin="8,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -95,22 +85,20 @@
                         <Border Grid.Column="0" 
                                 Background="#E3F2FD" 
                                 CornerRadius="8" 
-                                Padding="10" 
+                                Width="44" Height="44"
                                 Margin="0,0,14,0">
-                            <materialDesign:PackIcon Kind="InformationOutline" 
-                                                     Width="24" Height="24"
-                                                     Foreground="#1976D2"/>
+                            <TextBlock Text="ℹ" FontSize="20" 
+                                       HorizontalAlignment="Center" 
+                                       VerticalAlignment="Center"/>
                         </Border>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                            <TextBlock Text="Get Information" FontWeight="Medium" FontSize="14"/>
+                            <TextBlock Text="Get Information" FontWeight="SemiBold" FontSize="14"/>
                             <TextBlock Text="View element details" 
                                        FontSize="11" 
                                        Foreground="#757575"/>
                         </StackPanel>
-                        <materialDesign:PackIcon Grid.Column="2" 
-                                                 Kind="ChevronRight" 
-                                                 VerticalAlignment="Center"
-                                                 Foreground="#BDBDBD"/>
+                        <TextBlock Grid.Column="2" Text="›" FontSize="20" 
+                                   VerticalAlignment="Center" Foreground="#BDBDBD"/>
                     </Grid>
                 </Button>
 
@@ -128,22 +116,20 @@
                         <Border Grid.Column="0" 
                                 Background="#E8F5E9" 
                                 CornerRadius="8" 
-                                Padding="10" 
+                                Width="44" Height="44"
                                 Margin="0,0,14,0">
-                            <materialDesign:PackIcon Kind="FormatListBulleted" 
-                                                     Width="24" Height="24"
-                                                     Foreground="#388E3C"/>
+                            <TextBlock Text="📋" FontSize="20" 
+                                       HorizontalAlignment="Center" 
+                                       VerticalAlignment="Center"/>
                         </Border>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                            <TextBlock Text="Show Parameter" FontWeight="Medium" FontSize="14"/>
+                            <TextBlock Text="Show Parameter" FontWeight="SemiBold" FontSize="14"/>
                             <TextBlock Text="List all parameters" 
                                        FontSize="11" 
                                        Foreground="#757575"/>
                         </StackPanel>
-                        <materialDesign:PackIcon Grid.Column="2" 
-                                                 Kind="ChevronRight" 
-                                                 VerticalAlignment="Center"
-                                                 Foreground="#BDBDBD"/>
+                        <TextBlock Grid.Column="2" Text="›" FontSize="20" 
+                                   VerticalAlignment="Center" Foreground="#BDBDBD"/>
                     </Grid>
                 </Button>
 
@@ -151,7 +137,7 @@
                 <Button Margin="0,4" Height="56"
                         HorizontalContentAlignment="Left"
                         Command="{Binding ShowBoundaryCommand}"
-                        ToolTip="Show bounding box of selected elements">
+                        ToolTip="Create section box around selected elements">
                     <Grid Margin="8,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -161,22 +147,20 @@
                         <Border Grid.Column="0" 
                                 Background="#FFF3E0" 
                                 CornerRadius="8" 
-                                Padding="10" 
+                                Width="44" Height="44"
                                 Margin="0,0,14,0">
-                            <materialDesign:PackIcon Kind="VectorSquare" 
-                                                     Width="24" Height="24"
-                                                     Foreground="#F57C00"/>
+                            <TextBlock Text="📦" FontSize="20" 
+                                       HorizontalAlignment="Center" 
+                                       VerticalAlignment="Center"/>
                         </Border>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                            <TextBlock Text="Show Boundary" FontWeight="Medium" FontSize="14"/>
-                            <TextBlock Text="Display bounding box" 
+                            <TextBlock Text="Section Box" FontWeight="SemiBold" FontSize="14"/>
+                            <TextBlock Text="Create bounding box" 
                                        FontSize="11" 
                                        Foreground="#757575"/>
                         </StackPanel>
-                        <materialDesign:PackIcon Grid.Column="2" 
-                                                 Kind="ChevronRight" 
-                                                 VerticalAlignment="Center"
-                                                 Foreground="#BDBDBD"/>
+                        <TextBlock Grid.Column="2" Text="›" FontSize="20" 
+                                   VerticalAlignment="Center" Foreground="#BDBDBD"/>
                     </Grid>
                 </Button>
             </StackPanel>
@@ -196,12 +180,10 @@
                 </Grid.ColumnDefinitions>
                 
                 <!-- Status Icon -->
-                <materialDesign:PackIcon Grid.Column="0"
-                                         Kind="CheckCircleOutline" 
-                                         Width="18" Height="18"
-                                         VerticalAlignment="Center" 
-                                         Margin="0,0,10,0"
-                                         Foreground="#757575"/>
+                <TextBlock Grid.Column="0" Text="✓" FontSize="14"
+                           VerticalAlignment="Center" 
+                           Margin="0,0,10,0"
+                           Foreground="#757575"/>
                 
                 <!-- Status Message -->
                 <TextBlock Grid.Column="1"

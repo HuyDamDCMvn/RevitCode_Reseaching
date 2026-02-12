@@ -9,6 +9,7 @@
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResizeWithGrip"
         ShowInTaskbar="True"
+        Topmost="True"
         Background="#FAFAFA"
         FontFamily="Segoe UI"
         FontSize="13">

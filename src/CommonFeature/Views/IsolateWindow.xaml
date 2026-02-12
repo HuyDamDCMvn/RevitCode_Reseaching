@@ -1,0 +1,206 @@
+<Window x:Class="CommonFeature.Views.IsolateWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Isolate Elements" 
+        Height="320" 
+        Width="500"
+        MinHeight="280"
+        MinWidth="400"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResizeWithGrip"
+        ShowInTaskbar="True"
+        Topmost="True"
+        Background="#FAFAFA"
+        FontFamily="Segoe UI"
+        FontSize="13">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Padding="16,12" Background="#3F51B5">
+            <StackPanel>
+                <TextBlock Text="Isolate Elements" 
+                           FontSize="18" 
+                           FontWeight="SemiBold"
+                           Foreground="White"/>
+                <TextBlock x:Name="StatusText"
+                           Text="Select filters to isolate elements" 
+                           FontSize="11" 
+                           Foreground="#BBDEFB"
+                           Margin="0,2,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Content - Cascading Dropdowns -->
+        <Grid Grid.Row="1" Margin="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Level 1: Category -->
+            <Grid Grid.Row="0" Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Column="0" 
+                           Text="Category:" 
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold"/>
+                
+                <ComboBox x:Name="CategoryCombo" 
+                          Grid.Column="1"
+                          IsEditable="True"
+                          IsTextSearchEnabled="True"
+                          IsTextSearchCaseSensitive="False"
+                          TextSearch.TextPath="DisplayName"
+                          DisplayMemberPath="DisplayName"
+                          SelectionChanged="CategoryCombo_SelectionChanged"/>
+            </Grid>
+
+            <!-- Level 2: Family and Family Type -->
+            <Grid Grid.Row="1" Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Column="0" 
+                           Text="Family:" 
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold"/>
+                
+                <ComboBox x:Name="FamilyCombo" 
+                          Grid.Column="1"
+                          IsEditable="True"
+                          IsTextSearchEnabled="True"
+                          IsTextSearchCaseSensitive="False"
+                          TextSearch.TextPath="DisplayName"
+                          DisplayMemberPath="DisplayName"
+                          IsEnabled="False"
+                          SelectionChanged="FamilyCombo_SelectionChanged"/>
+                
+                <TextBlock Grid.Column="2" 
+                           Text="Type:" 
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold"
+                           Margin="12,0,8,0"/>
+                
+                <ComboBox x:Name="FamilyTypeCombo" 
+                          Grid.Column="3"
+                          IsEditable="True"
+                          IsTextSearchEnabled="True"
+                          IsTextSearchCaseSensitive="False"
+                          TextSearch.TextPath="DisplayName"
+                          DisplayMemberPath="DisplayName"
+                          IsEnabled="False"
+                          SelectionChanged="FamilyTypeCombo_SelectionChanged"/>
+            </Grid>
+
+            <!-- Level 3: Parameter and Value -->
+            <Grid Grid.Row="2" Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Column="0" 
+                           Text="Parameter:" 
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold"/>
+                
+                <ComboBox x:Name="ParameterCombo" 
+                          Grid.Column="1"
+                          IsEditable="True"
+                          IsTextSearchEnabled="True"
+                          IsTextSearchCaseSensitive="False"
+                          IsEnabled="False"
+                          SelectionChanged="ParameterCombo_SelectionChanged"/>
+                
+                <TextBlock Grid.Column="2" 
+                           Text="Value:" 
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold"
+                           Margin="12,0,8,0"/>
+                
+                <ComboBox x:Name="ValueCombo" 
+                          Grid.Column="3"
+                          IsEditable="True"
+                          IsTextSearchEnabled="True"
+                          IsTextSearchCaseSensitive="False"
+                          TextSearch.TextPath="DisplayName"
+                          DisplayMemberPath="DisplayName"
+                          IsEnabled="False"
+                          SelectionChanged="ValueCombo_SelectionChanged"/>
+            </Grid>
+
+            <!-- Info Panel -->
+            <Border Grid.Row="3" 
+                    Background="#E3F2FD" 
+                    BorderBrush="#90CAF9" 
+                    BorderThickness="1" 
+                    CornerRadius="4"
+                    Padding="12"
+                    Margin="0,8,0,0">
+                <StackPanel>
+                    <TextBlock x:Name="IsolateInfoText"
+                               Text="Select a Category to start isolating elements."
+                               TextWrapping="Wrap"
+                               Foreground="#1565C0"/>
+                    <TextBlock x:Name="ElementCountText"
+                               Text=""
+                               FontWeight="SemiBold"
+                               Foreground="#1565C0"
+                               Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Footer -->
+        <Border Grid.Row="2" Padding="16,10" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Clear Filters -->
+                <Button x:Name="ClearFiltersButton"
+                        Grid.Column="0"
+                        Content="Clear Filters"
+                        Padding="12,6"
+                        Click="ClearFilters_Click"/>
+
+                <!-- Action Buttons -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button x:Name="ResetIsolateButton"
+                            Content="Reset View"
+                            Padding="12,6"
+                            Margin="0,0,8,0"
+                            Background="#FF9800"
+                            Foreground="White"
+                            Click="ResetIsolate_Click"
+                            ToolTip="Reset temporary isolate in active view"/>
+                    <Button x:Name="CloseButton"
+                            Content="Close"
+                            Padding="12,6"
+                            Click="Close_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

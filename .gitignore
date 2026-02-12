@@ -1,6 +1,10 @@
+# ============================================================================
+# Git Ignore for HD Extension
+# ============================================================================
+
 # Build outputs
-bin/
-obj/
+**/bin/
+**/obj/
 *.dll
 *.pdb
 *.exe
@@ -8,14 +12,14 @@ obj/
 # IDE
 .vs/
 .vscode/
-*.suo
 *.user
+*.suo
+*.cache
 
-# pyRevit lib folders (DLLs are built, not source)
-HD.extension/lib/net48/
-HD.extension/lib/net8/
+# Release folder (distributable - don't commit binaries)
+/release/
 
-# Python cache
+# Python
 __pycache__/
 *.pyc
 *.pyo
@@ -23,3 +27,15 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
+
+# Temporary
+*.tmp
+*.temp
+*.log
+
+# Keep these in HD.extension (development)
+!HD.extension/lib/net8/*.dll
+
+# But ignore these large files if added accidentally
+HD.extension/lib/net8/MaterialDesign*.dll
+HD.extension/lib/net8/Microsoft.Xaml.Behaviors.dll

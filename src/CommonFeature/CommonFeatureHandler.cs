@@ -4,7 +4,8 @@ using System.Linq;
 using System.Windows;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using CommonFeature.Models;
+using HD.Core.Models;
+using HD.Core.Services;
 using CommonFeature.Views;
 
 namespace CommonFeature
@@ -16,6 +17,8 @@ namespace CommonFeature
     {
         None,
         Isolate,
+        IsolateElements,
+        ResetIsolate,
         GetInformation,
         ShowParameter,
         ShowBoundary,
@@ -35,6 +38,7 @@ namespace CommonFeature
         public List<long> ElementIds { get; }
         public List<string> ParameterNames { get; }
         public List<ParameterUpdateItem> Updates { get; }
+        public string Description { get; init; }
         
         private CommonFeatureRequest(RequestType type, List<long> elementIds = null, 
             List<string> paramNames = null, List<ParameterUpdateItem> updates = null)
@@ -46,6 +50,9 @@ namespace CommonFeature
         }
 
         public static CommonFeatureRequest Isolate() => new(RequestType.Isolate);
+        public static CommonFeatureRequest IsolateElements(List<long> elementIds, string description) 
+            => new(RequestType.IsolateElements, elementIds) { Description = description };
+        public static CommonFeatureRequest ResetIsolate() => new(RequestType.ResetIsolate);
         public static CommonFeatureRequest GetInformation() => new(RequestType.GetInformation);
         public static CommonFeatureRequest ShowParameter() => new(RequestType.ShowParameter);
         public static CommonFeatureRequest ShowBoundary() => new(RequestType.ShowBoundary);
@@ -111,6 +118,12 @@ namespace CommonFeature
                 {
                     case RequestType.Isolate:
                         ExecuteIsolate(app);
+                        break;
+                    case RequestType.IsolateElements:
+                        ExecuteIsolateElements(app, request.ElementIds, request.Description);
+                        break;
+                    case RequestType.ResetIsolate:
+                        ExecuteResetIsolate(app);
                         break;
                     case RequestType.GetInformation:
                         ExecuteGetInformation(app);
@@ -895,9 +908,489 @@ namespace CommonFeature
 
         private void ExecuteIsolate(UIApplication app)
         {
-            // TODO: Implement Isolate feature
-            OnOperationCompleted?.Invoke("Isolate: On Developing");
+            var uidoc = app.ActiveUIDocument;
+            if (uidoc == null)
+            {
+                OnError?.Invoke("No active document");
+                return;
+            }
+
+            var doc = uidoc.Document;
+            var activeView = uidoc.ActiveView;
+            
+            if (activeView == null)
+            {
+                OnError?.Invoke("No active view");
+                return;
+            }
+
+            // Show Isolate Window
+            var isolateWindow = new IsolateWindow();
+            
+            // Setup callbacks for data loading - uses current active view (may change)
+            isolateWindow.GetCategoriesCallback = () => 
+            {
+                var currentView = uidoc.ActiveView;
+                return currentView != null ? GetCategoriesForIsolate(doc, currentView.Id) : new List<CategoryItem>();
+            };
+            
+            isolateWindow.GetFamiliesCallback = (categoryName) => 
+            {
+                var currentView = uidoc.ActiveView;
+                return currentView != null ? GetFamiliesForCategory(doc, currentView.Id, categoryName) : new List<FamilyItem>();
+            };
+            
+            isolateWindow.GetTypesCallback = (categoryName, familyName) => 
+            {
+                var currentView = uidoc.ActiveView;
+                return currentView != null ? GetFamilyTypesForFamily(doc, currentView.Id, categoryName, familyName) : new List<FamilyTypeItem>();
+            };
+            
+            isolateWindow.GetParametersCallback = (categoryName, familyName, familyTypeName) => 
+            {
+                var currentView = uidoc.ActiveView;
+                return currentView != null ? GetParametersForIsolate(doc, currentView.Id, categoryName, familyName, familyTypeName) : new List<string>();
+            };
+            
+            isolateWindow.GetValuesCallback = (categoryName, familyName, familyTypeName, paramName) => 
+            {
+                var currentView = uidoc.ActiveView;
+                return currentView != null ? GetParameterValuesForIsolate(doc, currentView.Id, categoryName, familyName, familyTypeName, paramName) : new List<ParameterValueItem>();
+            };
+            
+            // Setup isolate callback - uses ExternalEvent to run on Revit main thread
+            isolateWindow.IsolateCallback = (request) =>
+            {
+                // Queue request and raise ExternalEvent
+                SetRequest(CommonFeatureRequest.IsolateElements(request.ElementIds, request.Description));
+                _externalEvent?.Raise();
+            };
+            
+            // Setup reset callback - uses ExternalEvent
+            isolateWindow.ResetIsolateCallback = () =>
+            {
+                SetRequest(CommonFeatureRequest.ResetIsolate());
+                _externalEvent?.Raise();
+            };
+            
+            // Setup callback to get current view name (for detecting view change)
+            isolateWindow.GetViewNameCallback = () =>
+            {
+                try { return uidoc.ActiveView?.Name ?? ""; }
+                catch { return ""; }
+            };
+            
+            // Setup callback to re-isolate on view change
+            isolateWindow.ReIsolateCallback = (categoryName, familyName, familyTypeName, paramName, paramValue) =>
+            {
+                try
+                {
+                    var currentView = uidoc.ActiveView;
+                    return currentView != null 
+                        ? GetElementIdsForIsolate(doc, currentView.Id, categoryName, familyName, familyTypeName, paramName, paramValue) 
+                        : new List<long>();
+                }
+                catch { return new List<long>(); }
+            };
+            
+            // Load data and show window
+            isolateWindow.LoadData();
+            isolateWindow.Show();
         }
+        
+        /// <summary>
+        /// Get element IDs matching the filter criteria in the specified view
+        /// Used for re-isolating when view changes
+        /// </summary>
+        private List<long> GetElementIdsForIsolate(Document doc, ElementId viewId, 
+            string categoryName, string familyName, string familyTypeName, string paramName, string paramValue)
+        {
+            var result = new List<long>(256); // Pre-allocate for performance
+            
+            var collector = new FilteredElementCollector(doc, viewId)
+                .WhereElementIsNotElementType();
+            
+            // Pre-compute filter flags
+            bool filterCategory = !string.IsNullOrEmpty(categoryName);
+            bool filterFamily = !string.IsNullOrEmpty(familyName);
+            bool filterType = !string.IsNullOrEmpty(familyTypeName);
+            bool filterParam = !string.IsNullOrEmpty(paramName) && !string.IsNullOrEmpty(paramValue);
+            
+            foreach (var elem in collector)
+            {
+                if (elem.Category == null) continue;
+                
+                // Filter by category
+                if (filterCategory && elem.Category.Name != categoryName)
+                    continue;
+                
+                // Filter by family
+                if (filterFamily && GetFamilyName(doc, elem) != familyName)
+                    continue;
+                
+                // Filter by family type
+                if (filterType && GetFamilyTypeName(doc, elem) != familyTypeName)
+                    continue;
+                
+                // Filter by parameter value
+                if (filterParam)
+                {
+                    var param = elem.LookupParameter(paramName);
+                    if (param == null) continue;
+                    
+                    var value = GetParameterValueAsString(doc, param);
+                    if (string.IsNullOrEmpty(value) || value == "-") value = "(Empty)";
+                    
+                    if (value != paramValue)
+                        continue;
+                }
+                
+                result.Add(elem.Id.Value);
+            }
+            
+            return result;
+        }
+
+        private void ExecuteIsolateElements(UIApplication app, List<long> elementIds, string description)
+        {
+            var uidoc = app.ActiveUIDocument;
+            if (uidoc == null)
+            {
+                OnError?.Invoke("No active document");
+                return;
+            }
+
+            var doc = uidoc.Document;
+            var activeView = uidoc.ActiveView;
+            
+            if (activeView == null)
+            {
+                OnError?.Invoke("No active view");
+                return;
+            }
+            
+            if (elementIds == null || elementIds.Count == 0)
+            {
+                OnError?.Invoke("No elements to isolate");
+                return;
+            }
+            
+            try
+            {
+                // Convert element IDs - use pre-allocated collection for better performance
+                var ids = new List<ElementId>(elementIds.Count);
+                foreach (var id in elementIds)
+                {
+                    ids.Add(new ElementId(id));
+                }
+                
+                // Single transaction: Reset + Isolate for better performance
+                using (var trans = new Transaction(doc, "Isolate Elements"))
+                {
+                    trans.Start();
+                    
+                    // First, reset any existing temporary isolation
+                    activeView.DisableTemporaryViewMode(TemporaryViewMode.TemporaryHideIsolate);
+                    
+                    // Then apply new isolation
+                    activeView.IsolateElementsTemporary(ids);
+                    
+                    trans.Commit();
+                }
+                
+                OnOperationCompleted?.Invoke($"Isolated {ids.Count} elements: {description}");
+            }
+            catch (Exception ex)
+            {
+                OnError?.Invoke($"Isolate failed: {ex.Message}");
+            }
+        }
+
+        private void ExecuteResetIsolate(UIApplication app)
+        {
+            var uidoc = app.ActiveUIDocument;
+            if (uidoc == null)
+            {
+                OnError?.Invoke("No active document");
+                return;
+            }
+
+            var doc = uidoc.Document;
+            var activeView = uidoc.ActiveView;
+            
+            if (activeView == null)
+            {
+                OnError?.Invoke("No active view");
+                return;
+            }
+            
+            try
+            {
+                using (var trans = new Transaction(doc, "Reset Isolate"))
+                {
+                    trans.Start();
+                    activeView.DisableTemporaryViewMode(TemporaryViewMode.TemporaryHideIsolate);
+                    trans.Commit();
+                }
+                
+                OnOperationCompleted?.Invoke("Isolation reset");
+            }
+            catch (Exception ex)
+            {
+                OnError?.Invoke($"Reset isolate failed: {ex.Message}");
+            }
+        }
+
+        #region Isolate Helper Methods
+
+        /// <summary>
+        /// Get categories from elements visible in the specified view only
+        /// </summary>
+        private List<CategoryItem> GetCategoriesForIsolate(Document doc, ElementId viewId)
+        {
+            var result = new Dictionary<long, CategoryItem>();
+            
+            // Filter by view - only visible elements
+            var collector = new FilteredElementCollector(doc, viewId)
+                .WhereElementIsNotElementType();
+            
+            foreach (var elem in collector)
+            {
+                if (elem.Category == null) continue;
+                var catId = elem.Category.Id.Value;
+                var elemId = elem.Id.Value;
+                
+                if (result.TryGetValue(catId, out var item))
+                {
+                    item.ElementCount++;
+                    item.ElementIds.Add(elemId);
+                }
+                else
+                {
+                    result[catId] = new CategoryItem
+                    {
+                        Name = elem.Category.Name,
+                        CategoryId = catId,
+                        ElementCount = 1,
+                        ElementIds = new List<long>(16) { elemId }
+                    };
+                }
+            }
+            
+            return result.Values.OrderBy(c => c.Name).ToList();
+        }
+
+        /// <summary>
+        /// Get families from elements visible in the specified view only, filtered by category
+        /// </summary>
+        private List<FamilyItem> GetFamiliesForCategory(Document doc, ElementId viewId, string categoryName)
+        {
+            var result = new Dictionary<string, FamilyItem>(StringComparer.Ordinal);
+            
+            // Filter by view - only visible elements
+            var collector = new FilteredElementCollector(doc, viewId)
+                .WhereElementIsNotElementType();
+            
+            foreach (var elem in collector)
+            {
+                if (elem.Category == null) continue;
+                if (elem.Category.Name != categoryName) continue;
+                
+                string familyName = GetFamilyName(doc, elem);
+                if (string.IsNullOrEmpty(familyName)) continue;
+                
+                var elemId = elem.Id.Value;
+                
+                if (result.TryGetValue(familyName, out var item))
+                {
+                    item.ElementCount++;
+                    item.ElementIds.Add(elemId);
+                }
+                else
+                {
+                    result[familyName] = new FamilyItem
+                    {
+                        FamilyName = familyName,
+                        CategoryName = categoryName,
+                        ElementCount = 1,
+                        ElementIds = new List<long>(16) { elemId }
+                    };
+                }
+            }
+            
+            return result.Values.OrderBy(f => f.FamilyName).ToList();
+        }
+
+        private string GetFamilyName(Document doc, Element elem)
+        {
+            if (elem is FamilyInstance fi && fi.Symbol?.Family != null)
+            {
+                return fi.Symbol.Family.Name;
+            }
+            
+            var typeId = elem.GetTypeId();
+            if (typeId != ElementId.InvalidElementId)
+            {
+                var elemType = doc.GetElement(typeId);
+                if (elemType != null)
+                {
+                    var familyParam = elemType.get_Parameter(BuiltInParameter.SYMBOL_FAMILY_NAME_PARAM);
+                    if (familyParam != null && familyParam.HasValue)
+                    {
+                        return familyParam.AsString();
+                    }
+                    return elemType.Name;
+                }
+            }
+            
+            return elem.GetType().Name;
+        }
+        
+        private string GetFamilyTypeName(Document doc, Element elem)
+        {
+            if (elem is FamilyInstance fi && fi.Symbol != null)
+            {
+                return fi.Symbol.Name;
+            }
+            
+            var typeId = elem.GetTypeId();
+            if (typeId != ElementId.InvalidElementId)
+            {
+                var elemType = doc.GetElement(typeId);
+                if (elemType != null)
+                {
+                    return elemType.Name;
+                }
+            }
+            
+            return "";
+        }
+        
+        /// <summary>
+        /// Get family types from elements visible in the specified view only, filtered by category and family
+        /// </summary>
+        private List<FamilyTypeItem> GetFamilyTypesForFamily(Document doc, ElementId viewId, string categoryName, string familyName)
+        {
+            var result = new Dictionary<string, FamilyTypeItem>(StringComparer.Ordinal);
+            
+            // Filter by view - only visible elements
+            var collector = new FilteredElementCollector(doc, viewId)
+                .WhereElementIsNotElementType();
+            
+            foreach (var elem in collector)
+            {
+                if (elem.Category == null) continue;
+                if (elem.Category.Name != categoryName) continue;
+                
+                string elemFamilyName = GetFamilyName(doc, elem);
+                if (elemFamilyName != familyName) continue;
+                
+                string typeName = GetFamilyTypeName(doc, elem);
+                if (string.IsNullOrEmpty(typeName)) continue;
+                
+                var elemId = elem.Id.Value;
+                
+                if (result.TryGetValue(typeName, out var item))
+                {
+                    item.ElementCount++;
+                    item.ElementIds.Add(elemId);
+                }
+                else
+                {
+                    result[typeName] = new FamilyTypeItem
+                    {
+                        TypeName = typeName,
+                        FamilyName = familyName,
+                        CategoryName = categoryName,
+                        ElementCount = 1,
+                        ElementIds = new List<long>(16) { elemId }
+                    };
+                }
+            }
+            
+            return result.Values.OrderBy(t => t.TypeName).ToList();
+        }
+
+        /// <summary>
+        /// Get parameters from elements visible in the specified view only
+        /// </summary>
+        private List<string> GetParametersForIsolate(Document doc, ElementId viewId, string categoryName, string familyName, string familyTypeName)
+        {
+            var parameters = new HashSet<string>(StringComparer.Ordinal);
+            
+            // Filter by view - only visible elements
+            var collector = new FilteredElementCollector(doc, viewId)
+                .WhereElementIsNotElementType();
+            
+            // Take sample of elements (max 20) to get parameters - reduced for speed
+            int count = 0;
+            foreach (var elem in collector)
+            {
+                if (elem.Category == null || elem.Category.Name != categoryName) continue;
+                if (!string.IsNullOrEmpty(familyName) && GetFamilyName(doc, elem) != familyName) continue;
+                if (!string.IsNullOrEmpty(familyTypeName) && GetFamilyTypeName(doc, elem) != familyTypeName) continue;
+                
+                foreach (Parameter param in elem.Parameters)
+                {
+                    if (param.Definition == null) continue;
+                    var name = param.Definition.Name;
+                    if (!string.IsNullOrEmpty(name) && !name.StartsWith("INVALID"))
+                    {
+                        parameters.Add(name);
+                    }
+                }
+                
+                if (++count >= 20) break; // Reduced sample size for speed
+            }
+            
+            return parameters.OrderBy(p => p).ToList();
+        }
+
+        /// <summary>
+        /// Get parameter values from elements visible in the specified view only
+        /// </summary>
+        private List<ParameterValueItem> GetParameterValuesForIsolate(Document doc, ElementId viewId, string categoryName, string familyName, string familyTypeName, string parameterName)
+        {
+            var result = new Dictionary<string, ParameterValueItem>(StringComparer.Ordinal);
+            
+            // Filter by view - only visible elements
+            var collector = new FilteredElementCollector(doc, viewId)
+                .WhereElementIsNotElementType();
+            
+            foreach (var elem in collector)
+            {
+                if (elem.Category == null || elem.Category.Name != categoryName) continue;
+                if (!string.IsNullOrEmpty(familyName) && GetFamilyName(doc, elem) != familyName) continue;
+                if (!string.IsNullOrEmpty(familyTypeName) && GetFamilyTypeName(doc, elem) != familyTypeName) continue;
+                
+                var param = elem.LookupParameter(parameterName);
+                if (param == null) continue;
+                
+                string value = GetParameterValueAsString(doc, param);
+                if (string.IsNullOrEmpty(value) || value == "-") value = "(Empty)";
+                
+                var elemId = elem.Id.Value;
+                
+                if (result.TryGetValue(value, out var item))
+                {
+                    item.ElementCount++;
+                    item.ElementIds.Add(elemId);
+                }
+                else
+                {
+                    result[value] = new ParameterValueItem
+                    {
+                        Value = value,
+                        ElementCount = 1,
+                        ElementIds = new List<long>(16) { elemId }
+                    };
+                }
+            }
+            
+            return result.Values.OrderBy(v => v.Value).ToList();
+        }
+
+        #endregion
 
         private void ExecuteUpdateParameterValues(UIApplication app, List<ParameterUpdateItem> updates)
         {
@@ -1256,6 +1749,23 @@ namespace CommonFeature
                     
                     // Activate the 3D view
                     uidoc.ActiveView = view3D;
+                    
+                    // Zoom to fit the section box
+                    try
+                    {
+                        // Get UIView for the active view
+                        var uiViews = uidoc.GetOpenUIViews();
+                        var uiView = uiViews.FirstOrDefault(v => v.ViewId == view3D.Id);
+                        if (uiView != null)
+                        {
+                            // Zoom to fit using the section box bounds
+                            uiView.ZoomToFit();
+                        }
+                    }
+                    catch
+                    {
+                        // Zoom failed - not critical, continue
+                    }
                     
                     OnOperationCompleted?.Invoke($"Section box created for {elementIds.Count} element(s) in '{view3D.Name}'");
                 }

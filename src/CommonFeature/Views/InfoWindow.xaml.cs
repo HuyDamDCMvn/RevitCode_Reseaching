@@ -10,7 +10,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
-using CommonFeature.Models;
+using HD.Core.Models;
 using Microsoft.Win32;
 
 namespace CommonFeature.Views
@@ -31,29 +31,6 @@ namespace CommonFeature.Views
         public const string EditedBy = "EditedBy";
         
         public static readonly string[] FixedColumns = { Id, FamilyName, FamilyType, Category, Workset, CreatedBy, EditedBy };
-    }
-    
-    #endregion
-
-    #region Filter Models
-    
-    /// <summary>
-    /// Filter item for multi-select popup
-    /// </summary>
-    public class FilterItem : INotifyPropertyChanged
-    {
-        private bool _isSelected = true;
-        public string Value { get; set; }
-        public bool IsSelected
-        {
-            get => _isSelected;
-            set
-            {
-                _isSelected = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSelected)));
-            }
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
     }
     
     #endregion
