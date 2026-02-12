@@ -50,7 +50,7 @@ from Autodesk.Revit.DB import Transaction
 
 # WPF imports
 from System.Windows import MessageBox, MessageBoxButton, MessageBoxImage, Clipboard
-from System.Windows.Controls import DataGridTextColumn, ContextMenu, MenuItem, Separator
+from System.Windows.Controls import DataGridTextColumn, DataGridLength, ContextMenu, MenuItem, Separator
 from System.Windows.Data import Binding
 from System.Windows.Media import SolidColorBrush, Color
 from System.Windows.Input import Key
@@ -206,7 +206,7 @@ class ElementInfoWindow(WPFWindow):
             col = DataGridTextColumn()
             col.Header = header
             col.Binding = Binding(binding_path)
-            col.Width = width
+            col.Width = DataGridLength(width)
             col.IsReadOnly = True
             self.ElementsGrid.Columns.Add(col)
     
@@ -223,7 +223,7 @@ class ElementInfoWindow(WPFWindow):
         
         col = DataGridTextColumn()
         col.Header = header
-        col.Width = 140
+        col.Width = DataGridLength(140)
         col.IsReadOnly = False
         
         self.ElementsGrid.Columns.Add(col)
