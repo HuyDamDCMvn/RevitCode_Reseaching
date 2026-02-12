@@ -2,12 +2,23 @@
 """Element utilities for pyHD Extension."""
 from __future__ import print_function
 
+import clr
+clr.AddReference('RevitAPI')
+clr.AddReference('RevitAPIUI')
+
 from Autodesk.Revit.DB import (
     FilteredElementCollector, CategoryType, BuiltInParameter,
     FamilyInstance, ElementId, WorksharingUtils, StorageType,
     Transaction, View3D, ViewFamily, ViewFamilyType, BoundingBoxXYZ, XYZ,
     DisplayStyle, ViewDetailLevel
 )
+
+# Try to import SpecTypeId (Revit 2022+)
+try:
+    from Autodesk.Revit.DB import SpecTypeId
+    HAS_SPEC_TYPE_ID = True
+except ImportError:
+    HAS_SPEC_TYPE_ID = False
 
 def get_element_info(doc, element):
     """
@@ -153,12 +164,12 @@ def get_parameter_value_as_string(doc, param):
     
     elif storage == StorageType.Integer:
         # Check for Yes/No
-        try:
-            from Autodesk.Revit.DB import SpecTypeId
-            if param.Definition and param.Definition.GetDataType() == SpecTypeId.Boolean.YesNo:
-                return "Yes" if param.AsInteger() == 1 else "No"
-        except:
-            pass
+        if HAS_SPEC_TYPE_ID:
+            try:
+                if param.Definition and param.Definition.GetDataType() == SpecTypeId.Boolean.YesNo:
+                    return "Yes" if param.AsInteger() == 1 else "No"
+            except:
+                pass
         return str(param.AsInteger())
     
     elif storage == StorageType.Double:
@@ -200,12 +211,12 @@ def get_parameter_data_type(param):
         return "String"
     
     elif storage == StorageType.Integer:
-        try:
-            from Autodesk.Revit.DB import SpecTypeId
-            if param.Definition and param.Definition.GetDataType() == SpecTypeId.Boolean.YesNo:
-                return "YesNo"
-        except:
-            pass
+        if HAS_SPEC_TYPE_ID:
+            try:
+                if param.Definition and param.Definition.GetDataType() == SpecTypeId.Boolean.YesNo:
+                    return "YesNo"
+            except:
+                pass
         return "Integer"
     
     elif storage == StorageType.Double:
@@ -425,17 +436,17 @@ def set_parameter_value(doc, elem_id, param_name, new_value, is_instance=True):
         
         elif storage == StorageType.Integer:
             # Handle Yes/No
-            try:
-                from Autodesk.Revit.DB import SpecTypeId
-                if param.Definition and param.Definition.GetDataType() == SpecTypeId.Boolean.YesNo:
-                    lower = new_value.lower() if new_value else ""
-                    if lower in ["yes", "true", "1"]:
-                        param.Set(1)
-                    else:
-                        param.Set(0)
-                    return (True, None)
-            except:
-                pass
+            if HAS_SPEC_TYPE_ID:
+                try:
+                    if param.Definition and param.Definition.GetDataType() == SpecTypeId.Boolean.YesNo:
+                        lower = new_value.lower() if new_value else ""
+                        if lower in ["yes", "true", "1"]:
+                            param.Set(1)
+                        else:
+                            param.Set(0)
+                        return (True, None)
+                except:
+                    pass
             param.Set(int(new_value))
             return (True, None)
         
@@ -527,7 +538,8 @@ def create_section_box(uidoc, element_ids):
     section_box.Min = combined_min
     section_box.Max = combined_max
     
-    with Transaction(doc, "Create Section Box") as trans:
+    trans = Transaction(doc, "Create Section Box")
+    try:
         trans.Start()
         
         view3d = None
@@ -580,3 +592,7 @@ def create_section_box(uidoc, element_ids):
         uidoc.ActiveView = view3d
         
         return (True, "Section box created in '{}'".format(view3d.Name))
+    except Exception as ex:
+        if trans.HasStarted():
+            trans.RollBack()
+        return (False, "Transaction error: {}".format(str(ex)))

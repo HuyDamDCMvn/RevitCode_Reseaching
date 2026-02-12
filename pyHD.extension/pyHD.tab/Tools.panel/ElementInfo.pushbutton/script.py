@@ -11,8 +11,10 @@ import csv
 import codecs
 
 from pyrevit import script, forms, HOST_APP, EXEC_PARAMS
-from pyrevit import revit, DB
+from pyrevit import revit
 from pyrevit.forms import WPFWindow
+
+from Autodesk.Revit import DB
 
 # Add lib folder to path
 ext_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -377,7 +379,8 @@ class ElementInfoWindow(WPFWindow):
         error_count = 0
         errors = []
         
-        with DB.Transaction(self.doc, "Update Parameter Values") as trans:
+        trans = DB.Transaction(self.doc, "Update Parameter Values")
+        try:
             trans.Start()
             
             for update in updates:
@@ -396,6 +399,11 @@ class ElementInfoWindow(WPFWindow):
                     errors.append("ID {}: {}".format(update['elem_id'], error))
             
             trans.Commit()
+        except Exception as ex:
+            if trans.HasStarted():
+                trans.RollBack()
+            self.StatusText.Text = "Transaction error: {}".format(str(ex))
+            return
         
         # Clear modifications on success
         if success_count > 0:
