@@ -1,0 +1,12 @@
+{
+    "name": "pyHD",
+    "description": "Pure Python HD Extension for Revit - Element Information and Productivity Tools",
+    "author": "HD Team",
+    "version": "1.0.0",
+    "type": "extension",
+    "engine": {
+        "type": "ironpython",
+        "version": "279"
+    },
+    "templates": []
+}

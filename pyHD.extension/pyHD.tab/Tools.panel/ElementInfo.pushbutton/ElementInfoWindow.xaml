@@ -1,0 +1,188 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Element Information (pyHD)" 
+        Height="650" 
+        Width="1100"
+        MinHeight="450"
+        MinWidth="850"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResizeWithGrip"
+        ShowInTaskbar="True"
+        Background="#FAFAFA"
+        FontFamily="Segoe UI"
+        FontSize="13">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Padding="16,12" Background="#3F51B5">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Element Information (Pure Python)" 
+                               FontSize="18" 
+                               FontWeight="SemiBold"
+                               Foreground="White"/>
+                    <TextBlock x:Name="CountText"
+                               Text="0 elements" 
+                               FontSize="11" 
+                               Foreground="#BBDEFB"
+                               Margin="0,4,0,0"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="AddParamButton"
+                            Content="Add Param"
+                            Padding="10,6"
+                            Margin="0,0,6,0"
+                            Background="#4CAF50"
+                            Foreground="White"
+                            BorderThickness="0"
+                            ToolTip="Add parameter columns"
+                            Cursor="Hand"/>
+                    <Button x:Name="UpdateButton"
+                            Content="Update Value"
+                            Padding="10,6"
+                            Margin="0,0,6,0"
+                            Background="#FF9800"
+                            Foreground="White"
+                            BorderThickness="0"
+                            ToolTip="Update modified values to Revit"
+                            Cursor="Hand"
+                            IsEnabled="False"/>
+                    <Button x:Name="ClearFilterButton"
+                            Content="Clear Filters"
+                            Padding="10,6"
+                            Margin="0,0,6,0"
+                            Background="#5C6BC0"
+                            Foreground="White"
+                            BorderThickness="0"
+                            ToolTip="Clear all filters"
+                            Cursor="Hand"/>
+                    <Button x:Name="ExportButton"
+                            Content="Export CSV"
+                            Padding="10,6"
+                            Margin="0,0,6,0"
+                            Background="#5C6BC0"
+                            Foreground="White"
+                            BorderThickness="0"
+                            ToolTip="Export to CSV file"
+                            Cursor="Hand"/>
+                    <Button x:Name="RefreshButton"
+                            Content="Refresh"
+                            Padding="10,6"
+                            Background="#5C6BC0"
+                            Foreground="White"
+                            BorderThickness="0"
+                            ToolTip="Reload data from Revit"
+                            Cursor="Hand"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1" Margin="12,8">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            
+            <!-- Search Box -->
+            <Grid Grid.Row="0" Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="300"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Search: " VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <TextBox x:Name="SearchBox" Grid.Column="1" Padding="6,4" BorderBrush="#BDBDBD"/>
+            </Grid>
+            
+            <!-- DataGrid -->
+            <DataGrid x:Name="ElementsGrid"
+                      Grid.Row="1"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      CanUserReorderColumns="True"
+                      CanUserResizeColumns="True"
+                      CanUserSortColumns="True"
+                      IsReadOnly="False"
+                      SelectionMode="Extended"
+                      SelectionUnit="FullRow"
+                      GridLinesVisibility="Horizontal"
+                      HeadersVisibility="Column"
+                      BorderThickness="1"
+                      BorderBrush="#E0E0E0"
+                      Background="White"
+                      RowHeight="26"
+                      ColumnHeaderHeight="30">
+                
+                <DataGrid.ColumnHeaderStyle>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="#F5F5F5"/>
+                        <Setter Property="Foreground" Value="#424242"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                        <Setter Property="Padding" Value="8,4"/>
+                        <Setter Property="BorderBrush" Value="#E0E0E0"/>
+                        <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                    </Style>
+                </DataGrid.ColumnHeaderStyle>
+                
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow">
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#E3F2FD"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
+            </DataGrid>
+        </Grid>
+
+        <!-- Footer -->
+        <Border Grid.Row="2" 
+                Background="#FAFAFA"
+                BorderBrush="#E0E0E0"
+                BorderThickness="0,1,0,0"
+                Padding="16,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Column="0"
+                           x:Name="StatusText"
+                           Text="Ready" 
+                           FontSize="12"
+                           VerticalAlignment="Center"
+                           Foreground="#757575"/>
+                
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <TextBlock x:Name="ModifiedText"
+                               Text=""
+                               FontSize="12"
+                               VerticalAlignment="Center"
+                               Foreground="#FF9800"
+                               Margin="0,0,16,0"/>
+                    <Button x:Name="CloseButton"
+                            Content="Close"
+                            Padding="16,6"
+                            Background="#3F51B5"
+                            Foreground="White"
+                            BorderThickness="0"
+                            Cursor="Hand"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
