@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
+# type: ignore
 """Element Information Tool - Pure Python Implementation.
 
 Shows all elements in a DataGrid with filtering, sorting, parameter editing,
 and export capabilities.
+
+Note: This module uses Revit API and WPF via IronPython/pythonnet.
+The '# type: ignore' at module level suppresses Pylance warnings
+for .NET types that the IDE cannot resolve.
 """
 from __future__ import print_function
 import os
@@ -11,7 +16,7 @@ import csv
 import codecs
 
 # pyRevit imports
-from pyrevit import script, forms, HOST_APP, EXEC_PARAMS
+from pyrevit import script, forms, HOST_APP, EXEC_PARAMS  # noqa: F401
 from pyrevit import revit
 from pyrevit.forms import WPFWindow
 
@@ -29,15 +34,15 @@ from element_utils import (
 )
 
 # .NET imports
-import clr
+import clr  # noqa: F401
 clr.AddReference('RevitAPI')
 clr.AddReference('System.Windows.Forms')
 
 # Try to add IronPython.Wpf reference
 try:
     clr.AddReference('IronPython.Wpf')
-    import wpf
-except:
+    import wpf  # noqa: F401
+except Exception:
     wpf = None
 
 # Revit API

@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Element utilities for pyHD Extension."""
+# type: ignore
+"""Element utilities for pyHD Extension.
+
+Note: This module uses Revit API via IronPython/pythonnet.
+The '# type: ignore' at module level suppresses Pylance warnings
+for .NET types that the IDE cannot resolve.
+"""
 from __future__ import print_function
 
-import clr
+import clr  # noqa: F401
 clr.AddReference('RevitAPI')
 clr.AddReference('RevitAPIUI')
 
