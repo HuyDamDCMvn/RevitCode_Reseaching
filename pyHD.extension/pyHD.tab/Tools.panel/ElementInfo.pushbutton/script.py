@@ -3,11 +3,7 @@
 """Element Information Tool - Pure Python Implementation.
 
 Shows all elements in a DataGrid with filtering, sorting, parameter editing,
-and export capabilities.
-
-Note: This module uses Revit API and WPF via IronPython/pythonnet.
-The '# type: ignore' at module level suppresses Pylance warnings
-for .NET types that the IDE cannot resolve.
+and export capabilities. Matches HD.extension functionality.
 """
 from __future__ import print_function
 import os
@@ -37,6 +33,8 @@ from element_utils import (
 import clr  # noqa: F401
 clr.AddReference('RevitAPI')
 clr.AddReference('System.Windows.Forms')
+clr.AddReference('PresentationFramework')
+clr.AddReference('WindowsBase')
 
 # Try to add IronPython.Wpf reference
 try:
@@ -50,13 +48,23 @@ from Autodesk.Revit.DB import Transaction
 
 # WPF imports
 from System.Windows import MessageBox, MessageBoxButton, MessageBoxImage, Clipboard
-from System.Windows.Controls import DataGridTextColumn, DataGridLength, ContextMenu, MenuItem, Separator
+from System.Windows.Controls import (
+    DataGridTextColumn, DataGridLength, ContextMenu, MenuItem, Separator,
+    CheckBox, TextBlock, Button, StackPanel, Orientation
+)
 from System.Windows.Data import Binding
 from System.Windows.Media import SolidColorBrush, Color
 from System.Windows.Input import Key
 
 __title__ = "Element\nInfo"
 __doc__ = "View and edit element information with filtering and export capabilities."
+
+
+class FilterItem(object):
+    """Filter item for checkbox list."""
+    def __init__(self, value, is_selected=True):
+        self.value = value
+        self.is_selected = is_selected
 
 
 class ElementData(object):
@@ -108,6 +116,25 @@ class ElementData(object):
         if name in self._original_params:
             self._parameters[name] = self._original_params[name]
             self._modified_params.discard(name)
+    
+    def get_value(self, column_name):
+        """Get value by column name for filtering."""
+        if column_name == "id":
+            return str(self.id)
+        elif column_name == "family_name":
+            return self.family_name
+        elif column_name == "family_type":
+            return self.family_type
+        elif column_name == "category":
+            return self.category
+        elif column_name == "workset":
+            return self.workset
+        elif column_name == "created_by":
+            return self.created_by
+        elif column_name == "edited_by":
+            return self.edited_by
+        else:
+            return self.get_param(column_name)
 
 
 class ElementInfoWindow(WPFWindow):
@@ -126,6 +153,9 @@ class ElementInfoWindow(WPFWindow):
         
         # Filter state
         self._column_filters = {}  # column_name -> set of selected values
+        self._current_filter_column = None
+        self._filter_items = []  # List of FilterItem for popup
+        self._filter_checkboxes = []  # List of CheckBox controls
         
         # Modified cell brush
         self._modified_brush = SolidColorBrush(Color.FromRgb(200, 230, 201))
@@ -137,10 +167,15 @@ class ElementInfoWindow(WPFWindow):
         self.ExportButton.Click += self.export_click
         self.AddParamButton.Click += self.add_param_click
         self.UpdateButton.Click += self.update_click
-        self.SearchBox.TextChanged += self.search_changed
         self.ElementsGrid.MouseRightButtonUp += self.grid_right_click
         self.ElementsGrid.CellEditEnding += self.cell_edit_ending
         self.ElementsGrid.BeginningEdit += self.beginning_edit
+        
+        # Filter popup events
+        self.PopupSearchBox.TextChanged += self.popup_search_changed
+        self.SelectAllBtn.Click += self.select_all_click
+        self.ClearAllBtn.Click += self.clear_all_click
+        self.ApplyFilterBtn.Click += self.apply_filter_click
         
         # Keyboard shortcut
         self.KeyDown += self.on_key_down
@@ -156,6 +191,7 @@ class ElementInfoWindow(WPFWindow):
             elements = collect_all_elements(self.doc)
             self._all_elements = [ElementData(e) for e in elements]
             self._filtered_elements = list(self._all_elements)
+            self._column_filters = {}
             
             self.update_grid()
             self.CountText.Text = "{} elements".format(len(self._all_elements))
@@ -163,37 +199,40 @@ class ElementInfoWindow(WPFWindow):
         except Exception as ex:
             self.StatusText.Text = "Error: {}".format(str(ex))
     
+    def apply_filters(self):
+        """Apply all column filters to get filtered elements."""
+        if not self._column_filters:
+            self._filtered_elements = list(self._all_elements)
+            return
+        
+        result = []
+        for elem in self._all_elements:
+            match = True
+            for col_name, selected_values in self._column_filters.items():
+                if selected_values:  # Only filter if there are selected values
+                    elem_value = elem.get_value(col_name)
+                    if elem_value not in selected_values:
+                        match = False
+                        break
+            if match:
+                result.append(elem)
+        
+        self._filtered_elements = result
+    
     def update_grid(self):
         """Update DataGrid with filtered elements."""
-        # Simple list binding
         self.ElementsGrid.ItemsSource = None
-        
-        # Apply search filter
-        search_text = self.SearchBox.Text.lower() if self.SearchBox.Text else ""
-        
-        if search_text:
-            filtered = []
-            for elem in self._filtered_elements:
-                if (search_text in str(elem.id) or
-                    search_text in elem.family_name.lower() or
-                    search_text in elem.family_type.lower() or
-                    search_text in elem.category.lower()):
-                    filtered.append(elem)
-            display_list = filtered
-        else:
-            display_list = self._filtered_elements
-        
-        self.ElementsGrid.ItemsSource = display_list
+        self.ElementsGrid.ItemsSource = self._filtered_elements
         self.CountText.Text = "{} / {} elements".format(
-            len(display_list), len(self._all_elements))
+            len(self._filtered_elements), len(self._all_elements))
     
     def setup_columns(self):
-        """Setup default columns."""
+        """Setup default columns with filter buttons."""
         self.ElementsGrid.Columns.Clear()
         
-        # Fixed columns
+        # Fixed columns with filter buttons
         columns = [
-            ("Id", "id", 80),
+            ("ID", "id", 80),
             ("Family Name", "family_name", 150),
             ("Family Type", "family_type", 150),
             ("Category", "category", 120),
@@ -204,29 +243,183 @@ class ElementInfoWindow(WPFWindow):
         
         for header, binding_path, width in columns:
             col = DataGridTextColumn()
-            col.Header = header
-            col.Binding = Binding(binding_path)
             col.Width = DataGridLength(width)
             col.IsReadOnly = True
+            col.Binding = Binding(binding_path)
+            
+            # Create header with filter button
+            header_panel = StackPanel()
+            header_panel.Orientation = Orientation.Horizontal
+            
+            header_text = TextBlock()
+            header_text.Text = header
+            header_text.VerticalAlignment = 1  # Center
+            header_text.Margin = System.Windows.Thickness(0, 0, 8, 0)
+            header_panel.Children.Add(header_text)
+            
+            filter_btn = Button()
+            filter_btn.Content = "▼"
+            filter_btn.FontSize = 10
+            filter_btn.Padding = System.Windows.Thickness(4, 2, 4, 2)
+            filter_btn.Background = SolidColorBrush(Color.FromRgb(224, 224, 224))
+            filter_btn.BorderThickness = System.Windows.Thickness(0)
+            filter_btn.Tag = binding_path
+            filter_btn.ToolTip = "Filter"
+            filter_btn.Click += self.filter_button_click
+            header_panel.Children.Add(filter_btn)
+            
+            col.Header = header_panel
             self.ElementsGrid.Columns.Add(col)
     
     def add_parameter_column(self, param_name, is_instance):
-        """Add a parameter column to the grid."""
+        """Add a parameter column to the grid with filter button."""
         if param_name in self._param_columns:
             return
         
         self._param_columns.append(param_name)
         self._param_is_instance[param_name] = is_instance
         
-        # Create column header
-        header = "{} ({})".format(param_name, "I" if is_instance else "T")
-        
+        # Create column
         col = DataGridTextColumn()
-        col.Header = header
         col.Width = DataGridLength(140)
         col.IsReadOnly = False
         
+        # Create header with filter button
+        header_text = "{} ({})".format(param_name, "I" if is_instance else "T")
+        
+        header_panel = StackPanel()
+        header_panel.Orientation = Orientation.Horizontal
+        
+        txt = TextBlock()
+        txt.Text = header_text
+        txt.VerticalAlignment = 1
+        txt.Margin = System.Windows.Thickness(0, 0, 8, 0)
+        header_panel.Children.Add(txt)
+        
+        filter_btn = Button()
+        filter_btn.Content = "▼"
+        filter_btn.FontSize = 10
+        filter_btn.Padding = System.Windows.Thickness(4, 2, 4, 2)
+        filter_btn.Background = SolidColorBrush(Color.FromRgb(224, 224, 224))
+        filter_btn.BorderThickness = System.Windows.Thickness(0)
+        filter_btn.Tag = param_name
+        filter_btn.ToolTip = "Filter"
+        filter_btn.Click += self.filter_button_click
+        header_panel.Children.Add(filter_btn)
+        
+        col.Header = header_panel
         self.ElementsGrid.Columns.Add(col)
+    
+    def filter_button_click(self, sender, args):
+        """Show filter popup for column."""
+        btn = sender
+        column_name = str(btn.Tag)
+        self._current_filter_column = column_name
+        
+        # Get unique values for this column from ALL elements
+        unique_values = set()
+        for elem in self._all_elements:
+            val = elem.get_value(column_name)
+            if val:
+                unique_values.add(val)
+        
+        # Sort values
+        sorted_values = sorted(unique_values)
+        
+        # Get currently selected values (if filter exists)
+        current_selected = self._column_filters.get(column_name, set())
+        if not current_selected:
+            # Default: all selected
+            current_selected = unique_values
+        
+        # Create filter items
+        self._filter_items = []
+        for val in sorted_values:
+            item = FilterItem(val, val in current_selected)
+            self._filter_items.append(item)
+        
+        # Populate popup
+        self.populate_filter_popup()
+        
+        # Show popup
+        self.FilterPopup.PlacementTarget = btn
+        self.FilterPopup.IsOpen = True
+        self.PopupSearchBox.Text = ""
+        self.PopupSearchBox.Focus()
+    
+    def populate_filter_popup(self, search_text=""):
+        """Populate filter popup with checkboxes."""
+        self.FilterItemsPanel.Children.Clear()
+        self._filter_checkboxes = []
+        
+        search_lower = search_text.lower() if search_text else ""
+        
+        for item in self._filter_items:
+            if search_lower and search_lower not in item.value.lower():
+                continue
+            
+            cb = CheckBox()
+            cb.Content = item.value
+            cb.IsChecked = item.is_selected
+            cb.Tag = item
+            cb.Margin = System.Windows.Thickness(0, 3, 0, 3)
+            cb.Checked += self.filter_checkbox_changed
+            cb.Unchecked += self.filter_checkbox_changed
+            
+            self.FilterItemsPanel.Children.Add(cb)
+            self._filter_checkboxes.append(cb)
+    
+    def filter_checkbox_changed(self, sender, args):
+        """Update filter item when checkbox changes."""
+        cb = sender
+        item = cb.Tag
+        item.is_selected = cb.IsChecked
+    
+    def popup_search_changed(self, sender, args):
+        """Filter popup items by search text."""
+        search_text = self.PopupSearchBox.Text
+        self.populate_filter_popup(search_text)
+    
+    def select_all_click(self, sender, args):
+        """Select all filter items."""
+        for item in self._filter_items:
+            item.is_selected = True
+        for cb in self._filter_checkboxes:
+            cb.IsChecked = True
+    
+    def clear_all_click(self, sender, args):
+        """Clear all filter items."""
+        for item in self._filter_items:
+            item.is_selected = False
+        for cb in self._filter_checkboxes:
+            cb.IsChecked = False
+    
+    def apply_filter_click(self, sender, args):
+        """Apply filter and close popup."""
+        if self._current_filter_column:
+            # Get selected values
+            selected_values = set()
+            for item in self._filter_items:
+                if item.is_selected:
+                    selected_values.add(item.value)
+            
+            if selected_values:
+                self._column_filters[self._current_filter_column] = selected_values
+            else:
+                # No items selected = show nothing (or could show all)
+                self._column_filters[self._current_filter_column] = set()
+        
+        self.FilterPopup.IsOpen = False
+        
+        # Apply all filters
+        self.apply_filters()
+        self.update_grid()
+        
+        filter_count = sum(1 for v in self._column_filters.values() if v)
+        if filter_count > 0:
+            self.StatusText.Text = "Filter applied ({} column(s))".format(filter_count)
+        else:
+            self.StatusText.Text = "Ready"
     
     def close_click(self, sender, args):
         self.Close()
@@ -241,12 +434,8 @@ class ElementInfoWindow(WPFWindow):
     def clear_filter_click(self, sender, args):
         self._column_filters = {}
         self._filtered_elements = list(self._all_elements)
-        self.SearchBox.Text = ""
         self.update_grid()
         self.StatusText.Text = "Filters cleared"
-    
-    def search_changed(self, sender, args):
-        self.update_grid()
     
     def export_click(self, sender, args):
         """Export to CSV."""
@@ -285,7 +474,8 @@ class ElementInfoWindow(WPFWindow):
                             row.append(elem.get_param(param))
                         writer.writerow(row)
                 
-                self.StatusText.Text = "Exported to: {}".format(file_path)
+                self.StatusText.Text = "Exported {} rows to: {}".format(
+                    len(self._filtered_elements), os.path.basename(file_path))
         except Exception as ex:
             self.StatusText.Text = "Export error: {}".format(str(ex))
     
@@ -316,7 +506,7 @@ class ElementInfoWindow(WPFWindow):
         
         selected_options = forms.SelectFromList.show(
             param_options,
-            title="Select Parameters",
+            title="Select Parameters to Add",
             button_name="Add Columns",
             multiselect=True
         )
@@ -325,6 +515,7 @@ class ElementInfoWindow(WPFWindow):
             return
         
         # Parse selections and add columns
+        added_count = 0
         for opt in selected_options:
             # Extract name (remove " (Instance)" or " (Type)" suffix)
             if opt.endswith(" (Instance)"):
@@ -336,9 +527,12 @@ class ElementInfoWindow(WPFWindow):
             else:
                 continue
             
+            if name in self._param_columns:
+                continue
+            
             # Get values for all elements
-            elem_ids = [e.id for e in self._all_elements]
-            values = get_parameter_values(self.doc, elem_ids, [name])
+            all_ids = [e.id for e in self._all_elements]
+            values = get_parameter_values(self.doc, all_ids, [name])
             
             # Store values in elements
             for elem in self._all_elements:
@@ -351,9 +545,10 @@ class ElementInfoWindow(WPFWindow):
                     elem._param_types[name] = info['type']
             
             self.add_parameter_column(name, is_instance)
+            added_count += 1
         
         self.update_grid()
-        self.StatusText.Text = "Added {} parameter column(s)".format(len(selected_options))
+        self.StatusText.Text = "Added {} parameter column(s)".format(added_count)
     
     def update_click(self, sender, args):
         """Update modified parameter values to Revit."""
@@ -376,7 +571,7 @@ class ElementInfoWindow(WPFWindow):
         
         # Confirm
         if not forms.alert(
-            "Update {} parameter value(s)?".format(len(updates)),
+            "Update {} parameter value(s) to Revit model?".format(len(updates)),
             title="Confirm Update",
             yes=True, no=True
         ):
@@ -448,15 +643,38 @@ class ElementInfoWindow(WPFWindow):
         if col is None:
             return
         
-        header = str(col.Header) if col.Header else ""
+        # Get header text
+        header = col.Header
+        if header is None:
+            args.Cancel = True
+            return
+        
+        # Try to get text from header
+        header_text = ""
+        try:
+            if hasattr(header, 'Children'):
+                for child in header.Children:
+                    if hasattr(child, 'Text'):
+                        header_text = child.Text
+                        break
+            elif hasattr(header, 'Text'):
+                header_text = header.Text
+            else:
+                header_text = str(header)
+        except Exception:
+            args.Cancel = True
+            return
         
         # Only allow editing parameter columns
-        if not header.endswith(" (I)") and not header.endswith(" (T)"):
+        if " (I)" not in header_text and " (T)" not in header_text:
             args.Cancel = True
             return
         
         # Extract param name
-        param_name = header[:-4]  # Remove " (I)" or " (T)"
+        if " (I)" in header_text:
+            param_name = header_text.replace(" (I)", "")
+        else:
+            param_name = header_text.replace(" (T)", "")
         
         # Check if read-only
         row = args.Row
@@ -483,13 +701,31 @@ class ElementInfoWindow(WPFWindow):
         if col is None or row is None or row.Item is None:
             return
         
-        header = str(col.Header) if col.Header else ""
-        
-        # Only process parameter columns
-        if not header.endswith(" (I)") and not header.endswith(" (T)"):
+        # Get header text
+        header = col.Header
+        header_text = ""
+        try:
+            if hasattr(header, 'Children'):
+                for child in header.Children:
+                    if hasattr(child, 'Text'):
+                        header_text = child.Text
+                        break
+            elif hasattr(header, 'Text'):
+                header_text = header.Text
+            else:
+                header_text = str(header)
+        except Exception:
             return
         
-        param_name = header[:-4]
+        # Only process parameter columns
+        if " (I)" not in header_text and " (T)" not in header_text:
+            return
+        
+        if " (I)" in header_text:
+            param_name = header_text.replace(" (I)", "")
+        else:
+            param_name = header_text.replace(" (T)", "")
+        
         elem = row.Item
         
         # Get new value from editing element
@@ -561,7 +797,7 @@ class ElementInfoWindow(WPFWindow):
         try:
             text = ", ".join(str(eid) for eid in elem_ids)
             Clipboard.SetText(text)
-            self.StatusText.Text = "Copied {} ID(s)".format(len(elem_ids))
+            self.StatusText.Text = "Copied {} ID(s) to clipboard".format(len(elem_ids))
         except Exception as ex:
             self.StatusText.Text = "Copy failed: {}".format(str(ex))
     
@@ -569,7 +805,7 @@ class ElementInfoWindow(WPFWindow):
         """Select elements in Revit."""
         try:
             select_elements(self.uidoc, elem_ids)
-            self.StatusText.Text = "Selected {} element(s)".format(len(elem_ids))
+            self.StatusText.Text = "Selected {} element(s) in Revit".format(len(elem_ids))
         except Exception as ex:
             self.StatusText.Text = "Select failed: {}".format(str(ex))
     
@@ -585,6 +821,10 @@ class ElementInfoWindow(WPFWindow):
         """Handle keyboard shortcuts."""
         if args.Key == Key.Escape:
             self.Close()
+
+
+# Need to import System for Thickness
+import System
 
 
 def main():
