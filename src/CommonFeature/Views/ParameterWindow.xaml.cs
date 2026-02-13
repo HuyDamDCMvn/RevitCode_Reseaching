@@ -62,9 +62,7 @@ namespace CommonFeature.Views
             {
                 InitializeComponent();
                 Closing += ParameterWindow_Closing;
-                
-                // Add default validation rules
-                InitializeDefaultValidationRules();
+                Loaded += ParameterWindow_Loaded;
             }
             catch (Exception ex)
             {
@@ -73,6 +71,12 @@ namespace CommonFeature.Views
                     "Initialization Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 throw;
             }
+        }
+
+        private void ParameterWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Initialize after UI is fully loaded
+            InitializeDefaultValidationRules();
         }
 
         public void Initialize(ParameterExternalHandler handler, ExternalEvent externalEvent)
@@ -293,6 +297,9 @@ namespace CommonFeature.Views
 
         private void Tab_Checked(object sender, RoutedEventArgs e)
         {
+            // Guard: Skip if window not fully loaded (event fires during XAML initialization)
+            if (!IsLoaded) return;
+            
             if (sender is RadioButton rb)
             {
                 // Hide all panels
@@ -303,11 +310,11 @@ namespace CommonFeature.Views
                 if (ValidatePanel != null) ValidatePanel.Visibility = Visibility.Collapsed;
 
                 // Show selected panel
-                if (rb == TabBrowse) BrowsePanel.Visibility = Visibility.Visible;
-                else if (rb == TabEdit) EditPanel.Visibility = Visibility.Visible;
-                else if (rb == TabTransfer) TransferPanel.Visibility = Visibility.Visible;
-                else if (rb == TabCompare) ComparePanel.Visibility = Visibility.Visible;
-                else if (rb == TabValidate) ValidatePanel.Visibility = Visibility.Visible;
+                if (rb == TabBrowse && BrowsePanel != null) BrowsePanel.Visibility = Visibility.Visible;
+                else if (rb == TabEdit && EditPanel != null) EditPanel.Visibility = Visibility.Visible;
+                else if (rb == TabTransfer && TransferPanel != null) TransferPanel.Visibility = Visibility.Visible;
+                else if (rb == TabCompare && ComparePanel != null) ComparePanel.Visibility = Visibility.Visible;
+                else if (rb == TabValidate && ValidatePanel != null) ValidatePanel.Visibility = Visibility.Visible;
             }
         }
 
@@ -611,6 +618,9 @@ namespace CommonFeature.Views
 
         private void TransferMode_Changed(object sender, RoutedEventArgs e)
         {
+            // Guard: Skip if window not fully loaded
+            if (!IsLoaded) return;
+            
             if (MapOptionsPanel != null)
                 MapOptionsPanel.Visibility = TransferModeMap?.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             if (ElementTransferPanel != null)
@@ -809,6 +819,9 @@ namespace CommonFeature.Views
 
         private void CompareMode_Changed(object sender, RoutedEventArgs e)
         {
+            // Guard: Skip if window not fully loaded
+            if (!IsLoaded) return;
+            
             if (CompareTwoPanel != null)
                 CompareTwoPanel.Visibility = CompareModeTwo?.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             if (FindEmptyPanel != null)
