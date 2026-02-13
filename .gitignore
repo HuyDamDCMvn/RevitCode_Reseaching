@@ -39,3 +39,7 @@ Thumbs.db
 # But ignore these large files if added accidentally
 HD.extension/lib/net8/MaterialDesign*.dll
 HD.extension/lib/net8/Microsoft.Xaml.Behaviors.dll
+
+# Local workspace artifacts
+SampleDrawing/
+.cursor/worktrees.json
