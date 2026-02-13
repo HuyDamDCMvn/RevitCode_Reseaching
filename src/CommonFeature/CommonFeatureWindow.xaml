@@ -14,6 +14,57 @@
         FontFamily="Segoe UI"
         FontSize="13">
 
+    <Window.Resources>
+        <!-- Feature Button Style: Light blue default, Gray when active -->
+        <Style x:Key="FeatureButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#E3F2FD"/>
+            <Setter Property="BorderBrush" Value="#BBDEFB"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                Padding="4">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalAlignment}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#BBDEFB"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#90CAF9"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#90CAF9"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Background" Value="#E0E0E0"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#BDBDBD"/>
+                                <Setter Property="Foreground" Value="#9E9E9E"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Active Feature Button Style: Gray background when feature is active -->
+        <Style x:Key="ActiveFeatureButtonStyle" TargetType="Button" BasedOn="{StaticResource FeatureButtonStyle}">
+            <Setter Property="Background" Value="#E0E0E0"/>
+            <Setter Property="BorderBrush" Value="#BDBDBD"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#D0D0D0"/>
+                    <Setter Property="BorderBrush" Value="#9E9E9E"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -44,7 +95,18 @@
                 <Button Margin="0,4" Height="56" 
                         HorizontalContentAlignment="Left"
                         Command="{Binding IsolateCommand}"
-                        ToolTip="Isolate elements by category, family, type">
+                        ToolTip="Isolate elements by category, family, type"
+                        Style="{StaticResource FeatureButtonStyle}">
+                    <Button.Resources>
+                        <Style TargetType="Button" BasedOn="{StaticResource FeatureButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsIsolateActive}" Value="True">
+                                    <Setter Property="Background" Value="#E0E0E0"/>
+                                    <Setter Property="BorderBrush" Value="#BDBDBD"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Resources>
                     <Grid Margin="8,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -52,10 +114,19 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <Border Grid.Column="0" 
-                                Background="#E8EAF6" 
                                 CornerRadius="8" 
                                 Width="44" Height="44"
                                 Margin="0,0,14,0">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="#E8EAF6"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.IsIsolateActive, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                            <Setter Property="Background" Value="#BDBDBD"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
                             <TextBlock Text="👁" FontSize="20" 
                                        HorizontalAlignment="Center" 
                                        VerticalAlignment="Center"/>
@@ -75,7 +146,18 @@
                 <Button Margin="0,4" Height="56"
                         HorizontalContentAlignment="Left"
                         Command="{Binding GetInformationCommand}"
-                        ToolTip="View and edit element information">
+                        ToolTip="View and edit element information"
+                        Style="{StaticResource FeatureButtonStyle}">
+                    <Button.Resources>
+                        <Style TargetType="Button" BasedOn="{StaticResource FeatureButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsInfoActive}" Value="True">
+                                    <Setter Property="Background" Value="#E0E0E0"/>
+                                    <Setter Property="BorderBrush" Value="#BDBDBD"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Resources>
                     <Grid Margin="8,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -83,10 +165,19 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <Border Grid.Column="0" 
-                                Background="#E3F2FD" 
                                 CornerRadius="8" 
                                 Width="44" Height="44"
                                 Margin="0,0,14,0">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="#E3F2FD"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.IsInfoActive, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                            <Setter Property="Background" Value="#BDBDBD"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
                             <TextBlock Text="ℹ" FontSize="20" 
                                        HorizontalAlignment="Center" 
                                        VerticalAlignment="Center"/>
@@ -106,7 +197,18 @@
                 <Button Margin="0,4" Height="56"
                         HorizontalContentAlignment="Left"
                         Command="{Binding ShowParameterCommand}"
-                        ToolTip="Display all parameters of selected elements">
+                        ToolTip="Display all parameters of selected elements"
+                        Style="{StaticResource FeatureButtonStyle}">
+                    <Button.Resources>
+                        <Style TargetType="Button" BasedOn="{StaticResource FeatureButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsParameterActive}" Value="True">
+                                    <Setter Property="Background" Value="#E0E0E0"/>
+                                    <Setter Property="BorderBrush" Value="#BDBDBD"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Resources>
                     <Grid Margin="8,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -114,10 +216,19 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <Border Grid.Column="0" 
-                                Background="#E8F5E9" 
                                 CornerRadius="8" 
                                 Width="44" Height="44"
                                 Margin="0,0,14,0">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="#E8F5E9"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.IsParameterActive, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                            <Setter Property="Background" Value="#BDBDBD"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
                             <TextBlock Text="📋" FontSize="20" 
                                        HorizontalAlignment="Center" 
                                        VerticalAlignment="Center"/>
@@ -137,7 +248,18 @@
                 <Button Margin="0,4" Height="56"
                         HorizontalContentAlignment="Left"
                         Command="{Binding ShowBoundaryCommand}"
-                        ToolTip="Create section box around selected elements">
+                        ToolTip="Create section box around selected elements"
+                        Style="{StaticResource FeatureButtonStyle}">
+                    <Button.Resources>
+                        <Style TargetType="Button" BasedOn="{StaticResource FeatureButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsBoundaryActive}" Value="True">
+                                    <Setter Property="Background" Value="#E0E0E0"/>
+                                    <Setter Property="BorderBrush" Value="#BDBDBD"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Resources>
                     <Grid Margin="8,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -145,10 +267,19 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <Border Grid.Column="0" 
-                                Background="#FFF3E0" 
                                 CornerRadius="8" 
                                 Width="44" Height="44"
                                 Margin="0,0,14,0">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="#FFF3E0"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.IsBoundaryActive, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                            <Setter Property="Background" Value="#BDBDBD"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
                             <TextBlock Text="📦" FontSize="20" 
                                        HorizontalAlignment="Center" 
                                        VerticalAlignment="Center"/>

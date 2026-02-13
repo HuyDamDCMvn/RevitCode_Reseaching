@@ -98,6 +98,12 @@ namespace CommonFeature
         public event Action<string> OnError;
 
         /// <summary>
+        /// Callback when a feature window is closed.
+        /// Parameter: feature name (Isolate, Info, Parameter, Boundary)
+        /// </summary>
+        public event Action<string> OnFeatureWindowClosed;
+
+        /// <summary>
         /// Set the ExternalEvent reference for async operations
         /// </summary>
         public void SetExternalEvent(ExternalEvent externalEvent)
@@ -997,9 +1003,14 @@ namespace CommonFeature
                 catch { return new List<long>(); }
             };
             
+            // Subscribe to window closed event to reset active state
+            isolateWindow.Closed += (s, e) => OnFeatureWindowClosed?.Invoke("Isolate");
+
             // Load data and show window
             isolateWindow.LoadData();
             isolateWindow.Show();
+            
+            OnOperationCompleted?.Invoke("Isolate window opened");
         }
         
         /// <summary>
@@ -1481,11 +1492,14 @@ namespace CommonFeature
                     _externalEvent?.Raise();
                 };
                 
+                // Subscribe to window closed event to reset active state
+                infoWindow.Closed += (s, e) => OnFeatureWindowClosed?.Invoke("Info");
+                
                 infoWindow.SetData(elementInfos);
                 infoWindow.Show();
             });
 
-            OnOperationCompleted?.Invoke($"Loaded {elementInfos.Count} element(s) from project");
+            OnOperationCompleted?.Invoke($"Get Information opened with {elementInfos.Count} elements");
         }
 
         private ElementInfo GetElementInfo(Document doc, Element element)
@@ -1714,6 +1728,9 @@ namespace CommonFeature
                     }
                 };
 
+                // Subscribe to window closed event to reset active state
+                parameterWindow.Closed += (s, e) => OnFeatureWindowClosed?.Invoke("Parameter");
+
                 // Load initial selection if any (after window is loaded)
                 if (currentSelection.Count > 0)
                 {
@@ -1863,6 +1880,9 @@ namespace CommonFeature
                     {
                         // Ignore cleanup errors - this happens when Revit is closing
                     }
+                    
+                    // Notify that feature window is closed
+                    OnFeatureWindowClosed?.Invoke("Boundary");
                 };
 
                 // Set initial selection if any

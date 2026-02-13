@@ -17,14 +17,24 @@ namespace CommonFeature
         private readonly CommonFeatureHandler _handler;
 
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(IsolateCommand))]
-        [NotifyCanExecuteChangedFor(nameof(GetInformationCommand))]
-        [NotifyCanExecuteChangedFor(nameof(ShowParameterCommand))]
-        [NotifyCanExecuteChangedFor(nameof(ShowBoundaryCommand))]
         private bool _isBusy;
 
         [ObservableProperty]
         private string _statusMessage = "Ready to use";
+
+        // Track active state for each feature (for UI styling)
+        // These stay true while the feature window is open
+        [ObservableProperty]
+        private bool _isIsolateActive;
+
+        [ObservableProperty]
+        private bool _isInfoActive;
+
+        [ObservableProperty]
+        private bool _isParameterActive;
+
+        [ObservableProperty]
+        private bool _isBoundaryActive;
 
         public CommonFeatureViewModel(ExternalEvent externalEvent, CommonFeatureHandler handler)
         {
@@ -37,44 +47,44 @@ namespace CommonFeature
             // Subscribe to handler callbacks
             _handler.OnOperationCompleted += HandleOperationCompleted;
             _handler.OnError += HandleError;
+            _handler.OnFeatureWindowClosed += HandleFeatureWindowClosed;
         }
 
         #region Commands
 
-        private bool CanExecuteCommand() => !IsBusy;
-
-        [RelayCommand(CanExecute = nameof(CanExecuteCommand))]
+        // All commands can execute anytime - features run in parallel
+        [RelayCommand]
         private void Isolate()
         {
-            IsBusy = true;
-            StatusMessage = "Isolating elements...";
+            IsIsolateActive = true;
+            StatusMessage = "Opening Isolate...";
             _handler.SetRequest(CommonFeatureRequest.Isolate());
             _externalEvent.Raise();
         }
 
-        [RelayCommand(CanExecute = nameof(CanExecuteCommand))]
+        [RelayCommand]
         private void GetInformation()
         {
-            IsBusy = true;
-            StatusMessage = "Getting information...";
+            IsInfoActive = true;
+            StatusMessage = "Opening Get Information...";
             _handler.SetRequest(CommonFeatureRequest.GetInformation());
             _externalEvent.Raise();
         }
 
-        [RelayCommand(CanExecute = nameof(CanExecuteCommand))]
+        [RelayCommand]
         private void ShowParameter()
         {
-            IsBusy = true;
-            StatusMessage = "Loading parameters...";
+            IsParameterActive = true;
+            StatusMessage = "Opening Parameter Manager...";
             _handler.SetRequest(CommonFeatureRequest.ShowParameter());
             _externalEvent.Raise();
         }
 
-        [RelayCommand(CanExecute = nameof(CanExecuteCommand))]
+        [RelayCommand]
         private void ShowBoundary()
         {
-            IsBusy = true;
-            StatusMessage = "Calculating boundary...";
+            IsBoundaryActive = true;
+            StatusMessage = "Opening Section Box...";
             _handler.SetRequest(CommonFeatureRequest.ShowBoundary());
             _externalEvent.Raise();
         }
@@ -88,7 +98,6 @@ namespace CommonFeature
             // Update UI on UI thread
             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
             {
-                IsBusy = false;
                 StatusMessage = message;
             }));
         }
@@ -97,8 +106,22 @@ namespace CommonFeature
         {
             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
             {
-                IsBusy = false;
                 StatusMessage = $"Error: {message}";
+            }));
+        }
+
+        private void HandleFeatureWindowClosed(string featureName)
+        {
+            // Reset active state when feature window is closed
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                switch (featureName)
+                {
+                    case "Isolate": IsIsolateActive = false; break;
+                    case "Info": IsInfoActive = false; break;
+                    case "Parameter": IsParameterActive = false; break;
+                    case "Boundary": IsBoundaryActive = false; break;
+                }
             }));
         }
 
@@ -110,6 +133,7 @@ namespace CommonFeature
         {
             _handler.OnOperationCompleted -= HandleOperationCompleted;
             _handler.OnError -= HandleError;
+            _handler.OnFeatureWindowClosed -= HandleFeatureWindowClosed;
         }
 
         #endregion
