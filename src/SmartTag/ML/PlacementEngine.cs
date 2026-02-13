@@ -27,6 +27,7 @@ namespace SmartTag.ML
         private readonly TagSizeCalibration _calibration;
         private readonly RuleEngine _ruleEngine;
         private readonly TagPositionPatternLoader _patternLoader;
+        private readonly TagPlacementRadiusService _radiusService = TagPlacementRadiusService.Instance;
 
         // Configuration
         private readonly int _knnK;
@@ -286,8 +287,14 @@ namespace SmartTag.ML
             var baseOffsetX = bounds.Width / 2 + ruleOffset + tagWidth / 2 + _minSpacing;
             var baseOffsetY = bounds.Height / 2 + ruleOffset + tagHeight / 2 + _minSpacing;
 
-            // Distance tiers for collision avoidance
-            var distanceMultipliers = new[] { 1.0, 1.3, 1.6, 2.0 };
+            var compactness = GetCompactnessFactor(context);
+            baseOffsetX *= compactness;
+            baseOffsetY *= compactness;
+            var fallbackRadius = Math.Sqrt(baseOffsetX * baseOffsetX + baseOffsetY * baseOffsetY);
+            var radius = GetUsefulRadius(element, context, fallbackRadius, tagWidth, tagHeight);
+
+            // Distance tiers for collision avoidance (tighter by default)
+            var distanceMultipliers = new[] { 0.85, 1.0, 1.2, 1.4 };
 
             foreach (var mult in distanceMultipliers)
             {
@@ -296,8 +303,9 @@ namespace SmartTag.ML
                     var (offsetX, offsetY) = _contextAnalyzer.CalculateOptimalOffset(
                         element, context, position, tagWidth, tagHeight);
 
-                    offsetX *= mult;
-                    offsetY *= mult;
+                    offsetX *= mult * compactness;
+                    offsetY *= mult * compactness;
+                    ClampOffsetToRadius(ref offsetX, ref offsetY, radius);
 
                     var tagLocation = new Point2D(center.X + offsetX, center.Y + offsetY);
                     var leaderEnd = position == TagPosition.Center ? tagLocation : center;
@@ -368,6 +376,41 @@ namespace SmartTag.ML
             }
 
             return candidates;
+        }
+
+        private static double GetCompactnessFactor(ElementContext context)
+        {
+            return context?.Density switch
+            {
+                DensityLevel.Low => 0.95,
+                DensityLevel.High => 0.75,
+                _ => 0.85
+            };
+        }
+
+        private double GetUsefulRadius(
+            TaggableElement element,
+            ElementContext context,
+            double fallbackRadius,
+            double tagWidth,
+            double tagHeight)
+        {
+            var radius = _radiusService.GetRadius(element, context, fallbackRadius);
+            if (double.IsNaN(radius) || double.IsInfinity(radius) || radius <= 0)
+                radius = fallbackRadius;
+
+            var minRadius = Math.Max(_minSpacing * 1.2, Math.Max(tagWidth, tagHeight) * 0.6);
+            return Math.Max(radius, minRadius);
+        }
+
+        private static void ClampOffsetToRadius(ref double offsetX, ref double offsetY, double radius)
+        {
+            if (radius <= 0) return;
+            var dist = Math.Sqrt(offsetX * offsetX + offsetY * offsetY);
+            if (dist <= 0.0001 || dist <= radius) return;
+            var scale = radius / dist;
+            offsetX *= scale;
+            offsetY *= scale;
         }
 
         /// <summary>

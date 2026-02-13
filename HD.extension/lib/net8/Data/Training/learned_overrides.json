@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-13T11:45:22.4900060Z",
+  "updatedAt": "2026-02-13T18:36:16.0724050Z",
   "byCategory": {
     "OST_DuctCurves": {
       "preferredPositions": [
@@ -61,15 +61,41 @@
     },
     "OST_PipeCurves": {
       "preferredPositions": [
-        "BottomCenter",
-        "Right",
-        "TopRight"
+        "BottomRight",
+        "TopRight",
+        "BottomLeft",
+        "TopLeft"
       ],
       "addLeader": true,
-      "offsetDistance": 1.3333333333333335,
-      "preferAlignRow": false,
-      "preferAlignColumn": false,
-      "sampleCount": 3
+      "offsetDistance": 43.75541247218826,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 369
+    },
+    "OST_GenericModel": {
+      "preferredPositions": [
+        "TopRight",
+        "BottomRight",
+        "BottomLeft",
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 26.718432847437892,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 3842
+    },
+    "OST_ElectricalEquipment": {
+      "preferredPositions": [
+        "BottomRight",
+        "BottomLeft",
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 66.62399274012311,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 25
     }
   },
   "byCategoryAndSystem": {
@@ -1488,6 +1514,58 @@
       "preferAlignRow": false,
       "preferAlignColumn": false,
       "sampleCount": 1
+    },
+    "OST_PipeCurves|Sanitary": {
+      "preferredPositions": [
+        "TopLeft",
+        "BottomLeft",
+        "BottomRight",
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 40.56743600260513,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 220
+    },
+    "OST_DuctCurves|SupplyAir": {
+      "preferredPositions": [
+        "BottomLeft",
+        "TopLeft",
+        "BottomRight",
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 69.1603953236643,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 71
+    },
+    "OST_PipeCurves|Heating": {
+      "preferredPositions": [
+        "BottomRight",
+        "BottomLeft",
+        "TopRight",
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 45.89750006040922,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 265
+    },
+    "OST_PipeCurves|Refrigeration": {
+      "preferredPositions": [
+        "BottomRight",
+        "TopRight",
+        "TopLeft",
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 97.41071590428804,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 143
     }
   }
 }

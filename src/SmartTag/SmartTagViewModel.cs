@@ -535,7 +535,7 @@ namespace SmartTag
                 AddLeaders = AddLeaders,
                 SkipTaggedElements = SkipTaggedElements,
                 AlignTags = AlignTags,
-                UseQuickMode = true,
+                UseQuickMode = false,
                 CategoryTagTypes = categoryTagTypes
             };
         }

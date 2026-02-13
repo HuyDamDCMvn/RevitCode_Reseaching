@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using SmartTag.ML;
 using SmartTag.Models;
 using SmartTag.Services;
 
@@ -297,7 +298,9 @@ namespace SmartTag
 
             var placementService = new TagPlacementService(doc, view);
             placementService.Initialize(elements, existingTags, annotations);
-            var placements = placementService.CalculatePlacements(elements, settings);
+            var placements = settings.UseQuickMode
+                ? placementService.CalculatePlacements(elements, settings)
+                : CalculatePlacementsWithML(doc, view, elements, settings);
 
             if (placements == null)
                 placements = new List<TagPlacement>();
@@ -410,8 +413,11 @@ namespace SmartTag
             // Calculate placements (without creating)
             var placementService = new TagPlacementService(doc, view);
             placementService.Initialize(elements, existingTags, annotations);
-            var placements = placementService.CalculatePlacements(elements, settings);
+            var placements = settings.UseQuickMode
+                ? placementService.CalculatePlacements(elements, settings)
+                : CalculatePlacementsWithML(doc, view, elements, settings);
             placementService.ResolveCollisions(placements);
+            placementService.RefinePlacementsIterative(placements, elements, settings, maxRefineIterations: 2);
 
             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -451,6 +457,33 @@ namespace SmartTag
                    (view.ViewType == ViewType.Elevation) ||
                    (view.ViewType == ViewType.Section) ||
                    (view.ViewType == ViewType.Detail);
+        }
+
+        private List<TagPlacement> CalculatePlacementsWithML(
+            Document doc,
+            View view,
+            List<TaggableElement> elements,
+            TagSettings settings)
+        {
+            try
+            {
+                var options = new PlacementEngineOptions
+                {
+                    TrainingDataPath = GetTrainingExportDirectory(),
+                    UseKNN = true,
+                    UseCSP = true,
+                    UseRules = true,
+                    UsePatterns = true
+                };
+
+                var engine = new PlacementEngine(doc, view, options);
+                return engine.CalculatePlacements(elements, settings);
+            }
+            catch (Exception ex)
+            {
+                OnError?.Invoke($"ML placement failed: {ex.Message}");
+                return new List<TagPlacement>();
+            }
         }
 
         #region Preview Workflow
@@ -512,7 +545,9 @@ namespace SmartTag
             // 2. Calculate placements
             var placementService = new TagPlacementService(doc, view);
             placementService.Initialize(elements, existingTags, annotations);
-            var placements = placementService.CalculatePlacements(elements, settings);
+            var placements = settings.UseQuickMode
+                ? placementService.CalculatePlacements(elements, settings)
+                : CalculatePlacementsWithML(doc, view, elements, settings);
             if (placements == null) placements = new List<TagPlacement>();
 
             // 3. Resolve collisions

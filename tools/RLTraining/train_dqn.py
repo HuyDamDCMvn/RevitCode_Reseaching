@@ -25,6 +25,53 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 
+# Category mapping (match FeatureExtractor.cs)
+CATEGORY_INDEX = {
+    "OST_PipeCurves": 0,
+    "OST_DuctCurves": 1,
+    "OST_CableTray": 2,
+    "OST_Conduit": 3,
+    "OST_MechanicalEquipment": 4,
+    "OST_ElectricalEquipment": 5,
+    "OST_PlumbingFixtures": 6,
+    "Other": 7
+}
+
+# Feature normalization (match FeatureExtractor.cs)
+MAX_LENGTH = 100.0
+MAX_WIDTH = 20.0
+MAX_HEIGHT = 20.0
+MAX_DIAMETER = 5.0
+MAX_DISTANCE = 50.0
+
+# Action mapping (positions + alignment + leader)
+POSITION_ACTIONS = {
+    "TopRight": 0,
+    "TopLeft": 1,
+    "TopCenter": 2,
+    "BottomRight": 3,
+    "BottomLeft": 4,
+    "BottomCenter": 5,
+    "Right": 6,
+    "Left": 7,
+    "Center": 8
+}
+
+ACTION_NAMES = [
+    "TopRight",
+    "TopLeft",
+    "TopCenter",
+    "BottomRight",
+    "BottomLeft",
+    "BottomCenter",
+    "Right",
+    "Left",
+    "Center",
+    "AlignRow",
+    "AlignColumn",
+    "ToggleLeader"
+]
+
 # Experience tuple for replay buffer
 Experience = namedtuple('Experience', ['state', 'action', 'reward', 'next_state', 'done'])
 
@@ -361,6 +408,163 @@ def load_feedback_data(feedback_path):
     return feedback
 
 
+def normalize(value, max_value):
+    if max_value <= 0:
+        return 0.0
+    return max(0.0, min(1.0, float(value) / max_value))
+
+
+def normalize_angle(degrees):
+    # Normalize to [0, 1] using radians in [0, pi]
+    radians = (degrees or 0.0) * np.pi / 180.0
+    radians = abs(radians)
+    while radians > np.pi:
+        radians -= np.pi
+    return radians / np.pi
+
+
+def encode_density(density):
+    if not density:
+        return 0.5
+    d = density.strip().lower()
+    if d == "low":
+        return 0.0
+    if d == "high":
+        return 1.0
+    return 0.5
+
+
+def get_category_index(category):
+    if category in CATEGORY_INDEX:
+        return CATEGORY_INDEX[category]
+    return CATEGORY_INDEX["Other"]
+
+
+def extract_features_from_sample(sample):
+    element = sample.get("element", {})
+    context = sample.get("context", {})
+
+    features = np.zeros(20, dtype=np.float32)
+    idx = 0
+
+    # Category one-hot (0-7)
+    cat_idx = get_category_index(element.get("category", "Other"))
+    for i in range(8):
+        features[idx] = 1.0 if i == cat_idx else 0.0
+        idx += 1
+
+    # Geometry (8-12)
+    features[idx] = normalize_angle(element.get("orientation", 0.0)); idx += 1
+    features[idx] = normalize(element.get("length", 0.0), MAX_LENGTH); idx += 1
+    features[idx] = normalize(element.get("width", 0.0), MAX_WIDTH); idx += 1
+    features[idx] = normalize(element.get("height", 0.0), MAX_HEIGHT); idx += 1
+    features[idx] = 1.0 if element.get("isLinear", False) else 0.0; idx += 1
+
+    # Context (13-19)
+    features[idx] = encode_density(context.get("density", "medium")); idx += 1
+    features[idx] = 1.0 if context.get("hasNeighborAbove", False) else 0.0; idx += 1
+    features[idx] = 1.0 if context.get("hasNeighborBelow", False) else 0.0; idx += 1
+    features[idx] = 1.0 if context.get("hasNeighborLeft", False) else 0.0; idx += 1
+    features[idx] = 1.0 if context.get("hasNeighborRight", False) else 0.0; idx += 1
+    features[idx] = normalize(context.get("distanceToWall", 0.0), MAX_DISTANCE); idx += 1
+    features[idx] = normalize(context.get("parallelElementsCount", 0.0), 10.0); idx += 1
+
+    return features
+
+
+def build_policy_key(sample):
+    element = sample.get("element", {})
+    context = sample.get("context", {})
+
+    category = (element.get("category") or "").strip()
+    system_type = (element.get("systemType") or "").strip()
+    density = (context.get("density") or "medium").strip().lower()
+
+    parallel = context.get("parallelElementsCount", 0) or 0
+    if parallel <= 0:
+        parallel_bucket = "0"
+    elif parallel <= 2:
+        parallel_bucket = "1-2"
+    else:
+        parallel_bucket = "3+"
+
+    orientation = abs((element.get("orientation") or 0.0) % 180.0)
+    if orientation <= 15 or orientation >= 165:
+        orientation_bucket = "H"
+    elif abs(orientation - 90) <= 15:
+        orientation_bucket = "V"
+    else:
+        orientation_bucket = "D"
+
+    is_linear = element.get("isLinear", False)
+    return f"{category}|{system_type}|{density}|{parallel_bucket}|{orientation_bucket}|{is_linear}"
+
+
+def export_policy_json(trainer, samples, output_path):
+    if not samples:
+        return
+
+    policy_accum = {}
+    policy_count = {}
+
+    trainer.policy_net.eval()
+
+    with torch.no_grad():
+        for sample in samples:
+            key = build_policy_key(sample)
+            features = extract_features_from_sample(sample)
+            knn_scores = [0.0] * 5
+
+            state = np.zeros(TagPlacementEnvironment.STATE_DIM, dtype=np.float32)
+            state[:20] = features[:20]
+            state[20:25] = knn_scores[:5]
+
+            state_tensor = torch.FloatTensor(state).unsqueeze(0).to(trainer.device)
+            q_values = trainer.policy_net(state_tensor).cpu().numpy().flatten()
+
+            if key not in policy_accum:
+                policy_accum[key] = np.zeros_like(q_values)
+                policy_count[key] = 0
+
+            policy_accum[key] += q_values
+            policy_count[key] += 1
+
+    policies = []
+    for key, scores in policy_accum.items():
+        count = policy_count.get(key, 1)
+        avg_scores = (scores / max(count, 1)).tolist()
+        action_scores = {ACTION_NAMES[i]: float(avg_scores[i]) for i in range(len(ACTION_NAMES))}
+
+        # Split key for metadata
+        parts = key.split("|")
+        if len(parts) < 6:
+            continue
+
+        policies.append({
+            "key": key,
+            "category": parts[0],
+            "systemType": parts[1],
+            "density": parts[2],
+            "parallelBucket": parts[3],
+            "orientationBucket": parts[4],
+            "isLinear": parts[5] == "True",
+            "sampleCount": count,
+            "actionScores": action_scores
+        })
+
+    policy_file = {
+        "version": "1.0",
+        "updatedAt": "",
+        "policies": policies
+    }
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(policy_file, f, indent=2)
+
+    print(f"RL policy exported to {output_path}")
+
+
 def main():
     parser = argparse.ArgumentParser(description='Train DQN for SmartTag placement')
     parser.add_argument('--data', type=str, default='../src/SmartTag/Data/Training/annotated',
@@ -377,6 +581,10 @@ def main():
                         help='Batch size')
     parser.add_argument('--lr', type=float, default=1e-4,
                         help='Learning rate')
+    parser.add_argument('--max_samples', type=int, default=0,
+                        help='Limit number of training samples (0 = all)')
+    parser.add_argument('--sample_seed', type=int, default=42,
+                        help='Random seed for sample limit')
     
     args = parser.parse_args()
     
@@ -395,6 +603,10 @@ def main():
     
     # Load training data
     training_samples = load_training_data(args.data)
+    if args.max_samples and args.max_samples > 0 and len(training_samples) > args.max_samples:
+        random.seed(args.sample_seed)
+        training_samples = random.sample(training_samples, args.max_samples)
+        print(f"Using {len(training_samples)} sampled training records")
     
     # Load feedback if provided
     feedback_samples = []
@@ -412,23 +624,28 @@ def main():
         
         # Train on annotated data
         for sample in training_samples:
-            # Extract features (simplified)
             element = sample.get('element', {})
             context = sample.get('context', {})
             tag = sample.get('tag', {})
-            
+
             # Create state from features
-            features = np.random.randn(20).astype(np.float32)  # Placeholder
-            knn_scores = [0.4, 0.3, 0.2, 0.05, 0.05]  # Placeholder
-            
+            features = extract_features_from_sample(sample)
+            knn_scores = [0.0, 0.0, 0.0, 0.0, 0.0]
             state = env.reset(features, knn_scores, [], [])
-            
-            # Determine action from ground truth
+
+            # Determine action from ground truth position
             position = tag.get('position', 'TopRight')
-            action = 0  # Map position to action (simplified)
-            
+            action = POSITION_ACTIONS.get(position, 0)
+
             # Calculate reward
-            reward = env.REWARDS['no_collision'] + env.REWARDS['aligned']
+            reward = env.REWARDS['no_collision']
+            if tag.get('alignedWithRow'):
+                reward += env.REWARDS['aligned']
+            if tag.get('alignedWithColumn'):
+                reward += env.REWARDS['aligned']
+            if tag.get('hasLeader'):
+                leader_len = float(tag.get('leaderLength', 0.0) or 0.0)
+                reward += max(env.REWARDS['short_leader'] - leader_len, 0.0)
             
             # Store experience
             next_state = state.copy()
@@ -457,6 +674,18 @@ def main():
     
     # Export to ONNX
     trainer.export_onnx(os.path.join(args.output, 'placement_policy.onnx'))
+
+    # Export policy JSON (for C# runtime)
+    policy_output = os.path.join(args.output, 'rl_policy.json')
+    export_policy_json(trainer, training_samples, policy_output)
+    
+    # Also place policy next to training data if possible
+    try:
+        data_dir = Path(args.data).resolve().parent
+        if data_dir.name.lower() == "training":
+            export_policy_json(trainer, training_samples, str(data_dir / "rl_policy.json"))
+    except Exception:
+        pass
     
     print("\nTraining complete!")
 

@@ -1,0 +1,145 @@
+{
+  "source": {
+    "projectName": "SampleDrawing PDF",
+    "drawingNumber": "Batch",
+    "viewType": "FloorPlan",
+    "discipline": "MEP",
+    "scale": "1:100",
+    "company": "",
+    "date": ""
+  },
+  "observations": [
+    {
+      "elementType": "PDF",
+      "category": "OST_GenericModel",
+      "tagPosition": "BottomRight",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Sometimes"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_GenericModel",
+      "tagPosition": "TopLeft",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Sometimes"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_GenericModel",
+      "tagPosition": "TopRight",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Sometimes"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_GenericModel",
+      "tagPosition": "BottomLeft",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Sometimes"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_PipeCurves",
+      "tagPosition": "BottomLeft",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Sometimes"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_PipeCurves",
+      "tagPosition": "BottomRight",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Sometimes"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_PipeCurves",
+      "tagPosition": "TopLeft",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Sometimes"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_PipeCurves",
+      "tagPosition": "TopRight",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Sometimes"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_DuctCurves",
+      "tagPosition": "BottomLeft",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Usually"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_DuctCurves",
+      "tagPosition": "TopLeft",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Rare"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_DuctCurves",
+      "tagPosition": "TopRight",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Rare"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_DuctCurves",
+      "tagPosition": "BottomRight",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Rare"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_ElectricalEquipment",
+      "tagPosition": "BottomLeft",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Sometimes"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_ElectricalEquipment",
+      "tagPosition": "TopLeft",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Sometimes"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_ElectricalEquipment",
+      "tagPosition": "BottomRight",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Sometimes"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_ElectricalEquipment",
+      "tagPosition": "TopRight",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Rare"
+    }
+  ],
+  "generalNotes": [
+    "Auto-generated from PDF text blocks. Use as hint patterns only."
+  ],
+  "imageReferences": []
+}

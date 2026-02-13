@@ -262,10 +262,10 @@ namespace SmartTag.ML
             // Adjust based on density
             var densityMultiplier = context.Density switch
             {
-                DensityLevel.Low => 0.8,
-                DensityLevel.Medium => 1.0,
-                DensityLevel.High => 1.3,
-                _ => 1.0
+                DensityLevel.Low => 0.95,
+                DensityLevel.Medium => 0.85,
+                DensityLevel.High => 0.75,
+                _ => 0.85
             };
 
             baseOffsetX *= densityMultiplier;

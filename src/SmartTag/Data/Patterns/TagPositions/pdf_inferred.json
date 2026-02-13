@@ -1,0 +1,81 @@
+{
+  "source": {
+    "projectName": "SampleDrawing PDF",
+    "drawingNumber": "Batch",
+    "viewType": "FloorPlan",
+    "discipline": "MEP",
+    "scale": "1:100",
+    "company": "",
+    "date": ""
+  },
+  "observations": [
+    {
+      "elementType": "PDF",
+      "category": "OST_GenericModel",
+      "tagPosition": "TopCenter",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Sometimes"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_GenericModel",
+      "tagPosition": "BottomCenter",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Sometimes"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_GenericModel",
+      "tagPosition": "TopRight",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Rare"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_GenericModel",
+      "tagPosition": "TopLeft",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Rare"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_PipeCurves",
+      "tagPosition": "TopRight",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Sometimes"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_PipeCurves",
+      "tagPosition": "TopCenter",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Rare"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_PipeCurves",
+      "tagPosition": "TopLeft",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Rare"
+    },
+    {
+      "elementType": "PDF",
+      "category": "OST_PipeCurves",
+      "tagPosition": "BottomLeft",
+      "hasLeader": true,
+      "context": "Auto-extracted from PDF layout",
+      "frequency": "Rare"
+    }
+  ],
+  "generalNotes": [
+    "Auto-generated from PDF text blocks. Use as hint patterns only."
+  ],
+  "imageReferences": []
+}

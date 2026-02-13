@@ -1,0 +1,42 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "pdf_inferred_generic",
+  "name": "PDF Inferred Generic Rule",
+  "version": "1.0.0",
+  "description": "Low priority rule inferred from PDF samples",
+  "enabled": true,
+  "priority": 5,
+  "conditions": {
+    "categories": [
+      "OST_GenericModel",
+      "OST_PipeCurves"
+    ],
+    "familyNamePatterns": [
+      ".*"
+    ],
+    "viewTypes": [
+      "FloorPlan",
+      "CeilingPlan",
+      "Section"
+    ]
+  },
+  "actions": {
+    "preferredPositions": [
+      "TopCenter",
+      "BottomCenter",
+      "TopRight"
+    ],
+    "addLeader": true,
+    "leaderStyle": "Straight",
+    "avoidCollisionWith": [],
+    "alignToGrid": false,
+    "groupAlignment": "None"
+  },
+  "scoring": {
+    "collisionPenalty": -65,
+    "preferenceBonus": 40,
+    "alignmentBonus": 20,
+    "leaderLengthPenalty": 0,
+    "nearEdgeBonus": 5
+  }
+}
