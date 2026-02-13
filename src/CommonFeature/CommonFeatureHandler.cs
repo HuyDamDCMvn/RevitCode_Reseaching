@@ -1580,8 +1580,174 @@ namespace CommonFeature
 
         private void ExecuteShowParameter(UIApplication app)
         {
-            // TODO: Implement Show Parameter feature
-            OnOperationCompleted?.Invoke("Show Parameter: On Developing");
+            // Step 1: Validate UIApplication
+            if (app == null)
+            {
+                OnError?.Invoke("UIApplication is null");
+                return;
+            }
+
+            // Step 2: Validate UIDocument
+            var uidoc = app.ActiveUIDocument;
+            if (uidoc == null)
+            {
+                OnError?.Invoke("No active document. Please open a Revit project first.");
+                return;
+            }
+
+            // Step 3: Validate Document
+            var doc = uidoc.Document;
+            if (doc == null)
+            {
+                OnError?.Invoke("Document is null");
+                return;
+            }
+
+            // Step 4: Get current selection (safely)
+            List<long> currentSelection;
+            try
+            {
+                var selection = uidoc.Selection;
+                if (selection == null)
+                {
+                    currentSelection = new List<long>();
+                }
+                else
+                {
+                    var elementIds = selection.GetElementIds();
+                    currentSelection = elementIds?.Select(id => id.Value).ToList() ?? new List<long>();
+                }
+            }
+            catch (Exception selEx)
+            {
+                OnError?.Invoke($"Failed to get selection: {selEx.Message}");
+                currentSelection = new List<long>();
+            }
+
+            // Step 5: Create ExternalEvent handler
+            Handlers.ParameterExternalHandler parameterHandler;
+            ExternalEvent parameterEvent;
+            try
+            {
+                parameterHandler = new Handlers.ParameterExternalHandler();
+                parameterEvent = ExternalEvent.Create(parameterHandler);
+                
+                if (parameterEvent == null)
+                {
+                    OnError?.Invoke("Failed to create ExternalEvent");
+                    return;
+                }
+            }
+            catch (Exception evtEx)
+            {
+                OnError?.Invoke($"Failed to create event handler: {evtEx.Message}");
+                return;
+            }
+
+            // Step 6: Store document path for change detection
+            string originalDocPath;
+            try
+            {
+                originalDocPath = doc.PathName ?? doc.Title ?? "Untitled";
+            }
+            catch
+            {
+                originalDocPath = "Unknown";
+            }
+
+            // Step 7: Create and show window
+            try
+            {
+                var parameterWindow = new ParameterWindow();
+                
+                if (parameterWindow == null)
+                {
+                    OnError?.Invoke("Failed to create Parameter Window");
+                    return;
+                }
+
+                parameterHandler.Window = parameterWindow;
+                parameterWindow.Initialize(parameterHandler, parameterEvent);
+
+                // Setup callback to get current selection from Revit
+                parameterWindow.GetCurrentSelectionCallback = () =>
+                {
+                    try
+                    {
+                        // Validate uidoc is still valid
+                        if (uidoc == null) return new List<long>();
+                        
+                        var currentDoc = uidoc.Document;
+                        if (currentDoc == null || !currentDoc.IsValidObject) return new List<long>();
+
+                        string currentPath = currentDoc.PathName ?? currentDoc.Title ?? "Untitled";
+                        if (currentPath != originalDocPath)
+                        {
+                            // Document changed - close window safely
+                            try
+                            {
+                                parameterWindow.Dispatcher.BeginInvoke(new Action(() =>
+                                {
+                                    try
+                                    {
+                                        System.Windows.MessageBox.Show(
+                                            "Document has changed. Closing Parameter Manager window.",
+                                            "Document Changed", MessageBoxButton.OK, MessageBoxImage.Information);
+                                        parameterWindow.Close();
+                                    }
+                                    catch { /* Ignore close errors */ }
+                                }));
+                            }
+                            catch { /* Ignore dispatcher errors */ }
+                            return new List<long>();
+                        }
+
+                        var sel = uidoc.Selection;
+                        if (sel == null) return new List<long>();
+                        
+                        var ids = sel.GetElementIds();
+                        return ids?.Select(id => id.Value).ToList() ?? new List<long>();
+                    }
+                    catch 
+                    { 
+                        return new List<long>(); 
+                    }
+                };
+
+                // Load initial selection if any (after window is loaded)
+                if (currentSelection.Count > 0)
+                {
+                    parameterWindow.Loaded += (s, e) =>
+                    {
+                        try
+                        {
+                            parameterWindow.LoadElements(currentSelection);
+                        }
+                        catch (Exception loadEx)
+                        {
+                            System.Windows.MessageBox.Show(
+                                $"Failed to load elements: {loadEx.Message}",
+                                "Load Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        }
+                    };
+                }
+
+                parameterWindow.Show();
+                OnOperationCompleted?.Invoke($"Parameter Manager opened with {currentSelection.Count} elements");
+            }
+            catch (Exception ex)
+            {
+                var errorMsg = $"Failed to open Parameter Manager:\n\n" +
+                               $"Error: {ex.Message}\n\n" +
+                               $"Type: {ex.GetType().Name}\n\n" +
+                               $"Stack: {ex.StackTrace?.Substring(0, Math.Min(500, ex.StackTrace?.Length ?? 0))}";
+                               
+                OnError?.Invoke($"Failed to open Parameter Manager: {ex.Message}");
+                
+                // Also show detailed error in MessageBox for debugging
+                System.Windows.MessageBox.Show(errorMsg, "Parameter Manager Error", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void ExecuteShowBoundary(UIApplication app)
