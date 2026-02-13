@@ -113,6 +113,11 @@
 
         <!-- Null to Visibility Converter -->
         <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        
+        <!-- Bool to Visibility Converter -->
+        <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <!-- String (non-empty) to Visibility -->
+        <local:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
     </Window.Resources>
 
     <Grid>
@@ -184,37 +189,66 @@
                             Style="{StaticResource LinkButtonStyle}"/>
                 </StackPanel>
 
-                <!-- Category List -->
+                <!-- Category List with Tag Type Selection -->
                 <Border Background="White" 
                         BorderBrush="#E0E0E0" 
                         BorderThickness="1" 
                         CornerRadius="6"
-                        MaxHeight="200">
+                        MaxHeight="280">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <ItemsControl ItemsSource="{Binding Categories}" Margin="8">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="{Binding DisplayName}" 
-                                                       VerticalAlignment="Center"/>
-                                            <TextBlock VerticalAlignment="Center" Margin="8,0,0,0">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Foreground" Value="#9E9E9E"/>
-                                                        <Setter Property="Text">
-                                                            <Setter.Value>
-                                                                <MultiBinding StringFormat="({0}/{1})">
-                                                                    <Binding Path="UntaggedCount"/>
-                                                                    <Binding Path="ElementCount"/>
-                                                                </MultiBinding>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </StackPanel>
-                                    </CheckBox>
+                                    <Border BorderBrush="#F0F0F0" BorderThickness="0,0,0,1" Padding="0,4">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            
+                                            <!-- Row 1: Checkbox + Category Name + Count -->
+                                            <CheckBox Grid.Row="0" IsChecked="{Binding IsSelected, Mode=TwoWay}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding DisplayName}" 
+                                                               VerticalAlignment="Center"
+                                                               FontWeight="SemiBold"/>
+                                                    <TextBlock VerticalAlignment="Center" Margin="8,0,0,0">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="#9E9E9E"/>
+                                                                <Setter Property="Text">
+                                                                    <Setter.Value>
+                                                                        <MultiBinding StringFormat="({0}/{1})">
+                                                                            <Binding Path="UntaggedCount"/>
+                                                                            <Binding Path="ElementCount"/>
+                                                                        </MultiBinding>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </CheckBox>
+                                            
+                                            <!-- Row 2: Tag Type Selector (shown when selected and has multiple types) -->
+                                            <StackPanel Grid.Row="1" 
+                                                        Orientation="Horizontal" 
+                                                        Margin="24,4,0,0"
+                                                        Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                <TextBlock Text="Tag:" 
+                                                           VerticalAlignment="Center"
+                                                           Foreground="#757575"
+                                                           FontSize="11"
+                                                           Margin="0,0,6,0"/>
+                                                <ComboBox ItemsSource="{Binding AvailableTagTypes}"
+                                                          SelectedItem="{Binding SelectedTagType, Mode=TwoWay}"
+                                                          DisplayMemberPath="DisplayName"
+                                                          Width="200"
+                                                          FontSize="11"
+                                                          Padding="4,2"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
@@ -287,13 +321,134 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Auto Tag Button (inside tab) -->
-                        <Button Content="Create Tags" 
-                                Command="{Binding ExecuteAutoTagCommand}"
-                                Style="{StaticResource PrimaryButtonStyle}"
-                                FontSize="14"
-                                Height="44"
-                                Margin="0,20,0,0"/>
+                        <!-- Preview/Confirm/Undo Buttons -->
+                        <Border Background="#FFF8E1" 
+                                BorderBrush="#FFE082" 
+                                BorderThickness="1" 
+                                CornerRadius="6"
+                                Padding="12"
+                                Margin="0,16,0,0"
+                                Visibility="{Binding IsPreviewMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <StackPanel>
+                                <TextBlock FontWeight="SemiBold" Foreground="#F57C00" Margin="0,0,0,8">
+                                    <Run Text="Preview Mode: "/>
+                                    <Run Text="{Binding PreviewCreatedCount, Mode=OneWay}"/>
+                                    <Run Text=" tags created"/>
+                                </TextBlock>
+                                <TextBlock Text="Review the tags in Revit, then Confirm to keep or Undo to remove." 
+                                           TextWrapping="Wrap"
+                                           Foreground="#EF6C00"
+                                           FontSize="11"
+                                           Margin="0,0,0,12"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <Button Grid.Column="0"
+                                            Content="Confirm Tags" 
+                                            Command="{Binding ConfirmPreviewCommand}"
+                                            Background="#4CAF50"
+                                            Foreground="White"
+                                            FontWeight="SemiBold"
+                                            Padding="12,8"
+                                            Cursor="Hand">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="border"
+                                                        Background="{TemplateBinding Background}"
+                                                        CornerRadius="4"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="border" Property="Background" Value="#43A047"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter TargetName="border" Property="Background" Value="#BDBDBD"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                    
+                                    <Button Grid.Column="2"
+                                            Content="Undo Preview" 
+                                            Command="{Binding UndoPreviewCommand}"
+                                            Background="#F44336"
+                                            Foreground="White"
+                                            FontWeight="SemiBold"
+                                            Padding="12,8"
+                                            Cursor="Hand">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="border"
+                                                        Background="{TemplateBinding Background}"
+                                                        CornerRadius="4"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="border" Property="Background" Value="#E53935"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter TargetName="border" Property="Background" Value="#BDBDBD"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Main Action Buttons (hidden during preview mode) -->
+                        <StackPanel Margin="0,20,0,0">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPreviewMode}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            
+                            <!-- Preview Button (recommended) -->
+                            <Button Content="Preview Tags" 
+                                    Command="{Binding CreatePreviewCommand}"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    FontSize="14"
+                                    Height="44"
+                                    ToolTip="Create tags as preview - you can undo if not satisfied"/>
+                            
+                            <!-- Direct Create Button (smaller, secondary) -->
+                            <Button Content="Create Tags Directly (No Preview)" 
+                                    Command="{Binding ExecuteAutoTagCommand}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    FontSize="12"
+                                    Height="32"
+                                    Margin="0,8,0,0"
+                                    ToolTip="Create tags immediately without preview"/>
+                            <!-- Export training data: export current view's tags to JSON for updating rules/patterns -->
+                            <Button Content="Export training data from view"
+                                    Command="{Binding ExportTrainingDataCommand}"
+                                    Style="{StaticResource LinkButtonStyle}"
+                                    FontSize="11"
+                                    Margin="0,16,0,0"
+                                    ToolTip="Export tagged elements from current view to JSON. Put file in repo and ask assistant to update rules/patterns."/>
+                            <TextBlock Text="{Binding ExportTrainingDataMessage}"
+                                       TextWrapping="Wrap"
+                                       Foreground="#2E7D32"
+                                       FontSize="10"
+                                       Margin="0,4,0,0"
+                                       Visibility="{Binding ExportTrainingDataMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
+                        </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

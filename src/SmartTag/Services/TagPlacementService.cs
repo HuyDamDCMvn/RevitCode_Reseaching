@@ -9,63 +9,92 @@ namespace SmartTag.Services
     /// <summary>
     /// Core service for calculating optimal tag placements.
     /// Implements Quick Mode (greedy heuristics) algorithm.
+    /// 
+    /// Tag size and spacing are dynamically calibrated using:
+    /// 1. Linear regression coefficients from training data (professional drawings)
+    /// 2. Runtime Revit API queries for actual tag/text dimensions
     /// </summary>
     public class TagPlacementService
     {
-        // Base tag size (in feet at 1:100 scale)
-        private const double BASE_TAG_WIDTH = 1.5;
-        private const double BASE_TAG_HEIGHT = 0.4;
-        private const double BASE_LEADER_LENGTH = 0.5;
-        private const double MIN_SPACING = 0.2;
+        // =============================================================
+        // FALLBACK CONSTANTS (used only if calibration fails)
+        // =============================================================
+        private const double FALLBACK_TAG_WIDTH = 3.0;
+        private const double FALLBACK_TAG_HEIGHT = 1.0;
+        private const double FALLBACK_LEADER_LENGTH = 2.0;
+        private const double FALLBACK_MIN_SPACING = 1.5;
         
         // Score thresholds
-        private const double MAX_ACCEPTABLE_SCORE = 300; // Skip tag if all positions worse than this
-        private const double COLLISION_PENALTY = 100;
-        private const double ELEMENT_COLLISION_PENALTY = 50;
-        private const double LEADER_COLLISION_PENALTY = 30;
-        
-        // Estimated characters per foot width (for dynamic sizing)
-        private const double CHARS_PER_FOOT = 8.0;
+        private const double MAX_ACCEPTABLE_SCORE = 800;
+        private const double COLLISION_PENALTY = 500;
+        private const double ELEMENT_COLLISION_PENALTY = 150;
+        private const double LEADER_COLLISION_PENALTY = 50;
         
         // Linear element thresholds
-        private const double LINEAR_SEGMENT_LENGTH = 20.0; // feet - split if longer
-        private const double MIN_LINEAR_LENGTH_FOR_SPLIT = 30.0; // feet - only split if element is this long
+        private const double LINEAR_SEGMENT_LENGTH = 20.0;
+        private const double MIN_LINEAR_LENGTH_FOR_SPLIT = 30.0;
         
         // Angle thresholds for tag rotation
         private const double VERTICAL_ANGLE_THRESHOLD = Math.PI / 4; // 45 degrees
         
         // Rule engine for preferred positions
         private RuleEngine _ruleEngine;
+        
+        // Calibration service - uses linear regression from training data
+        private readonly TagSizeCalibration _calibration;
 
         private readonly Document _doc;
         private readonly View _view;
         private readonly SpatialIndex _elementIndex;
         private readonly SpatialIndex _tagIndex;
-        private readonly SpatialIndex _annotationIndex; // For dimensions, text notes
+        private readonly SpatialIndex _annotationIndex;
         private readonly double _viewScale;
         private readonly BoundingBox2D? _viewCropBox;
 
-        // Dynamic sizing
+        // Calibrated sizing (from regression + Revit API)
         private double _tagWidth;
         private double _tagHeight;
         private double _leaderLength;
+        private double _minSpacing;
 
         public TagPlacementService(Document doc, View view)
         {
             _doc = doc ?? throw new ArgumentNullException(nameof(doc));
             _view = view ?? throw new ArgumentNullException(nameof(view));
             
-            // Get view scale factor (1:100 = 100, 1:50 = 50)
-            _viewScale = view.Scale > 0 ? view.Scale : 100;
-            var scaleFactor = _viewScale / 100.0;
+            // =============================================================
+            // CALIBRATION: Use linear regression + Revit API
+            // =============================================================
+            try
+            {
+                _calibration = new TagSizeCalibration(doc, view);
+                
+                // Get calibrated values from regression model
+                _tagWidth = _calibration.BaseTagWidth;
+                _tagHeight = _calibration.BaseTagHeight;
+                _leaderLength = _calibration.LeaderLength;
+                _minSpacing = _calibration.MinSpacing;
+                _viewScale = _calibration.ViewScale;
+                
+                System.Diagnostics.Debug.WriteLine($"TagPlacementService: Using CALIBRATED values from regression model");
+                System.Diagnostics.Debug.WriteLine($"  ViewScale={_viewScale}, TagWidth={_tagWidth:F2}, TagHeight={_tagHeight:F2}, MinSpacing={_minSpacing:F2}, Leader={_leaderLength:F2}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Calibration failed, using fallback: {ex.Message}");
+                
+                // Fallback to hardcoded values with inverse scale
+                _viewScale = view.Scale > 0 ? view.Scale : 100;
+                var inverseScaleFactor = 100.0 / _viewScale;
+                
+                _tagWidth = FALLBACK_TAG_WIDTH * inverseScaleFactor;
+                _tagHeight = FALLBACK_TAG_HEIGHT * inverseScaleFactor;
+                _leaderLength = FALLBACK_LEADER_LENGTH * inverseScaleFactor;
+                _minSpacing = FALLBACK_MIN_SPACING * inverseScaleFactor;
+            }
             
-            // Scale base sizes
-            _tagWidth = BASE_TAG_WIDTH * scaleFactor;
-            _tagHeight = BASE_TAG_HEIGHT * scaleFactor;
-            _leaderLength = BASE_LEADER_LENGTH * scaleFactor;
-            
-            // Adjust cell size based on scale
-            var cellSize = Math.Max(2.0 * scaleFactor, 1.0);
+            // Adjust cell size based on calibrated spacing
+            var cellSize = Math.Max(_minSpacing * 2, 2.0);
             _elementIndex = new SpatialIndex(cellSize);
             _tagIndex = new SpatialIndex(cellSize);
             _annotationIndex = new SpatialIndex(cellSize);
@@ -77,6 +106,11 @@ namespace SmartTag.Services
             _ruleEngine = RuleEngine.Instance;
             _ruleEngine.Initialize();
         }
+        
+        /// <summary>
+        /// Gets the calibrated minimum spacing value.
+        /// </summary>
+        public double MinSpacing => _minSpacing;
         
         private BoundingBox2D? GetViewCropBox()
         {
@@ -118,6 +152,9 @@ namespace SmartTag.Services
             _tagIndex.Clear();
             _annotationIndex.Clear();
 
+            if (elements == null) elements = new List<TaggableElement>();
+            if (existingTags == null) existingTags = new List<(long, long, BoundingBox2D)>();
+
             // Add elements to index
             foreach (var elem in elements)
             {
@@ -141,7 +178,9 @@ namespace SmartTag.Services
         }
         
         /// <summary>
-        /// Estimate tag size based on text content.
+        /// Estimate tag size using calibrated linear regression model.
+        /// Formula: Size = f(CharCount, LineCount, TextHeight, ViewScale)
+        /// Returns size in MODEL FEET that accounts for view scale.
         /// </summary>
         private (double width, double height) EstimateTagSize(TaggableElement element)
         {
@@ -151,6 +190,15 @@ namespace SmartTag.Services
                 var text = element?.GeneratedTagText ?? element?.SizeString ?? "DN100";
                 if (string.IsNullOrEmpty(text)) text = "DN100";
                 
+                // Use calibration service if available (preferred - uses regression model)
+                if (_calibration != null)
+                {
+                    var result = _calibration.EstimateTagSize(text);
+                    System.Diagnostics.Debug.WriteLine($"EstimateTagSize (calibrated): text='{text}', width={result.width:F2}, height={result.height:F2}");
+                    return result;
+                }
+                
+                // Fallback to simple calculation if calibration unavailable
                 var lines = text.Split('\n');
                 if (lines == null || lines.Length == 0) 
                     return (_tagWidth, _tagHeight);
@@ -160,22 +208,28 @@ namespace SmartTag.Services
                 
                 var lineCount = lines.Length;
                 
-                // Scale-adjusted sizing
-                var scaleFactor = _viewScale / 100.0;
-                if (scaleFactor <= 0) scaleFactor = 1.0;
+                // Inverse scale factor: 1:50 → 2.0, 1:100 → 1.0, 1:200 → 0.5
+                var inverseScaleFactor = 100.0 / _viewScale;
+                if (inverseScaleFactor <= 0) inverseScaleFactor = 1.0;
                 
-                var width = Math.Max((maxLineLength / CHARS_PER_FOOT) * scaleFactor, _tagWidth);
-                var height = Math.Max(lineCount * BASE_TAG_HEIGHT * scaleFactor, _tagHeight);
+                // Simple formula (fallback only)
+                var estWidth = Math.Max(maxLineLength * 0.2 * inverseScaleFactor, _tagWidth);
+                var estHeight = Math.Max(lineCount * _tagHeight, _tagHeight);
                 
-                // Sanity check - prevent extremely large or small values
-                width = Math.Max(0.1, Math.Min(width, 50.0));
-                height = Math.Max(0.1, Math.Min(height, 20.0));
+                // Add margin for safety (10%)
+                estWidth *= 1.1;
+                estHeight *= 1.1;
                 
-                return (width, height);
+                // Sanity check
+                estWidth = Math.Max(1.0, Math.Min(estWidth, 50.0));
+                estHeight = Math.Max(0.5, Math.Min(estHeight, 25.0));
+                
+                System.Diagnostics.Debug.WriteLine($"EstimateTagSize (fallback): text='{text}', width={estWidth:F2}, height={estHeight:F2}");
+                
+                return (estWidth, estHeight);
             }
             catch
             {
-                // Fallback to defaults
                 return (_tagWidth, _tagHeight);
             }
         }
@@ -186,7 +240,11 @@ namespace SmartTag.Services
         public List<TagPlacement> CalculatePlacements(List<TaggableElement> elements, TagSettings settings)
         {
             var placements = new List<TagPlacement>();
-            
+            if (elements == null || elements.Count == 0)
+                return placements;
+            if (settings == null)
+                return placements;
+
             // Sort elements by position (top-left to bottom-right) for consistent placement
             var sortedElements = elements
                 .Where(e => !e.IsInGroup || ShouldTagGroupedElement(e)) // #9: Handle grouped elements
@@ -434,22 +492,23 @@ namespace SmartTag.Services
         }
         
         /// <summary>
-        /// #12: Get preferred tag positions from matched rule.
+        /// #12: Get preferred tag positions. Priority: Rule (built-in) → Pattern (built-in) → Learned (user export).
         /// </summary>
         private List<string> GetPreferredPositionsFromRule(TaggableElement element)
         {
             if (element == null || _ruleEngine == null)
                 return new List<string>();
-            
+
+            // 1. Rule nội bộ (Data/Rules/Tagging)
             try
             {
                 var rule = _ruleEngine.GetBestTaggingRule(
                     element.BuiltInCategoryName ?? element.CategoryName ?? "",
                     element.FamilyName ?? "",
-                    null, // viewType - will match any
+                    null,
                     element.SystemClassification ?? "",
                     element.SystemName ?? "");
-                
+
                 if (rule?.Actions?.PreferredPositions != null && rule.Actions.PreferredPositions.Count > 0)
                 {
                     return new List<string>(rule.Actions.PreferredPositions);
@@ -459,18 +518,162 @@ namespace SmartTag.Services
             {
                 System.Diagnostics.Debug.WriteLine($"Rule lookup failed: {ex.Message}");
             }
-            
+
+            // 2. Pattern nội bộ (Data/Patterns/TagPositions)
+            try
+            {
+                var patternLoader = TagPositionPatternLoader.Instance;
+                patternLoader.Initialize();
+                var viewScale = (int)(_viewScale > 0 ? _viewScale : 100);
+                var hint = patternLoader.GetHint(
+                    element.BuiltInCategoryName ?? element.CategoryName ?? "",
+                    element.SystemName ?? "",
+                    viewScale);
+                if (hint?.Positions != null && hint.Positions.Count > 0)
+                {
+                    return hint.Positions
+                        .Where(p => p != TagPosition.Auto)
+                        .Select(p => p.ToString())
+                        .ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Pattern lookup failed: {ex.Message}");
+            }
+
+            // 3. Learned (JSON export của người dùng - nếu đã export và cập nhật)
+            try
+            {
+                var learned = LearnedOverridesService.Instance;
+                learned.EnsureLoaded();
+                var category = element.BuiltInCategoryName ?? element.CategoryName ?? "";
+                var systemName = element.SystemName ?? "";
+                var positions = learned.GetPreferredPositions(category, systemName);
+                if (positions != null && positions.Count > 0)
+                {
+                    return positions;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Learned overrides lookup failed: {ex.Message}");
+            }
+
             return new List<string>();
+        }
+        
+        /// <summary>
+        /// Get rule-based settings for an element (offset, leader, scoring).
+        /// </summary>
+        private RuleBasedSettings GetRuleSettings(TaggableElement element)
+        {
+            var settings = new RuleBasedSettings
+            {
+                OffsetDistance = _leaderLength,
+                AddLeader = true,
+                CollisionPenalty = COLLISION_PENALTY,
+                PreferenceBonus = 50,
+                AlignmentBonus = 20,
+                NearEdgeBonus = 10,
+                AvoidCategories = new List<string>()
+            };
+            
+            if (element == null || _ruleEngine == null)
+                return settings;
+            
+            try
+            {
+                var rule = _ruleEngine.GetBestTaggingRule(
+                    element.BuiltInCategoryName ?? element.CategoryName ?? "",
+                    element.FamilyName ?? "",
+                    null,
+                    element.SystemClassification ?? "",
+                    element.SystemName ?? "");
+                
+                var ruleMatched = rule?.Actions != null;
+                if (ruleMatched)
+                {
+                    if (rule.Actions.OffsetDistance > 0)
+                        settings.OffsetDistance = rule.Actions.OffsetDistance;
+                    
+                    settings.AddLeader = rule.Actions.AddLeader;
+                    
+                    if (rule.Actions.AvoidCollisionWith != null)
+                        settings.AvoidCategories = rule.Actions.AvoidCollisionWith;
+                    
+                    if (rule.Actions.GroupAlignment == "AlongCenterline")
+                        settings.PreferCenterline = true;
+                }
+
+                // Learned (user export): chỉ bù khi rule không chỉ định (ưu tiên rule/pattern nội bộ)
+                if (!ruleMatched)
+                {
+                    try
+                    {
+                        var learned = LearnedOverridesService.Instance;
+                        learned.EnsureLoaded();
+                        var category = element.BuiltInCategoryName ?? element.CategoryName ?? "";
+                        var systemName = element.SystemName ?? "";
+                        var learnedOffset = learned.GetOffsetDistance(category, systemName);
+                        var learnedLeader = learned.GetAddLeader(category, systemName);
+                        if (learnedOffset.HasValue && learnedOffset.Value > 0)
+                            settings.OffsetDistance = learnedOffset.Value;
+                        if (learnedLeader.HasValue)
+                            settings.AddLeader = learnedLeader.Value;
+                    }
+                    catch { /* ignore */ }
+                }
+                
+                if (rule?.Scoring != null)
+                {
+                    if (rule.Scoring.CollisionPenalty != 0)
+                        settings.CollisionPenalty = Math.Abs(rule.Scoring.CollisionPenalty);
+                    
+                    if (rule.Scoring.PreferenceBonus > 0)
+                        settings.PreferenceBonus = rule.Scoring.PreferenceBonus;
+                    
+                    if (rule.Scoring.AlignmentBonus > 0)
+                        settings.AlignmentBonus = rule.Scoring.AlignmentBonus;
+                    
+                    if (rule.Scoring.NearEdgeBonus > 0)
+                        settings.NearEdgeBonus = rule.Scoring.NearEdgeBonus;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Rule settings lookup failed: {ex.Message}");
+            }
+            
+            return settings;
+        }
+        
+        /// <summary>
+        /// Rule-based settings for tag placement.
+        /// </summary>
+        private class RuleBasedSettings
+        {
+            public double OffsetDistance { get; set; }
+            public bool AddLeader { get; set; }
+            public double CollisionPenalty { get; set; }
+            public double PreferenceBonus { get; set; }
+            public double AlignmentBonus { get; set; }
+            public double NearEdgeBonus { get; set; }
+            public List<string> AvoidCategories { get; set; }
+            public bool PreferCenterline { get; set; }
         }
 
         /// <summary>
         /// Find the best placement for a single element's tag.
+        /// PRIORITIZES non-colliding positions over ANY colliding position.
         /// </summary>
         private TagPlacement FindBestPlacement(TaggableElement element, TagSettings settings)
         {
             var candidates = GenerateCandidatePositions(element, settings);
-            TagPlacement bestPlacement = null;
-            double bestScore = double.MaxValue;
+            
+            // Separate into collision-free and colliding candidates
+            var collisionFreeCandidates = new List<(TagPlacement placement, double score)>();
+            var collidingCandidates = new List<(TagPlacement placement, double score)>();
 
             foreach (var candidate in candidates)
             {
@@ -480,12 +683,41 @@ namespace SmartTag.Services
                     continue;
                 }
                 
+                // Check if this candidate has ANY tag collision
+                var expandedBounds = candidate.EstimatedTagBounds.Expand(_minSpacing * 0.5);
+                var hasTagCollision = _tagIndex.GetCollisions(expandedBounds).Count > 0;
+                
                 var score = ScorePlacement(candidate, element, settings);
-                if (score < bestScore)
+                
+                if (hasTagCollision)
                 {
-                    bestScore = score;
-                    bestPlacement = candidate;
+                    collidingCandidates.Add((candidate, score));
                 }
+                else
+                {
+                    collisionFreeCandidates.Add((candidate, score));
+                }
+            }
+            
+            // PREFER collision-free candidates
+            TagPlacement bestPlacement = null;
+            double bestScore = double.MaxValue;
+            
+            // First, try collision-free candidates
+            if (collisionFreeCandidates.Count > 0)
+            {
+                var best = collisionFreeCandidates.OrderBy(c => c.score).First();
+                bestPlacement = best.placement;
+                bestScore = best.score;
+                System.Diagnostics.Debug.WriteLine($"Element {element.ElementId}: Found collision-free placement at {bestPlacement.Position} with score {bestScore}");
+            }
+            // Only if NO collision-free option exists, use best colliding option
+            else if (collidingCandidates.Count > 0)
+            {
+                var best = collidingCandidates.OrderBy(c => c.score).First();
+                bestPlacement = best.placement;
+                bestScore = best.score;
+                System.Diagnostics.Debug.WriteLine($"Element {element.ElementId}: No collision-free position, using {bestPlacement.Position} with collisions, score {bestScore}");
             }
 
             // Check if best placement is acceptable
@@ -507,6 +739,7 @@ namespace SmartTag.Services
 
         /// <summary>
         /// Generate candidate positions for a tag around an element.
+        /// Uses rule-based settings and multiple distance tiers for better collision avoidance.
         /// </summary>
         private List<TagPlacement> GenerateCandidatePositions(TaggableElement element, TagSettings settings)
         {
@@ -530,112 +763,307 @@ namespace SmartTag.Services
             
             // #12: Get preferred positions from rules
             var preferredPositions = GetPreferredPositionsFromRule(element);
+            
+            // Get rule-based settings
+            var ruleSettings = GetRuleSettings(element);
 
-            // Define candidate positions around the element
-            var positions = new (TagPosition pos, double offsetX, double offsetY)[]
+            // Use rule-based offset distance if available
+            var ruleOffset = ruleSettings.OffsetDistance > 0 ? ruleSettings.OffsetDistance : _leaderLength;
+            
+            // Base offset calculation
+            var baseOffsetX = bounds.Width / 2 + ruleOffset + tagWidth / 2 + _minSpacing;
+            var baseOffsetY = bounds.Height / 2 + ruleOffset + tagHeight / 2 + _minSpacing;
+
+            // FOR LINEAR ELEMENTS: Use special positioning along centerline
+            if (element.IsLinearElement && ruleSettings.PreferCenterline)
             {
-                // Primary positions (with leader)
-                (TagPosition.TopRight, bounds.Width / 2 + _leaderLength + tagWidth / 2, 
-                    bounds.Height / 2 + _leaderLength + tagHeight / 2),
-                (TagPosition.TopLeft, -(bounds.Width / 2 + _leaderLength + tagWidth / 2), 
-                    bounds.Height / 2 + _leaderLength + tagHeight / 2),
-                (TagPosition.TopCenter, 0, bounds.Height / 2 + _leaderLength + tagHeight / 2),
-                (TagPosition.BottomRight, bounds.Width / 2 + _leaderLength + tagWidth / 2, 
-                    -(bounds.Height / 2 + _leaderLength + tagHeight / 2)),
-                (TagPosition.BottomLeft, -(bounds.Width / 2 + _leaderLength + tagWidth / 2), 
-                    -(bounds.Height / 2 + _leaderLength + tagHeight / 2)),
-                (TagPosition.BottomCenter, 0, -(bounds.Height / 2 + _leaderLength + tagHeight / 2)),
-                (TagPosition.Right, bounds.Width / 2 + _leaderLength + tagWidth / 2, 0),
-                (TagPosition.Left, -(bounds.Width / 2 + _leaderLength + tagWidth / 2), 0),
-                // Center (no leader)
-                (TagPosition.Center, 0, 0)
-            };
-
-            foreach (var (pos, offsetX, offsetY) in positions)
-            {
-                var tagLocation = new Point2D(center.X + offsetX, center.Y + offsetY);
-                var leaderEnd = pos == TagPosition.Center ? tagLocation : center;
-                var hasLeader = pos != TagPosition.Center;
-
-                var tagBounds = new BoundingBox2D(
-                    tagLocation.X - tagWidth / 2,
-                    tagLocation.Y - tagHeight / 2,
-                    tagLocation.X + tagWidth / 2,
-                    tagLocation.Y + tagHeight / 2);
-
+                // Linear elements (pipes/ducts) - tag along centerline with no leader
                 candidates.Add(new TagPlacement
                 {
                     ElementId = element.ElementId,
-                    TagLocation = tagLocation,
-                    LeaderEnd = leaderEnd,
-                    HasLeader = hasLeader,
-                    Position = pos,
-                    EstimatedTagBounds = tagBounds,
-                    Rotation = rotation
+                    TagLocation = center,
+                    LeaderEnd = center,
+                    HasLeader = false, // No leader for linear elements (per rules)
+                    Position = TagPosition.Center,
+                    EstimatedTagBounds = new BoundingBox2D(
+                        center.X - tagWidth / 2 - _minSpacing,
+                        center.Y - tagHeight / 2 - _minSpacing,
+                        center.X + tagWidth / 2 + _minSpacing,
+                        center.Y + tagHeight / 2 + _minSpacing),
+                    Rotation = rotation,
+                    DistanceMultiplier = 0
+                });
+                
+                // Also add offset positions along the element direction for collision fallback
+                if (element.StartPoint.HasValue && element.EndPoint.HasValue)
+                {
+                    var start = element.StartPoint.Value;
+                    var end = element.EndPoint.Value;
+                    var dir = new Point2D(end.X - start.X, end.Y - start.Y);
+                    var length = Math.Sqrt(dir.X * dir.X + dir.Y * dir.Y);
+                    if (length > 0.01)
+                    {
+                        dir = new Point2D(dir.X / length, dir.Y / length);
+                        
+                        // Perpendicular offset positions (above/below the line)
+                        var perpX = -dir.Y;
+                        var perpY = dir.X;
+                        var perpOffset = tagHeight + _minSpacing * 2;
+                        
+                        // Position above centerline
+                        var abovePos = new Point2D(center.X + perpX * perpOffset, center.Y + perpY * perpOffset);
+                        candidates.Add(new TagPlacement
+                        {
+                            ElementId = element.ElementId,
+                            TagLocation = abovePos,
+                            LeaderEnd = center,
+                            HasLeader = ruleSettings.AddLeader,
+                            Position = TagPosition.TopCenter,
+                            EstimatedTagBounds = new BoundingBox2D(
+                                abovePos.X - tagWidth / 2 - _minSpacing,
+                                abovePos.Y - tagHeight / 2 - _minSpacing,
+                                abovePos.X + tagWidth / 2 + _minSpacing,
+                                abovePos.Y + tagHeight / 2 + _minSpacing),
+                            Rotation = rotation,
+                            DistanceMultiplier = 1.0
+                        });
+                        
+                        // Position below centerline
+                        var belowPos = new Point2D(center.X - perpX * perpOffset, center.Y - perpY * perpOffset);
+                        candidates.Add(new TagPlacement
+                        {
+                            ElementId = element.ElementId,
+                            TagLocation = belowPos,
+                            LeaderEnd = center,
+                            HasLeader = ruleSettings.AddLeader,
+                            Position = TagPosition.BottomCenter,
+                            EstimatedTagBounds = new BoundingBox2D(
+                                belowPos.X - tagWidth / 2 - _minSpacing,
+                                belowPos.Y - tagHeight / 2 - _minSpacing,
+                                belowPos.X + tagWidth / 2 + _minSpacing,
+                                belowPos.Y + tagHeight / 2 + _minSpacing),
+                            Rotation = rotation,
+                            DistanceMultiplier = 1.0
+                        });
+                    }
+                }
+            }
+
+            // Define positions at MULTIPLE distance tiers for better collision avoidance
+            var distanceMultipliers = new double[] { 1.0, 1.5, 2.0, 2.5 }; // 4 tiers of distance
+            
+            foreach (var mult in distanceMultipliers)
+            {
+                var offsetX = baseOffsetX * mult;
+                var offsetY = baseOffsetY * mult;
+                
+                var positions = new (TagPosition pos, double ox, double oy)[]
+                {
+                    // 8 cardinal + diagonal positions
+                    (TagPosition.TopRight, offsetX, offsetY),
+                    (TagPosition.TopLeft, -offsetX, offsetY),
+                    (TagPosition.TopCenter, 0, offsetY),
+                    (TagPosition.BottomRight, offsetX, -offsetY),
+                    (TagPosition.BottomLeft, -offsetX, -offsetY),
+                    (TagPosition.BottomCenter, 0, -offsetY),
+                    (TagPosition.Right, offsetX, 0),
+                    (TagPosition.Left, -offsetX, 0),
+                };
+
+                foreach (var (pos, ox, oy) in positions)
+                {
+                    var tagLocation = new Point2D(center.X + ox, center.Y + oy);
+                    var leaderEnd = center;
+
+                    var tagBounds = new BoundingBox2D(
+                        tagLocation.X - tagWidth / 2 - _minSpacing / 2,
+                        tagLocation.Y - tagHeight / 2 - _minSpacing / 2,
+                        tagLocation.X + tagWidth / 2 + _minSpacing / 2,
+                        tagLocation.Y + tagHeight / 2 + _minSpacing / 2);
+
+                    candidates.Add(new TagPlacement
+                    {
+                        ElementId = element.ElementId,
+                        TagLocation = tagLocation,
+                        LeaderEnd = leaderEnd,
+                        HasLeader = ruleSettings.AddLeader,
+                        Position = pos,
+                        EstimatedTagBounds = tagBounds,
+                        Rotation = rotation,
+                        DistanceMultiplier = mult // Track which tier
+                    });
+                }
+            }
+            
+            // Add center position (no leader) if not already added for linear elements
+            if (!element.IsLinearElement || !ruleSettings.PreferCenterline)
+            {
+                var centerBounds = new BoundingBox2D(
+                    center.X - tagWidth / 2 - _minSpacing / 2,
+                    center.Y - tagHeight / 2 - _minSpacing / 2,
+                    center.X + tagWidth / 2 + _minSpacing / 2,
+                    center.Y + tagHeight / 2 + _minSpacing / 2);
+                
+                candidates.Add(new TagPlacement
+                {
+                    ElementId = element.ElementId,
+                    TagLocation = center,
+                    LeaderEnd = center,
+                    HasLeader = false,
+                    Position = TagPosition.Center,
+                    EstimatedTagBounds = centerBounds,
+                    Rotation = rotation,
+                    DistanceMultiplier = 0
                 });
             }
             
-            // Sort by preferred positions from rules first
-            if (preferredPositions.Count > 0)
-            {
-                candidates = candidates
-                    .OrderBy(c => {
-                        var idx = preferredPositions.IndexOf(c.Position.ToString());
-                        return idx >= 0 ? idx : 999;
-                    })
-                    .ToList();
-            }
+            // Sort by preferred positions from rules first, then by distance (prefer closer)
+            candidates = candidates
+                .OrderBy(c => {
+                    var idx = preferredPositions.IndexOf(c.Position.ToString());
+                    return idx >= 0 ? idx : 999;
+                })
+                .ThenBy(c => c.DistanceMultiplier) // Prefer closer positions
+                .ToList();
 
             return candidates;
         }
 
         /// <summary>
         /// Score a tag placement (lower is better).
+        /// Uses rule-based scoring and heavily penalizes collisions to prevent tag overlap.
         /// </summary>
         private double ScorePlacement(TagPlacement placement, TaggableElement element, TagSettings settings)
         {
             double score = 0;
+            
+            // Get rule-based scoring weights
+            var ruleSettings = GetRuleSettings(element);
 
-            // 1. Tag-to-tag collision penalty (highest weight)
-            var tagCollisions = _tagIndex.GetCollisions(placement.EstimatedTagBounds);
-            score += tagCollisions.Count * COLLISION_PENALTY;
+            // 1. Tag-to-tag collision penalty (HIGHEST weight - prevent overlap)
+            // Use expanded bounds for better collision detection
+            var expandedBounds = placement.EstimatedTagBounds.Expand(_minSpacing);
+            var tagCollisions = _tagIndex.GetCollisions(expandedBounds);
+            if (tagCollisions.Count > 0)
+            {
+                // VERY HIGH penalty - make this almost impossible to choose
+                // Each collision adds exponentially more penalty
+                score += ruleSettings.CollisionPenalty * Math.Pow(3, tagCollisions.Count);
+                
+                // Debug logging
+                System.Diagnostics.Debug.WriteLine($"Tag collision for element {element.ElementId}: {tagCollisions.Count} collisions, penalty = {score}");
+            }
 
-            // 2. Tag-to-element collision (tag overlapping other elements)
+            // 2. Check overlap severity (how much area overlaps)
+            foreach (var collision in tagCollisions)
+            {
+                var overlapArea = GetOverlapArea(placement.EstimatedTagBounds, collision.Bounds);
+                if (overlapArea > 0)
+                {
+                    // VERY HIGH penalty proportional to overlap area
+                    score += overlapArea * 200;
+                }
+            }
+
+            // 3. Tag-to-element collision (tag overlapping other elements)
             var elementCollisions = _elementIndex.GetCollisions(
                 placement.EstimatedTagBounds.Expand(-0.1), // Slight shrink to allow touching
                 element.ElementId);
             score += elementCollisions.Count * ELEMENT_COLLISION_PENALTY;
             
-            // 3. Tag-to-annotation collision (dimensions, text notes)
+            // 3b. Check collision with categories specified in rules to avoid
+            if (ruleSettings.AvoidCategories.Count > 0)
+            {
+                foreach (var collision in elementCollisions)
+                {
+                    if (collision.Data is TaggableElement collidingElement)
+                    {
+                        if (ruleSettings.AvoidCategories.Contains(collidingElement.BuiltInCategoryName))
+                        {
+                            score += ELEMENT_COLLISION_PENALTY * 2; // Extra penalty for rule-specified categories
+                        }
+                    }
+                }
+            }
+            
+            // 4. Tag-to-annotation collision (dimensions, text notes)
             var annotationCollisions = _annotationIndex.GetCollisions(placement.EstimatedTagBounds);
             score += annotationCollisions.Count * ELEMENT_COLLISION_PENALTY;
             
-            // 4. Leader collision check (if has leader)
+            // 5. Leader collision check (if has leader)
             if (placement.HasLeader)
             {
                 var leaderCollisions = CheckLeaderCollisions(placement, element.ElementId);
                 score += leaderCollisions * LEADER_COLLISION_PENALTY;
             }
 
-            // 5. Position preference
-            score += GetPositionPreferenceScore(placement.Position, settings.PreferredPosition);
+            // 6. Position preference - use rule-based bonus
+            var preferenceScore = GetPositionPreferenceScore(placement.Position, settings.PreferredPosition);
+            score += preferenceScore;
+            
+            // 6b. Bonus for rule-preferred positions
+            var preferredPositions = GetPreferredPositionsFromRule(element);
+            if (preferredPositions.Contains(placement.Position.ToString()))
+            {
+                score -= ruleSettings.PreferenceBonus; // Lower score = better
+            }
 
-            // 6. Leader length penalty
+            // 7. Leader length penalty (but not too strong - collision avoidance is more important)
             if (placement.HasLeader)
             {
                 var leaderLength = placement.TagLocation.DistanceTo(placement.LeaderEnd);
-                score += leaderLength * 2; // Prefer shorter leaders
+                score += leaderLength * 1; // Reduced weight
+            }
+            else if (ruleSettings.PreferCenterline && element.IsLinearElement)
+            {
+                // Bonus for no-leader tags on linear elements (per rule)
+                score -= 20;
             }
 
-            // 7. Distance from element center
-            var distFromCenter = placement.TagLocation.DistanceTo(element.Center);
-            score += distFromCenter * 0.5;
+            // 8. Distance tier penalty (prefer closer positions if no collision)
+            if (tagCollisions.Count == 0)
+            {
+                score += placement.DistanceMultiplier * 5; // Small penalty for farther positions
+            }
+            else
+            {
+                // If there's collision, don't penalize farther positions as much
+                score += placement.DistanceMultiplier * 1;
+            }
 
-            // 8. Alignment bonus (tags that align with grid get lower score)
+            // 9. Alignment bonus (tags that align with grid get lower score)
             var alignmentScore = GetAlignmentScore(placement.TagLocation);
-            score -= alignmentScore * 5; // Subtract to favor aligned positions
+            score -= alignmentScore * ruleSettings.AlignmentBonus / 10;
+            
+            // 10. Near-edge bonus for equipment (per rule)
+            if (ruleSettings.NearEdgeBonus > 0 && !element.IsLinearElement)
+            {
+                // Bonus if tag is near element edge rather than far away
+                var distFromCenter = placement.TagLocation.DistanceTo(element.Center);
+                var maxDist = Math.Max(element.ViewBounds.Width, element.ViewBounds.Height) * 2;
+                if (distFromCenter < maxDist)
+                {
+                    score -= ruleSettings.NearEdgeBonus;
+                }
+            }
 
             return score;
+        }
+        
+        /// <summary>
+        /// Calculate overlap area between two bounding boxes.
+        /// </summary>
+        private double GetOverlapArea(BoundingBox2D a, BoundingBox2D b)
+        {
+            var overlapMinX = Math.Max(a.MinX, b.MinX);
+            var overlapMaxX = Math.Min(a.MaxX, b.MaxX);
+            var overlapMinY = Math.Max(a.MinY, b.MinY);
+            var overlapMaxY = Math.Min(a.MaxY, b.MaxY);
+            
+            if (overlapMinX >= overlapMaxX || overlapMinY >= overlapMaxY)
+                return 0;
+            
+            return (overlapMaxX - overlapMinX) * (overlapMaxY - overlapMinY);
         }
         
         /// <summary>
@@ -799,7 +1227,7 @@ namespace SmartTag.Services
         /// <summary>
         /// #11: Resolve collisions by pushing tags apart - OPTIMIZED using spatial index.
         /// </summary>
-        public void ResolveCollisions(List<TagPlacement> placements, int maxIterations = 10)
+        public void ResolveCollisions(List<TagPlacement> placements, int maxIterations = 20) // Increased iterations
         {
             if (placements == null || placements.Count == 0) return;
             
@@ -837,7 +1265,7 @@ namespace SmartTag.Services
                         var id = placement.ElementId * 1000 + placement.SegmentIndex;
                         
                         // Use spatial index to find nearby placements (O(1) average)
-                        var expandedBounds = placement.EstimatedTagBounds.Expand(MIN_SPACING);
+                        var expandedBounds = placement.EstimatedTagBounds.Expand(_minSpacing);
                         var nearby = placementIndex.Query(expandedBounds);
                         
                         if (nearby == null) continue;
@@ -896,31 +1324,80 @@ namespace SmartTag.Services
 
             if (dist < 0.001) // Nearly identical positions
             {
-                dx = 1;
-                dy = 0;
-                dist = 1;
+                // Push in a diagonal direction to spread out - use larger displacement
+                dx = _minSpacing * 2;
+                dy = _minSpacing * 2;
+                dist = Math.Sqrt(dx * dx + dy * dy);
             }
 
-            // Calculate overlap
-            var overlapX = (a.EstimatedTagBounds.Width + b.EstimatedTagBounds.Width) / 2 - Math.Abs(dx);
-            var overlapY = (a.EstimatedTagBounds.Height + b.EstimatedTagBounds.Height) / 2 - Math.Abs(dy);
+            // Normalize direction
+            var nx = dx / dist;
+            var ny = dy / dist;
 
-            // Push in direction of least resistance
-            double pushX, pushY;
-            if (overlapX < overlapY)
+            // Calculate the REQUIRED separation distance (half-widths + half-heights + spacing)
+            var requiredSepX = (a.EstimatedTagBounds.Width + b.EstimatedTagBounds.Width) / 2 + _minSpacing;
+            var requiredSepY = (a.EstimatedTagBounds.Height + b.EstimatedTagBounds.Height) / 2 + _minSpacing;
+            
+            // Calculate actual separation
+            var actualSepX = Math.Abs(dx);
+            var actualSepY = Math.Abs(dy);
+            
+            // Calculate overlap (positive = overlapping)
+            var overlapX = requiredSepX - actualSepX;
+            var overlapY = requiredSepY - actualSepY;
+            
+            // If no overlap in both directions, no need to push
+            if (overlapX <= 0 && overlapY <= 0) return;
+
+            // Calculate push distance - push MORE than just the overlap to create clearance
+            double pushDist;
+            if (overlapX > 0 && overlapY > 0)
             {
-                pushX = (overlapX / 2 + MIN_SPACING) * Math.Sign(dx);
-                pushY = 0;
+                // Full overlap - push along the direction that needs less movement
+                // But ensure we move ENOUGH to clear
+                var pushX = overlapX / 2 + _minSpacing;
+                var pushY = overlapY / 2 + _minSpacing;
+                
+                // Choose direction that creates most separation
+                if (overlapX < overlapY)
+                {
+                    // Push horizontally
+                    nx = Math.Sign(dx) != 0 ? Math.Sign(dx) : 1;
+                    ny = 0;
+                    pushDist = pushX;
+                }
+                else
+                {
+                    // Push vertically
+                    nx = 0;
+                    ny = Math.Sign(dy) != 0 ? Math.Sign(dy) : 1;
+                    pushDist = pushY;
+                }
+            }
+            else if (overlapX > 0)
+            {
+                // Only horizontal overlap - push horizontally
+                pushDist = overlapX / 2 + _minSpacing;
+                ny = 0;
+                nx = Math.Sign(dx) != 0 ? Math.Sign(dx) : 1;
             }
             else
             {
-                pushX = 0;
-                pushY = (overlapY / 2 + MIN_SPACING) * Math.Sign(dy);
+                // Only vertical overlap - push vertically
+                pushDist = overlapY / 2 + _minSpacing;
+                nx = 0;
+                ny = Math.Sign(dy) != 0 ? Math.Sign(dy) : 1;
             }
 
-            // Move tags apart
-            MoveTag(a, -pushX, -pushY);
-            MoveTag(b, pushX, pushY);
+            // Apply LARGER push to ensure clearance
+            var pushMultiplier = 1.2; // Push 20% more than needed
+            pushDist *= pushMultiplier;
+
+            // Move tags apart in opposite directions
+            MoveTag(a, -nx * pushDist, -ny * pushDist);
+            MoveTag(b, nx * pushDist, ny * pushDist);
+            
+            System.Diagnostics.Debug.WriteLine($"PushApart: Moved tags {a.ElementId} and {b.ElementId} apart by {pushDist:F2} in direction ({nx:F2}, {ny:F2})");
         }
 
         private void MoveTag(TagPlacement placement, double dx, double dy)

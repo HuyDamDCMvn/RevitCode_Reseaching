@@ -206,6 +206,15 @@ namespace SmartTag.Models
             return point.X >= MinX && point.X <= MaxX &&
                    point.Y >= MinY && point.Y <= MaxY;
         }
+        
+        /// <summary>
+        /// Check if this box fully contains another box.
+        /// </summary>
+        public bool Contains(BoundingBox2D other)
+        {
+            return MinX <= other.MinX && MaxX >= other.MaxX &&
+                   MinY <= other.MinY && MaxY >= other.MaxY;
+        }
 
         /// <summary>
         /// Expand the box by a margin.
@@ -274,6 +283,11 @@ namespace SmartTag.Models
         /// Segment index for linear elements with multiple tags.
         /// </summary>
         public int SegmentIndex { get; set; }
+        
+        /// <summary>
+        /// Distance multiplier used for this position (higher = farther from element).
+        /// </summary>
+        public double DistanceMultiplier { get; set; } = 1.0;
     }
 
     /// <summary>
@@ -315,6 +329,11 @@ namespace SmartTag.Models
         /// Tag type ID to use (null = default).
         /// </summary>
         public long? TagTypeId { get; set; }
+        
+        /// <summary>
+        /// Per-category tag type overrides (CategoryId -> TagTypeId).
+        /// </summary>
+        public Dictionary<long, long> CategoryTagTypes { get; set; } = new Dictionary<long, long>();
 
         /// <summary>
         /// Use Quick Mode (local heuristics) or Full Mode (cloud AI).
@@ -364,5 +383,34 @@ namespace SmartTag.Models
         public int ElementCount { get; set; }
         public int TaggedCount { get; set; }
         public long? PreferredTagTypeId { get; set; }
+        
+        /// <summary>
+        /// Available tag types for this category.
+        /// </summary>
+        public List<TagTypeInfo> AvailableTagTypes { get; set; } = new List<TagTypeInfo>();
+        
+        /// <summary>
+        /// Selected tag type for this category.
+        /// </summary>
+        public TagTypeInfo SelectedTagType { get; set; }
+    }
+    
+    /// <summary>
+    /// Information about a tag type (Family + Type).
+    /// </summary>
+    public class TagTypeInfo
+    {
+        public long TypeId { get; set; }
+        public string FamilyName { get; set; }
+        public string TypeName { get; set; }
+        
+        /// <summary>
+        /// Display name: "FamilyName: TypeName"
+        /// </summary>
+        public string DisplayName => string.IsNullOrEmpty(FamilyName) 
+            ? TypeName 
+            : $"{FamilyName}: {TypeName}";
+            
+        public override string ToString() => DisplayName;
     }
 }

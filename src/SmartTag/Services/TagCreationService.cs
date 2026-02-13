@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Autodesk.Revit.DB;
 using SmartTag.Models;
 
@@ -27,6 +28,9 @@ namespace SmartTag.Services
         {
             var result = new TagResult();
             var startTime = DateTime.Now;
+
+            if (placements == null || settings == null)
+                return result;
 
             foreach (var placement in placements)
             {
@@ -89,9 +93,19 @@ namespace SmartTag.Services
                     return null; // Element cannot be referenced
                 }
 
-                // Determine tag type
+                // Determine tag type - check per-category override first
                 FamilySymbol tagType = null;
-                if (settings.TagTypeId.HasValue)
+                var categoryId = (long)element.Category.Id.Value;
+                
+                // Check per-category tag type override
+                if (settings.CategoryTagTypes != null && 
+                    settings.CategoryTagTypes.TryGetValue(categoryId, out var categoryTagTypeId))
+                {
+                    tagType = _doc.GetElement(new ElementId(categoryTagTypeId)) as FamilySymbol;
+                }
+                
+                // Fallback to global tag type
+                if (tagType == null && settings.TagTypeId.HasValue)
                 {
                     tagType = _doc.GetElement(new ElementId(settings.TagTypeId.Value)) as FamilySymbol;
                 }

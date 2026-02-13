@@ -10,18 +10,90 @@ namespace SmartTag.Services
 {
     /// <summary>
     /// Service for collecting elements and their view-space bounding boxes.
+    /// OPTIMIZED: Caches existing tags to avoid repeated FilteredElementCollector calls.
     /// </summary>
     public class ElementCollector
     {
         private readonly Document _doc;
         private readonly View _view;
         private readonly TagTextFormatter _tagFormatter;
+        
+        // CACHE: Existing tags - loaded once, used many times
+        private Dictionary<long, long> _taggedElementCache; // ElementId -> TagId
+        private bool _tagCacheInitialized;
 
         public ElementCollector(Document doc, View view)
         {
             _doc = doc ?? throw new ArgumentNullException(nameof(doc));
             _view = view ?? throw new ArgumentNullException(nameof(view));
             _tagFormatter = new TagTextFormatter(doc);
+            _taggedElementCache = new Dictionary<long, long>();
+            _tagCacheInitialized = false;
+        }
+        
+        /// <summary>
+        /// Initialize tag cache once - O(n) instead of O(n*m)
+        /// </summary>
+        private void EnsureTagCacheInitialized()
+        {
+            if (_tagCacheInitialized) return;
+            
+            try
+            {
+                var tagCollector = new FilteredElementCollector(_doc, _view.Id)
+                    .OfClass(typeof(IndependentTag))
+                    .WhereElementIsNotElementType();
+                
+                foreach (IndependentTag tag in tagCollector)
+                {
+                    try
+                    {
+                        var taggedIds = GetTaggedElementIds(tag);
+                        if (taggedIds != null)
+                        {
+                            foreach (var id in taggedIds)
+                            {
+                                if (id != ElementId.InvalidElementId)
+                                    _taggedElementCache[id.Value] = tag.Id.Value;
+                            }
+                        }
+                    }
+                    catch { /* Ignore individual tag errors */ }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Tag cache initialization error: {ex.Message}");
+            }
+            
+            _tagCacheInitialized = true;
+            System.Diagnostics.Debug.WriteLine($"Tag cache initialized: {_taggedElementCache.Count} tagged elements");
+        }
+
+        /// <summary>
+        /// Get tagged element ID(s) from IndependentTag. Compatible with Revit 2024 (TaggedLocalElementId) and 2025+ (GetTaggedLocalElementIds).
+        /// </summary>
+        private static IList<ElementId> GetTaggedElementIds(IndependentTag tag)
+        {
+            if (tag == null) return null;
+            try
+            {
+                var taggedIds = tag.GetTaggedLocalElementIds();
+                if (taggedIds != null && taggedIds.Count > 0)
+                    return taggedIds.ToList();
+            }
+            catch
+            {
+                // Revit 2024-: use TaggedLocalElementId property
+                try
+                {
+                    var prop = typeof(IndependentTag).GetProperty("TaggedLocalElementId");
+                    if (prop?.GetValue(tag) is ElementId singleId && singleId != null && singleId != ElementId.InvalidElementId)
+                        return new[] { singleId };
+                }
+                catch { }
+            }
+            return null;
         }
 
         /// <summary>
@@ -169,11 +241,12 @@ namespace SmartTag.Services
 
             foreach (IndependentTag tag in collector)
             {
-                // Get tagged element IDs - API changed in Revit 2025
-                var taggedIds = tag.GetTaggedLocalElementIds();
+                var taggedIds = GetTaggedElementIds(tag);
                 if (taggedIds == null || taggedIds.Count == 0) continue;
 
-                var hostId = taggedIds.First();
+                var hostId = taggedIds[0];
+                if (hostId == null || hostId == ElementId.InvalidElementId) continue;
+
                 var viewBounds = GetViewBounds(tag);
                 if (viewBounds == null) continue;
 
@@ -295,41 +368,131 @@ namespace SmartTag.Services
         /// <summary>
         /// Get available tag types for a category.
         /// </summary>
-        public List<(long TypeId, string Name)> GetTagTypesForCategory(BuiltInCategory category)
+        public List<TagTypeInfo> GetTagTypesForCategory(BuiltInCategory category)
         {
-            var result = new List<(long, string)>();
+            var result = new List<TagTypeInfo>();
+            var tagCategory = GetTagCategoryForElementCategory(category);
+            
+            if (tagCategory == BuiltInCategory.INVALID) 
+            {
+                // Fallback: try generic annotation
+                tagCategory = BuiltInCategory.OST_GenericAnnotation;
+            }
 
             var collector = new FilteredElementCollector(_doc)
                 .OfClass(typeof(FamilySymbol))
-                .OfCategory(BuiltInCategory.OST_Tags)
+                .OfCategory(tagCategory)
                 .WhereElementIsElementType();
 
             foreach (FamilySymbol symbol in collector)
             {
-                // Check if this tag can tag the specified category
                 var family = symbol.Family;
-                if (family == null) continue;
-
-                // Get the category that this tag family can tag
-                var taggedCategory = GetTaggedCategory(family);
-                if (taggedCategory == category)
+                result.Add(new TagTypeInfo
                 {
-                    result.Add((symbol.Id.Value, $"{family.Name}: {symbol.Name}"));
-                }
+                    TypeId = symbol.Id.Value,
+                    FamilyName = family?.Name ?? "Unknown",
+                    TypeName = symbol.Name
+                });
             }
 
-            return result;
+            // Sort by Family then Type
+            return result.OrderBy(t => t.FamilyName).ThenBy(t => t.TypeName).ToList();
+        }
+        
+        /// <summary>
+        /// Map element category to its corresponding tag category.
+        /// </summary>
+        private BuiltInCategory GetTagCategoryForElementCategory(BuiltInCategory elementCategory)
+        {
+            var mappings = new Dictionary<BuiltInCategory, BuiltInCategory>
+            {
+                { BuiltInCategory.OST_Walls, BuiltInCategory.OST_WallTags },
+                { BuiltInCategory.OST_Doors, BuiltInCategory.OST_DoorTags },
+                { BuiltInCategory.OST_Windows, BuiltInCategory.OST_WindowTags },
+                { BuiltInCategory.OST_Rooms, BuiltInCategory.OST_RoomTags },
+                { BuiltInCategory.OST_Areas, BuiltInCategory.OST_AreaTags },
+                { BuiltInCategory.OST_Floors, BuiltInCategory.OST_FloorTags },
+                { BuiltInCategory.OST_Ceilings, BuiltInCategory.OST_CeilingTags },
+                { BuiltInCategory.OST_Roofs, BuiltInCategory.OST_RoofTags },
+                { BuiltInCategory.OST_Columns, BuiltInCategory.OST_ColumnTags },
+                { BuiltInCategory.OST_StructuralColumns, BuiltInCategory.OST_StructuralColumnTags },
+                { BuiltInCategory.OST_StructuralFraming, BuiltInCategory.OST_StructuralFramingTags },
+                { BuiltInCategory.OST_StructuralFoundation, BuiltInCategory.OST_StructuralFoundationTags },
+                { BuiltInCategory.OST_Furniture, BuiltInCategory.OST_FurnitureTags },
+                { BuiltInCategory.OST_GenericModel, BuiltInCategory.OST_GenericModelTags },
+                { BuiltInCategory.OST_MechanicalEquipment, BuiltInCategory.OST_MechanicalEquipmentTags },
+                { BuiltInCategory.OST_ElectricalEquipment, BuiltInCategory.OST_ElectricalEquipmentTags },
+                { BuiltInCategory.OST_ElectricalFixtures, BuiltInCategory.OST_ElectricalFixtureTags },
+                { BuiltInCategory.OST_LightingFixtures, BuiltInCategory.OST_LightingFixtureTags },
+                { BuiltInCategory.OST_PlumbingFixtures, BuiltInCategory.OST_PlumbingFixtureTags },
+                { BuiltInCategory.OST_DuctCurves, BuiltInCategory.OST_DuctTags },
+                { BuiltInCategory.OST_PipeCurves, BuiltInCategory.OST_PipeTags },
+                { BuiltInCategory.OST_DuctAccessory, BuiltInCategory.OST_DuctAccessoryTags },
+                { BuiltInCategory.OST_DuctFitting, BuiltInCategory.OST_DuctFittingTags },
+                { BuiltInCategory.OST_DuctTerminal, BuiltInCategory.OST_DuctTerminalTags },
+                { BuiltInCategory.OST_PipeAccessory, BuiltInCategory.OST_PipeAccessoryTags },
+                { BuiltInCategory.OST_PipeFitting, BuiltInCategory.OST_PipeFittingTags },
+                { BuiltInCategory.OST_Sprinklers, BuiltInCategory.OST_SprinklerTags },
+                { BuiltInCategory.OST_CableTray, BuiltInCategory.OST_CableTrayTags },
+                { BuiltInCategory.OST_Conduit, BuiltInCategory.OST_ConduitTags },
+                { BuiltInCategory.OST_SpecialityEquipment, BuiltInCategory.OST_SpecialityEquipmentTags }
+            };
+
+            return mappings.TryGetValue(elementCategory, out var tagCat) ? tagCat : BuiltInCategory.INVALID;
         }
 
         /// <summary>
         /// Get category statistics for the view.
+        /// OPTIMIZED: Uses category filter and cached tag lookup.
         /// </summary>
         public List<CategoryTagConfig> GetCategoryStats()
         {
             var stats = new Dictionary<BuiltInCategory, CategoryTagConfig>();
+            
+            // Initialize tag cache FIRST (only once)
+            EnsureTagCacheInitialized();
 
-            // Collect elements
+            // Filter for common taggable categories to reduce iteration
+            var taggableCategories = new[]
+            {
+                BuiltInCategory.OST_PipeCurves,
+                BuiltInCategory.OST_DuctCurves,
+                BuiltInCategory.OST_FlexPipeCurves,
+                BuiltInCategory.OST_FlexDuctCurves,
+                BuiltInCategory.OST_PipeFitting,
+                BuiltInCategory.OST_DuctFitting,
+                BuiltInCategory.OST_PipeAccessory,
+                BuiltInCategory.OST_DuctAccessory,
+                BuiltInCategory.OST_MechanicalEquipment,
+                BuiltInCategory.OST_PlumbingFixtures,
+                BuiltInCategory.OST_Sprinklers,
+                BuiltInCategory.OST_CableTray,
+                BuiltInCategory.OST_CableTrayFitting,
+                BuiltInCategory.OST_Conduit,
+                BuiltInCategory.OST_ConduitFitting,
+                BuiltInCategory.OST_ElectricalEquipment,
+                BuiltInCategory.OST_ElectricalFixtures,
+                BuiltInCategory.OST_LightingFixtures,
+                BuiltInCategory.OST_FireAlarmDevices,
+                BuiltInCategory.OST_DataDevices,
+                BuiltInCategory.OST_CommunicationDevices,
+                BuiltInCategory.OST_SecurityDevices,
+                BuiltInCategory.OST_DuctTerminal,
+                BuiltInCategory.OST_DuctTerminal, // Air terminals are under DuctTerminal
+                BuiltInCategory.OST_GenericModel
+            };
+            
+            // Create multi-category filter for faster collection
+            var categoryFilters = taggableCategories
+                .Select(c => new ElementCategoryFilter(c))
+                .Cast<ElementFilter>()
+                .ToList();
+            
+            var multiCatFilter = new LogicalOrFilter(categoryFilters);
+            
+            // Collect elements with category filter
             var collector = new FilteredElementCollector(_doc, _view.Id)
+                .WherePasses(multiCatFilter)
                 .WhereElementIsNotElementType();
 
             foreach (var elem in collector)
@@ -348,9 +511,6 @@ namespace SmartTag.Services
                     continue;
                 }
 
-                // Only include model categories that can be tagged
-                if (!IsTaggableCategory(builtInCat)) continue;
-
                 if (!stats.TryGetValue(builtInCat, out var config))
                 {
                     config = new CategoryTagConfig
@@ -366,9 +526,11 @@ namespace SmartTag.Services
 
                 config.ElementCount++;
 
-                // Check if tagged
-                var (hasTag, _) = CheckExistingTag(elem);
-                if (hasTag) config.TaggedCount++;
+                // O(1) lookup from cache - FAST!
+                if (_taggedElementCache.ContainsKey(elem.Id.Value))
+                {
+                    config.TaggedCount++;
+                }
             }
 
             return stats.Values
@@ -428,29 +590,20 @@ namespace SmartTag.Services
             return new BoundingBox2D(minX, minY, maxX, maxY);
         }
 
+        /// <summary>
+        /// Check if element has existing tag - OPTIMIZED using cache
+        /// </summary>
         private (bool HasTag, long? TagId) CheckExistingTag(Element elem)
         {
-            try
+            // Ensure cache is initialized (only once)
+            EnsureTagCacheInitialized();
+            
+            // O(1) lookup from cache
+            if (_taggedElementCache.TryGetValue(elem.Id.Value, out var tagId))
             {
-                var tagCollector = new FilteredElementCollector(_doc, _view.Id)
-                    .OfClass(typeof(IndependentTag))
-                    .WhereElementIsNotElementType();
-
-                foreach (IndependentTag tag in tagCollector)
-                {
-                    // Get tagged element IDs - API changed in Revit 2025
-                    var taggedIds = tag.GetTaggedLocalElementIds();
-                    if (taggedIds != null && taggedIds.Contains(elem.Id))
-                    {
-                        return (true, tag.Id.Value);
-                    }
-                }
+                return (true, tagId);
             }
-            catch
-            {
-                // Ignore errors
-            }
-
+            
             return (false, null);
         }
 

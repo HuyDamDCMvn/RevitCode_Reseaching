@@ -43,10 +43,8 @@ namespace SmartTag
 
                 // Create ViewModel and Window
                 var viewModel = new SmartTagViewModel(_externalEvent, _handler);
-                _window = new SmartTagWindow
-                {
-                    DataContext = viewModel
-                };
+                _window = new SmartTagWindow();
+                _window.DataContext = viewModel;
 
                 // Set Revit as owner (keeps window on top of Revit)
                 var helper = new WindowInteropHelper(_window);
@@ -61,6 +59,21 @@ namespace SmartTag
 
                 // Show modeless (non-blocking)
                 _window.Show();
+                
+                // AFTER window is shown, trigger initial load
+                // Use Dispatcher to defer execution so UI can render first
+                _window.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    try
+                    {
+                        viewModel.RefreshCategoriesCommand.Execute(null);
+                        viewModel.LoadDimensionTypesCommand.Execute(null);
+                    }
+                    catch (Exception initEx)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Initial load error: {initEx.Message}");
+                    }
+                }), System.Windows.Threading.DispatcherPriority.Background);
             }
             catch (Exception ex)
             {

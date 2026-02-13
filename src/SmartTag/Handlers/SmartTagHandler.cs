@@ -21,6 +21,12 @@ namespace SmartTag
         PreviewPlacements,
         ClearPreview,
         SelectElements,
+        // Preview workflow
+        CreatePreviewTags,      // Create tags for preview (can undo)
+        ConfirmPreviewTags,     // Confirm and keep preview tags
+        UndoPreviewTags,        // Undo/delete preview tags
+        // Export training data from current view (to update rules/patterns)
+        ExportTrainingData,
         // Dimension operations
         ExecuteAutoDimension,
         GetDimensionTypes,
@@ -55,6 +61,12 @@ namespace SmartTag
         public static SmartTagRequest ClearPreview() => new(SmartTagRequestType.ClearPreview);
         public static SmartTagRequest SelectElements(List<long> elementIds) => new(SmartTagRequestType.SelectElements, null, elementIds);
         
+        // Preview workflow requests
+        public static SmartTagRequest CreatePreviewTags(TagSettings settings) => new(SmartTagRequestType.CreatePreviewTags, settings);
+        public static SmartTagRequest ConfirmPreviewTags() => new(SmartTagRequestType.ConfirmPreviewTags);
+        public static SmartTagRequest UndoPreviewTags() => new(SmartTagRequestType.UndoPreviewTags);
+        public static SmartTagRequest ExportTrainingData() => new(SmartTagRequestType.ExportTrainingData);
+
         // Dimension requests
         public static SmartTagRequest ExecuteAutoDimension(DimensionSettings settings) => 
             new(SmartTagRequestType.ExecuteAutoDimension, null, null, settings);
@@ -71,6 +83,10 @@ namespace SmartTag
         private SmartTagRequest _request;
         private readonly object _lock = new();
         private ExternalEvent _externalEvent;
+        
+        // Preview state - stores created preview tag IDs for undo
+        private List<ElementId> _previewTagIds = new List<ElementId>();
+        private bool _hasPreviewTags = false;
 
         /// <summary>
         /// Callback when category stats are loaded.
@@ -86,6 +102,11 @@ namespace SmartTag
         /// Callback when placements are calculated (for preview).
         /// </summary>
         public event Action<List<TagPlacement>, List<TaggableElement>> OnPlacementsCalculated;
+        
+        /// <summary>
+        /// Callback when preview tags are created (user can confirm or undo).
+        /// </summary>
+        public event Action<TagResult, bool> OnPreviewTagsCreated; // bool = hasPreviewTags
 
         /// <summary>
         /// Callback on error.
@@ -106,6 +127,11 @@ namespace SmartTag
         /// Callback when dimension types are loaded.
         /// </summary>
         public event Action<List<(long Id, string Name)>> OnDimensionTypesLoaded;
+
+        /// <summary>
+        /// Callback when training data export completes. (outputPath, sampleCount, success)
+        /// </summary>
+        public event Action<string, int, bool> OnExportTrainingDataCompleted;
 
         public void SetExternalEvent(ExternalEvent externalEvent)
         {
@@ -139,6 +165,15 @@ namespace SmartTag
                     case SmartTagRequestType.SelectElements:
                         ExecuteSelectElements(app, request.ElementIds);
                         break;
+                    case SmartTagRequestType.CreatePreviewTags:
+                        ExecuteCreatePreviewTags(app, request.Settings);
+                        break;
+                    case SmartTagRequestType.ConfirmPreviewTags:
+                        ExecuteConfirmPreviewTags(app);
+                        break;
+                    case SmartTagRequestType.UndoPreviewTags:
+                        ExecuteUndoPreviewTags(app);
+                        break;
                     case SmartTagRequestType.ExecuteAutoDimension:
                         ExecuteAutoDimension(app, request.DimensionSettings);
                         break;
@@ -147,6 +182,9 @@ namespace SmartTag
                         break;
                     case SmartTagRequestType.DimensionSelection:
                         ExecuteDimensionSelection(app, request.DimensionSettings, request.ElementIds);
+                        break;
+                    case SmartTagRequestType.ExportTrainingData:
+                        ExecuteExportTrainingData(app);
                         break;
                 }
             }
@@ -178,18 +216,47 @@ namespace SmartTag
 
             var collector = new ElementCollector(doc, view);
             var stats = collector.GetCategoryStats();
-
+            
+            // OPTIMIZATION: Don't load tag types here - it's slow
+            // Tag types will be loaded lazily when user selects a category
+            // or in background after initial load
+            
+            // Quick dispatch to UI first (fast feedback)
             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
             {
                 OnCategoryStatsLoaded?.Invoke(stats);
             }));
 
             OnStatusUpdate?.Invoke($"Found {stats.Count} taggable categories");
+            
+            // THEN load tag types in background (non-blocking)
+            // This runs after UI is already updated
+            foreach (var stat in stats)
+            {
+                stat.AvailableTagTypes = collector.GetTagTypesForCategory(stat.Category);
+                
+                if (stat.AvailableTagTypes.Count > 0)
+                {
+                    stat.SelectedTagType = stat.AvailableTagTypes[0];
+                }
+            }
+            
+            // Notify UI again with tag types loaded
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                OnCategoryStatsLoaded?.Invoke(stats);
+            }));
         }
 
         private void ExecuteAutoTag(UIApplication app, TagSettings settings)
         {
             var stopwatch = Stopwatch.StartNew();
+
+            if (settings == null)
+            {
+                OnError?.Invoke("Settings are null");
+                return;
+            }
 
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null)
@@ -219,14 +286,21 @@ namespace SmartTag
             var elementCollector = new ElementCollector(doc, view);
             var elements = elementCollector.GetTaggableElements(settings.Categories);
             var existingTags = elementCollector.GetExistingTags();
-            var annotations = elementCollector.GetAnnotationBounds(); // NEW: collect annotations
+            var annotations = elementCollector.GetAnnotationBounds();
+
+            if (elements == null)
+                elements = new List<TaggableElement>();
+            if (existingTags == null)
+                existingTags = new List<(long, long, BoundingBox2D)>();
 
             OnStatusUpdate?.Invoke($"Found {elements.Count} elements, calculating placements...");
 
-            // 2. Calculate placements (with annotation collision avoidance)
             var placementService = new TagPlacementService(doc, view);
-            placementService.Initialize(elements, existingTags, annotations); // Pass annotations
+            placementService.Initialize(elements, existingTags, annotations);
             var placements = placementService.CalculatePlacements(elements, settings);
+
+            if (placements == null)
+                placements = new List<TagPlacement>();
 
             // 3. Resolve collisions
             OnStatusUpdate?.Invoke("Resolving collisions...");
@@ -374,6 +448,335 @@ namespace SmartTag
                    (view.ViewType == ViewType.Section) ||
                    (view.ViewType == ViewType.Detail);
         }
+
+        #region Preview Workflow
+
+        /// <summary>
+        /// Create preview tags - user can see result before confirming.
+        /// </summary>
+        private void ExecuteCreatePreviewTags(UIApplication app, TagSettings settings)
+        {
+            var stopwatch = Stopwatch.StartNew();
+
+            var uidoc = app.ActiveUIDocument;
+            if (uidoc == null)
+            {
+                OnError?.Invoke("No active document");
+                return;
+            }
+
+            var doc = uidoc.Document;
+            var view = uidoc.ActiveView;
+
+            if (view == null || !IsTaggableView(view))
+            {
+                OnError?.Invoke("Please switch to a floor plan, ceiling plan, section, or elevation view");
+                return;
+            }
+
+            if (settings == null)
+            {
+                OnError?.Invoke("Settings are null");
+                return;
+            }
+
+            if (settings.Categories == null || settings.Categories.Count == 0)
+            {
+                OnError?.Invoke("No categories selected");
+                return;
+            }
+
+            // Clear any existing preview first
+            if (_hasPreviewTags && _previewTagIds.Count > 0)
+            {
+                ExecuteUndoPreviewTags(app);
+            }
+
+            OnStatusUpdate?.Invoke("Collecting elements for preview...");
+
+            // 1. Collect elements
+            var elementCollector = new ElementCollector(doc, view);
+            var elements = elementCollector.GetTaggableElements(settings.Categories);
+            var existingTags = elementCollector.GetExistingTags();
+            var annotations = elementCollector.GetAnnotationBounds();
+
+            if (elements == null) elements = new List<TaggableElement>();
+            if (existingTags == null) existingTags = new List<(long, long, BoundingBox2D)>();
+
+            OnStatusUpdate?.Invoke($"Found {elements.Count} elements, calculating placements...");
+
+            // 2. Calculate placements
+            var placementService = new TagPlacementService(doc, view);
+            placementService.Initialize(elements, existingTags, annotations);
+            var placements = placementService.CalculatePlacements(elements, settings);
+            if (placements == null) placements = new List<TagPlacement>();
+
+            // 3. Resolve collisions
+            OnStatusUpdate?.Invoke("Resolving collisions...");
+            placementService.ResolveCollisions(placements);
+
+            OnStatusUpdate?.Invoke($"Creating {placements.Count} preview tags...");
+
+            // 4. Create tags in transaction
+            var creationService = new TagCreationService(doc, view);
+            TagResult result = new TagResult();
+            _previewTagIds.Clear();
+
+            using (var trans = new Transaction(doc, "Smart Tag - Preview Tags"))
+            {
+                try
+                {
+                    var transResult = trans.Start();
+                    if (transResult != TransactionStatus.Started)
+                    {
+                        OnError?.Invoke("Failed to start transaction");
+                        return;
+                    }
+                    
+                    result = creationService.CreateTags(placements, settings);
+                    
+                    // Store created tag IDs for potential undo
+                    _previewTagIds = (result?.CreatedTagIds != null)
+                        ? result.CreatedTagIds.Select(id => new ElementId(id)).ToList()
+                        : new List<ElementId>();
+                    
+                    if (result.TagsCreated > 0)
+                    {
+                        var commitResult = trans.Commit();
+                        if (commitResult == TransactionStatus.Committed)
+                        {
+                            _hasPreviewTags = true;
+                        }
+                        else
+                        {
+                            result.Warnings.Add("Transaction commit returned: " + commitResult.ToString());
+                            _hasPreviewTags = false;
+                        }
+                    }
+                    else
+                    {
+                        trans.RollBack();
+                        _hasPreviewTags = false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (trans.HasStarted())
+                    {
+                        try { trans.RollBack(); } catch { }
+                    }
+                    result.Warnings.Add($"Transaction error: {ex.Message}");
+                    OnError?.Invoke($"Preview failed: {ex.Message}");
+                    _hasPreviewTags = false;
+                    return;
+                }
+            }
+
+            stopwatch.Stop();
+            result.Duration = stopwatch.Elapsed;
+            result.CollisionsResolved = placements.Count(p => p.Score > 100);
+            
+            var elementsWithPlacements = new HashSet<long>(placements.Select(p => p.ElementId));
+            var skippedElements = elements
+                .Where(e => !e.HasExistingTag && !elementsWithPlacements.Contains(e.ElementId))
+                .ToList();
+            result.ElementsSkippedNoSpace = skippedElements.Count;
+            result.ElementsAlreadyTagged = elements.Count(e => e.HasExistingTag);
+
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                OnPreviewTagsCreated?.Invoke(result, _hasPreviewTags);
+            }));
+
+            OnStatusUpdate?.Invoke($"Preview: {result.TagsCreated} tags created. Confirm or Undo?");
+        }
+
+        /// <summary>
+        /// Confirm preview tags - keep them permanently.
+        /// </summary>
+        private void ExecuteConfirmPreviewTags(UIApplication app)
+        {
+            if (!_hasPreviewTags || _previewTagIds.Count == 0)
+            {
+                OnError?.Invoke("No preview tags to confirm");
+                return;
+            }
+
+            // Tags are already created, just clear the preview state
+            var count = _previewTagIds.Count;
+            _previewTagIds.Clear();
+            _hasPreviewTags = false;
+
+            OnStatusUpdate?.Invoke($"Confirmed {count} tags");
+            
+            // Refresh categories to update counts
+            var uidoc = app.ActiveUIDocument;
+            if (uidoc != null)
+            {
+                ExecuteGetCategoryStats(app);
+            }
+        }
+
+        /// <summary>
+        /// Undo preview tags - delete all preview tags.
+        /// </summary>
+        private void ExecuteUndoPreviewTags(UIApplication app)
+        {
+            if (!_hasPreviewTags || _previewTagIds.Count == 0)
+            {
+                OnStatusUpdate?.Invoke("No preview tags to undo");
+                _hasPreviewTags = false;
+                _previewTagIds.Clear();
+                return;
+            }
+
+            var uidoc = app.ActiveUIDocument;
+            if (uidoc == null)
+            {
+                OnError?.Invoke("No active document");
+                return;
+            }
+
+            var doc = uidoc.Document;
+            var deleteCount = _previewTagIds.Count;
+
+            using (var trans = new Transaction(doc, "Smart Tag - Undo Preview"))
+            {
+                try
+                {
+                    trans.Start();
+                    
+                    // Filter out invalid IDs (elements that may have been deleted by user)
+                    var validIds = _previewTagIds
+                        .Where(id => doc.GetElement(id) != null)
+                        .ToList();
+                    
+                    if (validIds.Count > 0)
+                    {
+                        doc.Delete(validIds);
+                    }
+                    
+                    trans.Commit();
+                    
+                    OnStatusUpdate?.Invoke($"Undone: deleted {validIds.Count} preview tags");
+                }
+                catch (Exception ex)
+                {
+                    if (trans.HasStarted())
+                    {
+                        try { trans.RollBack(); } catch { }
+                    }
+                    OnError?.Invoke($"Undo failed: {ex.Message}");
+                }
+            }
+
+            _previewTagIds.Clear();
+            _hasPreviewTags = false;
+        }
+
+        /// <summary>
+        /// Check if there are preview tags that can be undone.
+        /// </summary>
+        public bool HasPreviewTags => _hasPreviewTags && _previewTagIds.Count > 0;
+
+        /// <summary>
+        /// Export training data from current view (tagged elements) to JSON for updating rules/patterns.
+        /// </summary>
+        private void ExecuteExportTrainingData(UIApplication app)
+        {
+            var uidoc = app.ActiveUIDocument;
+            if (uidoc == null)
+            {
+                OnError?.Invoke("No active document");
+                return;
+            }
+
+            var doc = uidoc.Document;
+            var view = uidoc.ActiveView;
+
+            if (view == null || !IsTaggableView(view))
+            {
+                OnError?.Invoke("Please switch to a floor plan, ceiling plan, section, or elevation view");
+                return;
+            }
+
+            OnStatusUpdate?.Invoke("Exporting training data from current view...");
+
+            try
+            {
+                var exporter = new TrainingDataExporter(doc, view);
+                var safeName = string.Join("_", (view.Name ?? "View").Split(System.IO.Path.GetInvalidFileNameChars()));
+                var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmm");
+                var fileName = $"exported_{safeName}_{timestamp}.json";
+                var exportDir = GetTrainingExportDirectory();
+                var outputPath = System.IO.Path.Combine(exportDir, fileName);
+
+                var result = exporter.Export(outputPath);
+
+                if (result.Success && result.ExportedSamples > 0)
+                {
+                    // Self-learning: ingest export and update learned_overrides.json
+                    var ingestion = new ExportIngestionService();
+                    var ingestResult = ingestion.IngestAndUpdate(result.OutputPath);
+                    if (ingestResult.Success)
+                    {
+                        OnStatusUpdate?.Invoke($"Exported {result.ExportedSamples} samples. Learned: {ingestResult.Message}");
+                    }
+                    else
+                    {
+                        OnStatusUpdate?.Invoke($"Exported {result.ExportedSamples} samples to {result.OutputPath}");
+                    }
+                }
+                else if (result.Success)
+                {
+                    OnStatusUpdate?.Invoke("Export completed but no tagged elements in view.");
+                }
+                else
+                {
+                    var msg = result.Errors?.Count > 0 ? string.Join("; ", result.Errors) : "Export failed";
+                    OnError?.Invoke(msg);
+                }
+
+                Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    OnExportTrainingDataCompleted?.Invoke(
+                        result.OutputPath ?? "",
+                        result.ExportedSamples,
+                        result.Success);
+                }));
+            }
+            catch (Exception ex)
+            {
+                OnError?.Invoke($"Export failed: {ex.Message}");
+            }
+        }
+
+        private static string GetTrainingExportDirectory()
+        {
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var assemblyDir = System.IO.Path.GetDirectoryName(assembly.Location);
+            var candidates = new[]
+            {
+                System.IO.Path.Combine(assemblyDir, "Data", "Training", "annotated"),
+                System.IO.Path.Combine(assemblyDir, "..", "Data", "Training", "annotated"),
+                System.IO.Path.Combine(assemblyDir, "..", "..", "src", "SmartTag", "Data", "Training", "annotated"),
+                @"D:\03_DCMvn\RevitCode\src\SmartTag\Data\Training\annotated"
+            };
+            foreach (var dir in candidates)
+            {
+                try
+                {
+                    var full = System.IO.Path.GetFullPath(dir);
+                    if (!System.IO.Directory.Exists(full))
+                        System.IO.Directory.CreateDirectory(full);
+                    return full;
+                }
+                catch { }
+            }
+            return System.IO.Path.GetTempPath();
+        }
+
+        #endregion
 
         #region Dimension Operations
 

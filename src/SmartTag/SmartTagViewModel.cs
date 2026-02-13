@@ -53,6 +53,16 @@ namespace SmartTag
         // Last result for display
         [ObservableProperty]
         private TagResult _lastResult;
+        
+        // Preview state
+        [ObservableProperty]
+        private bool _hasPreviewTags;
+        
+        [ObservableProperty]
+        private bool _isPreviewMode;
+        
+        [ObservableProperty]
+        private int _previewCreatedCount;
 
         // Dimension properties
         [ObservableProperty]
@@ -75,6 +85,9 @@ namespace SmartTag
 
         [ObservableProperty]
         private DimensionDirection _selectedDimensionDirection = DimensionDirection.Both;
+
+        [ObservableProperty]
+        private string _exportTrainingDataMessage;
 
         public IReadOnlyList<DimensionMode> AvailableDimensionModes { get; } = new[]
         {
@@ -113,10 +126,22 @@ namespace SmartTag
             _handler.OnCategoryStatsLoaded += HandleCategoryStatsLoaded;
             _handler.OnAutoTagCompleted += HandleAutoTagCompleted;
             _handler.OnPlacementsCalculated += HandlePlacementsCalculated;
+            _handler.OnPreviewTagsCreated += HandlePreviewTagsCreated;
             _handler.OnError += HandleError;
             _handler.OnStatusUpdate += HandleStatusUpdate;
             _handler.OnAutoDimensionCompleted += HandleAutoDimensionCompleted;
             _handler.OnDimensionTypesLoaded += HandleDimensionTypesLoaded;
+            _handler.OnExportTrainingDataCompleted += HandleExportTrainingDataCompleted;
+        }
+        
+        /// <summary>
+        /// Initialize and auto-load categories when window opens.
+        /// Call this after window is shown.
+        /// </summary>
+        public void Initialize()
+        {
+            // Auto-load categories on startup
+            RefreshCategories();
         }
 
         #region Commands
@@ -145,7 +170,97 @@ namespace SmartTag
 
         private bool CanExecuteAutoTag()
         {
-            return !IsBusy && Categories.Any(c => c.IsSelected);
+            return !IsBusy && !IsPreviewMode && Categories.Any(c => c.IsSelected);
+        }
+        
+        /// <summary>
+        /// Create preview tags - user can review before confirming.
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanCreatePreview))]
+        private void CreatePreview()
+        {
+            if (!CanCreatePreview()) return;
+
+            IsBusy = true;
+            StatusMessage = "Creating preview tags...";
+            IsPreviewMode = true;
+
+            var settings = BuildSettings();
+            _handler.SetRequest(SmartTagRequest.CreatePreviewTags(settings));
+            _externalEvent.Raise();
+        }
+
+        private bool CanCreatePreview()
+        {
+            return !IsBusy && !IsPreviewMode && Categories.Any(c => c.IsSelected);
+        }
+        
+        /// <summary>
+        /// Confirm preview tags - keep them permanently.
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanConfirmPreview))]
+        private void ConfirmPreview()
+        {
+            if (!CanConfirmPreview()) return;
+
+            IsBusy = true;
+            StatusMessage = "Confirming tags...";
+
+            _handler.SetRequest(SmartTagRequest.ConfirmPreviewTags());
+            _externalEvent.Raise();
+            
+            IsPreviewMode = false;
+            HasPreviewTags = false;
+            IsBusy = false;
+        }
+
+        private bool CanConfirmPreview()
+        {
+            return !IsBusy && IsPreviewMode && HasPreviewTags;
+        }
+        
+        /// <summary>
+        /// Undo preview tags - delete all preview tags.
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanUndoPreview))]
+        private void UndoPreview()
+        {
+            if (!CanUndoPreview()) return;
+
+            IsBusy = true;
+            StatusMessage = "Undoing preview tags...";
+
+            _handler.SetRequest(SmartTagRequest.UndoPreviewTags());
+            _externalEvent.Raise();
+            
+            IsPreviewMode = false;
+            HasPreviewTags = false;
+            PreviewCreatedCount = 0;
+            IsBusy = false;
+        }
+
+        private bool CanUndoPreview()
+        {
+            return !IsBusy && IsPreviewMode && HasPreviewTags;
+        }
+
+        /// <summary>
+        /// Export training data from current view (for updating rules/patterns). Requires view with existing tags.
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanExportTrainingData))]
+        private void ExportTrainingData()
+        {
+            if (!CanExportTrainingData()) return;
+            IsBusy = true;
+            ExportTrainingDataMessage = "";
+            StatusMessage = "Exporting training data from current view...";
+            _handler.SetRequest(SmartTagRequest.ExportTrainingData());
+            _externalEvent.Raise();
+        }
+
+        private bool CanExportTrainingData()
+        {
+            return !IsBusy && !IsPreviewMode;
         }
 
         [RelayCommand]
@@ -290,6 +405,33 @@ namespace SmartTag
                 TotalElementCount = elements.Count;
             });
         }
+        
+        private void HandlePreviewTagsCreated(TagResult result, bool hasPreviewTags)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                LastResult = result;
+                HasPreviewTags = hasPreviewTags;
+                PreviewCreatedCount = result.TagsCreated;
+                IsBusy = false;
+
+                if (hasPreviewTags)
+                {
+                    StatusMessage = $"Preview: {result.TagsCreated} tags created. Review and Confirm or Undo.";
+                }
+                else
+                {
+                    StatusMessage = $"Preview failed: {string.Join(", ", result.Warnings.Take(2))}";
+                    IsPreviewMode = false;
+                }
+                
+                // Update command states
+                ConfirmPreviewCommand.NotifyCanExecuteChanged();
+                UndoPreviewCommand.NotifyCanExecuteChanged();
+                ExecuteAutoTagCommand.NotifyCanExecuteChanged();
+                CreatePreviewCommand.NotifyCanExecuteChanged();
+            });
+        }
 
         private void HandleError(string message)
         {
@@ -305,6 +447,24 @@ namespace SmartTag
             Application.Current?.Dispatcher.Invoke(() =>
             {
                 StatusMessage = message;
+            });
+        }
+
+        private void HandleExportTrainingDataCompleted(string outputPath, int sampleCount, bool success)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                IsBusy = false;
+                if (success)
+                {
+                    ExportTrainingDataMessage = $"Exported {sampleCount} samples to: {outputPath}";
+                    StatusMessage = ExportTrainingDataMessage;
+                }
+                else
+                {
+                    ExportTrainingDataMessage = "Export failed. Check that the view has tags.";
+                    StatusMessage = ExportTrainingDataMessage;
+                }
             });
         }
 
@@ -356,17 +516,27 @@ namespace SmartTag
 
         private TagSettings BuildSettings()
         {
+            var selectedCategories = Categories.Where(c => c.IsSelected).ToList();
+            
+            // Build per-category tag type overrides
+            var categoryTagTypes = new Dictionary<long, long>();
+            foreach (var cat in selectedCategories)
+            {
+                if (cat.SelectedTagType != null)
+                {
+                    categoryTagTypes[(long)cat.Category] = cat.SelectedTagType.TypeId;
+                }
+            }
+            
             return new TagSettings
             {
-                Categories = Categories
-                    .Where(c => c.IsSelected)
-                    .Select(c => c.Category)
-                    .ToList(),
+                Categories = selectedCategories.Select(c => c.Category).ToList(),
                 PreferredPosition = SelectedPosition,
                 AddLeaders = AddLeaders,
                 SkipTaggedElements = SkipTaggedElements,
                 AlignTags = AlignTags,
-                UseQuickMode = true
+                UseQuickMode = true,
+                CategoryTagTypes = categoryTagTypes
             };
         }
 
@@ -405,10 +575,12 @@ namespace SmartTag
             _handler.OnCategoryStatsLoaded -= HandleCategoryStatsLoaded;
             _handler.OnAutoTagCompleted -= HandleAutoTagCompleted;
             _handler.OnPlacementsCalculated -= HandlePlacementsCalculated;
+            _handler.OnPreviewTagsCreated -= HandlePreviewTagsCreated;
             _handler.OnError -= HandleError;
             _handler.OnStatusUpdate -= HandleStatusUpdate;
             _handler.OnAutoDimensionCompleted -= HandleAutoDimensionCompleted;
             _handler.OnDimensionTypesLoaded -= HandleDimensionTypesLoaded;
+            _handler.OnExportTrainingDataCompleted -= HandleExportTrainingDataCompleted;
         }
 
         #endregion
@@ -423,12 +595,17 @@ namespace SmartTag
 
         [ObservableProperty]
         private bool _isSelected;
+        
+        [ObservableProperty]
+        private TagTypeInfo _selectedTagType;
 
         public BuiltInCategory Category => _config.Category;
         public string DisplayName => _config.DisplayName;
         public int ElementCount => _config.ElementCount;
         public int TaggedCount => _config.TaggedCount;
         public int UntaggedCount => ElementCount - TaggedCount;
+        public List<TagTypeInfo> AvailableTagTypes => _config.AvailableTagTypes;
+        public bool HasMultipleTagTypes => AvailableTagTypes?.Count > 1;
         
         public string DisplayText => $"{DisplayName} ({UntaggedCount}/{ElementCount})";
 
@@ -436,6 +613,7 @@ namespace SmartTag
         {
             _config = config;
             _isSelected = config.IsSelected;
+            _selectedTagType = config.SelectedTagType;
         }
     }
 

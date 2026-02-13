@@ -14,19 +14,7 @@ namespace SmartTag
         public SmartTagWindow()
         {
             InitializeComponent();
-
-            // Auto-refresh categories when window loads
-            Loaded += OnLoaded;
-        }
-
-        private void OnLoaded(object sender, RoutedEventArgs e)
-        {
-            // Trigger category refresh on load
-            if (DataContext is SmartTagViewModel vm)
-            {
-                vm.RefreshCategoriesCommand.Execute(null);
-                vm.LoadDimensionTypesCommand.Execute(null);
-            }
+            // Note: Initial load is triggered in Entry.cs after DataContext is set
         }
     }
 
@@ -43,6 +31,46 @@ namespace SmartTag
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
+        }
+    }
+    
+    /// <summary>
+    /// Converter that returns Visible if string is non-empty, Collapsed otherwise.
+    /// </summary>
+    public class StringToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return !string.IsNullOrEmpty(value as string) ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Converter that returns Visible if value is true, Collapsed otherwise.
+    /// </summary>
+    public class BoolToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool boolValue)
+            {
+                return boolValue ? Visibility.Visible : Visibility.Collapsed;
+            }
+            return Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is Visibility visibility)
+            {
+                return visibility == Visibility.Visible;
+            }
+            return false;
         }
     }
 }

@@ -1,0 +1,154 @@
+{
+  "version": "1.0",
+  "source": {
+    "project": "MunichRE Revitalization",
+    "discipline": "Sanitary",
+    "drawings": ["SAN_01_0001"],
+    "viewScale": 50,
+    "annotatedBy": "SmartTag Training",
+    "annotatedDate": "2026-02-13"
+  },
+  "samples": [
+    {
+      "id": "sample_001",
+      "element": {
+        "category": "OST_PipeCurves",
+        "familyName": "Pipe Types",
+        "typeName": "Standard",
+        "orientation": 0,
+        "isLinear": true,
+        "length": 15.5,
+        "width": 0.33,
+        "height": 0.33,
+        "diameter": 0.33,
+        "systemType": "Domestic Cold Water",
+        "centerX": 10.5,
+        "centerY": 25.3
+      },
+      "context": {
+        "density": "medium",
+        "neighborCount": 3,
+        "hasNeighborAbove": true,
+        "hasNeighborBelow": false,
+        "hasNeighborLeft": false,
+        "hasNeighborRight": true,
+        "distanceToNearestAbove": 2.5,
+        "distanceToNearestBelow": 10.0,
+        "distanceToNearestLeft": 8.0,
+        "distanceToNearestRight": 3.0,
+        "distanceToWall": 5.0,
+        "parallelElementsCount": 2,
+        "isInGroup": false
+      },
+      "tag": {
+        "position": "BottomCenter",
+        "offsetX": 0,
+        "offsetY": -1.5,
+        "hasLeader": false,
+        "leaderLength": 0,
+        "rotation": "Horizontal",
+        "alignedWithRow": true,
+        "alignedWithColumn": false,
+        "rowId": "row_01",
+        "columnId": null,
+        "tagText": "PWC-TWK DN100",
+        "tagWidth": 2.5,
+        "tagHeight": 0.8
+      }
+    },
+    {
+      "id": "sample_002",
+      "element": {
+        "category": "OST_PipeCurves",
+        "familyName": "Pipe Types",
+        "typeName": "Standard",
+        "orientation": 90,
+        "isLinear": true,
+        "length": 8.2,
+        "width": 0.25,
+        "height": 0.25,
+        "diameter": 0.25,
+        "systemType": "Domestic Hot Water",
+        "centerX": 15.0,
+        "centerY": 30.0
+      },
+      "context": {
+        "density": "low",
+        "neighborCount": 1,
+        "hasNeighborAbove": false,
+        "hasNeighborBelow": false,
+        "hasNeighborLeft": true,
+        "hasNeighborRight": false,
+        "distanceToNearestAbove": 10.0,
+        "distanceToNearestBelow": 10.0,
+        "distanceToNearestLeft": 4.0,
+        "distanceToNearestRight": 10.0,
+        "distanceToWall": 3.0,
+        "parallelElementsCount": 0,
+        "isInGroup": false
+      },
+      "tag": {
+        "position": "Right",
+        "offsetX": 2.0,
+        "offsetY": 0,
+        "hasLeader": true,
+        "leaderLength": 1.5,
+        "rotation": "Vertical",
+        "alignedWithRow": false,
+        "alignedWithColumn": true,
+        "rowId": null,
+        "columnId": "col_02",
+        "tagText": "PWH-TWW DN80",
+        "tagWidth": 2.0,
+        "tagHeight": 0.7
+      }
+    },
+    {
+      "id": "sample_003",
+      "element": {
+        "category": "OST_PipeCurves",
+        "familyName": "Pipe Types",
+        "typeName": "Standard",
+        "orientation": 0,
+        "isLinear": true,
+        "length": 20.0,
+        "width": 0.5,
+        "height": 0.5,
+        "diameter": 0.5,
+        "systemType": "Drainage",
+        "centerX": 25.0,
+        "centerY": 15.0
+      },
+      "context": {
+        "density": "high",
+        "neighborCount": 5,
+        "hasNeighborAbove": true,
+        "hasNeighborBelow": true,
+        "hasNeighborLeft": true,
+        "hasNeighborRight": true,
+        "distanceToNearestAbove": 1.5,
+        "distanceToNearestBelow": 1.2,
+        "distanceToNearestLeft": 2.0,
+        "distanceToNearestRight": 2.5,
+        "distanceToWall": 8.0,
+        "parallelElementsCount": 4,
+        "isInGroup": false
+      },
+      "tag": {
+        "position": "TopRight",
+        "offsetX": 2.5,
+        "offsetY": 2.0,
+        "hasLeader": true,
+        "leaderLength": 2.8,
+        "rotation": "Horizontal",
+        "alignedWithRow": false,
+        "alignedWithColumn": false,
+        "rowId": null,
+        "columnId": null,
+        "tagText": "SW DN150",
+        "tagWidth": 1.8,
+        "tagHeight": 0.7
+      }
+    }
+  ]
+}

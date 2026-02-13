@@ -38,6 +38,7 @@ if ($Clean) {
 Write-Host "[1/5] Creating release structure..." -ForegroundColor Yellow
 $dirs = @(
     "$ExtensionDir\lib\net8",
+    "$ExtensionDir\HD.tab\Labeling.panel\SmartTag.pushbutton",
     "$ExtensionDir\HD.tab\WIP.panel\CommonFeature.pushbutton",
     "$ExtensionDir\HD.tab\WIP.panel\CheckCode.pushbutton",
     "$ExtensionDir\HD.tab\General.panel\Reload.pushbutton",
@@ -67,6 +68,11 @@ Write-Host "   Building CheckCode..." -ForegroundColor Gray
 dotnet build "$SrcDir\CheckCode\CheckCode.csproj" -c $Configuration --nologo -v q
 if ($LASTEXITCODE -ne 0) { throw "CheckCode build failed" }
 
+# Build SmartTag (depends on HD.Core)
+Write-Host "   Building SmartTag..." -ForegroundColor Gray
+dotnet build "$SrcDir\SmartTag\SmartTag.csproj" -c $Configuration --nologo -v q
+if ($LASTEXITCODE -ne 0) { throw "SmartTag build failed" }
+
 Write-Host "   Done." -ForegroundColor Green
 
 # Copy DLLs (NO PDB, NO source code)
@@ -75,6 +81,7 @@ $dlls = @(
     "HD.Core.dll",
     "CommonFeature.dll",
     "CheckCode.dll",
+    "SmartTag.dll",
     "CommunityToolkit.Mvvm.dll"
 )
 foreach ($dll in $dlls) {
@@ -82,7 +89,23 @@ foreach ($dll in $dlls) {
     if (Test-Path $srcPath) {
         Copy-Item $srcPath $LibNet8Dir -Force
         Write-Host "   Copied: $dll" -ForegroundColor Gray
+    } else {
+        # SmartTag post-build copies to HD.extension; fallback to bin output
+        $binPath = Join-Path "$SrcDir\SmartTag\bin\$Configuration\net8.0-windows" $dll
+        if (Test-Path $binPath) {
+            Copy-Item $binPath $LibNet8Dir -Force
+            Write-Host "   Copied: $dll (from bin)" -ForegroundColor Gray
+        }
     }
+}
+
+# SmartTag requires Data folder (Rules, Patterns, Training) next to DLLs
+$smartTagDataSrc = Join-Path $SrcDir "SmartTag\Data"
+$smartTagDataDest = Join-Path $LibNet8Dir "Data"
+if (Test-Path $smartTagDataSrc) {
+    if (Test-Path $smartTagDataDest) { Remove-Item $smartTagDataDest -Recurse -Force }
+    Copy-Item $smartTagDataSrc $smartTagDataDest -Recurse -Force
+    Write-Host "   Copied: SmartTag Data (Rules, Patterns, Training)" -ForegroundColor Gray
 }
 Write-Host "   Done." -ForegroundColor Green
 
@@ -94,6 +117,7 @@ Copy-Item "$DevExtensionDir\lib\launcher_base.py" "$ExtensionDir\lib\" -Force
 
 # Copy pushbutton scripts and icons
 $pushbuttons = @(
+    @{ Src = "HD.tab\Labeling.panel\SmartTag.pushbutton"; Files = @("script.py") },
     @{ Src = "HD.tab\WIP.panel\CommonFeature.pushbutton"; Files = @("script.py", "icon.png") },
     @{ Src = "HD.tab\WIP.panel\CheckCode.pushbutton"; Files = @("script.py", "icon.png") },
     @{ Src = "HD.tab\General.panel\Reload.pushbutton"; Files = @("script.py", "icon.png") },
@@ -142,6 +166,7 @@ Framework: .NET 8.0
 
 ## Tools Included
 
+- **SmartTag** (Labeling): Auto tag, preview/confirm/undo, export training data, dimensions
 - **CommonFeature**: Element information, isolate, section box
 - **CheckCode**: Code checking utilities
 
