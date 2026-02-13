@@ -1,0 +1,115 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "electrical_cable_trays",
+  "name": "Electrical Cable Trays (Kabeltrassen)",
+  "version": "1.0.0",
+  "description": "Tagging rules for cable trays with fire rating, voltage type, and dimensions - German standard",
+  "enabled": true,
+  "priority": 89,
+  "conditions": {
+    "categories": [
+      "OST_CableTray",
+      "OST_CableTrayFitting",
+      "OST_Conduit",
+      "OST_ConduitFitting"
+    ],
+    "familyNamePatterns": [
+      ".*Kabel.*",
+      ".*Cable.*",
+      ".*Tray.*",
+      ".*Trasse.*",
+      ".*Steige.*"
+    ],
+    "viewTypes": ["FloorPlan", "CeilingPlan", "Section"]
+  },
+  "actions": {
+    "preferredPositions": ["Center", "TopCenter", "BottomCenter"],
+    "offsetDistance": 0.1,
+    "addLeader": false,
+    "leaderStyle": "None",
+    "avoidCollisionWith": [
+      "OST_CableTray",
+      "OST_Walls",
+      "OST_Grids"
+    ],
+    "alignToGrid": false,
+    "groupAlignment": "AlongRun"
+  },
+  "scoring": {
+    "collisionPenalty": -90,
+    "preferenceBonus": 55,
+    "alignmentBonus": 20,
+    "leaderLengthPenalty": 0,
+    "nearEdgeBonus": 5
+  },
+  "tagFormat": {
+    "pattern": "[Qty]x[Width]x[Height] [Type] [Orientation]",
+    "components": {
+      "quantity": {
+        "description": "Number of parallel/stacked trays",
+        "format": "[N]x (omit if 1)",
+        "examples": ["2x", "3x"]
+      },
+      "dimensions": {
+        "description": "Width x Height in mm",
+        "format": "[Width]x[Height]",
+        "widths_mm": [300, 400, 500, 600],
+        "heights_mm": [60, 70]
+      },
+      "type": {
+        "E30-90": {
+          "name": "Funktionserhalt E30-90",
+          "english": "Fire Rated (30-90 min)",
+          "usage": "Emergency circuits"
+        },
+        "E90_Sprinkler": {
+          "name": "E90 Sprinkler",
+          "english": "Fire Rated 90 min for Sprinkler",
+          "usage": "Sprinkler supply cables"
+        },
+        "AV_230_400V": {
+          "name": "AV - 230/400V",
+          "english": "General Power (230/400V)",
+          "usage": "Standard power distribution"
+        },
+        "AV_FM": {
+          "name": "AV - FM",
+          "english": "Facility Management",
+          "usage": "Low voltage, data, controls"
+        },
+        "MS_20kV": {
+          "name": "MS 20 kV",
+          "english": "Medium Voltage (20 kV)",
+          "usage": "High power transmission"
+        }
+      },
+      "orientation": {
+        "Trasse": "Horizontal run",
+        "Steigetrasse": "Vertical riser"
+      }
+    },
+    "examples": [
+      "400x60 E30 - 90 Trasse",
+      "600x60 AV - 230/400V Trasse",
+      "600x60 AV - FM Trasse",
+      "600x70 AV - 230/400V Steigetrasse",
+      "2x400x60 E30 - 90 Trasse",
+      "400x60 MS 20 kV Trasse"
+    ]
+  },
+  "metadata": {
+    "createdAt": "2026-02-13T16:00:00Z",
+    "author": "SmartTag",
+    "source": "Munich Arena Cable Tray drawings (ELTR) - 21 files",
+    "confidence": 0.95,
+    "sampleCount": 500
+  },
+  "_comments": {
+    "patternNotes": [
+      "Always include fire rating or voltage type",
+      "Dimensions are WxH in mm",
+      "Trasse for horizontal, Steigetrasse for vertical",
+      "Prefix with quantity (2x, 3x) for stacked/parallel trays"
+    ]
+  }
+}

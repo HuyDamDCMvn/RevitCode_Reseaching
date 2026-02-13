@@ -1,0 +1,155 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "electrical_panels_equipment",
+  "name": "Electrical Panels & Equipment",
+  "version": "1.0.0",
+  "description": "Tagging rules for electrical distribution panels, switchboards, and equipment - German standard",
+  "enabled": true,
+  "priority": 85,
+  "conditions": {
+    "categories": [
+      "OST_ElectricalEquipment",
+      "OST_ElectricalFixtures",
+      "OST_GenericModel"
+    ],
+    "familyNamePatterns": [
+      ".*UV.*",
+      ".*NSHV.*",
+      ".*Trafo.*",
+      ".*Transformer.*",
+      ".*Panel.*",
+      ".*Switchboard.*",
+      ".*Busway.*",
+      ".*Verteiler.*"
+    ],
+    "viewTypes": ["FloorPlan", "Section"]
+  },
+  "actions": {
+    "preferredPositions": ["Right", "TopRight", "BottomRight", "Left"],
+    "offsetDistance": 0.2,
+    "addLeader": false,
+    "leaderStyle": "None",
+    "avoidCollisionWith": [
+      "OST_ElectricalEquipment",
+      "OST_CableTray",
+      "OST_Walls"
+    ],
+    "alignToGrid": false,
+    "groupAlignment": "None"
+  },
+  "scoring": {
+    "collisionPenalty": -100,
+    "preferenceBonus": 50,
+    "alignmentBonus": 10,
+    "leaderLengthPenalty": -2,
+    "nearEdgeBonus": 10
+  },
+  "tagFormat": {
+    "equipmentTypes": {
+      "UV": {
+        "pattern": "UV_[Level].[Zone].[Number] ([Area])",
+        "name": "Unterverteilung",
+        "english": "Distribution Panel",
+        "examples": [
+          "UV_1.0.1",
+          "UV_2.0.4 (Kiosk)",
+          "UV_1.2.3"
+        ]
+      },
+      "SV": {
+        "pattern": "SV_[Level].[Zone].[Number]",
+        "name": "Sicherheitsversorgung",
+        "english": "Emergency Power Panel",
+        "examples": ["SV_1.0.1", "SV_2.0.1"]
+      },
+      "NSHV": {
+        "pattern": "NSHV [Name/Area] or NSHV_[Code]",
+        "name": "Niederspannungshauptverteilung",
+        "english": "Low Voltage Main Distribution Board",
+        "examples": [
+          "NSHV AV NO",
+          "NSHV AV NW",
+          "NSHV_2.1.0 (Nordost)",
+          "NSHV Technik AV",
+          "NSHV SV"
+        ]
+      },
+      "MS": {
+        "pattern": "MS-[Name]",
+        "name": "Mittelspannung",
+        "english": "Medium Voltage Switchgear",
+        "examples": [
+          "MS-EVU",
+          "MS-Nord",
+          "MS-Kälte",
+          "MS-Parkhaus",
+          "MS-SÜD"
+        ]
+      },
+      "ASP": {
+        "pattern": "ASP_[System] or ASP_[Level].[Zone].[Number]",
+        "name": "Automatisierungspanel",
+        "english": "Automation Panel",
+        "examples": [
+          "ASP_TW",
+          "ASP_Sprinkler",
+          "ASP_Heizung",
+          "ASP_1.0.1"
+        ]
+      },
+      "Trafo": {
+        "pattern": "Trafo [Number/Name]",
+        "name": "Transformator",
+        "english": "Transformer",
+        "examples": [
+          "Trafo 1",
+          "Trafo Nord 1",
+          "GEAFOL Neo Transformator"
+        ]
+      },
+      "Busway": {
+        "pattern": "Busway_[Model] or W[W]xH[H]_LDA",
+        "name": "Stromschiene",
+        "english": "Busbar/Busway",
+        "examples": [
+          "Busway_LDA4623",
+          "W240xH180_LDA"
+        ]
+      },
+      "IT": {
+        "pattern": "IT Feld[N]",
+        "name": "IT Verteiler",
+        "english": "IT Distribution",
+        "examples": ["IT Feld1"]
+      },
+      "Safety": {
+        "types": {
+          "BOS": "Behörden und Organisationen mit Sicherheitsaufgaben (Emergency Services)",
+          "BMZ": "Brandmeldezentrale (Fire Alarm Panel)",
+          "SAA": "Sprachalarmanlage (Voice Alarm System)"
+        }
+      }
+    },
+    "dimensionFormat": {
+      "pattern": "L[Length]xW[Width]xH[Height]",
+      "unit": "mm",
+      "examples": [
+        "L300xW800xH2200",
+        "L600xW1200xH2200"
+      ]
+    }
+  },
+  "namingConvention": {
+    "levelCode": "[Level number: 0, 1, 2, 3, 4, 5, 6]",
+    "zoneCode": "[Zone within level: 0=general, 1=north, 2=south, etc.]",
+    "sequenceNumber": "[Sequential number within zone]",
+    "areaName": "Optional area/room description in parentheses"
+  },
+  "metadata": {
+    "createdAt": "2026-02-13T16:00:00Z",
+    "author": "SmartTag",
+    "source": "Munich Arena Electrical drawings (ELTR)",
+    "confidence": 0.9,
+    "sampleCount": 150
+  }
+}

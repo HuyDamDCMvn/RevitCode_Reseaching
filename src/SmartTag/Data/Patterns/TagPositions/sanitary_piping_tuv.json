@@ -1,0 +1,201 @@
+{
+  "_description": "Pipe and plumbing tagging patterns from Munich Arena Sanitary drawings",
+  "source": {
+    "projectName": "Munich Arena (TP1_TUV)",
+    "drawings": [
+      {
+        "number": "TP1_TUV_PG_3OG_LP3_SANA_002_P_00",
+        "title": "Grundriss Sanitär 3OG - Süd",
+        "level": "3OG (3rd Floor)",
+        "scale": "1:100",
+        "discipline": "Sanitary/Plumbing"
+      },
+      {
+        "number": "TP1_TUV_PG_5OG_LP3_SANA_002_P_00",
+        "title": "Grundriss Sanitär 5OG - Süd",
+        "level": "5OG (5th Floor)",
+        "scale": "1:100",
+        "discipline": "Sanitary/Plumbing"
+      }
+    ],
+    "company": "Teuber + Viel GmbH / Müller-BBM Building Solutions",
+    "client": "SWMunich Real Estate GmbH",
+    "date": "12.12.25",
+    "phase": "LP3"
+  },
+  "legend": {
+    "pipeSystems": [
+      {
+        "code": "BCWS",
+        "name": "Trinkwasserleitung Kalt",
+        "english": "Cold Water Supply",
+        "color": "Blue"
+      },
+      {
+        "code": "HWSF",
+        "name": "Trinkwasserleitung Warm",
+        "english": "Hot Water Supply",
+        "color": "Red"
+      },
+      {
+        "code": "HWSR",
+        "name": "Trinkwasserleitung Warm Zirkulation",
+        "english": "Hot Water Return/Circulation",
+        "color": "Red (dashed)"
+      },
+      {
+        "code": "KP",
+        "name": "Schmutzwasserleitung Fetthaltig",
+        "english": "Grease Waste/Kitchen Waste",
+        "color": "Brown"
+      },
+      {
+        "code": "RWSP",
+        "name": "Regenwasserleitung",
+        "english": "Rainwater/Storm Water",
+        "color": "Green"
+      },
+      {
+        "code": "SP",
+        "name": "Schmutzwasserleitung",
+        "english": "Sanitary Waste/Soil Pipe",
+        "color": "Gray"
+      },
+      {
+        "code": "WVP",
+        "name": "Schmutzwasser Entlüftung",
+        "english": "Waste Vent Pipe",
+        "color": "Gray (dashed)"
+      }
+    ],
+    "abbreviations": {
+      "RA": "Rohrachse (Pipe Centerline)",
+      "RS": "Rohrsohle (Pipe Invert)",
+      "DN": "Diameter Nominal (Nominal Diameter)",
+      "OKRFB": "Oberkante Rohfußboden (Top of Subfloor)"
+    },
+    "directionSymbols": [
+      "Beginnend nach oben (Starting upward)",
+      "Hindurchgehend nach oben (Continuing upward)",
+      "Beginnend nach unten (Starting downward)",
+      "Hindurchgehend nach unten (Continuing downward)",
+      "Von unten kommend und endend (Coming from below and ending)",
+      "Von oben kommend und endend (Coming from above and ending)"
+    ]
+  },
+  "observations": [
+    {
+      "elementType": "Pipe Run",
+      "labelingPattern": "[SystemCode]-DN[Size]",
+      "examples": [
+        "BCWS-DN15", "BCWS-DN20", "BCWS-DN25", "BCWS-DN32", "BCWS-DN40", "BCWS-DN50", "BCWS-DN65",
+        "SP-DN50", "SP-DN80", "SP-DN100", "SP-DN125", "SP-DN150",
+        "KP-DN50", "KP-DN80", "KP-DN100", "KP-DN125",
+        "RWSP-DN80", "RWSP-DN100", "RWSP-DN125", "RWSP-DN150", "RWSP-DN200", "RWSP-DN300",
+        "WVP-DN200",
+        "HWSF-DN20"
+      ],
+      "position": "Along pipe centerline or at connection points",
+      "hasLeader": false,
+      "frequency": "Always at size changes and connections"
+    },
+    {
+      "elementType": "Pipe Elevation Tag",
+      "labelingPattern": "RS = +[Elevation] OKRFB or RA = +[Elevation] OKRFB",
+      "examples": [
+        "RS = +3022 OKRFB",
+        "RS = +256 OKRFB",
+        "RA = +50 OKRFB",
+        "RA = +3690 OKRFB",
+        "RS = +2413 OKRFB"
+      ],
+      "position": "Near pipe, aligned with run",
+      "hasLeader": true,
+      "frequency": "At elevation changes, drops, and risers",
+      "notes": "RS=Invert (bottom of pipe), RA=Centerline"
+    },
+    {
+      "elementType": "Slope Indicator",
+      "labelingPattern": "[Percentage]%",
+      "examples": ["0.5%", "1.0%"],
+      "position": "Along sloped pipe runs",
+      "frequency": "On all horizontal drainage pipes"
+    },
+    {
+      "elementType": "Floor Drain",
+      "labelingPattern": "FloorDrain_Vertical_CastIron DN[Size]",
+      "examples": ["FloorDrain_Vertical_CastIron DN50", "FloorDrain_Vertical_CastIron DN100"],
+      "position": "At drain location",
+      "frequency": "At all floor drains"
+    },
+    {
+      "elementType": "Equipment Tag",
+      "labelingPattern": "[EquipmentType] Standard",
+      "examples": [
+        "InstantaneousWaterHeater_TeaKitchen Standard",
+        "InstantaneousWaterHeater_Shower Standard",
+        "HomeStation_DHK Frischwasserstation",
+        "ShutoffValve_Threaded Standard",
+        "Bodenrinne 200x1100"
+      ],
+      "position": "Near equipment symbol",
+      "hasLeader": true
+    }
+  ],
+  "pipeSizeRanges": {
+    "BCWS": {
+      "min_DN": 15,
+      "max_DN": 65,
+      "common": [15, 20, 25, 32, 40, 50, 65]
+    },
+    "SP": {
+      "min_DN": 50,
+      "max_DN": 150,
+      "common": [50, 80, 100, 125, 150]
+    },
+    "KP": {
+      "min_DN": 50,
+      "max_DN": 125,
+      "common": [50, 80, 100, 125]
+    },
+    "RWSP": {
+      "min_DN": 80,
+      "max_DN": 300,
+      "common": [80, 100, 125, 150, 200, 300]
+    },
+    "WVP": {
+      "typical_DN": 200
+    }
+  },
+  "elevationRanges": {
+    "RS_values_mm": {
+      "min": 39,
+      "max": 3604,
+      "notes": "Relative to OKRFB (subfloor)"
+    },
+    "RA_values_mm": {
+      "min": 50,
+      "max": 3690,
+      "notes": "Pipe centerline elevation"
+    }
+  },
+  "slopeValues": {
+    "drainage": ["0.5%", "1.0%"],
+    "notes": "Standard slopes for horizontal drainage"
+  },
+  "roomTypesObserved": {
+    "hospitality": ["Suite 9-16", "Loge 4-6", "VVIP Suite", "Corner Club S", "Meadow Bar", "Bar Suiten"],
+    "spectator": ["MITTELRANG - LOGE", "MITTELRANG - SUITE", "MITTELRANG - CLUB M", "MITTELRANG - THE MEADOW", "OBERRANG - SKY GARDEN", "OBERRANG - GA"],
+    "circulation": ["Hospitality Korridor", "Suiten - Erschließung", "Hospitality Vertikale Erschließung"],
+    "kitchen": ["Küche", "Pantry Küche", "Küche - VVIP / Meadow"]
+  },
+  "generalNotes": [
+    "Scale 1:100 for detailed sanitary plans",
+    "Pipe tags include system code and nominal diameter",
+    "Elevation tags reference OKRFB (subfloor level)",
+    "RS for pipe invert, RA for pipe centerline",
+    "All drainage pipes show slope percentages",
+    "German terminology throughout",
+    "Equipment uses family_type naming convention"
+  ]
+}

@@ -1,0 +1,241 @@
+{
+  "_description": "Heating (HZG - Heizung) system patterns from MunichRE Revitalization project - detailed piping execution drawings",
+  "source": {
+    "projectName": "MunichRE Revitalization (Königinstraße 107, München)",
+    "drawings": [
+      {
+        "number": "HG--_ASS_420_5-_GR-_[Level]_[Sheet]_A_FG",
+        "title": "[Level] - Gewerk HZG Planteil [A/B/C]",
+        "discipline": "HZG (Heizung / Heating)",
+        "levels": ["U2", "U1", "00", "01", "02", "03", "04", "05"],
+        "sheets": ["0001", "0002", "0003"],
+        "scale": "1:50"
+      }
+    ],
+    "company": "Assmann Beraten + Planen GmbH",
+    "client": "Münchener Rückversicherungs-Gesellschaft AG",
+    "date": "12.02.2026",
+    "phase": "LP5 (Ausführungsplanung)",
+    "totalFiles": 24
+  },
+  "legend": {
+    "pipingSystems": {
+      "HZG-HK": {
+        "code": "420_HZG-HK",
+        "VL": "Vorlauf_Heizung_Heizkörper (Radiator Supply)",
+        "RL": "Rücklauf_Heizung_Heizkörper (Radiator Return)"
+      },
+      "HZG-HKS": {
+        "code": "420_HZG-HKS",
+        "VL": "Vorlauf_Heizung_Hauptkühlsystem (Main Cooling Supply)",
+        "RL": "Rücklauf_Heizung_Hauptkühlsystem (Main Cooling Return)"
+      },
+      "HZG-HKD": {
+        "VL": "HeizKühlDecke Supply (Heating/Cooling Ceiling)",
+        "RL": "HeizKühlDecke Return (Heating/Cooling Ceiling)"
+      },
+      "HZG-UFK": {
+        "code": "420_HZG-UFK",
+        "VL": "Vorlauf_Heizung_Unterflurkonvektoren (Underfloor Convector Supply)",
+        "RL": "Rücklauf_Heizung_Unterflurkonvektoren (Underfloor Convector Return)"
+      },
+      "HZG-DYN": {
+        "VL": "Dynamic system supply",
+        "RL": "Dynamic system return"
+      },
+      "HZG-WRG": {
+        "code": "420_HZG-WRG",
+        "VL": "Vorlauf_Heizung_Wärmerückgewinnung (Heat Recovery Supply)",
+        "RL": "Rücklauf_Heizung_Wärmerückgewinnung (Heat Recovery Return)"
+      },
+      "HZG-WW": {
+        "VL": "Warmwasser supply (Hot Water)",
+        "RL": "Warmwasser return (Hot Water)"
+      },
+      "HZG-FERN": {
+        "code": "420_HZG-FERN",
+        "VL": "Vorlauf_Heizung_Fernwaerme (District Heating Supply)",
+        "RL": "Rücklauf_Heizung_Fernwaerme (District Heating Return)"
+      },
+      "HZG-SK": {
+        "code": "420_HZG-SK",
+        "VL": "Vorlauf_Heizung_SpeicherKälte_Konvekta (Cold Storage Supply)",
+        "RL": "Rücklauf_Heizung_SpeicherKälte_Konvekta (Cold Storage Return)"
+      },
+      "HZG-SW": {
+        "code": "420_HZG-SW",
+        "VL": "Vorlauf_Heizung_SpeicherWärme_Konvekta (Heat Storage Supply)",
+        "RL": "Rücklauf_Heizung_SpeicherWärme_Konvekta (Heat Storage Return)"
+      },
+      "HZG-QS": {
+        "code": "420_HZG-QS",
+        "VL": "Vorlauf_Heizung_Quelle/Senke_Konvekta (Source/Sink Supply)",
+        "RL": "Rücklauf_Heizung_Quelle/Senke_Konvekta (Source/Sink Return)"
+      },
+      "HZG-ERG-AUL": {
+        "code": "420_HZG-ERG-AUL",
+        "VL": "Vorlauf_Heizung_Zuluftanlagen_Konvekta (Supply Air Coil Supply)",
+        "RL": "Rücklauf_Heizung_Zuluftanlagen_Konvekta (Supply Air Coil Return)"
+      },
+      "HZG-ERG-FOL": {
+        "code": "420_HZG-ERG-FOL",
+        "VL": "Vorlauf_Heizung_Abluftanlagen_Konvekta (Exhaust Air Coil Supply)",
+        "RL": "Rücklauf_Heizung_Abluftanlagen_Konvekta (Exhaust Air Coil Return)"
+      },
+      "HZG-PWT-KW": {
+        "code": "420_HZG-PWT-KW",
+        "VL": "Vorlauf_Heizung_Kaltwasser_Konvekta (Plate HX Cold Water Supply)",
+        "RL": "Rücklauf_Heizung_Kaltwasser_Konvekta (Plate HX Cold Water Return)"
+      },
+      "HZG-PWT-WW": {
+        "code": "420_HZG-PWT-WW",
+        "VL": "Vorlauf_Heizung_Warmwasser_Konvekta (Plate HX Hot Water Supply)",
+        "RL": "Rücklauf_Heizung_Warmwasser_Konvekta (Plate HX Hot Water Return)"
+      },
+      "HZG-WW-VD": {
+        "code": "420_HZG-WW-VD",
+        "VL": "Vorlauf_Heizung_VerdampferWärmepumpe_Konvekta (Heat Pump Evaporator Supply)",
+        "RL": "Rücklauf_Heizung_VerdampferWärmepumpe_Konvekta (Heat Pump Evaporator Return)"
+      },
+      "HZG-WW-VF": {
+        "code": "420_HZG-WW-VF",
+        "VL": "Vorlauf_Heizung_VerflüssigerWärmepumpe_Konvekta (Heat Pump Condenser Supply)",
+        "RL": "Rücklauf_Heizung_VerflüssigerWärmepumpe_Konvekta (Heat Pump Condenser Return)"
+      }
+    },
+    "flowDirection": {
+      "VL": "Vorlauf (Supply/Flow)",
+      "RL": "Rücklauf (Return)"
+    },
+    "abbreviations": {
+      "OK": "Oberkante (Top edge)",
+      "RA": "Rohrachse (Pipe centerline)",
+      "RS": "Rohrsohle (Pipe invert)",
+      "UK": "Unterkante (Bottom edge)",
+      "UKRD": "Unterkante Rohdecke (Underside of structural slab)",
+      "Ltg. im Fußboden": "Leitung im Fußboden (Pipe in floor)",
+      "DN": "Nennweite (Nominal diameter)"
+    },
+    "valves": {
+      "6WegeVentil": "6-Way Valve",
+      "Kugelhahn": "Ball Valve",
+      "Druckregelventil": "Pressure Control Valve",
+      "Regulierventil": "Balancing Valve",
+      "Absperrschieber": "Gate Valve",
+      "Füll- und Entleerungskugelhahn": "Fill & Drain Ball Valve",
+      "Entleerung": "Drain Valve"
+    },
+    "sensors": {
+      "Temperaturfühler MSR": "Temperature Sensor (BMS)",
+      "Temperaturanzeige MSR": "Temperature Display (BMS)"
+    }
+  },
+  "observations": [
+    {
+      "elementType": "Pipe Tag - Floor Routing",
+      "labelingPattern": "HZG-[System]-[VL/RL]_DN[Size]",
+      "routingNote": "Ltg. im Fußboden",
+      "examples": [
+        "HZG-HK-VL_DN15",
+        "Ltg. im Fußboden",
+        "HZG-HK-RL_DN25",
+        "Ltg. im Fußboden"
+      ]
+    },
+    {
+      "elementType": "Pipe Tag - Elevated with Elevation",
+      "labelingPattern": "HZG-[System]-[VL/RL]_DN[Size]",
+      "elevationFormat": "RA = [+/-][value] m UKRD",
+      "examples": [
+        "HZG-HKS-VL_DN40",
+        "RA = -0.54 m UKRD",
+        "HZG-HKD-RL_DN15",
+        "RA = -0.39 m UKRD"
+      ]
+    },
+    {
+      "elementType": "Radiator (Heizkörper)",
+      "labelingPattern": "Heizkörper\n[Type]\nHeizleistung: [Value] W",
+      "types": ["Standard", "Standard 2"],
+      "heatingPowerRange": "0-1500 W",
+      "examples": [
+        "Heizkörper\nStandard\nHeizleistung: 1500 W"
+      ]
+    },
+    {
+      "elementType": "Heating/Cooling Ceiling Panel (HeizKühlsegel)",
+      "labelingPattern": "HeizKühlsegel Decke\n[Dimensions]\nHeizleistung: [Value] W\nKühlleistung: [Value] W",
+      "dimensions": "1500x650",
+      "heatingRange": "400-3350 W",
+      "coolingRange": "464-9350 W",
+      "examples": [
+        "HeizKühlsegel Decke\n1500x650\nHeizleistung: 2000 W\nKühlleistung: 5600 W",
+        "HeizKühlsegel Decke\n1500x650\nHeizleistung: 1675 W\nKühlleistung: 4675 W"
+      ]
+    },
+    {
+      "elementType": "Energy Distributor",
+      "labelingPattern": "Energieverteiler\n[Model]\nHeizleistung: [Value] W\nKühlleistung: [Value] W",
+      "examples": [
+        "Energieverteiler\nEM_ECQ_06F\nHeizleistung: 0 W\nKühlleistung: 0 W"
+      ]
+    },
+    {
+      "elementType": "6-Way Valve",
+      "labelingPattern": "DN[Size]\n6WegeVentil Gewinde",
+      "sizes": ["DN15", "DN25"],
+      "variants": ["6WegeVentil Gewinde", "6WegeVentil Umgekehrt Gewinde"]
+    },
+    {
+      "elementType": "Ball Valve",
+      "labelingPattern": "DN[Size]\nKugelhahn Gewinde",
+      "sizes": ["DN15", "DN20", "DN25", "DN32", "DN40", "DN50"]
+    },
+    {
+      "elementType": "Pressure Control Valve",
+      "labelingPattern": "DN[Size]\nDruckregelventil_Gewinde",
+      "sizes": ["DN15"]
+    },
+    {
+      "elementType": "Balancing Valve",
+      "labelingPattern": "DN[Size]\nRegulierventil Gewinde",
+      "sizes": ["DN20", "DN25", "DN32"]
+    },
+    {
+      "elementType": "Fill & Drain Valve",
+      "labelingPattern": "DN[Size]\nFüll- und Entleerungskugelhahn Gewinde",
+      "sizes": ["DN020", "DN025", "DN032"]
+    },
+    {
+      "elementType": "Gate Valve (Flanged)",
+      "labelingPattern": "DN[Size]\nAbsperrschieber Flansch",
+      "sizes": ["DN65"]
+    },
+    {
+      "elementType": "Drain Valve",
+      "labelingPattern": "DN[Size]\nEntleerung",
+      "sizes": ["DN20", "DN32"]
+    },
+    {
+      "elementType": "Temperature Sensor",
+      "labelingPattern": "DN[Size]\nTemperaturfühler MSR",
+      "sizes": ["DN15"]
+    },
+    {
+      "elementType": "Temperature Display",
+      "labelingPattern": "Standard\nTemperaturanzeige MSR"
+    }
+  ],
+  "pipeSizes_DN": [15, 20, 25, 32, 40, 50, 65, 80, 100],
+  "systemPrefixes": {
+    "420": "Heating systems (Gewerk 420 = Heizung)",
+    "HZG": "Heizung (Heating)"
+  },
+  "generalNotes": [
+    "Scale 1:50 for detailed execution drawings",
+    "Elevations referenced to UKRD (underside of structural slab)",
+    "All pipe sizes in DN (nominal diameter, mm)",
+    "VL = Vorlauf (Supply), RL = Rücklauf (Return)",
+    "Floor-routed pipes marked with 'Ltg. im Fußboden'"
+  ]
+}

@@ -1,0 +1,4 @@
+# Rejected Feedback
+# Files here contain placements that users rejected
+# Analyze these to understand what's wrong with current rules
+# Format: JSON files following Feedback.schema.json

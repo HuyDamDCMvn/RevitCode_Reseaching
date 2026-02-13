@@ -1,0 +1,142 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "heating_piping_hzg",
+  "name": "Heating Piping - German HZG Standard",
+  "version": "1.0.0",
+  "description": "Tagging rules for heating piping systems using German HZG (Heizung) naming conventions",
+  "enabled": true,
+  "priority": 85,
+  "conditions": {
+    "categories": [
+      "OST_PipeCurves",
+      "OST_FlexPipeCurves",
+      "OST_PipeFitting",
+      "OST_PipeAccessory"
+    ],
+    "familyNamePatterns": [
+      ".*Pipe.*",
+      ".*Rohr.*",
+      ".*Leitung.*",
+      ".*HZG.*",
+      ".*Heizung.*"
+    ],
+    "systemTypePatterns": [
+      ".*Heating.*",
+      ".*Heizung.*",
+      ".*HK.*",
+      ".*HKS.*"
+    ],
+    "viewTypes": ["FloorPlan", "CeilingPlan", "Section"]
+  },
+  "actions": {
+    "preferredPositions": ["Center", "TopCenter", "BottomCenter"],
+    "offsetDistance": 0.12,
+    "addLeader": false,
+    "avoidCollisionWith": [
+      "OST_PipeCurves",
+      "OST_MechanicalEquipment"
+    ],
+    "groupAlignment": "AlongCenterline"
+  },
+  "scoring": {
+    "collisionPenalty": -60,
+    "preferenceBonus": 45,
+    "alignmentBonus": 18
+  },
+  "tagFormat": {
+    "pipeTag": {
+      "pattern": "HZG-[System]-[Direction]_DN[Size]",
+      "components": {
+        "HZG": "Heizung (Heating prefix)",
+        "System": "System code (HK, HKS, HKD, UFK, DYN, WRG, WW, FERN, SK, SW, QS, etc.)",
+        "Direction": "VL (Vorlauf/Supply) or RL (Rücklauf/Return)",
+        "DN": "Nominal diameter in mm"
+      },
+      "examples": [
+        "HZG-HK-VL_DN15",
+        "HZG-HKS-RL_DN40",
+        "HZG-HKD-VL_DN15",
+        "HZG-DYN-RL_DN25"
+      ]
+    },
+    "floorRoutingNote": {
+      "pattern": "Ltg. im Fußboden",
+      "meaning": "Pipe routed in floor construction",
+      "usage": "Shown below pipe tag when pipe is in floor"
+    },
+    "elevationTag": {
+      "pattern": "RA = [+/-][value] m UKRD",
+      "components": {
+        "RA": "Rohrachse (Pipe centerline)",
+        "UKRD": "Unterkante Rohdecke (Underside of structural slab)"
+      },
+      "examples": [
+        "RA = -0.54 m UKRD",
+        "RA = -0.39 m UKRD",
+        "RA = -1.11 m UKRD"
+      ]
+    },
+    "systemCodes": {
+      "HK": {
+        "german": "Heizkörper",
+        "english": "Radiator",
+        "fullCode": "420_HZG-HK"
+      },
+      "HKS": {
+        "german": "Hauptkühlsystem",
+        "english": "Main Cooling System",
+        "fullCode": "420_HZG-HKS"
+      },
+      "HKD": {
+        "german": "HeizKühlDecke",
+        "english": "Heating/Cooling Ceiling Panel"
+      },
+      "UFK": {
+        "german": "Unterflurkonvektoren",
+        "english": "Underfloor Convectors",
+        "fullCode": "420_HZG-UFK"
+      },
+      "DYN": {
+        "german": "Dynamisches System",
+        "english": "Dynamic System"
+      },
+      "WRG": {
+        "german": "Wärmerückgewinnung",
+        "english": "Heat Recovery",
+        "fullCode": "420_HZG-WRG"
+      },
+      "WW": {
+        "german": "Warmwasser",
+        "english": "Hot Water"
+      },
+      "FERN": {
+        "german": "Fernwärme",
+        "english": "District Heating",
+        "fullCode": "420_HZG-FERN"
+      },
+      "SK": {
+        "german": "SpeicherKälte",
+        "english": "Cold Storage",
+        "fullCode": "420_HZG-SK"
+      },
+      "SW": {
+        "german": "SpeicherWärme",
+        "english": "Heat Storage",
+        "fullCode": "420_HZG-SW"
+      },
+      "QS": {
+        "german": "Quelle/Senke",
+        "english": "Source/Sink",
+        "fullCode": "420_HZG-QS"
+      }
+    }
+  },
+  "commonSizes_DN": [15, 20, 25, 32, 40, 50, 65, 80, 100],
+  "metadata": {
+    "createdAt": "2026-02-13T18:30:00Z",
+    "author": "SmartTag",
+    "source": "MunichRE HZG drawings - 24 files",
+    "confidence": 0.94,
+    "sampleCount": 800
+  }
+}

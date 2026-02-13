@@ -1,0 +1,100 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "electrical_lighting_fixtures",
+  "name": "Lighting Fixtures - EE Code System",
+  "version": "1.0.0",
+  "description": "Tagging rules for lighting fixtures using EE code naming convention - German standard",
+  "enabled": true,
+  "priority": 85,
+  "conditions": {
+    "categories": [
+      "OST_LightingFixtures",
+      "OST_ElectricalFixtures",
+      "OST_LightingDevices"
+    ],
+    "familyNamePatterns": [
+      ".*Leuchte.*",
+      ".*Light.*",
+      ".*LED.*",
+      ".*Decken.*",
+      ".*Wand.*"
+    ],
+    "viewTypes": ["FloorPlan", "CeilingPlan", "ReflectedCeilingPlan"]
+  },
+  "actions": {
+    "preferredPositions": ["Center", "TopCenter", "BottomCenter"],
+    "offsetDistance": 0.1,
+    "addLeader": false,
+    "leaderStyle": "None",
+    "avoidCollisionWith": [
+      "OST_LightingFixtures",
+      "OST_Ceilings",
+      "OST_Walls"
+    ],
+    "alignToGrid": false,
+    "groupAlignment": "None"
+  },
+  "scoring": {
+    "collisionPenalty": -70,
+    "preferenceBonus": 50,
+    "alignmentBonus": 10,
+    "leaderLengthPenalty": 0,
+    "nearEdgeBonus": 5
+  },
+  "tagFormat": {
+    "pattern": "EE[Circuit].[Type].[Variant][Suffix]",
+    "components": {
+      "EE": "Elektrische Einrichtung (Electrical Equipment)",
+      "Circuit": {
+        "1": "Normal power circuit",
+        "2": "Emergency/special circuit"
+      },
+      "Type": {
+        "1": "Ceiling light type 1",
+        "2": "Ceiling light type 2",
+        "3": "Linear/strip light",
+        "4": "Spot/accent light",
+        "5": "Special purpose light",
+        "6": "Pendant/suspended light",
+        "10": "Outdoor/weatherproof light",
+        "11": "Large area/high bay light"
+      },
+      "Variant": "1-9 or X (placeholder)",
+      "Suffix": "_ (underscore) or blank"
+    },
+    "examples": [
+      "EE1.1.1_",
+      "EE1.2.1_",
+      "EE1.3.1",
+      "EE1.4.1_",
+      "EE1.5.1_",
+      "EE1.6.1_",
+      "EE1.10.1",
+      "EE1.11.1",
+      "EE2.1.X",
+      "EE2.4.X",
+      "EE2.11_X"
+    ]
+  },
+  "wallLightFormat": {
+    "pattern": "W ED[Series].[Type].[Variant]",
+    "examples": ["W ED4.1.1"],
+    "notes": "W prefix indicates wall-mounted"
+  },
+  "metadata": {
+    "createdAt": "2026-02-13T17:00:00Z",
+    "author": "SmartTag",
+    "source": "Munich Arena Electrical Installation drawings (ELEA) - 24 files",
+    "confidence": 0.9,
+    "sampleCount": 2000
+  },
+  "_comments": {
+    "patternNotes": [
+      "EE codes are highly structured with circuit.type.variant format",
+      "Circuit 1 = normal, Circuit 2 = emergency/special",
+      "Type indicates fixture category",
+      "X suffix indicates variable/multiple variants",
+      "_ suffix used in some variants"
+    ]
+  }
+}

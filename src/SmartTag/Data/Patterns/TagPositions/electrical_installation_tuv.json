@@ -1,0 +1,136 @@
+{
+  "_description": "Electrical installation (lighting, devices, fire alarm) patterns from Munich Arena ELEA drawings",
+  "source": {
+    "projectName": "Munich Arena (TP1_TUV)",
+    "drawings": [
+      {
+        "number": "TP1_TUV_PG_[Level]_LP3_ELEA_[N]_P_00",
+        "title": "Grundriss Installation [Level]",
+        "discipline": "ELT Installations (Elektroinstallation)",
+        "levels": ["UEB", "0EG", "1OG", "2OG", "3OG", "4OG", "5OG", "6OG"],
+        "sheets": ["000 (Gesamt)", "001 (Nord)", "002 (Süd)"],
+        "scale": "1:100"
+      }
+    ],
+    "company": "Teuber + Viel GmbH",
+    "date": "12.12.25",
+    "phase": "LP3",
+    "totalFiles": 24
+  },
+  "legend": {
+    "lighting": [
+      { "code": "Deckenleuchte_rechteckig", "english": "Rectangular ceiling light" },
+      { "code": "Deckenleuchte_rund", "english": "Round ceiling light" },
+      { "code": "LED-Lichtleiste", "english": "LED strip light" },
+      { "code": "LED Striplight um Säule", "english": "LED strip around column" },
+      { "code": "LED Striplight unterhalb Rolltreppe", "english": "LED strip under escalator" }
+    ],
+    "emergencyLighting": [
+      { "code": "Sicherheitsbeleuchtung", "english": "Emergency lighting" },
+      { "code": "Bereitschaftsleuchte_rund", "english": "Round standby light" },
+      { "code": "Dauerleuchte", "english": "Maintained emergency light" }
+    ],
+    "devices": [
+      { "code": "Bodentank rund", "english": "Round floor box" },
+      { "code": "Datenanschluss", "english": "Data connection" },
+      { "code": "Elektroanschluss_zuordnend", "english": "Associated electrical connection" },
+      { "code": "Steckdose einfach", "english": "Single socket outlet" },
+      { "code": "Steckdose abschließbar", "english": "Lockable socket outlet" }
+    ],
+    "sensors": [
+      { "code": "Bewegungsmelder wand", "english": "Wall motion sensor" },
+      { "code": "Präsenzmelder Decke", "english": "Ceiling presence sensor" },
+      { "code": "Raumbediengerät", "english": "Room control device" }
+    ],
+    "fireAlarm": [
+      { "code": "Rauchmelder optisch-thermisch_ZD", "english": "Optical-thermal smoke detector (central)" },
+      { "code": "Rauchmelder optisch-thermisch", "english": "Optical-thermal smoke detector" },
+      { "code": "RWA_Druckknopfmelder", "english": "Manual call point (RWA)" },
+      { "code": "RWA", "english": "Smoke and heat exhaust system" }
+    ],
+    "voiceAlarm": [
+      { "code": "SAA", "english": "Voice alarm speaker" },
+      { "code": "SAA A/B", "english": "Voice alarm speaker (Zone A/B)" },
+      { "code": "Lautsprecher_rund", "english": "Round speaker" },
+      { "code": "Leuchte-Hupe", "english": "Light-horn combo" }
+    ],
+    "nurseCall": [
+      { "code": "LRA_Zugtaster", "english": "Pull cord switch (nurse call)" },
+      { "code": "LRA_Ruf-Abstelltaster", "english": "Call/cancel button (nurse call)" }
+    ],
+    "other": [
+      { "code": "REV 400x400", "english": "Access panel 400x400" },
+      { "code": "Revisionsöffnung Decke/Boden", "english": "Ceiling/floor access opening" },
+      { "code": "TABLEAU MSR", "english": "Control panel (MSR)" },
+      { "code": "ZT", "english": "Zeitgeber/Timer" },
+      { "code": "RT", "english": "Raumthermostat/Room thermostat" },
+      { "code": "AT", "english": "Außentemperatur/Outside temperature" },
+      { "code": "E", "english": "Single outlet/connection point" },
+      { "code": "W ED4.1.1", "english": "Wall light type ED4.1.1" }
+    ]
+  },
+  "observations": [
+    {
+      "elementType": "Lighting Fixture",
+      "labelingPatterns": [
+        "EE1.1.1_", "EE1.2.1_", "EE1.3.1", "EE1.4.1_", "EE1.5.1_", "EE1.6.1_",
+        "EE1.10.1", "EE1.11.1",
+        "EE2.1.X", "EE2.4.X", "EE2.11_X"
+      ],
+      "namingConvention": "EE[Circuit].[Type].[Variant]_",
+      "position": "At fixture center or near symbol",
+      "hasLeader": false,
+      "frequency": "Every fixture"
+    },
+    {
+      "elementType": "Wall Light",
+      "labelingPattern": "W ED4.1.1",
+      "notes": "W prefix for wall-mounted, ED series number"
+    },
+    {
+      "elementType": "Voice Alarm Speaker",
+      "labelingPattern": "SAA or SAA A/B",
+      "notes": "A/B indicates zone assignment",
+      "frequency": "High density in public areas"
+    },
+    {
+      "elementType": "Access Panel",
+      "labelingPattern": "REV [Width]x[Height]",
+      "examples": ["REV 400x400"],
+      "notes": "Revision opening dimensions in mm"
+    },
+    {
+      "elementType": "Control Panel",
+      "labelingPattern": "TABLEAU MSR",
+      "english": "Control panel for measurement and regulation"
+    },
+    {
+      "elementType": "Room Controls",
+      "labelingPattern": "ZT / RT / AT",
+      "notes": "ZT=Timer, RT=Room thermostat, AT=Outside temp"
+    }
+  ],
+  "lightingTypeCodeStructure": {
+    "prefix": "EE",
+    "firstDigit": "Circuit group (1=normal, 2=emergency/special)",
+    "secondDigit": "Fixture type",
+    "thirdDigit": "Variant/subtype",
+    "suffix": "_ (underscore) or X (placeholder)",
+    "examples": {
+      "EE1.1.1_": "Normal circuit, type 1, variant 1",
+      "EE1.3.1": "Normal circuit, type 3, variant 1",
+      "EE1.11.1": "Normal circuit, type 11 (large area), variant 1",
+      "EE2.1.X": "Emergency circuit, type 1, variable",
+      "EE2.4.X": "Emergency circuit, type 4, variable"
+    }
+  },
+  "generalNotes": [
+    "Fixture codes follow EE[Circuit].[Type].[Variant] pattern",
+    "SAA (Sprachalarmanlage) = Voice alarm system",
+    "RWA (Rauch-Wärme-Abzug) = Smoke/heat exhaust",
+    "LRA (Lichtrufanlage) = Nurse call system",
+    "TABLEAU MSR = Control panel (Mess-Steuer-Regelung)",
+    "REV = Revisionsöffnung (Access panel)",
+    "Scale 1:100 for detailed installation plans"
+  ]
+}

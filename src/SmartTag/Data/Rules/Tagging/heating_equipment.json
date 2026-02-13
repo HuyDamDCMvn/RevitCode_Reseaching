@@ -1,0 +1,149 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "heating_equipment",
+  "name": "Heating Equipment - HZG Connected (Radiators, Ceiling Panels, Valves)",
+  "version": "2.0.0",
+  "description": "Tagging rules for equipment connected to HZG (Heizung) heating system - radiators, dual-mode ceiling panels on heating circuit, and valves",
+  "enabled": true,
+  "priority": 84,
+  "systemConnection": "HZG",
+  "systemConnectionNote": "Use this rule for equipment connected to HZG-* piping systems (HZG-HK, HZG-HKS, HZG-UFK, HZG-HKD)",
+  "conditions": {
+    "categories": [
+      "OST_MechanicalEquipment",
+      "OST_PipeAccessory",
+      "OST_PipeFitting"
+    ],
+    "familyNamePatterns": [
+      ".*Heizkörper.*",
+      ".*Radiator.*",
+      ".*Energieverteiler.*"
+    ],
+    "systemNamePatterns": [".*HZG.*"],
+    "viewTypes": ["FloorPlan", "CeilingPlan", "ReflectedCeilingPlan"]
+  },
+  "actions": {
+    "preferredPositions": ["Center", "TopCenter", "Right"],
+    "offsetDistance": 0.15,
+    "addLeader": true,
+    "leaderStyle": "Straight",
+    "avoidCollisionWith": [
+      "OST_MechanicalEquipment",
+      "OST_Ceilings"
+    ]
+  },
+  "scoring": {
+    "collisionPenalty": -55,
+    "preferenceBonus": 45,
+    "alignmentBonus": 15,
+    "leaderLengthPenalty": -3
+  },
+  "tagFormat": {
+    "radiator": {
+      "pattern": "Heizkörper\n[Type]\nHeizleistung: [Value] W",
+      "types": {
+        "Standard": "Standard radiator",
+        "Standard 2": "Alternative standard radiator"
+      },
+      "powerRange_W": [0, 1500],
+      "examples": [
+        "Heizkörper\nStandard\nHeizleistung: 1500 W",
+        "Heizkörper\nStandard 2\nHeizleistung: 0 W"
+      ]
+    },
+    "heatingCoolingCeiling": {
+      "pattern": "HeizKühlsegel Decke\n[Dimensions]\nHeizleistung: [Value] W\nKühlleistung: [Value] W",
+      "commonDimensions": ["1500x650"],
+      "heatingRange_W": [400, 3350],
+      "coolingRange_W": [464, 9350],
+      "examples": [
+        "HeizKühlsegel Decke\n1500x650\nHeizleistung: 2000 W\nKühlleistung: 5600 W",
+        "HeizKühlsegel Decke\n1500x650\nHeizleistung: 1675 W\nKühlleistung: 4675 W",
+        "HeizKühlsegel Decke\n1500x650\nHeizleistung: 3350 W\nKühlleistung: 9350 W"
+      ]
+    },
+    "energyDistributor": {
+      "pattern": "Energieverteiler\n[Model]\nHeizleistung: [Value] W\nKühlleistung: [Value] W",
+      "examples": [
+        "Energieverteiler\nEM_ECQ_06F\nHeizleistung: 0 W\nKühlleistung: 0 W"
+      ]
+    },
+    "valves": {
+      "sixWayValve": {
+        "pattern": "DN[Size]\n6WegeVentil Gewinde",
+        "variants": [
+          "6WegeVentil Gewinde",
+          "6WegeVentil Umgekehrt Gewinde"
+        ],
+        "sizes_DN": [15, 25]
+      },
+      "ballValve": {
+        "pattern": "DN[Size]\nKugelhahn Gewinde",
+        "sizes_DN": [15, 20, 25, 32, 40, 50]
+      },
+      "pressureControlValve": {
+        "pattern": "DN[Size]\nDruckregelventil Gewinde",
+        "_note": "Standardized to space separator (was underscore)",
+        "sizes_DN": [15]
+      },
+      "balancingValve": {
+        "pattern": "DN[Size]\nRegulierventil Gewinde",
+        "sizes_DN": [20, 25, 32]
+      },
+      "fillDrainValve": {
+        "pattern": "DN[Size]\nFüll- und Entleerungskugelhahn Gewinde",
+        "sizes_DN": [20, 25, 32]
+      },
+      "gateValveFlanged": {
+        "pattern": "DN[Size]\nAbsperrschieber Flansch",
+        "sizes_DN": [65]
+      },
+      "drainValve": {
+        "pattern": "DN[Size]\nEntleerung",
+        "sizes_DN": [20, 32]
+      }
+    },
+    "sensors": {
+      "temperatureSensor": {
+        "pattern": "DN[Size]\nTemperaturfühler MSR",
+        "sizes_DN": [15]
+      },
+      "temperatureDisplay": {
+        "pattern": "Standard\nTemperaturanzeige MSR"
+      }
+    }
+  },
+  "dualModeEquipment": {
+    "_comment": "HeizKühlsegel can be connected to either HZG or KLT - use HZG rule when primarily heating",
+    "heatingCoolingCeiling": {
+      "pattern": "HeizKühlsegel Decke\n[Dimensions]\nHeizleistung: [Value] W\nKühlleistung: [Value] W",
+      "note": "When connected to HZG-HKD system, tag via this rule",
+      "connectedSystem": "HZG-HKD"
+    }
+  },
+  "metadata": {
+    "createdAt": "2026-02-13T18:30:00Z",
+    "updatedAt": "2026-02-13",
+    "author": "SmartTag",
+    "sources": ["MunichRE HZG drawings - 24 files"],
+    "confidence": 0.92,
+    "sampleCount": 600
+  },
+  "_comments": {
+    "germanTerms": {
+      "Heizkörper": "Radiator",
+      "HeizKühlsegel": "Heating/Cooling Sail (ceiling panel)",
+      "Heizleistung": "Heating capacity",
+      "Kühlleistung": "Cooling capacity",
+      "Gewinde": "Threaded",
+      "Flansch": "Flanged",
+      "Kugelhahn": "Ball valve",
+      "Druckregelventil": "Pressure control valve",
+      "Regulierventil": "Balancing/regulating valve",
+      "Absperrschieber": "Gate valve",
+      "Entleerung": "Drain",
+      "Temperaturfühler": "Temperature sensor",
+      "MSR": "Mess-, Steuerungs-, Regeltechnik (BMS/Controls)"
+    }
+  }
+}

@@ -1,0 +1,179 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "DimensionPattern.schema.json",
+  "title": "Dimension Pattern",
+  "description": "Schema for auto-dimension patterns",
+  "type": "object",
+  "required": ["id", "name", "version", "pattern"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "name": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "description": {
+      "type": "string"
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "discipline": {
+      "type": "string",
+      "enum": ["MEP", "Structural", "Architectural", "All"],
+      "description": "Which discipline this pattern applies to"
+    },
+    "pattern": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "ChainFromGrid",
+            "ChainBetweenElements", 
+            "SingleReference",
+            "RadialFromCenter",
+            "OffsetFromWall",
+            "ElevationMarks"
+          ]
+        },
+        "direction": {
+          "type": "string",
+          "enum": ["Horizontal", "Vertical", "Both", "Radial"]
+        },
+        "targetElements": {
+          "type": "object",
+          "properties": {
+            "categories": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "familyPatterns": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Regex patterns"
+            },
+            "openingTypes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["BDB_RU", "BDB_RE", "WDB_RU", "WDB_RE", "Shaft", "Sleeve"]
+              },
+              "description": "MEP opening types"
+            }
+          }
+        },
+        "referenceElements": {
+          "type": "object",
+          "properties": {
+            "useGrids": { "type": "boolean", "default": true },
+            "useWalls": { "type": "boolean", "default": true },
+            "useColumns": { "type": "boolean", "default": false },
+            "gridNamePatterns": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Filter grids by name pattern"
+            },
+            "wallTypes": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Specific wall type names"
+            }
+          }
+        },
+        "dimensionTo": {
+          "type": "string",
+          "enum": ["Center", "NearEdge", "FarEdge", "BothEdges"],
+          "description": "What point on element to dimension to"
+        },
+        "grouping": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string",
+              "enum": ["ByRow", "ByColumn", "ByProximity", "Individual"]
+            },
+            "tolerance": {
+              "type": "number",
+              "description": "Grouping tolerance in feet"
+            },
+            "minElementsPerGroup": {
+              "type": "integer",
+              "default": 1
+            }
+          }
+        },
+        "placement": {
+          "type": "object",
+          "properties": {
+            "offset": {
+              "type": "number",
+              "description": "Distance from elements in feet"
+            },
+            "side": {
+              "type": "string",
+              "enum": ["Above", "Below", "Left", "Right", "Auto"]
+            },
+            "chainGap": {
+              "type": "number",
+              "description": "Gap between chain dimensions"
+            }
+          }
+        }
+      }
+    },
+    "dimensionStyle": {
+      "type": "object",
+      "properties": {
+        "typeNamePattern": {
+          "type": "string",
+          "description": "Regex to find dimension type"
+        },
+        "units": {
+          "type": "string",
+          "enum": ["Millimeters", "Centimeters", "Meters", "Feet", "Inches", "ProjectUnits"]
+        },
+        "precision": {
+          "type": "integer"
+        },
+        "showLeaders": {
+          "type": "boolean"
+        }
+      }
+    },
+    "examples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "source": { "type": "string", "description": "Project/drawing reference" },
+          "imageUrl": { "type": "string" },
+          "values": {
+            "type": "array",
+            "items": { "type": "number" },
+            "description": "Example dimension values in mm"
+          },
+          "notes": { "type": "string" }
+        }
+      },
+      "description": "Reference examples from real drawings"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "author": { "type": "string" },
+        "source": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "sampleCount": { "type": "integer" }
+      }
+    }
+  }
+}

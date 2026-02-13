@@ -1,0 +1,115 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "lightning_protection_earthing",
+  "name": "Lightning Protection & Earthing Systems",
+  "version": "1.0.0",
+  "description": "Tagging rules for Blitzschutz (lightning protection) and earthing systems according to German standards",
+  "enabled": true,
+  "priority": 75,
+  "conditions": {
+    "categories": [
+      "OST_ElectricalEquipment",
+      "OST_SpecialityEquipment",
+      "OST_GenericModel"
+    ],
+    "familyNamePatterns": [
+      ".*Blitz.*",
+      ".*Lightning.*",
+      ".*Erder.*",
+      ".*Earth.*",
+      ".*Ground.*",
+      ".*PAS.*",
+      ".*Fangstange.*"
+    ],
+    "parameterFilters": [
+      { "name": "System Classification", "contains": "Lightning" },
+      { "name": "System Classification", "contains": "Earthing" }
+    ],
+    "viewTypes": ["FloorPlan", "StructuralPlan"]
+  },
+  "actions": {
+    "preferredPositions": ["Center", "Right", "TopRight"],
+    "offsetDistance": 0.2,
+    "addLeader": true,
+    "leaderStyle": "Straight",
+    "avoidCollisionWith": [
+      "OST_StructuralColumns",
+      "OST_StructuralFoundation",
+      "OST_Walls"
+    ]
+  },
+  "scoring": {
+    "collisionPenalty": -60,
+    "preferenceBonus": 40,
+    "alignmentBonus": 15,
+    "leaderLengthPenalty": -5
+  },
+  "tagFormat": {
+    "potentialEqualization": {
+      "pattern": "PAS",
+      "english": "Potential Equalization Bar (Potentialausgleichsschiene)",
+      "notes": "Main bonding point for equipotential bonding"
+    },
+    "fundamenterder": {
+      "description": "Foundation earthing system",
+      "material": "Hot-dip galvanized (tauchfeuerverzinkt)",
+      "bandstahl": "30x3.5mm",
+      "components": [
+        "Leitung durchgehend (Continuous conductor)",
+        "Leitung kommend von unten (Conductor from below)",
+        "Leitung abgehend nach oben (Conductor going up)",
+        "Anschlussfahne 1,5m (Connection tab 1.5m)",
+        "Anschlussfahne 3,0m (Connection tab 3.0m)",
+        "Kreuzverbinder (Cross connector)",
+        "Erdungsfestpunkt (Earthing fixed point)",
+        "Dehnungselement (Expansion element)",
+        "Verbinder allgemein (General connector)"
+      ]
+    },
+    "ringerder": {
+      "description": "Ring earthing system",
+      "material": "V4A stainless steel (Werkstoff-Nr.: 1.4571)",
+      "bandstahl": "30x3.5mm",
+      "additionalComponents": [
+        "Wandanschlusspunkt druckwasserfest (Pressure-water-resistant wall connection)",
+        "Wanddurchführung druckwasserfest (Pressure-water-resistant wall penetration)"
+      ]
+    },
+    "blitzfanganlage": {
+      "description": "Lightning capture system",
+      "components": [
+        "Fangleitung Aluminium (Aluminum capture conductor)",
+        "Fangleitung Ausführung HVI (HVI capture conductor)",
+        "Fangstange Aluminium mit Fangspitze AlMgSI (Aluminum air terminal with tip)",
+        "Fangstange Ausführung HVI mit Fangspitze (HVI air terminal with tip)"
+      ]
+    }
+  },
+  "systemClassification": {
+    "class": "LPS III",
+    "meshWidth": "15m (Maschenweite)",
+    "standards": ["IEC 62305", "DIN EN 62305", "VDE 0185-305"]
+  },
+  "metadata": {
+    "createdAt": "2026-02-13T17:00:00Z",
+    "author": "SmartTag",
+    "source": "Munich Arena Lightning Protection drawings (EBLI) - 25 files",
+    "confidence": 0.88,
+    "sampleCount": 400
+  },
+  "_comments": {
+    "germanTerms": {
+      "Blitzschutz": "Lightning protection",
+      "Fundamenterder": "Foundation earthing electrode",
+      "Ringerder": "Ring earthing electrode",
+      "Blitzfanganlage": "Air termination system",
+      "Potentialausgleich": "Equipotential bonding",
+      "tauchfeuerverzinkt": "Hot-dip galvanized",
+      "V4A": "Stainless steel grade (316Ti equivalent)",
+      "HVI": "High Voltage Insulated",
+      "Fangstange": "Air terminal rod",
+      "Fangleitung": "Air terminal conductor"
+    },
+    "dimensionPatterns": "Numeric values indicate conductor lengths in mm or spacing in m"
+  }
+}

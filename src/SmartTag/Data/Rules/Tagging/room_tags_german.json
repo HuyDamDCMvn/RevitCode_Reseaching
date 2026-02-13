@@ -1,0 +1,96 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "room_tags_german_format",
+  "name": "Room Tags - German Format (Name/NO)",
+  "version": "1.0.0",
+  "description": "Room tagging rules based on Munich Arena HVAC drawings - German two-line format",
+  "enabled": true,
+  "priority": 80,
+  "conditions": {
+    "categories": [
+      "OST_Rooms",
+      "OST_Areas"
+    ],
+    "viewTypes": ["FloorPlan", "CeilingPlan", "AreaPlan"]
+  },
+  "actions": {
+    "preferredPositions": ["Center"],
+    "offsetDistance": 0,
+    "addLeader": false,
+    "leaderStyle": "None",
+    "avoidCollisionWith": [
+      "OST_Doors",
+      "OST_Windows",
+      "OST_MechanicalEquipment"
+    ],
+    "alignToGrid": false,
+    "groupAlignment": "None"
+  },
+  "scoring": {
+    "collisionPenalty": -80,
+    "preferenceBonus": 100,
+    "alignmentBonus": 0,
+    "leaderLengthPenalty": 0,
+    "nearEdgeBonus": 0
+  },
+  "tagFormat": {
+    "lines": [
+      {
+        "label": "Name:",
+        "parameter": "Name",
+        "position": 1
+      },
+      {
+        "label": "NO:",
+        "parameter": "Number",
+        "position": 2
+      }
+    ],
+    "examples": [
+      "Name: WC - Damen\nNO: R-027",
+      "Name: TGA - Lüftung\nNO: R-025",
+      "Name: F&B Kiosk\nNO: E02-015"
+    ]
+  },
+  "numberingPatterns": {
+    "R-###": {
+      "description": "Ring level rooms (permanent structure)",
+      "regex": "^R-\\d{3}$"
+    },
+    "E##-###": {
+      "description": "Event level rooms (E02=2OG, E05=5OG, etc.)",
+      "regex": "^E\\d{2}-\\d{3}$"
+    }
+  },
+  "roomTypeKeywords": {
+    "WC": ["WC - Damen", "WC - Herren", "WC - Barrierefrei", "WC - Vorraum", "Wickelraum", "Putzraum"],
+    "TGA": ["TGA - Lüftung", "TGA - ELT", "TGA - HLSK Schacht", "TGA - AV Verteiler", "TGA Dachzentrale", "TGA - SER", "TGA - IT Raum"],
+    "Circulation": ["Interne Erschließung", "Erschließung Eingang", "Hospitality Eingang", "Hospitality Erschließung", "Rolltreppe", "Zugang FW"],
+    "Stairwell": ["TH 1A", "TH 1B", "TH 2A", "TH 2B", "TH 3A", "TH 3B", "TH 4A", "TH 4B", "TH 5A", "TH 5B", "TH 6A", "TH 6B", "TH 7", "TH 8", "TH 10A"],
+    "Elevator": ["Aufzug 1 Pers.", "Aufzug 2 Pers.", "Aufzug 1 Gastro", "Aufzug 2 Lasten."],
+    "F&B": ["F&B Kiosk", "Bar - Skygarden", "Skygarden Restaurant", "Skygarden Terrasse", "The Attic", "The Attic Bar", "Küche", "Selbstbedienungsmarkt"],
+    "Storage": ["Lager", "Lager Küche", "Lager Bierwand", "Lager - TBD"],
+    "Electrical": ["NSHV SV", "NSHV Technik AV", "NSHV PV-Anlage", "NSHV-SV", "NSHV-AV PV Anlage", "MS PV-Anlage", "Trafo"],
+    "Special": ["Merchandise", "Customer Care & Kartenverkauf", "Erste Hilfe Station", "Einsatzraum Polizei", "Übertragungstechnik", "Produktion-Kontrollraum", "Rezeption"]
+  },
+  "metadata": {
+    "createdAt": "2026-02-13T13:00:00Z",
+    "updatedAt": "2026-02-13T13:00:00Z",
+    "author": "SmartTag",
+    "source": "Munich Arena HVAC drawings (TP1_TUV_PG_2OG, TP1_TUV_PG_5OG)",
+    "confidence": 0.9,
+    "sampleCount": 150
+  },
+  "_comments": {
+    "patternNotes": [
+      "Room tags always centered in room",
+      "Two-line format: Name on top, Number below",
+      "No leaders used for room tags",
+      "German terminology used consistently"
+    ],
+    "todo": [
+      "Add support for multi-line tag display",
+      "Implement room type detection from keywords"
+    ]
+  }
+}

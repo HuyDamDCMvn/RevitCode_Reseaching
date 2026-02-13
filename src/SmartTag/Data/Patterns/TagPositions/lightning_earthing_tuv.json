@@ -1,0 +1,85 @@
+{
+  "_description": "Lightning protection and earthing system patterns from Munich Arena EBLI drawings",
+  "source": {
+    "projectName": "Munich Arena (TP1_TUV)",
+    "drawings": [
+      {
+        "number": "TP1_TUV_PG_[Level]_LP3_EBLI_[N]_P_00",
+        "title": "Grundriss Blitzschutz [Level]",
+        "discipline": "Lightning Protection & Earthing (Blitzschutz)",
+        "levels": ["1UG", "0EG", "1OG", "2OG", "3OG", "4OG", "5OG", "6OG"],
+        "sheets": ["000 (Gesamt)", "001 (Nord)", "002 (Süd)"],
+        "scale": "1:100"
+      }
+    ],
+    "company": "Teuber + Viel GmbH",
+    "date": "12.12.25",
+    "phase": "LP3",
+    "totalFiles": 25
+  },
+  "legend": {
+    "blitzschutzklasse": "LPS III - Maschenweite 15m",
+    "fundamenterder": {
+      "description": "Foundation earthing system (tauchfeuerverzinkt - hot-dip galvanized)",
+      "components": [
+        { "symbol": "Leitung durchgehend", "english": "Continuous conductor" },
+        { "symbol": "Leitung kommend von unten", "english": "Conductor coming from below" },
+        { "symbol": "Leitung abgehend nach oben", "english": "Conductor going upward" },
+        { "symbol": "Anschlussfahne 1,5m", "english": "Connection tab 1.5m" },
+        { "symbol": "Anschlussfahne 3,0m", "english": "Connection tab 3.0m" },
+        { "symbol": "Kreuzverbinder", "english": "Cross connector" },
+        { "symbol": "Erdungsfestpunkt", "english": "Earthing fixed point", "material": "V4A, Werkstoff-Nr.: 1.4571" },
+        { "symbol": "Dehnungselement", "english": "Expansion element", "material": "V4A, Werkstoff-Nr.: 1.4571" },
+        { "symbol": "Verbinder allgemein", "english": "General connector" }
+      ],
+      "bandstahl": "30x3,5 mm, tauchfeuerverzinkt"
+    },
+    "ringerder": {
+      "description": "Ring earthing system (V4A stainless steel)",
+      "material": "V4A, Werkstoff-Nr.: 1.4571",
+      "components": [
+        { "symbol": "Wandanschlusspunkt druckwasserfest", "english": "Pressure-water-resistant wall connection" },
+        { "symbol": "Wanddurchführung druckwasserfest", "english": "Pressure-water-resistant wall penetration" }
+      ],
+      "bandstahl": "30x3,5 mm, V4A"
+    },
+    "blitzfanganlage": {
+      "description": "Lightning capture system",
+      "components": [
+        { "symbol": "Fangleitung Aluminium", "english": "Capture conductor (aluminum)" },
+        { "symbol": "Fangleitung Ausführung HVI", "english": "HVI (High Voltage Insulated) capture conductor" },
+        { "symbol": "Fangstange Aluminium mit Fangspitze AlMgSI", "english": "Aluminum air terminal with AlMgSi tip" },
+        { "symbol": "Fangstange Ausführung HVI mit Fangspitze", "english": "HVI air terminal with tip" }
+      ],
+      "heightNote": "Höhe gem. Angabe (Height per specification)"
+    }
+  },
+  "observations": [
+    {
+      "elementType": "PAS (Potentialausgleichsschiene)",
+      "labelingPattern": "PAS",
+      "english": "Potential Equalization Bar",
+      "position": "At each equipotential bonding location",
+      "hasLeader": false,
+      "frequency": "High - multiple per room/area"
+    },
+    {
+      "elementType": "Connection Note",
+      "labelingPattern": "Anschlussfahne für den Bereich der angrenzenden Garage",
+      "english": "Connection tab for adjacent garage area",
+      "notes": "Text annotation for special connections"
+    },
+    {
+      "elementType": "Dimension Reference",
+      "labelingPattern": "Numeric values (65, 95, 174, 230, 460, 690)",
+      "notes": "Conductor lengths or distances in mm/m"
+    }
+  ],
+  "generalNotes": [
+    "Lightning protection class: LPS III",
+    "Mesh width: 15m",
+    "Materials: Hot-dip galvanized (tauchfeuerverzinkt) or V4A stainless steel (1.4571)",
+    "Band steel: 30x3.5mm",
+    "PAS = Potentialausgleichsschiene (Potential Equalization Bar)"
+  ]
+}

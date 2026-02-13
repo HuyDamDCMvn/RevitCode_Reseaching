@@ -1,0 +1,85 @@
+{
+  "_description": "Dimension patterns for radial grid systems (arena/stadium layouts)",
+  "source": {
+    "projectName": "Munich Arena (TP1_TUV)",
+    "drawings": [
+      "TP1_TUV_PG_2OG_LP3_RLTA_000_P_00",
+      "TP1_TUV_PG_5OG_LP3_RLTA_000_P_00"
+    ],
+    "viewType": "FloorPlan",
+    "discipline": "HVAC",
+    "scale": "1:200",
+    "company": "Teuber + Viel GmbH",
+    "date": "2025-12"
+  },
+  "dimensionChains": [
+    {
+      "name": "Radial Grid Spacing - Standard",
+      "direction": "Radial",
+      "chainType": "ChainBetweenElements",
+      "startReference": "Grid",
+      "endReference": "Grid",
+      "values_mm": [10000, 10000, 10000, 10000, 10000, 10000],
+      "placement": "Along radial direction",
+      "offset_mm": 500,
+      "notes": "Standard 10m grid spacing repeated 6 times"
+    },
+    {
+      "name": "Radial Grid Spacing - Transition",
+      "direction": "Radial",
+      "chainType": "ChainBetweenElements",
+      "values_mm": [8000, 8000, 8000],
+      "notes": "8m spacing at zone transitions"
+    },
+    {
+      "name": "Angular Grid - Fine",
+      "direction": "Angular",
+      "values_degrees": [4.50],
+      "frequency": "Most common",
+      "notes": "Standard angular grid division"
+    },
+    {
+      "name": "Angular Grid - Medium",
+      "direction": "Angular",
+      "values_degrees": [11.25],
+      "notes": "Secondary angular division"
+    },
+    {
+      "name": "Angular Grid - Coarse",
+      "direction": "Angular",
+      "values_degrees": [22.50],
+      "notes": "Major angular division"
+    }
+  ],
+  "typicalRanges": {
+    "radialSpacing_mm": {
+      "min": 8000,
+      "max": 10000,
+      "common": [8000, 10000]
+    },
+    "angularSpacing_degrees": {
+      "min": 4.50,
+      "max": 22.50,
+      "common": [4.50, 11.25, 22.50]
+    }
+  },
+  "gridNaming": {
+    "pattern": "N# / S#",
+    "description": "North (N) and South (S) sides with sequential numbers",
+    "examples": ["N1", "N2", "N3", "N4", "N5", "N6", "N7", "N8", "N9", "N10", "N11", "N12", "N13",
+                 "S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10", "S11", "S12", "S13"]
+  },
+  "generalNotes": [
+    "Stadium/Arena uses radial coordinate system",
+    "Dimensions shown in millimeters",
+    "Angular dimensions shown in degrees with 2 decimal places",
+    "Grid lines radiate from arena center",
+    "Consistent 10m radial spacing in main areas",
+    "8m spacing at transition zones"
+  ],
+  "_todo": [
+    "Implement radial dimension support in auto-dimension tool",
+    "Add angular dimension type detection",
+    "Support N/S grid naming convention"
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "_description": "Tag and labeling patterns from Munich Arena HVAC/Ventilation drawings",
+  "source": {
+    "projectName": "Munich Arena (TP1_TUV)",
+    "drawings": [
+      {
+        "number": "TP1_TUV_PG_2OG_LP3_RLTA_000_P_00",
+        "title": "Grundriss Raumlufttechnik 2OG - Gesamt",
+        "level": "2OG (2nd Floor)",
+        "scale": "1:200",
+        "discipline": "HVAC - Raumlufttechnik"
+      },
+      {
+        "number": "TP1_TUV_PG_5OG_LP3_RLTA_000_P_00",
+        "title": "Grundriss Raumlufttechnik 5OG - Gesamt",
+        "level": "5OG (5th Floor)",
+        "scale": "1:200",
+        "discipline": "HVAC - Raumlufttechnik"
+      }
+    ],
+    "company": "Teuber + Viel GmbH / Müller-BBM Building Solutions",
+    "client": "SWMunich Real Estate GmbH",
+    "date": "12.12.25",
+    "phase": "LP3"
+  },
+  "legend": {
+    "ductSystems": [
+      {
+        "code": "EA",
+        "name": "Abluftkanalsystem",
+        "english": "Exhaust Air System"
+      },
+      {
+        "code": "FA",
+        "name": "Aussenluftkanalsystem",
+        "english": "Fresh Air / Outdoor Air System"
+      },
+      {
+        "code": "FO",
+        "name": "Fortluftkanalsystem",
+        "english": "Discharge Air System"
+      },
+      {
+        "code": "SA",
+        "name": "Zuluftkanalsystem",
+        "english": "Supply Air System"
+      }
+    ]
+  },
+  "observations": [
+    {
+      "elementType": "Duct Run / Air Terminal",
+      "labelingPattern": "RN## / RS## / CN###",
+      "examples": ["RN64", "RS1", "CN7", "CN140"],
+      "position": "Along duct centerline",
+      "hasLeader": false,
+      "frequency": "Always",
+      "notes": "Sequential numbering, RN=supply diffuser, RS=return, CN=connection"
+    },
+    {
+      "elementType": "Grid Lines - Radial",
+      "labelingPattern": "N# / S#",
+      "examples": ["N1", "N2", "S1", "S2", "N12", "N13", "S12", "S13"],
+      "position": "At grid intersection",
+      "notes": "N=North side, S=South side of arena (radial grid system)"
+    },
+    {
+      "elementType": "Room Tag",
+      "labelingPattern": "Name: [RoomName] / NO: [RoomNumber]",
+      "examples": [
+        "Name: WC - Damen / NO: R-027",
+        "Name: TGA - Lüftung / NO: R-025",
+        "Name: Hospitality Eingang / NO: R-106",
+        "Name: F&B Kiosk / NO: E02-015"
+      ],
+      "position": "Center of room",
+      "hasLeader": false,
+      "frequency": "Always",
+      "tagContent": ["Name:", "NO:"],
+      "notes": "Two-line format, R-### for Ring rooms, E##-### for Event level rooms"
+    },
+    {
+      "elementType": "Angular Dimension",
+      "values": ["4.50°", "11.25°", "22.50°"],
+      "frequency": "Common",
+      "notes": "Radial grid angles - stadium/arena layout"
+    },
+    {
+      "elementType": "Linear Dimension - Radial Grid Spacing",
+      "values_mm": [8000, 10000],
+      "pattern": "Repeated spacing along radial direction",
+      "notes": "10000mm typical spacing, 8000mm at transitions"
+    }
+  ],
+  "roomCategories": {
+    "WC": ["WC - Damen", "WC - Herren", "WC - Barrierefrei", "WC - Vorraum", "Wickelraum"],
+    "TGA": ["TGA - Lüftung", "TGA - ELT", "TGA - HLSK Schacht", "TGA - AV Verteiler", "TGA Dachzentrale"],
+    "Circulation": ["Interne Erschließung", "Hospitality Eingang", "Rolltreppe", "TH #A/B (Treppenhaus)"],
+    "F&B": ["F&B Kiosk", "Bar - Skygarden", "Skygarden Restaurant", "The Attic", "Küche"],
+    "Storage": ["Lager", "Lager Küche", "Lager Bierwand"],
+    "Technical": ["NSHV SV", "NSHV Technik AV", "MS PV-Anlage", "Trafo", "Übertragungstechnik"]
+  },
+  "numberingConventions": {
+    "R-###": "Ring level rooms (permanent structure)",
+    "E##-###": "Event level rooms (E02=2OG, E05=5OG)",
+    "TH #A/B": "Treppenhaus (Stairwell) with A/B designation"
+  },
+  "generalNotes": [
+    "Scale 1:200 for floor plans",
+    "Radial grid system (N/S) with angular dimensions",
+    "Consistent room tag format: Name/NO two lines",
+    "German terminology throughout",
+    "Equipment tags use alphanumeric codes (RN, RS, CN)",
+    "Clear separation between circulation and technical rooms"
+  ]
+}

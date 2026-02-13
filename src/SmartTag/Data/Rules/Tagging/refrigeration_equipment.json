@@ -1,0 +1,291 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "refrigeration_equipment",
+  "name": "Refrigeration Equipment - KLT Connected (Fan Coils, Ceiling Panels, Valves)",
+  "description": "Tagging rules for equipment connected to KLT (Kältetechnik) cooling system - fan coils, dual-mode ceiling panels on cooling circuit, and valves",
+  "version": "2.0.0",
+  "enabled": true,
+  "priority": 83,
+  "systemConnection": "KLT",
+  "systemConnectionNote": "Use this rule for equipment connected to KLT-* piping systems (KLT-IT, KLT-HKS, KLT-GLK, KLT-UFK)",
+  "conditions": {
+    "categories": [
+      "OST_MechanicalEquipment",
+      "OST_PipeAccessory",
+      "OST_PipeFitting",
+      "OST_GenericModel"
+    ],
+    "familyNamePatterns": [
+      ".*Ventilatorkonvektor.*",
+      ".*FanCoil.*",
+      ".*FCU.*"
+    ],
+    "systemNamePatterns": [".*KLT.*"],
+    "viewTypes": ["FloorPlan", "CeilingPlan", "ReflectedCeilingPlan"]
+  },
+  "metadata": {
+    "author": "SmartTag AI Training",
+    "category": "Cooling/Refrigeration",
+    "discipline": "KLT (Kältetechnik)",
+    "sources": ["MunichRE KLT drawings - 24 files"],
+    "sampleCount": 500,
+    "updatedAt": "2026-02-13"
+  },
+  "equipmentTypes": [
+    {
+      "type": "Fan Coil Unit",
+      "german": "Ventilatorkonvektor",
+      "english": "Fan Coil Unit (FCU)",
+      "tagFormat": {
+        "pattern": "Ventilatorkonvektor\nL[L]xW[W]xH[H]\nKühlleistung: [Value] W",
+        "multiLine": true,
+        "components": {
+          "L": "Length in mm",
+          "W": "Width in mm",
+          "H": "Height in mm",
+          "Kühlleistung": "Cooling capacity in Watts"
+        }
+      },
+      "standardDimensions": "L1725xW519xH223",
+      "coolingCapacities": [136, 469, 1000, 5000],
+      "examples": [
+        "Ventilatorkonvektor\nL1725xW519xH223\nKühlleistung: 5000 W",
+        "Ventilatorkonvektor\nL1725xW519xH223\nKühlleistung: 469 W"
+      ]
+    },
+    {
+      "type": "Heating/Cooling Ceiling Panel",
+      "german": "HeizKühlsegel Decke",
+      "english": "Heating/Cooling Ceiling Sail",
+      "tagFormat": {
+        "pattern": "HeizKühlsegel Decke\n[Dimensions]\nHeizleistung: [Heat] W\nKühlleistung: [Cool] W",
+        "multiLine": true,
+        "components": {
+          "Dimensions": "LxW dimensions",
+          "Heizleistung": "Heating capacity in Watts",
+          "Kühlleistung": "Cooling capacity in Watts"
+        }
+      },
+      "standardDimensions": "1500x650",
+      "typicalCapacities": {
+        "heating": 2000,
+        "cooling": 5600
+      },
+      "examples": [
+        "HeizKühlsegel Decke\n1500x650\nHeizleistung: 2000 W\nKühlleistung: 5600 W"
+      ]
+    }
+  ],
+  "valveTypes": [
+    {
+      "type": "Ball Valve",
+      "german": "Kugelhahn Gewinde",
+      "english": "Threaded Ball Valve",
+      "tagFormat": {
+        "pattern": "DN[Size]\nKugelhahn Gewinde"
+      },
+      "sizes": [15, 20, 25, 50],
+      "examples": [
+        "DN20\nKugelhahn Gewinde",
+        "DN50\nKugelhahn Gewinde"
+      ]
+    },
+    {
+      "type": "Pressure Control Valve",
+      "german": "Druckregelventil Gewinde",
+      "english": "Threaded Pressure Control Valve",
+      "tagFormat": {
+        "pattern": "DN[Size]\nDruckregelventil Gewinde",
+        "_note": "Standardized to space separator"
+      },
+      "sizes": [15, 20, 25],
+      "examples": [
+        "DN20\nDruckregelventil Gewinde",
+        "DN15\nDruckregelventil_Gewinde"
+      ]
+    },
+    {
+      "type": "6-Way Valve",
+      "german": "6WegeVentil Gewinde",
+      "english": "6-Way Threaded Valve",
+      "tagFormat": {
+        "pattern": "DN[Size]\n6WegeVentil Gewinde"
+      },
+      "sizes": [15],
+      "usage": "Used for heating/cooling ceiling panels",
+      "examples": [
+        "DN15\n6WegeVentil Gewinde"
+      ]
+    },
+    {
+      "type": "Regulating Valve",
+      "german": "Regulierventil Gewinde",
+      "english": "Threaded Regulating Valve",
+      "tagFormat": {
+        "pattern": "DN[Size]\nRegulierventil Gewinde"
+      },
+      "sizes": [20, 25, 50],
+      "examples": [
+        "DN20\nRegulierventil Gewinde"
+      ]
+    },
+    {
+      "type": "Fill/Drain Valve",
+      "german": "Füll- und Entleerungskugelhahn",
+      "english": "Fill and Drain Ball Valve",
+      "tagFormat": {
+        "pattern": "DN[Size]\nFüll- und Entleerungskugelhahn",
+        "paddedVariant": "DN0[Size]\nFüll- und Entleerungskugelhahn"
+      },
+      "sizes": [20, 25, 50],
+      "examples": [
+        "DN020\nFüll- und Entleerungskugelhahn",
+        "DN025\nFüll- und Entleerungskugelhahn"
+      ]
+    },
+    {
+      "type": "Gate Valve",
+      "german": "Absperrschieber Flansch",
+      "english": "Flanged Gate Valve",
+      "tagFormat": {
+        "pattern": "DN[Size]\nAbsperrschieber Flansch"
+      },
+      "sizes": [65, 250],
+      "usage": "Main line isolation",
+      "examples": [
+        "DN65\nAbsperrschieber Flansch",
+        "DN250\nAbsperrschieber Flansch"
+      ]
+    },
+    {
+      "type": "Motorized Control Valve",
+      "german": "Motorisierter Regelventil Gewinde",
+      "english": "Motorized Threaded Control Valve",
+      "tagFormat": {
+        "pattern": "DN[Size]\nMotorisierter Regelventil Gewinde"
+      },
+      "sizes": [25],
+      "examples": [
+        "DN25\nMotorisierter Regelventil Gewinde"
+      ]
+    },
+    {
+      "type": "Drain",
+      "german": "Entleerung",
+      "english": "Drain Point",
+      "tagFormat": {
+        "pattern": "DN[Size]\nEntleerung"
+      },
+      "sizes": [15, 20, 32],
+      "examples": [
+        "DN32\nEntleerung",
+        "DN20\nEntleerung"
+      ]
+    }
+  ],
+  "sensors": [
+    {
+      "type": "Temperature Sensor",
+      "german": "Temperaturfühler MSR",
+      "english": "Temperature Sensor (BMS)",
+      "tagFormat": {
+        "pattern": "DN[Size]\nTemperaturfühler MSR"
+      },
+      "sizes": [15],
+      "usage": "Connected to building management system",
+      "examples": [
+        "DN15\nTemperaturfühler MSR"
+      ]
+    },
+    {
+      "type": "Temperature Display",
+      "german": "Temperaturanzeige MSR",
+      "english": "Temperature Display (BMS)",
+      "tagFormat": {
+        "pattern": "Standard\nTemperaturanzeige MSR"
+      },
+      "variants": ["Standard"],
+      "examples": [
+        "Standard\nTemperaturanzeige MSR"
+      ]
+    }
+  ],
+  "legendSymbols": {
+    "valves": [
+      { "symbol": "gas_regulator", "german": "Gasdruckregler", "english": "Gas pressure regulator" },
+      { "symbol": "gas_relief", "german": "Gas-Sicherheitsabblaseventil", "english": "Gas safety relief valve" },
+      { "symbol": "3way_valve", "german": "3-Way Valve", "english": "3-way valve" },
+      { "symbol": "butterfly", "german": "Absperrklappe", "english": "Butterfly valve" },
+      { "symbol": "cap_valve", "german": "Kappenventil", "english": "Cap valve" },
+      { "symbol": "6way_valve", "german": "6-Wegeventil", "english": "6-way valve" },
+      { "symbol": "check_valve", "german": "Rückschlagklppe", "english": "Check valve" },
+      { "symbol": "compensator", "german": "Kompensator", "english": "Expansion compensator" }
+    ],
+    "equipment": [
+      { "symbol": "consumer", "german": "Verbraucher", "english": "Consumer/Load" },
+      { "symbol": "diff_manometer", "german": "Differenzdruck Manometer", "english": "Differential pressure gauge" },
+      { "symbol": "control_valve", "german": "Regelventil", "english": "Control valve" },
+      { "symbol": "diff_pressure_ctrl", "german": "Differenzdruckregler mit Durchflussregler", "english": "Diff pressure with flow ctrl" },
+      { "symbol": "motor_drive", "german": "Antrieb durch Elektromotor horizontal", "english": "Electric motor drive" },
+      { "symbol": "drain", "german": "Entleerung", "english": "Drain" },
+      { "symbol": "gas_meter", "german": "Gaszähler", "english": "Gas meter" },
+      { "symbol": "gas_manometer", "german": "Gas-Manometer mit Absperrventil", "english": "Gas manometer with valve" },
+      { "symbol": "heat_meter", "german": "Wärmemengenzähler", "english": "Heat meter" },
+      { "symbol": "pump", "german": "Flüssigkeitspumpe, allgemein", "english": "Liquid pump" },
+      { "symbol": "mag_separator", "german": "Magnetabscheider", "english": "Magnetic separator" },
+      { "symbol": "expansion_vessel", "german": "Membranausdehnungsgefäß", "english": "Expansion vessel" },
+      { "symbol": "plate_hx", "german": "Plattenwärmetauscher", "english": "Plate heat exchanger" },
+      { "symbol": "thermometer", "german": "Thermometer", "english": "Thermometer" },
+      { "symbol": "safety_valve", "german": "Sicherheitsventil", "english": "Safety valve" },
+      { "symbol": "shutoff", "german": "Absperrventil", "english": "Shutoff valve" },
+      { "symbol": "shutoff_general", "german": "Absperrarmatur, allgemein", "english": "General shutoff" },
+      { "symbol": "network_end", "german": "Teilnetzende", "english": "Network end" },
+      { "symbol": "network_start", "german": "Teilnetzstarts-Symbol", "english": "Network start" },
+      { "symbol": "manometer", "german": "Manometer", "english": "Pressure gauge" },
+      { "symbol": "strainer", "german": "Schmutzfänger", "english": "Strainer/Filter" }
+    ]
+  },
+  "dualModeEquipment": {
+    "_comment": "HeizKühlsegel can be connected to either HZG or KLT - use KLT rule when primarily cooling",
+    "heatingCoolingCeiling": {
+      "pattern": "HeizKühlsegel Decke\n[Dimensions]\nHeizleistung: [Value] W\nKühlleistung: [Value] W",
+      "note": "When connected to KLT-HKS system, tag via this rule",
+      "connectedSystem": "KLT-HKS"
+    }
+  },
+  "actions": {
+    "preferredPositions": ["Center", "TopCenter", "Right"],
+    "offsetDistance": 0.15,
+    "addLeader": true,
+    "leaderStyle": "Straight",
+    "avoidCollisionWith": ["OST_MechanicalEquipment", "OST_Ceilings"]
+  },
+  "scoring": {
+    "collisionPenalty": -55,
+    "preferenceBonus": 45,
+    "alignmentBonus": 15,
+    "leaderLengthPenalty": -3
+  },
+  "rules": [
+    {
+      "condition": { "familyName": "contains", "value": "Fan Coil" },
+      "tagSettings": { "pattern": "Ventilatorkonvektor\nL{Length}xW{Width}xH{Height}\nKühlleistung: {CoolingCapacity} W", "multiLine": true }
+    },
+    {
+      "condition": { "familyName": "contains", "value": "Ceiling Panel", "systemName": "contains", "systemValue": "KLT" },
+      "tagSettings": { "pattern": "HeizKühlsegel Decke\n{Dimensions}\nHeizleistung: {HeatingCapacity} W\nKühlleistung: {CoolingCapacity} W", "multiLine": true }
+    },
+    {
+      "condition": { "familyName": "contains", "value": "Ball Valve" },
+      "tagSettings": { "pattern": "DN{Size}\nKugelhahn Gewinde" }
+    },
+    {
+      "condition": { "familyName": "contains", "value": "Pressure" },
+      "tagSettings": { "pattern": "DN{Size}\nDruckregelventil Gewinde" }
+    },
+    {
+      "condition": { "familyName": "contains", "value": "6-Way" },
+      "tagSettings": { "pattern": "DN{Size}\n6WegeVentil Gewinde" }
+    }
+  ]
+}

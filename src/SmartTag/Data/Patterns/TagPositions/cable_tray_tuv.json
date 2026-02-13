@@ -1,0 +1,261 @@
+{
+  "_description": "Cable tray (Kabeltrassen) tagging patterns from Munich Arena Electrical drawings",
+  "source": {
+    "projectName": "Munich Arena (TP1_TUV)",
+    "drawings": [
+      {
+        "number": "TP1_TUV_PG_[Level]_LP3_ELTR_[N]_P_00",
+        "discipline": "Electrical - Cable Trays (Kabeltrassen)",
+        "levels": ["0EG", "1OG", "2OG", "3OG", "4OG", "5OG", "6OG"],
+        "sheets": ["000 (Gesamt)", "001 (Nord)", "002 (Süd)"],
+        "scale": "1:100 / 1:200"
+      }
+    ],
+    "company": "Teuber + Viel GmbH",
+    "client": "SWMunich Real Estate GmbH",
+    "date": "12.12.25",
+    "phase": "LP3",
+    "totalFiles": 21
+  },
+  "legend": {
+    "cableTrayTypes": [
+      {
+        "code": "E30 - 90",
+        "name": "Verlegesystem Funktionserhalt E30-90",
+        "english": "Fire Rated Cable Tray (30-90 min)",
+        "color": "Orange/Red"
+      },
+      {
+        "code": "E90 Sprinkler",
+        "name": "Verlegesystem Funktionserhalt E90 Sprinklerzuleitung",
+        "english": "Fire Rated (90 min) for Sprinkler Supply",
+        "color": "Orange"
+      },
+      {
+        "code": "AV - 230/400V",
+        "name": "Verlegesystem Starkstrom 230/400V",
+        "english": "Power Cable Tray (230/400V)",
+        "color": "Blue"
+      },
+      {
+        "code": "AV - FM",
+        "name": "Verlegesystem Schachstrom",
+        "english": "Facility Management / Low Voltage Tray",
+        "color": "Green"
+      },
+      {
+        "code": "MS 20 kV",
+        "name": "Verlegesystem Mittelspannung 20 kV",
+        "english": "Medium Voltage Cable Tray (20 kV)",
+        "color": "Yellow"
+      },
+      {
+        "code": "Stromschiene",
+        "name": "Stromschiene",
+        "english": "Busbar / Busway",
+        "color": "Gray"
+      }
+    ],
+    "trayPrefixes": {
+      "Trasse": "Horizontal cable tray run",
+      "Steigetrasse": "Vertical riser cable tray"
+    }
+  },
+  "observations": [
+    {
+      "elementType": "Cable Tray Run",
+      "labelingPattern": "[Qty]x[Width]x[Height] [Type] [Orientation]",
+      "examples": [
+        "400x60 E30 - 90 Trasse",
+        "600x60 AV - 230/400V Trasse",
+        "600x60 AV - FM Trasse",
+        "400x60 MS 20 kV Trasse",
+        "400x60 E90 Sprinkler Trasse",
+        "2x400x60 E30 - 90 Trasse",
+        "2x600x60 AV - 230/400V Trasse",
+        "500x60 AV - 230/400V Trasse",
+        "300x60 AV - 230/400V Trasse",
+        "300x60 E30 - 90 Trasse"
+      ],
+      "position": "Along tray centerline",
+      "hasLeader": false,
+      "frequency": "At size changes and intersections"
+    },
+    {
+      "elementType": "Cable Tray Riser",
+      "labelingPattern": "[Width]x[Height] [Type] Steigetrasse",
+      "examples": [
+        "600x70 E30 - 90 Steigetrasse",
+        "600x70 AV - 230/400V Steigetrasse",
+        "600x70 AV - FM Steigetrasse",
+        "400x70 AV - 230/400V Steigetrasse",
+        "400x60 E30 - 90 Steigetrasse"
+      ],
+      "position": "Near riser opening",
+      "hasLeader": false
+    },
+    {
+      "elementType": "Busway",
+      "labelingPattern": "W[Width]xH[Height]_LDA",
+      "examples": [
+        "W240xH180_LDA",
+        "Busway_LDA4623",
+        "L1930xW240xH180_LdaAs2"
+      ],
+      "position": "Near busway",
+      "hasLeader": false
+    },
+    {
+      "elementType": "Distribution Panel (UV)",
+      "labelingPattern": "UV_[Level].[Zone].[Number] ([Area])",
+      "examples": [
+        "UV_1.0.1",
+        "UV_1.0.2",
+        "UV_1.0.3 (BOH)",
+        "UV_1.0.5 (Showpower)",
+        "UV_2.0.1",
+        "UV_2.0.4 (Kiosk)",
+        "UV_2.0.5 (Kiosk)",
+        "UV_2.0.6 (Bar)",
+        "UV_2.0.7 (Vinyl Club)",
+        "UV_2.0.8 (Außenbereich)",
+        "UV_2.0.9 (Showroom)",
+        "UV_2.0.10 (Merchandise)",
+        "UV_2.0.11 (Showroom)",
+        "UV_1.2.1",
+        "UV_1.2.2",
+        "UV_1.2.3",
+        "UV_2.2.1",
+        "UV_2.2.3 (Kiosk)",
+        "UV_2.2.5 (Merchandise)",
+        "UV_2.2.6 (Kartenverkauf)"
+      ],
+      "position": "At panel location",
+      "hasLeader": false,
+      "includesDimensions": true,
+      "dimensionFormat": "L[Length]xW[Width]xH[Height]"
+    },
+    {
+      "elementType": "Emergency Power (SV)",
+      "labelingPattern": "SV_[Level].[Zone].[Number]",
+      "examples": [
+        "SV_1.0.1",
+        "SV_2.0.1",
+        "SV_1.2.1"
+      ],
+      "notes": "Sicherheitsversorgung (Emergency Power)"
+    },
+    {
+      "elementType": "Panel/Equipment Dimensions",
+      "labelingPattern": "L[Length]xW[Width]xH[Height]",
+      "examples": [
+        "L300xW550xH2200",
+        "L300xW800xH2200",
+        "L300xW1550xH2200",
+        "L600xW600xH2200",
+        "L600xW800xH2200",
+        "L600xW1200xH2200",
+        "L800xW800xH2200",
+        "L1000xW800xH2200"
+      ],
+      "notes": "Dimensions in mm"
+    },
+    {
+      "elementType": "Automation Panel (ASP)",
+      "labelingPattern": "ASP_[System] or ASP_[Level].[Zone].[Number]",
+      "examples": [
+        "ASP_TW",
+        "ASP_Sprinkler",
+        "ASP_Heizung",
+        "ASP_1.0.1",
+        "ASP_2.0.1",
+        "ASP_1.2.1",
+        "ASP_2.2.1"
+      ]
+    },
+    {
+      "elementType": "Transformer",
+      "labelingPattern": "Trafo [Number/Name]",
+      "examples": [
+        "Trafo 1",
+        "Trafo 2",
+        "Trafo 3",
+        "Trafo 4",
+        "Trafo Nord 1",
+        "Trafo Nord 2",
+        "Trafo Nord 3",
+        "Trafo Nord 4",
+        "GEAFOL Neo Transformator, Öko-Design Stufe 2",
+        "1000kVA_L1695xW1000xH1740_4GX6064_3E"
+      ]
+    },
+    {
+      "elementType": "Main Switchboard (NSHV)",
+      "labelingPattern": "NSHV[_Name] or NSHV AV [Area]",
+      "examples": [
+        "NSHV AV NO",
+        "NSHV AV NW",
+        "NSHV_2.1.0 (Nordost)",
+        "NSHV Technik AV",
+        "NSHV SV",
+        "NSHV PV-Anlage",
+        "NSHV-SV",
+        "NSHV-AV PV Anlage"
+      ]
+    },
+    {
+      "elementType": "Medium Voltage Switchgear (MS)",
+      "labelingPattern": "MS-[Name]",
+      "examples": [
+        "MS-EVU",
+        "MS-Nord",
+        "MS-Kälte",
+        "MS-Parkhaus",
+        "MS-SÜD",
+        "MS PV-Anlage"
+      ]
+    },
+    {
+      "elementType": "IT Equipment",
+      "labelingPattern": "IT Feld[N]",
+      "examples": [
+        "IT Feld1",
+        "Sibe ZBA"
+      ]
+    },
+    {
+      "elementType": "Fire Alarm / Safety",
+      "labelingPattern": "[System]",
+      "examples": [
+        "BOS",
+        "BMZ",
+        "SAA"
+      ],
+      "notes": "BOS=Emergency services, BMZ=Fire alarm panel, SAA=Voice alarm"
+    },
+    {
+      "elementType": "E30 UV (Emergency)",
+      "labelingPattern": "E30 SV UV",
+      "examples": [
+        "E30 SV UV L325xW419xH919"
+      ]
+    }
+  ],
+  "traySizes": {
+    "widths_mm": [300, 400, 500, 600],
+    "heights_mm": [60, 70],
+    "common_combinations": [
+      "300x60", "400x60", "500x60", "600x60",
+      "400x70", "600x70"
+    ]
+  },
+  "generalNotes": [
+    "Cable tray tags show: [Quantity]x[Width]x[Height] [Type] [Orientation]",
+    "Quantity prefix (2x) for stacked/parallel trays",
+    "Trasse = horizontal, Steigetrasse = vertical riser",
+    "Fire ratings: E30, E90, E30-90",
+    "System types: AV=Allgemeine Versorgung, FM=Facility Management, MS=Mittelspannung",
+    "Equipment panels have UV (Unterverteilung), SV (Sicherheitsversorgung), ASP (Automation)",
+    "Naming convention: [Type]_[Level].[Zone].[Number] ([Area name])"
+  ]
+}

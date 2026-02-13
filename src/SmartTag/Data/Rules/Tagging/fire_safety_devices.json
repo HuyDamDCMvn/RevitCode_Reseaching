@@ -1,0 +1,109 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "fire_safety_devices",
+  "name": "Fire Safety & Voice Alarm Devices",
+  "version": "1.0.0",
+  "description": "Tagging rules for smoke detectors, voice alarm speakers (SAA), RWA, and nurse call systems",
+  "enabled": true,
+  "priority": 91,
+  "conditions": {
+    "categories": [
+      "OST_FireAlarmDevices",
+      "OST_CommunicationDevices",
+      "OST_SecurityDevices",
+      "OST_NurseCallDevices",
+      "OST_ElectricalFixtures"
+    ],
+    "familyNamePatterns": [
+      ".*Rauchmelder.*",
+      ".*Smoke.*",
+      ".*Speaker.*",
+      ".*Lautsprecher.*",
+      ".*SAA.*",
+      ".*RWA.*",
+      ".*LRA.*",
+      ".*Alarm.*"
+    ],
+    "viewTypes": ["FloorPlan", "CeilingPlan", "ReflectedCeilingPlan"]
+  },
+  "actions": {
+    "preferredPositions": ["Center", "TopCenter"],
+    "offsetDistance": 0.15,
+    "addLeader": false,
+    "leaderStyle": "None",
+    "avoidCollisionWith": [
+      "OST_FireAlarmDevices",
+      "OST_Ceilings"
+    ],
+    "alignToGrid": false
+  },
+  "scoring": {
+    "collisionPenalty": -80,
+    "preferenceBonus": 60,
+    "alignmentBonus": 10
+  },
+  "tagFormat": {
+    "smokeDetectors": {
+      "pattern": "[Type]",
+      "types": {
+        "Rauchmelder optisch-thermisch": {
+          "code": "RM",
+          "english": "Optical-thermal smoke detector"
+        },
+        "Rauchmelder optisch-thermisch_ZD": {
+          "code": "RM_ZD",
+          "english": "Optical-thermal smoke detector (central monitoring)"
+        }
+      },
+      "notes": "Often shown only as symbol without text tag"
+    },
+    "voiceAlarm": {
+      "pattern": "SAA [Zone]",
+      "examples": ["SAA", "SAA A/B", "SAA A", "SAA B"],
+      "components": {
+        "SAA": "Sprachalarmanlage (Voice Alarm System)",
+        "Zone": "A, B, or A/B for dual-zone speakers"
+      },
+      "notes": "High density in public/evacuation areas"
+    },
+    "rwa": {
+      "pattern": "RWA",
+      "english": "Rauch- und Wärmeabzugsanlage (Smoke and Heat Exhaust System)",
+      "types": {
+        "RWA": "General RWA device/control",
+        "RWA_Druckknopfmelder": "Manual call point"
+      }
+    },
+    "nurseCall": {
+      "pattern": "LRA_[Type]",
+      "examples": ["LRA_Zugtaster", "LRA_Ruf-Abstelltaster"],
+      "components": {
+        "LRA": "Lichtrufanlage (Nurse Call System)",
+        "Zugtaster": "Pull cord switch",
+        "Ruf-Abstelltaster": "Call/cancel button"
+      }
+    },
+    "audioVisual": {
+      "pattern": "[Type]",
+      "types": {
+        "Lautsprecher_rund": "Round speaker",
+        "Leuchte-Hupe": "Light-horn combination"
+      }
+    }
+  },
+  "metadata": {
+    "createdAt": "2026-02-13T17:00:00Z",
+    "author": "SmartTag",
+    "source": "Munich Arena Electrical Installation drawings (ELEA) - 24 files",
+    "confidence": 0.92,
+    "sampleCount": 800
+  },
+  "_comments": {
+    "germanTerms": {
+      "SAA": "Sprachalarmanlage - Voice alarm/PA system for evacuation",
+      "RWA": "Rauch- und Wärmeabzugsanlage - Smoke/heat exhaust",
+      "LRA": "Lichtrufanlage - Nurse call/patient call system",
+      "ZD": "Zentraldiagnose - Central monitoring/diagnostics"
+    }
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "hvac_ducts_rlt",
+  "name": "HVAC Ducts - German RLT Standard",
+  "version": "1.0.0",
+  "description": "Tagging rules for HVAC ductwork using German RLT (Raumlufttechnik) naming conventions",
+  "enabled": true,
+  "priority": 88,
+  "conditions": {
+    "categories": [
+      "OST_DuctCurves",
+      "OST_FlexDuctCurves",
+      "OST_DuctFitting",
+      "OST_DuctAccessory"
+    ],
+    "familyNamePatterns": [
+      ".*Duct.*",
+      ".*Kanal.*",
+      ".*Leitung.*"
+    ],
+    "viewTypes": ["FloorPlan", "CeilingPlan", "Section"]
+  },
+  "actions": {
+    "preferredPositions": ["Center", "TopCenter", "BottomCenter"],
+    "offsetDistance": 0.15,
+    "addLeader": false,
+    "leaderStyle": "None",
+    "avoidCollisionWith": [
+      "OST_DuctCurves",
+      "OST_MechanicalEquipment",
+      "OST_Ceilings"
+    ],
+    "alignToGrid": false,
+    "groupAlignment": "AlongCenterline"
+  },
+  "scoring": {
+    "collisionPenalty": -65,
+    "preferenceBonus": 45,
+    "alignmentBonus": 20,
+    "leaderLengthPenalty": 0,
+    "nearEdgeBonus": 5
+  },
+  "tagFormat": {
+    "ductTag": {
+      "pattern": "L_[AirType]-[System]_[Size]",
+      "components": {
+        "L": "Leitung (Duct/Line prefix)",
+        "AirType": {
+          "ZUL": "Zuluft (Supply Air)",
+          "ABL": "Abluft (Exhaust Air)",
+          "AUL": "Außenluft (Outside/Fresh Air)",
+          "FOL": "Fortluft (Exhaust to Outside)",
+          "UML": "Umluft (Recirculation Air)"
+        },
+        "System": "RLT system number (RLT01, RLT05, RLT10, RLT20, RLT25, RLT30, RLT35, RLT40, RLT45, etc.)",
+        "Size": "DN[diameter] for round, [Width]x[Height] for rectangular"
+      },
+      "roundFormat": "DN[Size]",
+      "rectangularFormat": "[Width]x[Height]",
+      "examples": [
+        "L_ZUL-RLT20_DN125",
+        "L_ABL-RLT40_DN200",
+        "L_ZUL-RLT35_450x350",
+        "L_ABL-RLT20_550x300"
+      ]
+    },
+    "multiSystemDuct": {
+      "pattern": "L_[AirType]-[System1]&[System2]&..._[Size]",
+      "examples": ["L_AUL-RLT30&RLT20&RLT35&RLT40_1500x600"]
+    },
+    "elevationTag": {
+      "patterns": {
+        "centerline": "RA = [+/-][value] m UKRD",
+        "topOfDuct": "OKK = [+/-][value] m UKRD"
+      },
+      "reference": {
+        "UKRD": "Unterkante Rohdecke (Underside of structural slab)",
+        "OKRD": "Oberkante Rohdecke (Top of structural slab)",
+        "OKFFB": "Oberkante Fertigfußboden (Top of finished floor)"
+      },
+      "examples": [
+        "RA = -0.15 m UKRD",
+        "OKK = -0.08 m UKRD",
+        "RA = +1.25 m UKRD"
+      ]
+    }
+  },
+  "commonSizes": {
+    "round_DN": [80, 100, 125, 150, 160, 200, 250, 315, 400, 500, 630, 800, 1000],
+    "rectangular_common": [
+      "200x150", "250x150", "250x200", "300x250", "350x200", "350x300",
+      "400x300", "450x300", "500x300", "500x350", "550x300", "600x300",
+      "700x400", "800x400", "850x1100", "950x350", "1000x350"
+    ]
+  },
+  "metadata": {
+    "createdAt": "2026-02-13T18:00:00Z",
+    "author": "SmartTag",
+    "source": "MunichRE RLT drawings - 24 files",
+    "confidence": 0.95,
+    "sampleCount": 1200
+  },
+  "_comments": {
+    "germanTerms": {
+      "Leitung": "Duct/Line",
+      "Zuluft": "Supply air",
+      "Abluft": "Exhaust air",
+      "Außenluft": "Outside air",
+      "Fortluft": "Exhaust air (to outside)",
+      "Umluft": "Recirculation air",
+      "Rohrachse": "Pipe/duct centerline",
+      "Oberkante Kanal": "Top of duct"
+    }
+  }
+}
