@@ -1,0 +1,7 @@
+# Manual Corrections
+# Files here contain cases where users manually corrected placements
+# These are the most valuable for training - they show:
+# - Original placement (algorithm output)
+# - Corrected placement (user preference)
+# - Reason for correction
+# Format: JSON files following Feedback.schema.json

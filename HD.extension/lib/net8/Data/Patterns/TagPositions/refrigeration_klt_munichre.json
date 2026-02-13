@@ -1,0 +1,258 @@
+{
+  "_description": "Refrigeration/Cooling (KLT - Kältetechnik) system patterns from MunichRE Revitalization project - detailed cooling execution drawings",
+  "source": {
+    "projectName": "MunichRE Revitalization (Königinstraße 107, München)",
+    "drawings": [
+      {
+        "number": "HG--_ASS_434_5-_GR-_[Level]_[Sheet]_A_FG",
+        "title": "[Level] - Gewerk KLT Planteil [A/B/C]",
+        "discipline": "KLT (Kältetechnik / Refrigeration/Cooling)",
+        "levels": ["U2", "U1", "00", "01", "02", "03", "04", "05"],
+        "sheets": ["0001", "0002", "0003"],
+        "scale": "1:50"
+      }
+    ],
+    "company": "Assmann Beraten + Planen GmbH",
+    "client": "Münchener Rückversicherungs-Gesellschaft AG",
+    "date": "12.02.2026",
+    "phase": "LP5 (Ausführungsplanung)",
+    "totalFiles": 24
+  },
+  "legend": {
+    "coolingSystems": {
+      "KLT-GLK-VL": { 
+        "code": "434_KLT-GLK-VL", 
+        "german": "Vorlauf_Kälteversorgung_Großluftkühler", 
+        "english": "Large Air Cooler Supply" 
+      },
+      "KLT-GLK-RL": { 
+        "code": "434_KLT-GLK-RL", 
+        "german": "Rücklauf_Kälteversorgung_Großluftkühler", 
+        "english": "Large Air Cooler Return" 
+      },
+      "KLT-HKS-VL": { 
+        "code": "434_KLT-HKS-VL", 
+        "german": "Vorlauf_Kälteversorgung_Hauptkühlsystem", 
+        "english": "Main Cooling System Supply" 
+      },
+      "KLT-HKS-RL": { 
+        "code": "434_KLT-HKS-RL", 
+        "german": "Rücklauf_Kälteversorgung_Hauptkühlsystem", 
+        "english": "Main Cooling System Return" 
+      },
+      "KLT-IT-VL": { 
+        "code": "434_KLT-IT-VL", 
+        "german": "Vorlauf_Kälteversorgung_Informationstechnik", 
+        "english": "IT Cooling Supply" 
+      },
+      "KLT-IT-RL": { 
+        "code": "434_KLT-IT-RL", 
+        "german": "Rücklauf_Kälteversorgung_Informationstechnik", 
+        "english": "IT Cooling Return" 
+      },
+      "KLT-UFK-VL": { 
+        "code": "434_KLT-UFK-VL", 
+        "german": "Vorlauf_Kälteversorgung_Unterflurkonvektoren", 
+        "english": "Underfloor Convector Supply" 
+      },
+      "KLT-UFK-RL": { 
+        "code": "434_KLT-UFK-RL", 
+        "german": "Rücklauf_Kälteversorgung_Unterflurkonvektoren", 
+        "english": "Underfloor Convector Return" 
+      },
+      "KLT-FL-RL": { 
+        "german": "Rücklauf_Kälteversorgung_Freie_Leitungen", 
+        "english": "Free Line Return" 
+      }
+    },
+    "flowDirection": {
+      "VL": { "german": "Vorlauf", "english": "Supply/Flow" },
+      "RL": { "german": "Rücklauf", "english": "Return" }
+    },
+    "abbreviations": {
+      "RA": "Rohrachse (Pipe centerline)",
+      "RS": "Rohrsohle (Pipe invert)",
+      "OK": "Oberkante (Top edge)",
+      "UK": "Unterkante (Bottom edge)",
+      "UKRD": "Unterkante Rohdecke (Underside of raw ceiling)",
+      "DN": "Nennweite (Nominal diameter)"
+    }
+  },
+  "observations": [
+    {
+      "elementType": "Cooling Pipe Tag - IT System",
+      "labelingPattern": "KLT-IT-[VL/RL]_DN[Size]",
+      "elevationFormat": "RA = [+/-][value] m UKRD",
+      "examples": [
+        "KLT-IT-VL_DN20",
+        "RA = -0.17 m UKRD",
+        "KLT-IT-RL_DN20",
+        "RA = -0.08 m UKRD",
+        "KLT-IT-VL_DN25",
+        "RA = -0.08 m UKRD",
+        "KLT-IT-VL_DN40",
+        "RA = -0.26 m UKRD",
+        "KLT-IT-VL_DN50",
+        "RA = -0.31 m UKRD",
+        "KLT-IT-VL_DN65",
+        "RA = -0.27 m UKRD"
+      ]
+    },
+    {
+      "elementType": "Cooling Pipe Tag - Main Cooling System (HKS)",
+      "labelingPattern": "KLT-HKS-[VL/RL]_DN[Size]",
+      "elevationFormat": "RA = [+/-][value] m UKRD",
+      "examples": [
+        "KLT-HKS-VL_DN15",
+        "RA = -0.38 m UKRD",
+        "KLT-HKS-RL_DN15",
+        "RA = -0.33 m UKRD",
+        "KLT-HKS-VL_DN25",
+        "RA = -0.29 m UKRD",
+        "KLT-HKS-VL_DN40",
+        "RA = -0.29 m UKRD",
+        "KLT-HKS-VL_DN65",
+        "RA = -0.27 m UKRD",
+        "KLT-HKS-VL_DN80"
+      ]
+    },
+    {
+      "elementType": "Cooling Pipe Tag - Large Air Cooler (GLK)",
+      "labelingPattern": "KLT-GLK-[VL/RL]_DN[Size]",
+      "elevationFormat": "RA = [+/-][value] m UKRD",
+      "examples": [
+        "KLT-GLK-VL_DN250",
+        "RA = -0.27 m UKRD",
+        "KLT-GLK-RL_DN250",
+        "RA = -0.37 m UKRD"
+      ]
+    },
+    {
+      "elementType": "Fan Coil Unit (Ventilatorkonvektor)",
+      "labelingPattern": "Ventilatorkonvektor\nL[L]xW[W]xH[H]\nKühlleistung: [Value] W",
+      "dimensions": "L1725xW519xH223",
+      "coolingCapacities": [136, 469, 1000, 5000],
+      "examples": [
+        "Ventilatorkonvektor\nL1725xW519xH223\nKühlleistung: 5000 W",
+        "Ventilatorkonvektor\nL1725xW519xH223\nKühlleistung: 469 W",
+        "Ventilatorkonvektor\nL1725xW519xH223\nKühlleistung: 136 W"
+      ]
+    },
+    {
+      "elementType": "Heating/Cooling Ceiling Panel",
+      "labelingPattern": "HeizKühlsegel Decke\n[Dimensions]\nHeizleistung: [Value] W\nKühlleistung: [Value] W",
+      "dimensions": "1500x650",
+      "examples": [
+        "HeizKühlsegel Decke\n1500x650\nHeizleistung: 2000 W\nKühlleistung: 5600 W"
+      ]
+    },
+    {
+      "elementType": "Ball Valve (Kugelhahn)",
+      "labelingPattern": "DN[Size]\nKugelhahn Gewinde",
+      "sizes": [15, 20, 25, 50],
+      "examples": [
+        "DN20\nKugelhahn Gewinde",
+        "DN15\nKugelhahn Gewinde",
+        "DN50\nKugelhahn Gewinde"
+      ]
+    },
+    {
+      "elementType": "Pressure Control Valve",
+      "labelingPattern": "DN[Size]\nDruckregelventil Gewinde",
+      "labelingVariant": "DN[Size]\nDruckregelventil_Gewinde",
+      "sizes": [15, 20, 25],
+      "examples": [
+        "DN20\nDruckregelventil Gewinde",
+        "DN15\nDruckregelventil_Gewinde"
+      ]
+    },
+    {
+      "elementType": "6-Way Valve",
+      "labelingPattern": "DN[Size]\n6WegeVentil Gewinde",
+      "sizes": [15],
+      "examples": [
+        "DN15\n6WegeVentil Gewinde"
+      ]
+    },
+    {
+      "elementType": "Regulating Valve",
+      "labelingPattern": "DN[Size]\nRegulierventil Gewinde",
+      "sizes": [20, 25, 50],
+      "examples": [
+        "DN20\nRegulierventil Gewinde",
+        "DN25\nRegulierventil Gewinde"
+      ]
+    },
+    {
+      "elementType": "Fill/Drain Valve",
+      "labelingPattern": "DN[Size]\nFüll- und Entleerungskugelhahn",
+      "labelingVariant": "DN0[Size]\nFüll- und Entleerungskugelhahn",
+      "sizes": [20, 25, 50],
+      "examples": [
+        "DN020\nFüll- und Entleerungskugelhahn",
+        "DN025\nFüll- und Entleerungskugelhahn"
+      ]
+    },
+    {
+      "elementType": "Temperature Sensor",
+      "labelingPattern": "DN[Size]\nTemperaturfühler MSR",
+      "sizes": [15],
+      "examples": [
+        "DN15\nTemperaturfühler MSR"
+      ]
+    },
+    {
+      "elementType": "Temperature Display",
+      "labelingPattern": "Standard\nTemperaturanzeige MSR"
+    },
+    {
+      "elementType": "Gate Valve (Absperrschieber)",
+      "labelingPattern": "DN[Size]\nAbsperrschieber Flansch",
+      "sizes": [65, 250],
+      "examples": [
+        "DN65\nAbsperrschieber Flansch",
+        "DN250\nAbsperrschieber Flansch"
+      ]
+    },
+    {
+      "elementType": "Drain (Entleerung)",
+      "labelingPattern": "DN[Size]\nEntleerung",
+      "sizes": [15, 20, 32],
+      "examples": [
+        "DN32\nEntleerung",
+        "DN20\nEntleerung"
+      ]
+    },
+    {
+      "elementType": "Motorized Control Valve",
+      "labelingPattern": "DN[Size]\nMotorisierter Regelventil Gewinde",
+      "sizes": [25],
+      "examples": [
+        "DN25\nMotorisierter Regelventil Gewinde"
+      ]
+    }
+  ],
+  "pipeSizes_DN": {
+    "smallBranch": [15, 20, 25, 32],
+    "mediumDistribution": [40, 50, 65, 80],
+    "largeMain": [250]
+  },
+  "elevationReference": {
+    "standard": "RA = [value] m UKRD - Rohrachse referenced to underside of raw ceiling (UKRD)"
+  },
+  "coolingSystemHierarchy": {
+    "primary": "GLK (Großluftkühler) - Large air cooler for central plant",
+    "secondary": "HKS (Hauptkühlsystem) - Main cooling system for general building",
+    "tertiary": [
+      "IT (Informationstechnik) - IT/Server room cooling",
+      "UFK (Unterflurkonvektoren) - Underfloor convectors"
+    ]
+  },
+  "generalNotes": [
+    "Scale 1:50 for detailed execution drawings",
+    "All elevations: RA (centerline) referenced to UKRD",
+    "VL = Vorlauf/Supply, RL = Rücklauf/Return",
+    "All pipe sizes in DN (nominal diameter, mm)",
+    "Cooling capacities in Watts (W)"
+  ]
+}

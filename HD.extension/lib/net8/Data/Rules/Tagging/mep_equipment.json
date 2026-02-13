@@ -1,0 +1,52 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "mep_equipment_default",
+  "name": "MEP Equipment - Default Tagging",
+  "version": "1.0.0",
+  "description": "Tagging rules for MEP equipment (VAV, AHU, pumps, etc.)",
+  "enabled": true,
+  "priority": 60,
+  "conditions": {
+    "categories": [
+      "OST_MechanicalEquipment",
+      "OST_PlumbingEquipment",
+      "OST_ElectricalEquipment"
+    ],
+    "viewTypes": ["FloorPlan", "CeilingPlan", "Section", "Elevation"]
+  },
+  "actions": {
+    "preferredPositions": ["TopRight", "TopCenter", "Right", "TopLeft"],
+    "offsetDistance": 0.3,
+    "addLeader": true,
+    "leaderStyle": "Straight",
+    "avoidCollisionWith": [
+      "OST_MechanicalEquipment",
+      "OST_Ducts",
+      "OST_Pipes",
+      "OST_Grids"
+    ],
+    "alignToGrid": false,
+    "groupAlignment": "Horizontal"
+  },
+  "scoring": {
+    "collisionPenalty": -120,
+    "preferenceBonus": 50,
+    "alignmentBonus": 35,
+    "leaderLengthPenalty": -4,
+    "nearEdgeBonus": 10
+  },
+  "metadata": {
+    "createdAt": "2026-02-13T12:00:00Z",
+    "author": "SmartTag",
+    "source": "Initial setup",
+    "confidence": 0.5,
+    "sampleCount": 0
+  },
+  "_comments": {
+    "note": "Equipment tags thường đặt ở top-right để không che element",
+    "todo": [
+      "Add rules for specific equipment types",
+      "Consider equipment size for offset distance"
+    ]
+  }
+}

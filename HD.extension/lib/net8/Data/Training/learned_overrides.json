@@ -1,0 +1,1493 @@
+{
+  "version": 1,
+  "updatedAt": "2026-02-13T11:45:22.4900060Z",
+  "byCategory": {
+    "OST_DuctCurves": {
+      "preferredPositions": [
+        "BottomLeft",
+        "TopLeft",
+        "BottomRight",
+        "TopRight",
+        "Right",
+        "Left",
+        "BottomCenter"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.753488541924526,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 133
+    },
+    "OST_DuctTerminal": {
+      "preferredPositions": [
+        "Right",
+        "BottomRight",
+        "BottomLeft",
+        "Left",
+        "TopLeft",
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 7.082770525672311,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 34
+    },
+    "OST_MechanicalEquipment": {
+      "preferredPositions": [
+        "TopRight",
+        "BottomLeft",
+        "TopLeft",
+        "BottomRight",
+        "Left"
+      ],
+      "addLeader": true,
+      "offsetDistance": 13.559928599876812,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 14
+    },
+    "OST_DuctAccessory": {
+      "preferredPositions": [
+        "Right",
+        "BottomRight",
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 7.9047370129604655,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 4
+    },
+    "OST_PipeCurves": {
+      "preferredPositions": [
+        "BottomCenter",
+        "Right",
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 1.3333333333333335,
+      "preferAlignRow": false,
+      "preferAlignColumn": false,
+      "sampleCount": 3
+    }
+  },
+  "byCategoryAndSystem": {
+    "OST_DuctCurves|EA 75": {
+      "preferredPositions": [
+        "BottomRight",
+        "TopRight",
+        "Right",
+        "TopLeft",
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 6.5450952921006955,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 15
+    },
+    "OST_DuctCurves|SA 11": {
+      "preferredPositions": [
+        "TopRight",
+        "BottomRight",
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 7.054919681871889,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 7
+    },
+    "OST_DuctCurves|SA 10": {
+      "preferredPositions": [
+        "BottomLeft",
+        "TopLeft",
+        "TopRight",
+        "Left"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.727891115567093,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 7
+    },
+    "OST_DuctCurves|EA 1": {
+      "preferredPositions": [
+        "TopLeft",
+        "BottomLeft",
+        "BottomRight",
+        "Left",
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.11820526321387,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 12
+    },
+    "OST_DuctCurves|FA 37": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.327391676559955,
+      "preferAlignRow": false,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FO 45": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.313552246253927,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|SA 33": {
+      "preferredPositions": [
+        "BottomLeft",
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 7.793625932701987,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 3
+    },
+    "OST_DuctCurves|EA 12": {
+      "preferredPositions": [
+        "TopLeft",
+        "BottomLeft",
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 8.026012568246108,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 3
+    },
+    "OST_DuctCurves|EA 2": {
+      "preferredPositions": [
+        "TopLeft",
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 8.014112336150554,
+      "preferAlignRow": false,
+      "preferAlignColumn": false,
+      "sampleCount": 2
+    },
+    "OST_DuctCurves|SA 50": {
+      "preferredPositions": [
+        "TopLeft",
+        "BottomRight",
+        "TopRight",
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 6.251832337025691,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 4
+    },
+    "OST_DuctCurves|EA 58": {
+      "preferredPositions": [
+        "Left",
+        "TopLeft",
+        "TopRight",
+        "BottomLeft",
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.1117247104895562,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 7
+    },
+    "OST_DuctCurves|SA 104": {
+      "preferredPositions": [
+        "BottomRight",
+        "TopLeft",
+        "TopRight",
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 2.5747546809226733,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 5
+    },
+    "OST_DuctCurves|SA 87": {
+      "preferredPositions": [
+        "TopRight",
+        "Right",
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.369490655715199,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 4
+    },
+    "OST_DuctCurves|EA 84": {
+      "preferredPositions": [
+        "BottomRight",
+        "TopLeft",
+        "Left",
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.274830235361773,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 10
+    },
+    "OST_DuctCurves|EA 83": {
+      "preferredPositions": [
+        "BottomLeft",
+        "TopLeft",
+        "Left",
+        "BottomRight",
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.057073744256476,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 10
+    },
+    "OST_DuctCurves|SA 80": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.461854906766282,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 3
+    },
+    "OST_DuctCurves|EA 26": {
+      "preferredPositions": [
+        "BottomLeft",
+        "TopRight",
+        "Right",
+        "BottomRight",
+        "TopLeft",
+        "Left"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.2685236161361817,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 14
+    },
+    "OST_DuctCurves|SA 19": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 1.952841958659178,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FO 21": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 6.973374677407925,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FA 18": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 11.980202520903905,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FA 51": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 7.69750002667514,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FO 43": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 12.636881273609571,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FA 100": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.767645082776426,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FO 95": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.027064042540289,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|KE 2": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 10.247107152953966,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|KS 7": {
+      "preferredPositions": [
+        "Left"
+      ],
+      "addLeader": true,
+      "offsetDistance": 8.762535807969115,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|EA 75": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 10.004031232725978,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 2
+    },
+    "OST_DuctTerminal|EA 26": {
+      "preferredPositions": [
+        "BottomLeft",
+        "TopRight",
+        "BottomCenter"
+      ],
+      "addLeader": true,
+      "offsetDistance": 8.122638819813213,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 3
+    },
+    "OST_DuctCurves|FA 5": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 9.894574931369299,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FO 20": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 12.080028198263435,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 20": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 11.83184049198639,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FA 5": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 9.681148863284221,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 19,EA 26,FA 5,FO 20": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 19.858991789882865,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|EA 83": {
+      "preferredPositions": [
+        "Right",
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.4045491643311445,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 2
+    },
+    "OST_DuctTerminal|FA 18": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 14.607488428820744,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 21": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 11.34446587614299,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 80,EA 83,FA 18,FO 21": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 20.388027687113905,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FA 51": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.1141428818348302,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 43": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 6.35577728895991,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 87,EA 84,FA 51,FO 43": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 10.079897889159405,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|EA 84": {
+      "preferredPositions": [
+        "TopRight",
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.574165371609503,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 2
+    },
+    "OST_DuctTerminal|FA 100": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 2.795178941612882,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 95": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 2.5910471228612764,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 104,EA 58,FA 100,FO 95": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 9.610934622347067,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 16": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 2.53277042686949,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FA 23": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 2.532781725164071,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 50,EA 2,FA 23,FO 16": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 8.532299454353293,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 10,EA 1,FA 37,FO 45": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 8.178925309742866,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|EA 53": {
+      "preferredPositions": [
+        "BottomRight",
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.862603586856762,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 2
+    },
+    "OST_DuctTerminal|EA 1": {
+      "preferredPositions": [
+        "Right",
+        "Left",
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 10.33209994284508,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 3
+    },
+    "OST_DuctCurves|FO 16": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.3374565742944213,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FA 23": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.078828866860647,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 45": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.461647283725199,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FA 37": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.451198233164597,
+      "preferAlignRow": false,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|EA 70": {
+      "preferredPositions": [
+        "TopLeft",
+        "Right",
+        "BottomRight",
+        "BottomLeft",
+        "TopRight",
+        "Left"
+      ],
+      "addLeader": true,
+      "offsetDistance": 2.7366026513991724,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 18
+    },
+    "OST_DuctCurves|SA 88": {
+      "preferredPositions": [
+        "BottomRight",
+        "BottomLeft",
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.386326316812351,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 5
+    },
+    "OST_DuctCurves|EA 17": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 2.965673922813041,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 2
+    },
+    "OST_DuctCurves|SA 27": {
+      "preferredPositions": [
+        "TopLeft",
+        "BottomLeft",
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 7.164412555290446,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 5
+    },
+    "OST_DuctCurves|EA 78": {
+      "preferredPositions": [
+        "BottomLeft",
+        "TopRight",
+        "Left",
+        "Right",
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.9338438672029596,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 14
+    },
+    "OST_DuctCurves|SA 71": {
+      "preferredPositions": [
+        "BottomLeft",
+        "Left",
+        "TopLeft",
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.605213353573492,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 4
+    },
+    "OST_DuctCurves|EA 5": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 6.661651521097083,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 4
+    },
+    "OST_DuctCurves|EA 71": {
+      "preferredPositions": [
+        "TopLeft",
+        "BottomCenter",
+        "BottomRight",
+        "Right",
+        "BottomLeft",
+        "Left"
+      ],
+      "addLeader": true,
+      "offsetDistance": 1.6931270288920088,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 14
+    },
+    "OST_DuctCurves|SA 26": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.841933251967561,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|KS 3": {
+      "preferredPositions": [
+        "BottomLeft",
+        "TopLeft",
+        "BottomCenter"
+      ],
+      "addLeader": true,
+      "offsetDistance": 6.33810752004281,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 4
+    },
+    "OST_DuctCurves|KE 4": {
+      "preferredPositions": [
+        "BottomLeft",
+        "TopLeft",
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 9.016482000019753,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 4
+    },
+    "OST_DuctCurves|EA 8": {
+      "preferredPositions": [
+        "TopLeft",
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.024975880659163,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 5
+    },
+    "OST_DuctCurves|SA 4": {
+      "preferredPositions": [
+        "TopLeft",
+        "TopRight",
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 7.1987426916492225,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 4
+    },
+    "OST_DuctCurves|SA 119": {
+      "preferredPositions": [
+        "TopLeft",
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 6.993852216908969,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 2
+    },
+    "OST_DuctCurves|EA 15": {
+      "preferredPositions": [
+        "TopLeft",
+        "BottomLeft",
+        "TopRight",
+        "BottomRight",
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.122785585607149,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 16
+    },
+    "OST_DuctCurves|EA 59": {
+      "preferredPositions": [
+        "TopRight",
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.927114914057244,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 2
+    },
+    "OST_DuctCurves|FO 46": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.678707677273284,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FA 11": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 2.8459152097915137,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FO 44": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 7.30944721631186,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FA 43": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.916511735698826,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FO 35": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.336258460779916,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FA 13": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.8954379106771455,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FO 26": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 6.096961248710585,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FA 3": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.710066960529126,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FO 47": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 6.688988602598755,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FA 2": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.7277222689537126,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FO 48": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 8.434573546499735,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FA 7": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 9.807150367024512,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FA 90": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 6.846230966916728,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FO 80": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 7.575327586307093,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|EA 70": {
+      "preferredPositions": [
+        "TopLeft",
+        "Left",
+        "BottomRight",
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 13.741104055142724,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 5
+    },
+    "OST_DuctTerminal|EA 78": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 9.738902818675193,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|EA 65": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 20.123932717223813,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|EA 71": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 10.392909642045575,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 2
+    },
+    "OST_DuctTerminal|EA 15": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.769819351889828,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 11
+    },
+    "OST_MechanicalEquipment|SA 11,EA 75,FA 90,FO 80": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 16.699812720214315,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 119,EA 15,FA 3,FO 26": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 12.180282183428567,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 4,EA 8,FA 13,FO 35": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 9.25118748218766,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 26,EA 71,FA 43,FO 44": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 14.613023400439552,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 71,EA 5,FA 11,FO 46": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 23.1964898367362,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|Unknown": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 16.646629739337264,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctAccessory|EA 70": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 6.563715292763952,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctAccessory|SA 88": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 7.343500077581773,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctAccessory|EA 78": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 7.734231040922712,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctAccessory|SA 27": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 9.977501640573424,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|EA 65": {
+      "preferredPositions": [
+        "BottomLeft",
+        "BottomCenter"
+      ],
+      "addLeader": true,
+      "offsetDistance": 1.9552680452652806,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 4
+    },
+    "OST_DuctTerminal|FA 2": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 2.128664878369456,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 47": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 12.900482196079455,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 48": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 9.926602472936352,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FA 7": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 11.525305489686588,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 44": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.974708083473061,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FA 43": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 2.6114273111636876,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 46": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.868261270502035,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FA 11": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.548045483800113,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 35": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.457038556852794,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FA 13": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 2.3544091790304265,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 26": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.362232799628174,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FA 3": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 2.6582538065692134,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FA 90": {
+      "preferredPositions": [
+        "Left"
+      ],
+      "addLeader": true,
+      "offsetDistance": 7.203087853696209,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 80": {
+      "preferredPositions": [
+        "Left"
+      ],
+      "addLeader": true,
+      "offsetDistance": 7.47349052457913,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 27,EA 78,FA 2,FO 47": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 13.13181731058149,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 88,EA 70,FA 7,FO 48": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 19.646769642740132,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|KE 2,KS 7,FO 51,SA 130": {
+      "preferredPositions": [
+        "Left"
+      ],
+      "addLeader": true,
+      "offsetDistance": 13.616798046195344,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 15,EA 23,FA 58,FO 4": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 11.089686512064667,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 95,EA 64,FA 30,FO 31": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 9.009281577232564,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 34,EA 117,FA 35,FO 53": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 16.668534091152917,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 106,EA 66,FA 27,FO 24": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 13.41276691168381,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 16,EA 105,FA 96,FO 32": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 12.59355422561002,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 115,EA 81,FA 36,FO 29": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 11.210145422321013,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 42,EA 34,FA 74,FO 69": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 19.3962560850728,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 93,EA 48,FA 1,FO 8": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 21.239568013525137,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 127,EA 98,FA 67,FO 63": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 12.271239353016512,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 39,EA 80,FA 32,SE 13": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 10.431337671439515,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 35,EA 108,FA 62,FO 60,Hydronic Supply 31,Hydronic Supply 30": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 9.817169007720437,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 32,EA 94,FA 57,FO 2": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 20.56552185292963,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 43,EA 110,FA 16,FO 17,Hydronic Supply 13,Hydronic Supply 12": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 8.51714162831098,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_PipeCurves|Domestic Cold Water": {
+      "preferredPositions": [
+        "BottomCenter"
+      ],
+      "addLeader": false,
+      "offsetDistance": 0.75,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_PipeCurves|Domestic Hot Water": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 1,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_PipeCurves|Drainage": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 2.25,
+      "preferAlignRow": false,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "$schema": "../Schema/DimensionPattern.schema.json",
+  "id": "mep_opening_sizes",
+  "name": "MEP Opening Size Dimensions",
+  "version": "1.0.0",
+  "description": "Dimension opening width/height or diameter",
+  "enabled": true,
+  "discipline": "MEP",
+  "pattern": {
+    "type": "SingleReference",
+    "direction": "Both",
+    "targetElements": {
+      "categories": [
+        "OST_FloorOpening",
+        "OST_ShaftOpening"
+      ],
+      "openingTypes": ["BDB_RU", "BDB_RE", "WDB_RU", "WDB_RE"]
+    },
+    "referenceElements": {
+      "useGrids": false,
+      "useWalls": false
+    },
+    "dimensionTo": "BothEdges",
+    "grouping": {
+      "method": "Individual",
+      "tolerance": 0,
+      "minElementsPerGroup": 1
+    },
+    "placement": {
+      "offset": 0.3,
+      "side": "Auto",
+      "chainGap": 0
+    }
+  },
+  "dimensionStyle": {
+    "typeNamePattern": ".*Linear.*",
+    "units": "Millimeters",
+    "precision": 0
+  },
+  "examples": [
+    {
+      "source": "TP1_TUV drawings",
+      "values": [210, 240],
+      "notes": "Diameter values for circular openings (ø210, ø240)"
+    }
+  ],
+  "metadata": {
+    "createdAt": "2026-02-13T12:00:00Z",
+    "author": "SmartTag",
+    "source": "PDF analysis",
+    "confidence": 0.6,
+    "sampleCount": 1
+  },
+  "_comments": {
+    "note": "Usually shown as tag parameter (ø210) rather than separate dimension",
+    "todo": [
+      "Decide if this should be dimension or tag display",
+      "Add logic for rectangular vs circular"
+    ]
+  }
+}

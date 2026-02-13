@@ -1,0 +1,37 @@
+{
+  "_description": "Template for recording tag position patterns from real drawings",
+  "_instructions": [
+    "1. Copy this file and rename to descriptive name",
+    "2. Fill in the source information",
+    "3. Record observed tag positions",
+    "4. Add context about why positions were chosen"
+  ],
+  "source": {
+    "projectName": "",
+    "drawingNumber": "",
+    "viewType": "",
+    "discipline": "MEP",
+    "scale": "1:100",
+    "company": "",
+    "date": ""
+  },
+  "observations": [
+    {
+      "elementType": "",
+      "category": "",
+      "tagPosition": "",
+      "hasLeader": false,
+      "context": "",
+      "frequency": "Always|Usually|Sometimes|Rare"
+    }
+  ],
+  "generalNotes": [
+    ""
+  ],
+  "imageReferences": [
+    {
+      "filename": "",
+      "description": ""
+    }
+  ]
+}

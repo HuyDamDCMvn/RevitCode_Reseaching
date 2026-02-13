@@ -1,0 +1,134 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "mechanical_equipment_hvac",
+  "name": "Mechanical Equipment - FALLBACK/Legacy (AHU, FCU, Radiators)",
+  "version": "2.0.0",
+  "description": "FALLBACK rule for HVAC equipment not matched by HZG or KLT rules. Contains legacy English naming patterns.",
+  "enabled": true,
+  "priority": 70,
+  "_deprecationNote": "Prefer heating_equipment.json (HZG) or refrigeration_equipment.json (KLT) for German-standard tagging",
+  "conditions": {
+    "categories": [
+      "OST_MechanicalEquipment",
+      "OST_DuctTerminal",
+      "OST_GenericModel"
+    ],
+    "familyNamePatterns": [
+      ".*AirHandlingUnit.*",
+      ".*FanCoilUnit.*",
+      ".*Radiator.*",
+      ".*HeatedAndChilled.*",
+      ".*Manifold.*",
+      ".*Valve.*",
+      ".*HomeStation.*"
+    ],
+    "viewTypes": ["FloorPlan", "CeilingPlan", "Section"]
+  },
+  "actions": {
+    "preferredPositions": ["Right", "TopRight", "BottomRight", "Left"],
+    "offsetDistance": 0.25,
+    "addLeader": false,
+    "leaderStyle": "None",
+    "avoidCollisionWith": [
+      "OST_MechanicalEquipment",
+      "OST_PipeCurves",
+      "OST_DuctCurves",
+      "OST_Walls"
+    ],
+    "alignToGrid": false,
+    "groupAlignment": "None"
+  },
+  "scoring": {
+    "collisionPenalty": -100,
+    "preferenceBonus": 50,
+    "alignmentBonus": 15,
+    "leaderLengthPenalty": -2,
+    "nearEdgeBonus": 10
+  },
+  "tagFormat": {
+    "equipmentTypes": {
+      "AirHandlingUnit": {
+        "pattern": "AirHandlingUnit_[LayerType]_[Mounting]",
+        "examples": [
+          "AirHandlingUnit_2LayerCompactSeries_FloorStand",
+          "AirHandlingUnit_1LayerFlachSeries_CeilingStand",
+          "AirHandlingUnit_1LayerSupply_FloorStand"
+        ],
+        "notes": "Full family_type name"
+      },
+      "FanCoilUnit": {
+        "pattern": "FanCoilUnit_[Mounting]",
+        "examples": ["FanCoilUnit_CeilingMounted"],
+        "notes": "FCU with mounting type"
+      },
+      "Radiator": {
+        "pattern": "RadiatorFlatPanel_WallMounted or RadiatorFlatPanel_WallMounted_xFlairPlanK",
+        "examples": [
+          "RadiatorFlatPanel_WallMounted",
+          "RadiatorFlatPanel_WallMounted_xFlairPlanK"
+        ]
+      },
+      "CeilingPanel": {
+        "pattern": "HeatedAndChilledCorridorCeilings L[Length]xW[Width]",
+        "examples": [
+          "HeatedAndChilledCorridorCeilings L1000xW1250",
+          "HeatedAndChilledCorridorCeilings L1000xW750",
+          "HeatedAndChilledCorridorCeilings L1500xW1000"
+        ],
+        "notes": "Dimensions in mm"
+      },
+      "Manifold": {
+        "pattern": "RectangularTubeManifold_[N]Connection",
+        "examples": [
+          "RectangularTubeManifold_14Connection",
+          "RectangularTubeManifold_8Connection"
+        ]
+      },
+      "HomeStation": {
+        "pattern": "HomeStation_DHK",
+        "notes": "District heating connection"
+      }
+    }
+  },
+  "valveTagFormat": {
+    "pattern": "[ValveType] DN[Size]",
+    "types": {
+      "GateValve_Thread": {
+        "examples": ["GateValve_Thread DN32", "GateValve_Thread DN40"]
+      },
+      "GlobeValve_Flanged": {
+        "examples": ["GlobeValve_Flanged DN065", "GlobeValve_Flanged DN080", "GlobeValve_Flanged DN100", "GlobeValve_Flanged DN150"],
+        "notes": "Size may have leading zero (DN065)"
+      },
+      "GlobeValve_Thread": {
+        "examples": ["GlobeValve_Thread DN50"]
+      }
+    }
+  },
+  "germanEquivalents": {
+    "_comment": "Mapping from English patterns to German standard (preferred)",
+    "FanCoilUnit": "Ventilatorkonvektor (see refrigeration_equipment.json)",
+    "RadiatorFlatPanel": "Heizkörper (see heating_equipment.json)",
+    "HeatedAndChilledCorridorCeilings": "HeizKühlsegel Decke (see heating_equipment.json or refrigeration_equipment.json)",
+    "GateValve_Thread": "Absperrschieber Flansch",
+    "GlobeValve_Flanged": "Regulierventil Flansch"
+  },
+  "metadata": {
+    "createdAt": "2026-02-13T15:00:00Z",
+    "updatedAt": "2026-02-13",
+    "author": "SmartTag",
+    "source": "Munich Arena Heating/Cooling drawings (legacy)",
+    "confidence": 0.70,
+    "sampleCount": 80,
+    "status": "FALLBACK - prefer German standard rules"
+  },
+  "_comments": {
+    "patternNotes": [
+      "Equipment tags use full family_type naming",
+      "No leaders for most equipment",
+      "Valve tags include type and DN size",
+      "Ceiling panels include dimensions in mm"
+    ],
+    "deprecationWarning": "This file uses English naming conventions. For new projects, use heating_equipment.json (HZG-connected) or refrigeration_equipment.json (KLT-connected) which follow German DIN standard."
+  }
+}

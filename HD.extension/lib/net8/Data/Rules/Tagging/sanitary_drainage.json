@@ -1,0 +1,182 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "sanitary_drainage_pipes",
+  "name": "Sanitary Drainage Pipes - German SAN Standard",
+  "description": "Tagging rules for sanitary drainage pipes using German naming conventions (merged from TUV + MunichRE)",
+  "version": "2.0.0",
+  "enabled": true,
+  "priority": 85,
+  "conditions": {
+    "categories": [
+      "OST_PipeCurves",
+      "OST_FlexPipeCurves",
+      "OST_PipeAccessory",
+      "OST_PipeFitting"
+    ],
+    "systemClassification": ["SanitaryWaste", "Storm", "Vent"],
+    "viewTypes": ["FloorPlan", "CeilingPlan", "Section"]
+  },
+  "actions": {
+    "preferredPositions": ["TopCenter", "Center", "BottomCenter"],
+    "offsetDistance": 0.15,
+    "addLeader": false,
+    "leaderStyle": "None",
+    "avoidCollisionWith": ["OST_PipeCurves", "OST_Grids", "OST_Walls"],
+    "alignToGrid": false
+  },
+  "scoring": {
+    "collisionPenalty": -80,
+    "preferenceBonus": 60,
+    "alignmentBonus": 10,
+    "leaderLengthPenalty": 0,
+    "nearEdgeBonus": 5
+  },
+  "metadata": {
+    "author": "SmartTag AI Training",
+    "category": "Sanitary/Plumbing",
+    "discipline": "SAN (Sanitär)",
+    "sources": ["Munich Arena TUV", "MunichRE Revitalization"],
+    "sampleCount": 400,
+    "updatedAt": "2026-02-13"
+  },
+  "systemTypes": [
+    {
+      "code": "SW",
+      "fullCode": "410_SW",
+      "german": "Schmutzwasser",
+      "english": "Waste Water/Sewage",
+      "description": "General waste water drainage"
+    },
+    {
+      "code": "SW-GL",
+      "fullCode": "410_SW-GL",
+      "german": "Schmutzwasser Grundleitung",
+      "english": "Waste Water Main/Underground",
+      "description": "Underground main waste lines"
+    },
+    {
+      "code": "SW-DL",
+      "fullCode": "410_SW-DL",
+      "german": "Druckleitung Schmutzwasser",
+      "english": "Waste Water Pressure Line",
+      "description": "Pressurized waste water lines"
+    },
+    {
+      "code": "SWE",
+      "fullCode": "410_SWE",
+      "german": "Schmutzwasser Entlüftung",
+      "english": "Waste Water Vent",
+      "description": "Vent pipes for waste water"
+    },
+    {
+      "code": "SWF",
+      "fullCode": "410_SWF",
+      "german": "Fetthaltiges Abwasser",
+      "english": "Grease-containing Waste Water",
+      "description": "Kitchen/commercial grease drainage"
+    },
+    {
+      "code": "SWF-E",
+      "fullCode": "410_SWF-E",
+      "german": "Entlüftung Fetthaltiges Abwasser",
+      "english": "Grease Water Vent",
+      "description": "Vent for grease waste system"
+    },
+    {
+      "code": "RW",
+      "fullCode": "410_RW",
+      "german": "Regenwasser",
+      "english": "Rain Water",
+      "description": "Roof/surface drainage"
+    },
+    {
+      "code": "RW-GL",
+      "fullCode": "410_RW-GL",
+      "german": "Regenwasser Grundleitung",
+      "english": "Rain Water Main/Underground",
+      "description": "Underground rain water mains"
+    },
+    {
+      "code": "MW",
+      "fullCode": "410_MW",
+      "german": "Mischwasser",
+      "english": "Combined Sewage",
+      "description": "Combined waste and rain water"
+    }
+  ],
+  "tagFormat": {
+    "pipeTag": {
+      "pattern": "[System]_DN[Size]",
+      "examples": ["SW_DN100", "SW-GL_DN100", "SWE_DN80", "SWF_DN80", "RW-GL_DN150"],
+      "components": {
+        "System": "System abbreviation from legend",
+        "DN": "Nominal diameter in mm"
+      }
+    },
+    "elevationTag": {
+      "pattern": "RS = [+/-][value] m (bez. ±0.00)",
+      "components": {
+        "RS": "Rohrsohle (pipe invert)",
+        "value": "Elevation in meters",
+        "bez. ±0.00": "Reference to ±0.00 level"
+      },
+      "examples": [
+        "RS = -0.94 m (bez. ±0.00)",
+        "RS = 2.47 m (bez. ±0.00)"
+      ]
+    },
+    "combinedTag": {
+      "pattern": "[System]_DN[Size]\nRS = [value] m (bez. ±0.00)",
+      "multiLine": true
+    }
+  },
+  "pipeSizes": {
+    "units": "mm (DN)",
+    "drainageSizes": [50, 70, 80, 100, 125, 150],
+    "commonSizes": {
+      "branch": [50, 80],
+      "main": [100, 125],
+      "trunk": [150]
+    }
+  },
+  "slopeAnnotations": {
+    "pattern": "[Value]%",
+    "commonValues": ["0.5%", "0.7%", "1.0%", "2.0%"],
+    "placement": "Along pipe run"
+  },
+  "elevationReference": {
+    "datum": "bez. ±0.00",
+    "type": "RS",
+    "description": "Rohrsohle (pipe invert) referenced to ±0.00 ground level",
+    "note": "Drainage uses RS (invert) not RA (centerline)"
+  },
+  "legacyCodeMapping": {
+    "_comment": "Mapping from old TUV codes to new German standard",
+    "SP": "SW",
+    "KP": "SWF",
+    "RWSP": "RW",
+    "WVP": "SWE"
+  },
+  "rules": [
+    {
+      "condition": { "systemType": "contains", "value": "Schmutzwasser" },
+      "tagSettings": { "prefix": "SW", "showElevation": true, "elevationType": "RS" }
+    },
+    {
+      "condition": { "systemType": "contains", "value": "Regenwasser" },
+      "tagSettings": { "prefix": "RW", "showElevation": true, "elevationType": "RS" }
+    },
+    {
+      "condition": { "systemType": "contains", "value": "Vent" },
+      "tagSettings": { "prefix": "SWE", "showElevation": true, "elevationType": "RS" }
+    },
+    {
+      "condition": { "parameter": "Underground", "value": true },
+      "tagSettings": { "suffix": "-GL" }
+    },
+    {
+      "condition": { "parameter": "GreaseWaste", "value": true },
+      "tagSettings": { "prefix": "SWF" }
+    }
+  ]
+}

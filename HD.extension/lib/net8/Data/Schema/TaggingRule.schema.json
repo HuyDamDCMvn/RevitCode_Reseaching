@@ -1,0 +1,157 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "TaggingRule.schema.json",
+  "title": "Tagging Rule",
+  "description": "Schema for tag placement rules",
+  "type": "object",
+  "required": ["id", "name", "version", "conditions", "actions"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique rule identifier",
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable rule name"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "description": {
+      "type": "string"
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 50,
+      "description": "Higher = processed first"
+    },
+    "conditions": {
+      "type": "object",
+      "description": "When this rule applies",
+      "properties": {
+        "categories": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Revit BuiltInCategory names"
+        },
+        "familyNamePatterns": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Regex patterns for family names"
+        },
+        "viewTypes": {
+          "type": "array",
+          "items": { 
+            "type": "string",
+            "enum": ["FloorPlan", "CeilingPlan", "Section", "Elevation", "Detail", "ThreeD"]
+          }
+        },
+        "parameterFilters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "parameterName": { "type": "string" },
+              "operator": { 
+                "type": "string", 
+                "enum": ["equals", "contains", "greater", "less", "exists"] 
+              },
+              "value": { "type": ["string", "number", "boolean", "null"] }
+            }
+          }
+        },
+        "sizeRange": {
+          "type": "object",
+          "properties": {
+            "minWidth": { "type": "number" },
+            "maxWidth": { "type": "number" },
+            "minHeight": { "type": "number" },
+            "maxHeight": { "type": "number" }
+          },
+          "description": "Element bounding box size in feet"
+        }
+      }
+    },
+    "actions": {
+      "type": "object",
+      "description": "What to do when conditions match",
+      "properties": {
+        "preferredPositions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["TopRight", "TopLeft", "TopCenter", "Right", "Left", "BottomRight", "BottomLeft", "BottomCenter", "Center", "Auto"]
+          },
+          "description": "Ordered preference list"
+        },
+        "offsetDistance": {
+          "type": "number",
+          "description": "Distance from element in feet"
+        },
+        "addLeader": {
+          "type": "boolean"
+        },
+        "leaderStyle": {
+          "type": "string",
+          "enum": ["Straight", "Arc", "None"]
+        },
+        "tagTypeId": {
+          "type": ["integer", "null"],
+          "description": "Specific tag type to use, null = default"
+        },
+        "avoidCollisionWith": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Categories to avoid overlapping"
+        },
+        "alignToGrid": {
+          "type": "boolean",
+          "description": "Snap to alignment grid"
+        },
+        "groupAlignment": {
+          "type": "string",
+          "enum": ["None", "Horizontal", "Vertical", "Both"],
+          "description": "Align with nearby tags of same category"
+        }
+      }
+    },
+    "scoring": {
+      "type": "object",
+      "description": "Weights for placement scoring",
+      "properties": {
+        "collisionPenalty": { "type": "number", "default": -100 },
+        "preferenceBonus": { "type": "number", "default": 50 },
+        "alignmentBonus": { "type": "number", "default": 30 },
+        "leaderLengthPenalty": { "type": "number", "default": -5 },
+        "nearEdgeBonus": { "type": "number", "default": 10 }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "author": { "type": "string" },
+        "source": { "type": "string", "description": "Where this rule came from" },
+        "confidence": { 
+          "type": "number", 
+          "minimum": 0, 
+          "maximum": 1,
+          "description": "How reliable this rule is (0-1)"
+        },
+        "sampleCount": {
+          "type": "integer",
+          "description": "Number of samples this rule was derived from"
+        }
+      }
+    }
+  }
+}

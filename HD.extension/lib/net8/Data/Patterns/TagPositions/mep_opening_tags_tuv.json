@@ -1,0 +1,65 @@
+{
+  "_description": "Tag position patterns observed from TUV MEP drawings",
+  "source": {
+    "projectName": "TP1_TUV",
+    "drawingNumber": "PG_0EG_LP3_TGAA_100",
+    "viewType": "FloorPlan",
+    "discipline": "MEP",
+    "scale": "1:100",
+    "company": "Unknown",
+    "date": "2026-02"
+  },
+  "observations": [
+    {
+      "elementType": "Floor Opening (BDB_RU)",
+      "category": "OST_FloorOpening / OST_GenericModel",
+      "tagPosition": "Left",
+      "hasLeader": true,
+      "leaderLength": "Short (< 500mm)",
+      "context": "Tags placed on left side of openings, aligned vertically when multiple openings in column",
+      "frequency": "Always",
+      "tagContent": [
+        "BDB_RU: ø[Diameter]",
+        "DB UK= [Elevation] mm",
+        "SN: [SystemName]"
+      ]
+    },
+    {
+      "elementType": "Room Tag",
+      "category": "OST_RoomTags",
+      "tagPosition": "Center",
+      "hasLeader": false,
+      "context": "Room name and number centered in room",
+      "frequency": "Always",
+      "tagContent": [
+        "Name: [RoomName]",
+        "NO: [RoomNumber]"
+      ]
+    }
+  ],
+  "generalNotes": [
+    "Opening tags consistently on LEFT side",
+    "Multiple-line tag format with clear hierarchy",
+    "Leader lines are straight, short",
+    "Vertical alignment when openings are in same column",
+    "Tags avoid overlapping with dimension lines"
+  ],
+  "dimensionPatterns": [
+    {
+      "type": "Horizontal chain",
+      "values_mm": [208, 1114, 1063, 1053, 2858],
+      "notes": "From grid/wall to opening centers"
+    },
+    {
+      "type": "Vertical spacing",
+      "values_mm": [125, 759, 858, 1896],
+      "notes": "Between openings and walls"
+    }
+  ],
+  "imageReferences": [
+    {
+      "filename": "screenshot_tuv_openings.png",
+      "description": "Screenshot showing typical opening tag placement"
+    }
+  ]
+}

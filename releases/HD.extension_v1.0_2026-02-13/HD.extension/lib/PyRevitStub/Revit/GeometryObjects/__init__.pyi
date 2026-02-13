@@ -1,0 +1,6 @@
+from typing import Tuple, Set, Iterable, List
+
+
+class GeometryObjectSelector:
+    def ByReferenceStableRepresentation(referenceString: str) -> Object: ...
+    def GetPointByReference(referenceString: str) -> ElementGeometryReference: ...

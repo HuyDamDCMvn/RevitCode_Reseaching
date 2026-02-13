@@ -1,0 +1,145 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "hvac_air_terminals",
+  "name": "HVAC Air Terminals & Diffusers",
+  "version": "1.0.0",
+  "description": "Tagging rules for air terminals, diffusers, grilles and kitchen hoods with German naming conventions",
+  "enabled": true,
+  "priority": 87,
+  "conditions": {
+    "categories": [
+      "OST_DuctTerminal",
+      "OST_MechanicalEquipment",
+      "OST_AirTerminals"
+    ],
+    "familyNamePatterns": [
+      ".*Tellerventil.*",
+      ".*Diffusor.*",
+      ".*Gitter.*",
+      ".*Grille.*",
+      ".*Hood.*",
+      ".*Haube.*",
+      ".*Auslass.*"
+    ],
+    "viewTypes": ["FloorPlan", "CeilingPlan", "ReflectedCeilingPlan"]
+  },
+  "actions": {
+    "preferredPositions": ["Center", "TopCenter", "Right"],
+    "offsetDistance": 0.1,
+    "addLeader": false,
+    "leaderStyle": "None",
+    "avoidCollisionWith": [
+      "OST_DuctTerminal",
+      "OST_Ceilings"
+    ],
+    "alignToGrid": false
+  },
+  "scoring": {
+    "collisionPenalty": -60,
+    "preferenceBonus": 50,
+    "alignmentBonus": 15
+  },
+  "tagFormat": {
+    "tellerventile": {
+      "roundPattern": "Tellerventile_DN[Size]",
+      "rectangularPattern": "Tellerventile_L[L]xW[W]xH[H]_DN[Size]",
+      "flowRateFormat": "[Value] m³/h",
+      "sizes_DN": [80, 100, 125, 150, 160, 200, 250],
+      "examples": [
+        { "tag": "Tellerventile_DN125", "flow": "80 m³/h" },
+        { "tag": "Tellerventile_DN100", "flow": "40 m³/h" },
+        { "tag": "Tellerventile_L600xW600xH345_DN250", "flow": "420 m³/h" }
+      ]
+    },
+    "lueftungsgitter": {
+      "pattern": "Lüftungsgitter_W[Width]xH[Height]",
+      "roundPattern": "Lüftungsgitter_DN[Size]",
+      "flowRateFormat": "[Value] m³/h",
+      "commonSizes": [
+        "W100xH100", "W150xH100", "W150xH150", "W225xH75", "W225xH125",
+        "W325xH125", "W325xH225", "W425xH125", "W525xH125"
+      ],
+      "examples": [
+        { "tag": "Lüftungsgitter_W325xH225", "flow": "410 m³/h" },
+        { "tag": "Lüftungsgitter_W425xH125", "flow": "440 m³/h" },
+        { "tag": "Lüftungsgitter_DN125", "flow": "90 m³/h" }
+      ]
+    },
+    "bodendiffusor": {
+      "pattern": "Bodendiffusor_B[Width]xH[Height]xT[Depth]",
+      "flowRateFormat": "[Value] m³/h",
+      "commonTypes": [
+        "B350xH600xT200",
+        "B400xH800xT300",
+        "B500xH1000xT350"
+      ],
+      "examples": [
+        { "tag": "Bodendiffusor_B500xH1000xT350", "flow": "299 m³/h" },
+        { "tag": "Bodendiffusor_B400xH800xT300", "flow": "220 m³/h" }
+      ]
+    },
+    "bodenluftauslass": {
+      "pattern": "Bodenluftauslass_L[L]xW[W]xH[H]",
+      "flowRateFormat": "[Value] m³/h",
+      "examples": [
+        { "tag": "Bodenluftauslass_L1000xW390xH200", "flow": "0 m³/h" }
+      ]
+    },
+    "kitchenHood": {
+      "pattern": "Kü._Haube",
+      "flowRateFormat": "[Value] m³/h",
+      "flowRateRange": "125-1834 m³/h",
+      "examples": [
+        { "tag": "Kü._Haube", "flow": "340 m³/h" },
+        { "tag": "Kü._Haube", "flow": "764 m³/h" },
+        { "tag": "Kü._Haube", "flow": "1834 m³/h" }
+      ]
+    }
+  },
+  "legacyCodeSupport": {
+    "_comment": "Support for alphanumeric codes from TUV/Munich Arena (hvac_equipment_tags.json)",
+    "enabled": true,
+    "prefixes": {
+      "RN": {
+        "description": "Return/Supply diffuser (numbered sequentially)",
+        "mapTo": "Tellerventile",
+        "examples": ["RN1", "RN2", "RN64"]
+      },
+      "RS": {
+        "description": "Return grille/terminal",
+        "mapTo": "Lüftungsgitter",
+        "examples": ["RS1", "RS2", "RS20"]
+      },
+      "CN": {
+        "description": "Connection point",
+        "mapTo": "Anschluss",
+        "examples": ["CN7", "CN140"]
+      }
+    },
+    "ductSystems": {
+      "_comment": "Mapping from English to German air type codes",
+      "SA": { "german": "ZUL", "full": "Zuluft (Supply Air)" },
+      "EA": { "german": "ABL", "full": "Abluft (Exhaust Air)" },
+      "FA": { "german": "AUL", "full": "Außenluft (Fresh/Outdoor Air)" },
+      "FO": { "german": "FOL", "full": "Fortluft (Discharge Air)" }
+    }
+  },
+  "metadata": {
+    "createdAt": "2026-02-13T18:00:00Z",
+    "updatedAt": "2026-02-13",
+    "author": "SmartTag",
+    "sources": ["MunichRE RLT drawings - 24 files", "Munich Arena TUV HVAC"],
+    "confidence": 0.93,
+    "sampleCount": 864
+  },
+  "_comments": {
+    "germanTerms": {
+      "Tellerventile": "Disc valve / circular diffuser",
+      "Lüftungsgitter": "Ventilation grille",
+      "Bodendiffusor": "Floor diffuser",
+      "Bodenluftauslass": "Floor air outlet",
+      "Kü._Haube": "Kitchen hood (Küchenhaube)"
+    },
+    "mergeNote": "Merged hvac_equipment_tags.json patterns - prefer German naming for new projects, legacy codes retained for backward compatibility"
+  }
+}

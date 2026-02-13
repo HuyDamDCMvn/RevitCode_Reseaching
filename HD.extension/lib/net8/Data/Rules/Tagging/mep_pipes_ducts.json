@@ -1,0 +1,66 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "mep_pipes_ducts",
+  "name": "MEP Pipes & Ducts - FALLBACK (Generic positioning only)",
+  "version": "2.0.0",
+  "description": "FALLBACK rule for pipes/ducts not matched by discipline-specific rules. Provides positioning only, no tag format.",
+  "enabled": true,
+  "priority": 40,
+  "_deprecationNote": "This is a catch-all fallback. Prefer discipline-specific rules: sanitary_*.json, hvac_*.json, heating_*.json, refrigeration_*.json, cable_trays.json",
+  "conditions": {
+    "categories": [
+      "OST_DuctCurves",
+      "OST_PipeCurves",
+      "OST_CableTray",
+      "OST_Conduit",
+      "OST_FlexDuctCurves",
+      "OST_FlexPipeCurves"
+    ],
+    "viewTypes": ["FloorPlan", "CeilingPlan", "Section"]
+  },
+  "actions": {
+    "preferredPositions": ["TopCenter", "BottomCenter", "Center"],
+    "offsetDistance": 0.2,
+    "addLeader": false,
+    "leaderStyle": "None",
+    "avoidCollisionWith": [
+      "OST_DuctCurves",
+      "OST_PipeCurves",
+      "OST_Grids"
+    ],
+    "alignToGrid": false,
+    "groupAlignment": "None"
+  },
+  "scoring": {
+    "collisionPenalty": -100,
+    "preferenceBonus": 40,
+    "alignmentBonus": 20,
+    "leaderLengthPenalty": -2,
+    "nearEdgeBonus": 5
+  },
+  "tagFormat": {
+    "_comment": "No specific format - uses Revit default tag. For proper tagging use discipline-specific rules.",
+    "fallbackBehavior": "Use element's default tag family and show System Abbreviation + Size"
+  },
+  "disciplineSpecificRules": {
+    "sanitary": ["sanitary_drainage.json", "sanitary_water_supply.json"],
+    "hvac_ducts": ["hvac_ducts.json", "hvac_accessories.json"],
+    "hvac_pipes": ["hvac_piping.json"],
+    "heating": ["heating_piping.json"],
+    "cooling": ["refrigeration_piping.json"],
+    "electrical": ["cable_trays.json"]
+  },
+  "metadata": {
+    "createdAt": "2026-02-13T12:00:00Z",
+    "updatedAt": "2026-02-13",
+    "author": "SmartTag",
+    "source": "Initial setup",
+    "confidence": 0.3,
+    "sampleCount": 0,
+    "status": "FALLBACK - lowest priority catch-all"
+  },
+  "_comments": {
+    "note": "Linear elements - tags thường đặt centered trên đường ống/kênh",
+    "warning": "This rule has no tagFormat defined. It only provides positioning. Use discipline-specific rules for proper tagging."
+  }
+}

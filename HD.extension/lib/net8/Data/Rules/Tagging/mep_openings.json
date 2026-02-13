@@ -1,0 +1,62 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "mep_openings_default",
+  "name": "MEP Openings - Default Tagging",
+  "version": "1.0.0",
+  "description": "Default tagging rules for MEP floor/wall openings (BDB/WDB)",
+  "enabled": true,
+  "priority": 70,
+  "conditions": {
+    "categories": [
+      "OST_FloorOpening",
+      "OST_ShaftOpening", 
+      "OST_GenericModel"
+    ],
+    "familyNamePatterns": [
+      ".*Opening.*",
+      ".*Durchbruch.*",
+      ".*Penetration.*",
+      ".*BDB.*",
+      ".*WDB.*"
+    ],
+    "viewTypes": ["FloorPlan", "CeilingPlan", "Section"]
+  },
+  "actions": {
+    "preferredPositions": ["Left", "TopLeft", "BottomLeft", "Right"],
+    "offsetDistance": 0.5,
+    "addLeader": true,
+    "leaderStyle": "Straight",
+    "avoidCollisionWith": [
+      "OST_FloorOpening",
+      "OST_Grids",
+      "OST_Dimensions"
+    ],
+    "alignToGrid": false,
+    "groupAlignment": "Vertical"
+  },
+  "scoring": {
+    "collisionPenalty": -150,
+    "preferenceBonus": 60,
+    "alignmentBonus": 40,
+    "leaderLengthPenalty": -3,
+    "nearEdgeBonus": 15
+  },
+  "metadata": {
+    "createdAt": "2026-02-13T12:00:00Z",
+    "author": "SmartTag",
+    "source": "BIMLOGIQ pattern analysis",
+    "confidence": 0.7,
+    "sampleCount": 0
+  },
+  "_comments": {
+    "note": "Pattern từ PDF drawings - openings thường có tag ở bên trái",
+    "examples": [
+      "BDB_RU: ø210 - tag ở left side",
+      "DB UK= 12230 mm - elevation info"
+    ],
+    "todo": [
+      "Refine positions based on user feedback",
+      "Add size-based rules (large vs small openings)"
+    ]
+  }
+}

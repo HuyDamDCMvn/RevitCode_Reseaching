@@ -1,0 +1,265 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://smarttag.local/training-data.schema.json",
+  "title": "SmartTag Training Data",
+  "description": "Schema for annotated tag placement training data",
+  "type": "object",
+  "required": ["version", "source", "samples"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema version",
+      "const": "1.0"
+    },
+    "source": {
+      "type": "object",
+      "description": "Source drawing information",
+      "required": ["project", "discipline"],
+      "properties": {
+        "project": { "type": "string" },
+        "discipline": { "type": "string" },
+        "drawings": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "viewScale": { "type": "integer" },
+        "annotatedBy": { "type": "string" },
+        "annotatedDate": { "type": "string", "format": "date" }
+      }
+    },
+    "samples": {
+      "type": "array",
+      "description": "Annotated tag placement samples",
+      "items": {
+        "$ref": "#/$defs/sample"
+      }
+    }
+  },
+  "$defs": {
+    "sample": {
+      "type": "object",
+      "required": ["id", "element", "context", "tag"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique sample ID"
+        },
+        "element": {
+          "$ref": "#/$defs/elementData"
+        },
+        "context": {
+          "$ref": "#/$defs/contextData"
+        },
+        "tag": {
+          "$ref": "#/$defs/tagData"
+        }
+      }
+    },
+    "elementData": {
+      "type": "object",
+      "description": "Element properties",
+      "required": ["category", "orientation"],
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "Revit BuiltInCategory name",
+          "enum": [
+            "OST_PipeCurves",
+            "OST_DuctCurves",
+            "OST_FlexPipeCurves",
+            "OST_FlexDuctCurves",
+            "OST_PipeFitting",
+            "OST_DuctFitting",
+            "OST_PipeAccessory",
+            "OST_DuctAccessory",
+            "OST_MechanicalEquipment",
+            "OST_PlumbingFixtures",
+            "OST_Sprinklers",
+            "OST_CableTray",
+            "OST_CableTrayFitting",
+            "OST_Conduit",
+            "OST_ConduitFitting",
+            "OST_ElectricalEquipment",
+            "OST_ElectricalFixtures",
+            "OST_LightingFixtures",
+            "OST_FireAlarmDevices",
+            "OST_DuctTerminal",
+            "OST_GenericModel"
+          ]
+        },
+        "familyName": {
+          "type": "string",
+          "description": "Revit family name"
+        },
+        "typeName": {
+          "type": "string",
+          "description": "Revit type name"
+        },
+        "orientation": {
+          "type": "number",
+          "description": "Angle in degrees (0-360)",
+          "minimum": 0,
+          "maximum": 360
+        },
+        "isLinear": {
+          "type": "boolean",
+          "description": "True for pipes, ducts, conduits"
+        },
+        "length": {
+          "type": "number",
+          "description": "Length in feet (for linear elements)"
+        },
+        "width": {
+          "type": "number",
+          "description": "Width in feet"
+        },
+        "height": {
+          "type": "number",
+          "description": "Height in feet"
+        },
+        "diameter": {
+          "type": "number",
+          "description": "Diameter in feet (for round elements)"
+        },
+        "systemType": {
+          "type": "string",
+          "description": "MEP system type (e.g., 'Supply Air', 'Domestic Cold Water')"
+        },
+        "centerX": {
+          "type": "number",
+          "description": "Element center X in view coordinates"
+        },
+        "centerY": {
+          "type": "number",
+          "description": "Element center Y in view coordinates"
+        }
+      }
+    },
+    "contextData": {
+      "type": "object",
+      "description": "Surrounding context",
+      "properties": {
+        "density": {
+          "type": "string",
+          "description": "Element density in area",
+          "enum": ["low", "medium", "high"]
+        },
+        "neighborCount": {
+          "type": "integer",
+          "description": "Number of neighbors within radius"
+        },
+        "hasNeighborAbove": {
+          "type": "boolean"
+        },
+        "hasNeighborBelow": {
+          "type": "boolean"
+        },
+        "hasNeighborLeft": {
+          "type": "boolean"
+        },
+        "hasNeighborRight": {
+          "type": "boolean"
+        },
+        "distanceToNearestAbove": {
+          "type": "number",
+          "description": "Distance to nearest element above (feet)"
+        },
+        "distanceToNearestBelow": {
+          "type": "number"
+        },
+        "distanceToNearestLeft": {
+          "type": "number"
+        },
+        "distanceToNearestRight": {
+          "type": "number"
+        },
+        "nearWall": {
+          "type": "boolean",
+          "description": "True if element is near a wall"
+        },
+        "distanceToWall": {
+          "type": "number"
+        },
+        "parallelElementsCount": {
+          "type": "integer",
+          "description": "Count of parallel elements (for pipes/ducts)"
+        },
+        "isInGroup": {
+          "type": "boolean",
+          "description": "True if element is part of a group"
+        }
+      }
+    },
+    "tagData": {
+      "type": "object",
+      "description": "Actual tag placement (ground truth)",
+      "required": ["position", "offsetX", "offsetY"],
+      "properties": {
+        "position": {
+          "type": "string",
+          "description": "Tag position relative to element",
+          "enum": [
+            "TopLeft",
+            "TopCenter",
+            "TopRight",
+            "Left",
+            "Center",
+            "Right",
+            "BottomLeft",
+            "BottomCenter",
+            "BottomRight"
+          ]
+        },
+        "offsetX": {
+          "type": "number",
+          "description": "X offset from element center (feet)"
+        },
+        "offsetY": {
+          "type": "number",
+          "description": "Y offset from element center (feet)"
+        },
+        "hasLeader": {
+          "type": "boolean",
+          "description": "Tag has leader line"
+        },
+        "leaderLength": {
+          "type": "number",
+          "description": "Leader length in feet"
+        },
+        "rotation": {
+          "type": "string",
+          "description": "Tag rotation",
+          "enum": ["Horizontal", "Vertical"]
+        },
+        "alignedWithRow": {
+          "type": "boolean",
+          "description": "Tag is aligned horizontally with other tags"
+        },
+        "alignedWithColumn": {
+          "type": "boolean",
+          "description": "Tag is aligned vertically with other tags"
+        },
+        "rowId": {
+          "type": "string",
+          "description": "ID of alignment row (if aligned)"
+        },
+        "columnId": {
+          "type": "string",
+          "description": "ID of alignment column (if aligned)"
+        },
+        "tagText": {
+          "type": "string",
+          "description": "Actual tag text content"
+        },
+        "tagWidth": {
+          "type": "number",
+          "description": "Actual tag width in feet"
+        },
+        "tagHeight": {
+          "type": "number",
+          "description": "Actual tag height in feet"
+        }
+      }
+    }
+  }
+}

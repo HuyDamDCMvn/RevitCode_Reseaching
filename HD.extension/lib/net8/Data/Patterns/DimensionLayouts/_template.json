@@ -1,0 +1,38 @@
+{
+  "_description": "Template for recording dimension layout patterns from drawings",
+  "_instructions": [
+    "1. Copy and rename this file",
+    "2. Fill in source information",
+    "3. Record dimension chain patterns",
+    "4. Note typical value ranges"
+  ],
+  "source": {
+    "projectName": "",
+    "drawingNumber": "",
+    "viewType": "",
+    "discipline": "MEP",
+    "scale": "",
+    "company": "",
+    "date": ""
+  },
+  "dimensionChains": [
+    {
+      "direction": "Horizontal|Vertical",
+      "chainType": "ChainFromGrid|ChainBetweenElements|Mixed",
+      "startReference": "Grid|Wall|None",
+      "endReference": "Grid|Wall|None",
+      "values_mm": [],
+      "placement": "Above|Below|Left|Right",
+      "offset_mm": 0,
+      "notes": ""
+    }
+  ],
+  "typicalRanges": {
+    "minSpacing_mm": 0,
+    "maxSpacing_mm": 0,
+    "commonValues_mm": []
+  },
+  "generalNotes": [
+    ""
+  ]
+}

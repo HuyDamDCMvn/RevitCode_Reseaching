@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "Feedback.schema.json",
+  "title": "User Feedback",
+  "description": "Schema for user feedback on tag/dimension placements",
+  "type": "object",
+  "required": ["id", "timestamp", "type", "status"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sessionId": {
+      "type": "string",
+      "description": "Unique session identifier for grouping"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["Tag", "Dimension"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["Approved", "Rejected", "Corrected", "Pending"]
+    },
+    "context": {
+      "type": "object",
+      "description": "Revit context when action was taken",
+      "properties": {
+        "projectName": { "type": "string" },
+        "viewName": { "type": "string" },
+        "viewType": { "type": "string" },
+        "viewScale": { "type": "number" },
+        "discipline": { "type": "string" }
+      }
+    },
+    "element": {
+      "type": "object",
+      "description": "The element that was tagged/dimensioned",
+      "properties": {
+        "elementId": { "type": "integer" },
+        "category": { "type": "string" },
+        "familyName": { "type": "string" },
+        "typeName": { "type": "string" },
+        "boundingBox": {
+          "type": "object",
+          "properties": {
+            "minX": { "type": "number" },
+            "minY": { "type": "number" },
+            "maxX": { "type": "number" },
+            "maxY": { "type": "number" }
+          }
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Relevant parameters as key-value"
+        }
+      }
+    },
+    "originalPlacement": {
+      "type": "object",
+      "description": "What the algorithm produced",
+      "properties": {
+        "tagId": { "type": "integer" },
+        "position": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" }
+          }
+        },
+        "positionType": { 
+          "type": "string",
+          "enum": ["TopRight", "TopLeft", "TopCenter", "Right", "Left", "BottomRight", "BottomLeft", "BottomCenter", "Center"]
+        },
+        "hasLeader": { "type": "boolean" },
+        "score": { "type": "number" },
+        "ruleUsed": { "type": "string" }
+      }
+    },
+    "correction": {
+      "type": "object",
+      "description": "User's manual correction (if status = Corrected)",
+      "properties": {
+        "newPosition": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" }
+          }
+        },
+        "newPositionType": { "type": "string" },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "Collision",
+            "WrongSide", 
+            "TooFar",
+            "TooClose",
+            "MisalignedWithOthers",
+            "BlocksView",
+            "StylePreference",
+            "Other"
+          ]
+        },
+        "notes": { "type": "string" }
+      }
+    },
+    "nearbyElements": {
+      "type": "array",
+      "description": "Elements in proximity (for context)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "elementId": { "type": "integer" },
+          "category": { "type": "string" },
+          "distance": { "type": "number" },
+          "direction": { "type": "string" }
+        }
+      }
+    },
+    "nearbyTags": {
+      "type": "array",
+      "description": "Existing tags nearby",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tagId": { "type": "integer" },
+          "hostCategory": { "type": "string" },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": { "type": "number" },
+              "y": { "type": "number" }
+            }
+          },
+          "distance": { "type": "number" }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "userName": { "type": "string" },
+        "machineName": { "type": "string" },
+        "revitVersion": { "type": "string" },
+        "toolVersion": { "type": "string" }
+      }
+    }
+  }
+}

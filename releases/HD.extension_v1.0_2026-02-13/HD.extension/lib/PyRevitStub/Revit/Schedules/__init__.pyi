@@ -1,0 +1,43 @@
+from typing import Tuple, Set, Iterable, List
+
+
+class SchedulableField:
+    @property
+    def Name(self) -> str: ...
+    def ToString(self) -> str: ...
+
+
+class ScheduleExportOptions:
+    def ByProperties(columnHeaders: str, fieldDelimiter: str, headersFootersBlanks: bool, textQualifier: str, title: bool) -> ScheduleExportOptions: ...
+
+
+class ScheduleField:
+    @property
+    def Name(self) -> str: ...
+    def ToString(self) -> str: ...
+
+
+class ScheduleFilter:
+    def ByFieldTypeAndValue(field: ScheduleField, filterType: str, value: Object) -> ScheduleFilter: ...
+    @property
+    def FilterType(self) -> str: ...
+    @property
+    def FiledId(self) -> int: ...
+    @property
+    def Value(self) -> Object: ...
+    def ToString(self) -> str: ...
+    def Equals(self, obj: Object) -> bool: ...
+    def GetHashCode(self) -> int: ...
+    def Equals4DigitPrecision(left: float, right: float) -> bool: ...
+
+
+class ExportColumnHeaders:
+    #None = 0
+    OneRow = 1
+    MultipleRows = 2
+
+
+class ExportTextQualifier:
+    #None = 0
+    Quote = 1
+    DoubleQuote = 2

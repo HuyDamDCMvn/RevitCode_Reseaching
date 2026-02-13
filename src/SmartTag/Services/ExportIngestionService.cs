@@ -136,6 +136,51 @@ namespace SmartTag.Services
             return result;
         }
 
+        /// <summary>
+        /// Aggregate all JSON files in the annotated folder into a single LearnedOverridesData.
+        /// Does not call LearnedOverridesService; caller can merge into existing data.
+        /// </summary>
+        public LearnedOverridesData AggregateFromFolder(string annotatedFolderPath)
+        {
+            if (string.IsNullOrEmpty(annotatedFolderPath) || !Directory.Exists(annotatedFolderPath))
+                return null;
+
+            var files = Directory.GetFiles(annotatedFolderPath, "*.json", SearchOption.TopDirectoryOnly)
+                .Where(f => !Path.GetFileName(f).StartsWith("_", StringComparison.Ordinal))
+                .ToList();
+
+            if (files.Count == 0)
+                return null;
+
+            var allByCategory = new Dictionary<string, LearnedOverride>(StringComparer.OrdinalIgnoreCase);
+            var allByCategoryAndSystem = new Dictionary<string, LearnedOverride>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var file in files)
+            {
+                try
+                {
+                    var json = File.ReadAllText(file);
+                    var data = JsonSerializer.Deserialize<TrainingDataFile>(json, JsonOptions);
+                    if (data?.Samples == null) continue;
+
+                    var byCat = AggregateByCategory(data.Samples);
+                    var byCatSys = AggregateByCategoryAndSystem(data.Samples);
+
+                    MergeOverrides(allByCategory, byCat);
+                    MergeOverrides(allByCategoryAndSystem, byCatSys);
+                }
+                catch { /* skip bad files */ }
+            }
+
+            return new LearnedOverridesData
+            {
+                Version = 1,
+                UpdatedAt = DateTime.UtcNow.ToString("o"),
+                ByCategory = allByCategory,
+                ByCategoryAndSystem = allByCategoryAndSystem
+            };
+        }
+
         private static Dictionary<string, LearnedOverride> AggregateByCategory(List<TrainingSample> samples)
         {
             if (samples == null) return new Dictionary<string, LearnedOverride>(StringComparer.OrdinalIgnoreCase);

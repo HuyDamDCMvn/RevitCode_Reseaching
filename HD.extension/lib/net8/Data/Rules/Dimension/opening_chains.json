@@ -1,0 +1,82 @@
+{
+  "$schema": "../Schema/DimensionPattern.schema.json",
+  "id": "mep_opening_chain_from_grid",
+  "name": "MEP Opening Chain Dimensions from Grid",
+  "version": "1.0.0",
+  "description": "Chain dimensions from grid lines to MEP opening centers - Based on BIMLOGIQ pattern",
+  "enabled": true,
+  "discipline": "MEP",
+  "pattern": {
+    "type": "ChainFromGrid",
+    "direction": "Both",
+    "targetElements": {
+      "categories": [
+        "OST_FloorOpening",
+        "OST_ShaftOpening",
+        "OST_GenericModel"
+      ],
+      "familyPatterns": [
+        ".*BDB.*",
+        ".*WDB.*",
+        ".*Opening.*",
+        ".*Durchbruch.*"
+      ],
+      "openingTypes": ["BDB_RU", "BDB_RE", "WDB_RU", "WDB_RE"]
+    },
+    "referenceElements": {
+      "useGrids": true,
+      "useWalls": true,
+      "useColumns": false,
+      "gridNamePatterns": [".*"]
+    },
+    "dimensionTo": "Center",
+    "grouping": {
+      "method": "ByRow",
+      "tolerance": 1.0,
+      "minElementsPerGroup": 1
+    },
+    "placement": {
+      "offset": 2.0,
+      "side": "Auto",
+      "chainGap": 0.5
+    }
+  },
+  "dimensionStyle": {
+    "typeNamePattern": ".*Linear.*",
+    "units": "Millimeters",
+    "precision": 0,
+    "showLeaders": false
+  },
+  "examples": [
+    {
+      "source": "TP1_TUV_PG_0EG_LP3_TGAA_100_P_00.pdf",
+      "values": [208, 1114, 1063, 1053, 2858],
+      "notes": "Horizontal chain from grid to BDB openings - Hospitality Korridor area"
+    },
+    {
+      "source": "TP1_TUV_PG_0EG_LP3_TGAA_100_P_00.pdf", 
+      "values": [125, 759, 858, 1896],
+      "notes": "Vertical spacing dimensions between openings"
+    }
+  ],
+  "metadata": {
+    "createdAt": "2026-02-13T12:00:00Z",
+    "updatedAt": "2026-02-13T12:00:00Z",
+    "author": "SmartTag",
+    "source": "PDF analysis - TP1_TUV drawings",
+    "confidence": 0.8,
+    "sampleCount": 2
+  },
+  "_comments": {
+    "patternNotes": [
+      "Typical values: 200-3000mm spacing",
+      "Chain starts from nearest grid line",
+      "Dimensions placed above (horizontal) or left (vertical)",
+      "Uses millimeter display with 0 decimal precision"
+    ],
+    "todo": [
+      "Add radial grid support for curved buildings",
+      "Handle cases with no nearby grids"
+    ]
+  }
+}

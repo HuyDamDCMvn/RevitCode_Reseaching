@@ -1,0 +1,6 @@
+from typing import Tuple, Set, Iterable, List
+
+
+class Transaction:
+    def Start(input: Object) -> Object: ...
+    def End(input: Object) -> Object: ...

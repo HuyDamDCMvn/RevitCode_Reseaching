@@ -1,0 +1,209 @@
+{
+  "_description": "HVAC piping and equipment tagging patterns from Munich Arena Heating/Cooling drawings",
+  "source": {
+    "projectName": "Munich Arena (TP1_TUV)",
+    "drawings": [
+      {
+        "number": "TP1_TUV_PG_2OG_LP3_HZGA_002_P_00",
+        "title": "Grundriss Heizung / Kälte 2OG - Süd",
+        "level": "2OG (2nd Floor)",
+        "scale": "1:100",
+        "discipline": "Heating/Cooling (HVAC Piping)"
+      },
+      {
+        "number": "TP1_TUV_PG_5OG_LP3_HZGA_001_P_00",
+        "title": "Grundriss Heizung / Kälte 5OG - Nord",
+        "level": "5OG (5th Floor)",
+        "scale": "1:100",
+        "discipline": "Heating/Cooling (HVAC Piping)"
+      }
+    ],
+    "company": "Teuber + Viel GmbH / Müller-BBM Building Solutions",
+    "client": "SWMunich Real Estate GmbH",
+    "date": "12.12.25",
+    "phase": "LP3"
+  },
+  "legend": {
+    "pipeSystems": [
+      {
+        "code": "CHWF",
+        "name": "Kältevorlauf",
+        "english": "Chilled Water Flow/Supply",
+        "color": "Blue"
+      },
+      {
+        "code": "CHWR",
+        "name": "Kälterücklauf",
+        "english": "Chilled Water Return",
+        "color": "Blue (lighter)"
+      },
+      {
+        "code": "CONF",
+        "name": "Kaltwasser Vorlauf",
+        "english": "Condenser Water Flow",
+        "color": "Cyan"
+      },
+      {
+        "code": "DCF",
+        "name": "Kaltwasser Rücklauf",
+        "english": "Condenser Water Return",
+        "color": "Cyan (lighter)"
+      },
+      {
+        "code": "LTHWF",
+        "name": "Heizungsvorlauf",
+        "english": "Low Temperature Hot Water Flow/Supply",
+        "color": "Red"
+      },
+      {
+        "code": "LTHWR",
+        "name": "Heizungsrücklauf",
+        "english": "Low Temperature Hot Water Return",
+        "color": "Red (lighter)"
+      }
+    ],
+    "abbreviations": {
+      "RA": "Rohrachse (Pipe Centerline)",
+      "RS": "Rohrsohle (Pipe Invert)",
+      "DN": "Diameter Nominal",
+      "OKRFB": "Oberkante Rohfußboden (Top of Subfloor)"
+    }
+  },
+  "observations": [
+    {
+      "elementType": "HVAC Pipe Run",
+      "labelingPattern": "[SystemCode]-DN[Size]",
+      "examples": [
+        "CHWF-DN25", "CHWF-DN32", "CHWF-DN40", "CHWF-DN50", "CHWF-DN65", "CHWF-DN80", "CHWF-DN100", "CHWF-DN125", "CHWF-DN150", "CHWF-DN200", "CHWF-DN300", "CHWF-DN400",
+        "CHWR-DN25", "CHWR-DN32", "CHWR-DN40", "CHWR-DN50", "CHWR-DN65", "CHWR-DN80", "CHWR-DN100", "CHWR-DN125", "CHWR-DN150", "CHWR-DN200", "CHWR-DN300", "CHWR-DN400",
+        "LTHWF-DN20", "LTHWF-DN25", "LTHWF-DN32", "LTHWF-DN40", "LTHWF-DN50", "LTHWF-DN65", "LTHWF-DN80", "LTHWF-DN100", "LTHWF-DN125", "LTHWF-DN200",
+        "LTHWR-DN20", "LTHWR-DN25", "LTHWR-DN32", "LTHWR-DN40", "LTHWR-DN50", "LTHWR-DN65", "LTHWR-DN80", "LTHWR-DN100", "LTHWR-DN125", "LTHWR-DN200",
+        "CONF-DN500"
+      ],
+      "position": "Along pipe centerline",
+      "hasLeader": false,
+      "frequency": "At size changes and major connections"
+    },
+    {
+      "elementType": "Pipe Elevation Tag",
+      "labelingPattern": "RA = +[Elevation] OKRFB or RS = +[Elevation] OKRFB",
+      "examples": [
+        "RA = +3320 OKRFB",
+        "RA = +2700 OKRFB",
+        "RA = +3600 OKRFB",
+        "RA = +3430 OKRFB",
+        "RS = +2620 OKRFB",
+        "RS = +2143 OKRFB",
+        "RS = +2788 OKRFB"
+      ],
+      "position": "Near pipe, with leader to pipe",
+      "hasLeader": true,
+      "frequency": "At elevation changes and risers"
+    },
+    {
+      "elementType": "Fan Coil Unit",
+      "labelingPattern": "FanCoilUnit_CeilingMounted",
+      "position": "Near unit symbol",
+      "hasLeader": false,
+      "frequency": "At all FCU locations"
+    },
+    {
+      "elementType": "Air Handling Unit",
+      "labelingPattern": "AirHandlingUnit_[Type]_[Mounting]",
+      "examples": [
+        "AirHandlingUnit_2LayerCompactSeries_FloorStand",
+        "AirHandlingUnit_1LayerFlachSeries_CeilingStand",
+        "AirHandlingUnit_1LayerSupply_FloorStand"
+      ],
+      "position": "Near unit outline",
+      "hasLeader": false
+    },
+    {
+      "elementType": "Radiator",
+      "labelingPattern": "RadiatorFlatPanel_WallMounted or RadiatorFlatPanel_WallMounted_xFlairPlanK",
+      "position": "Near radiator symbol",
+      "hasLeader": false
+    },
+    {
+      "elementType": "Ceiling Panel (Heated/Chilled)",
+      "labelingPattern": "HeatedAndChilledCorridorCeilings L[Length]xW[Width]",
+      "examples": [
+        "HeatedAndChilledCorridorCeilings L1000xW1250",
+        "HeatedAndChilledCorridorCeilings L1000xW750",
+        "HeatedAndChilledCorridorCeilings L1500xW1000"
+      ],
+      "position": "At panel center",
+      "hasLeader": false
+    },
+    {
+      "elementType": "Valve",
+      "labelingPattern": "[ValveType] DN[Size] or DN0[Size]",
+      "examples": [
+        "GateValve_Thread DN32",
+        "GateValve_Thread DN40",
+        "GlobeValve_Flanged DN065",
+        "GlobeValve_Flanged DN080",
+        "GlobeValve_Flanged DN100",
+        "GlobeValve_Flanged DN150",
+        "GlobeValve_Thread DN50"
+      ],
+      "position": "Near valve symbol",
+      "hasLeader": true
+    },
+    {
+      "elementType": "Manifold",
+      "labelingPattern": "RectangularTubeManifold_[Connections]Connection",
+      "examples": [
+        "RectangularTubeManifold_14Connection",
+        "RectangularTubeManifold_8Connection"
+      ],
+      "position": "Near manifold",
+      "hasLeader": false
+    },
+    {
+      "elementType": "Home Station",
+      "labelingPattern": "HomeStation_DHK",
+      "notes": "District heating connection unit"
+    }
+  ],
+  "pipeSizeRanges": {
+    "CHWF_CHWR": {
+      "min_DN": 25,
+      "max_DN": 500,
+      "common": [25, 32, 40, 50, 65, 80, 100, 125, 150, 200, 300, 400, 500]
+    },
+    "LTHWF_LTHWR": {
+      "min_DN": 20,
+      "max_DN": 200,
+      "common": [20, 25, 32, 40, 50, 65, 80, 100, 125, 200]
+    }
+  },
+  "elevationRanges": {
+    "RA_values_mm": {
+      "min": 500,
+      "max": 3600,
+      "common": [2700, 2900, 3320, 3430, 3600]
+    },
+    "RS_values_mm": {
+      "min": 2143,
+      "max": 2788
+    }
+  },
+  "equipmentTypes": {
+    "AHU": ["2LayerCompactSeries_FloorStand", "1LayerFlachSeries_CeilingStand", "1LayerSupply_FloorStand"],
+    "FCU": ["CeilingMounted"],
+    "Radiator": ["FlatPanel_WallMounted", "FlatPanel_WallMounted_xFlairPlanK"],
+    "CeilingPanel": ["HeatedAndChilledCorridorCeilings"],
+    "Valve": ["GateValve_Thread", "GlobeValve_Flanged", "GlobeValve_Thread"],
+    "Manifold": ["RectangularTubeManifold"]
+  },
+  "generalNotes": [
+    "Scale 1:100 for detailed HVAC piping plans",
+    "Pipe tags include system code (CHW/LTHW) + F/R suffix + DN size",
+    "F = Flow/Vorlauf (Supply), R = Rücklauf (Return)",
+    "Elevation tags reference OKRFB (subfloor level)",
+    "RA for centerline, RS for invert",
+    "Equipment uses family_type naming convention",
+    "Valve sizes use DN format, sometimes with leading zero (DN065)"
+  ]
+}

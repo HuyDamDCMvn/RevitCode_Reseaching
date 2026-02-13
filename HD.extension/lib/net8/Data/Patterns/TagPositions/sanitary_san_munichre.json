@@ -1,0 +1,205 @@
+{
+  "_description": "Sanitary (SAN - Sanitär) system patterns from MunichRE Revitalization project - detailed plumbing execution drawings",
+  "source": {
+    "projectName": "MunichRE Revitalization (Königinstraße 107, München)",
+    "drawings": [
+      {
+        "number": "HG--_ASS_410_5-_GR-_[Level]_[Sheet]_A_FG",
+        "title": "[Level] - Gewerk SAN Planteil [A/B/C]",
+        "discipline": "SAN (Sanitär / Sanitary/Plumbing)",
+        "levels": ["U2", "U1", "00", "01", "02", "03", "04", "05"],
+        "sheets": ["0001", "0002", "0003"],
+        "scale": "1:50"
+      }
+    ],
+    "company": "Assmann Beraten + Planen GmbH",
+    "client": "Münchener Rückversicherungs-Gesellschaft AG",
+    "date": "12.02.2026",
+    "phase": "LP5 (Ausführungsplanung)",
+    "totalFiles": 24
+  },
+  "legend": {
+    "drainageSystems": {
+      "SW": { "code": "410_SW", "german": "Schmutzwasser", "english": "Waste Water/Sewage" },
+      "SW-GL": { "code": "410_SW-GL", "german": "Schmutzwasser Grundleitung", "english": "Waste Water Main Line" },
+      "SW-DL": { "code": "410_SW-DL", "german": "Druckleitung Schmutzwasser", "english": "Waste Water Pressure Line" },
+      "SWE": { "code": "410_SWE", "german": "Schmutzwasser Entlüftung", "english": "Waste Water Vent" },
+      "SWF": { "code": "410_SWF", "german": "Fetthaltiges Abwasser", "english": "Grease-containing Waste Water" },
+      "SWF-E": { "code": "410_SWF-E", "german": "Entlüftung Fetthaltiges Abwasser", "english": "Grease Water Vent" },
+      "RW": { "code": "410_RW", "german": "Regenwasser", "english": "Rain Water" },
+      "RW-GL": { "code": "410_RW-GL", "german": "Regenwasser Grundleitung", "english": "Rain Water Main Line" },
+      "RW-DL": { "code": "410_RW-DL", "german": "Druckleitung Regenwasser", "english": "Rain Water Pressure Line" },
+      "MW": { "code": "410_MW", "german": "Mischwasser", "english": "Combined Sewage" }
+    },
+    "waterSupplySystems": {
+      "PWC-TWK": { "code": "410_PWC-TWK", "german": "Trinkwasserleitung Kalt", "english": "Cold Drinking Water" },
+      "PWC-TWK-GELB": { "german": "Trinkwasserleitung Kalt (Gelb/Yellow marked)", "english": "Cold Water Yellow" },
+      "PWH-TWW": { "code": "410_PWC-TWW", "german": "Trinkwasserleitung Warm", "english": "Hot Drinking Water" },
+      "PWH-C-TWZ": { "code": "410_PWC-TWZ", "german": "Trinkwasserleitung Zirkulation", "english": "Hot Water Circulation" }
+    },
+    "condensateSystems": {
+      "KN": { "code": "410_KN", "german": "Kondensatleitungen", "english": "Condensate Lines" }
+    },
+    "abbreviations": {
+      "RS": "Rohrsohle (Pipe invert)",
+      "RA": "Rohrachse (Pipe centerline)",
+      "PÖ": "Prüföffnungen (Inspection openings)",
+      "OK": "Oberkante (Top edge)",
+      "UK": "Unterkante (Bottom edge)",
+      "bez.": "bezogen auf (referenced to)",
+      "DN": "Nennweite (Nominal diameter)"
+    },
+    "materials": {
+      "Stz": "Steinzeug (Vitrified clay)",
+      "PE": "Polyäthylen (Polyethylene)",
+      "G": "Gußeisen (Cast iron)"
+    }
+  },
+  "observations": [
+    {
+      "elementType": "Waste Pipe Tag - Horizontal",
+      "labelingPattern": "[System]_DN[Size]",
+      "elevationFormat": "RS = [+/-][value] m (bez. ±0.00)",
+      "examples": [
+        "SW_DN100",
+        "RS = -0.94 m (bez. ±0.00)",
+        "SW_DN80",
+        "RS = -0.47 m (bez. ±0.00)"
+      ]
+    },
+    {
+      "elementType": "Waste Pipe Tag - Various Systems",
+      "labelingPatterns": [
+        "SW_DN[Size]",
+        "SW-GL_DN[Size]",
+        "SW-DL_DN[Size]",
+        "SWE_DN[Size]",
+        "SWF_DN[Size]",
+        "SWF-E_DN[Size]"
+      ],
+      "examples": [
+        "SW_DN125",
+        "SW-GL_DN100",
+        "SWE_DN80",
+        "SWF_DN80",
+        "SWF-E_DN100"
+      ]
+    },
+    {
+      "elementType": "Rain Water Pipe Tag",
+      "labelingPatterns": [
+        "RW_DN[Size]",
+        "RW-GL_DN[Size]",
+        "RW-GL_DN150"
+      ],
+      "examples": [
+        "RW-GL_DN150",
+        "RW-GL_DN100",
+        "RW_DN100"
+      ]
+    },
+    {
+      "elementType": "Condensate Pipe Tag",
+      "labelingPattern": "KN_DN[Size]",
+      "elevationFormat": "RS = [value] m (bez. ±0.00)",
+      "examples": [
+        "KN_DN25",
+        "RS = 2.53 m (bez. ±0.00)",
+        "KN_DN32",
+        "RS = 2.38 m (bez. ±0.00)",
+        "KN_DN40",
+        "KN_DN65"
+      ]
+    },
+    {
+      "elementType": "Cold Water Pipe Tag",
+      "labelingPatterns": [
+        "PWC-TWK_DN[Size]",
+        "PWC-TWK-GELB_DN[Size]"
+      ],
+      "elevationFormat": "RA = [+/-][value] m UKRD",
+      "examples": [
+        "PWC-TWK_DN20",
+        "RA = -5.05 m UKRD",
+        "PWC-TWK_DN40",
+        "RA = -0.67 m UKRD",
+        "PWC-TWK-GELB_DN25",
+        "RA = -0.67 m UKRD"
+      ]
+    },
+    {
+      "elementType": "Hot Water Pipe Tag",
+      "labelingPattern": "PWH-TWW_DN[Size]",
+      "elevationFormat": "RA = [+/-][value] m UKRD",
+      "examples": [
+        "PWH-TWW_DN20",
+        "RA = -5.05 m UKRD",
+        "PWH-TWW_DN40",
+        "RA = -0.67 m UKRD"
+      ]
+    },
+    {
+      "elementType": "Hot Water Circulation Tag",
+      "labelingPattern": "PWH-C-TWZ_DN[Size]",
+      "elevationFormat": "RA = [+/-][value] m UKRD",
+      "examples": [
+        "PWH-C-TWZ_DN15",
+        "RA = -0.56 m UKRD",
+        "PWH-C-TWZ_DN20",
+        "RA = -3.94 m UKRD"
+      ]
+    },
+    {
+      "elementType": "Floor Drain",
+      "labelingPattern": "DN[Size]\nBodenablaufe",
+      "variants": ["Bodenablaufe", "Bodenablauf Horizontale"],
+      "sizes": [80, 100],
+      "examples": [
+        "DN80\nBodenablaufe",
+        "DN100\nBodenablaufe",
+        "DN80\nBodenablauf Horizontale"
+      ]
+    },
+    {
+      "elementType": "Pipe Slope",
+      "labelingPattern": "[Value]%",
+      "commonValues": ["0.5%", "0.7%", "1.0%", "2.0%"]
+    },
+    {
+      "elementType": "Wall-hung WC Element",
+      "labelingPattern": "Duofix Element Für Wandhängende WC\n[Type]",
+      "types": ["Standard"]
+    },
+    {
+      "elementType": "Washbasin",
+      "labelingPattern": "Waschtisch\n[Type]",
+      "types": ["Standard"]
+    },
+    {
+      "elementType": "Urinal",
+      "labelingPattern": "Urinal_Universell\n[Type]",
+      "types": ["Standard"]
+    },
+    {
+      "elementType": "Fan Coil Unit (Ventilatorkonvektor)",
+      "labelingPattern": "Ventilatorkonvektor\nL[L]xW[W]xH[H]",
+      "dimensions": "L1725xW519xH223"
+    }
+  ],
+  "pipeSizes_DN": {
+    "drainage": [50, 70, 80, 100, 125, 150],
+    "water": [15, 20, 25, 32, 40],
+    "condensate": [25, 32, 40, 65]
+  },
+  "elevationReference": {
+    "drainage": "RS = [value] m (bez. ±0.00) - Rohrsohle referenced to ±0.00",
+    "water": "RA = [value] m UKRD - Rohrachse referenced to UKRD"
+  },
+  "generalNotes": [
+    "Scale 1:50 for detailed execution drawings",
+    "Drainage elevations: RS (pipe invert) referenced to ±0.00",
+    "Water supply elevations: RA (centerline) referenced to UKRD",
+    "All pipe sizes in DN (nominal diameter, mm)",
+    "Slope shown as percentage"
+  ]
+}

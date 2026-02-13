@@ -1,0 +1,125 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "room_controls_sensors",
+  "name": "Room Controls & Sensors",
+  "version": "1.0.0",
+  "description": "Tagging rules for room control devices, thermostats, sensors, and access panels",
+  "enabled": true,
+  "priority": 80,
+  "conditions": {
+    "categories": [
+      "OST_ElectricalFixtures",
+      "OST_DataDevices",
+      "OST_CommunicationDevices",
+      "OST_GenericModel"
+    ],
+    "familyNamePatterns": [
+      ".*Thermostat.*",
+      ".*Sensor.*",
+      ".*Melder.*",
+      ".*Bediengerät.*",
+      ".*Steckdose.*",
+      ".*Socket.*",
+      ".*Revision.*"
+    ],
+    "viewTypes": ["FloorPlan", "CeilingPlan"]
+  },
+  "actions": {
+    "preferredPositions": ["Right", "TopRight", "Center"],
+    "offsetDistance": 0.12,
+    "addLeader": false,
+    "leaderStyle": "None",
+    "avoidCollisionWith": [
+      "OST_Walls",
+      "OST_Doors"
+    ]
+  },
+  "scoring": {
+    "collisionPenalty": -50,
+    "preferenceBonus": 40,
+    "alignmentBonus": 10
+  },
+  "tagFormat": {
+    "hvacControls": {
+      "codes": {
+        "ZT": {
+          "german": "Zeitgeber",
+          "english": "Timer/time switch"
+        },
+        "RT": {
+          "german": "Raumthermostat",
+          "english": "Room thermostat"
+        },
+        "AT": {
+          "german": "Außentemperaturfühler",
+          "english": "Outside temperature sensor"
+        }
+      },
+      "grouping": "Often shown together: ZT RT AT",
+      "notes": "Typically near HVAC equipment or room entries"
+    },
+    "sensors": {
+      "motionSensor": {
+        "pattern": "Bewegungsmelder wand",
+        "english": "Wall motion sensor"
+      },
+      "presenceSensor": {
+        "pattern": "Präsenzmelder Decke",
+        "english": "Ceiling presence detector"
+      },
+      "roomControl": {
+        "pattern": "Raumbediengerät",
+        "english": "Room control unit"
+      }
+    },
+    "outlets": {
+      "singleSocket": {
+        "pattern": "Steckdose einfach",
+        "english": "Single socket outlet",
+        "symbol": "E"
+      },
+      "lockableSocket": {
+        "pattern": "Steckdose abschließbar",
+        "english": "Lockable socket outlet"
+      },
+      "floorBox": {
+        "pattern": "Bodentank rund",
+        "english": "Round floor box"
+      },
+      "dataConnection": {
+        "pattern": "Datenanschluss",
+        "english": "Data connection point"
+      }
+    },
+    "accessPanels": {
+      "pattern": "REV [Width]x[Height]",
+      "examples": ["REV 400x400"],
+      "german": "Revisionsöffnung",
+      "english": "Access panel/revision opening",
+      "units": "mm",
+      "variations": [
+        "Revisionsöffnung Decke/Boden (Ceiling/floor access)"
+      ]
+    },
+    "controlPanels": {
+      "pattern": "TABLEAU MSR",
+      "german": "Mess-Steuer-Regelungs Tableau",
+      "english": "Measurement-Control-Regulation panel"
+    }
+  },
+  "metadata": {
+    "createdAt": "2026-02-13T17:00:00Z",
+    "author": "SmartTag",
+    "source": "Munich Arena Electrical Installation drawings (ELEA) - 24 files",
+    "confidence": 0.85,
+    "sampleCount": 600
+  },
+  "_comments": {
+    "usage": [
+      "ZT, RT, AT often grouped together for room climate control",
+      "E symbol used for single electrical connection points",
+      "REV panels sized in mm (400x400 is common)",
+      "MSR = Building automation/BMS controls"
+    ]
+  }
+}

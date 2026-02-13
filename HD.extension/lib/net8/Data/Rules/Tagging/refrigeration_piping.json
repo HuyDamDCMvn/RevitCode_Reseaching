@@ -1,0 +1,223 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "refrigeration_piping_klt",
+  "name": "Refrigeration Piping - German KLT Standard",
+  "description": "Tagging rules for refrigeration/cooling piping using German naming conventions from MunichRE project",
+  "version": "1.0.0",
+  "author": "SmartTag AI Training",
+  "category": "Cooling/Refrigeration",
+  "discipline": "KLT (Kältetechnik)",
+  "revitCategories": ["PipeSegments", "Pipes", "PipeFittings", "PipeAccessories"],
+  "systemTypes": [
+    {
+      "code": "KLT-GLK-VL",
+      "fullCode": "434_KLT-GLK-VL",
+      "german": "Vorlauf Kälteversorgung Großluftkühler",
+      "english": "Large Air Cooler Cooling Supply",
+      "description": "Supply line for large central air coolers"
+    },
+    {
+      "code": "KLT-GLK-RL",
+      "fullCode": "434_KLT-GLK-RL",
+      "german": "Rücklauf Kälteversorgung Großluftkühler",
+      "english": "Large Air Cooler Cooling Return",
+      "description": "Return line from large central air coolers"
+    },
+    {
+      "code": "KLT-HKS-VL",
+      "fullCode": "434_KLT-HKS-VL",
+      "german": "Vorlauf Kälteversorgung Hauptkühlsystem",
+      "english": "Main Cooling System Supply",
+      "description": "Supply for main building cooling system (ceiling panels, etc.)"
+    },
+    {
+      "code": "KLT-HKS-RL",
+      "fullCode": "434_KLT-HKS-RL",
+      "german": "Rücklauf Kälteversorgung Hauptkühlsystem",
+      "english": "Main Cooling System Return",
+      "description": "Return from main building cooling system"
+    },
+    {
+      "code": "KLT-IT-VL",
+      "fullCode": "434_KLT-IT-VL",
+      "german": "Vorlauf Kälteversorgung Informationstechnik",
+      "english": "IT Cooling Supply",
+      "description": "Dedicated cooling supply for IT/server rooms"
+    },
+    {
+      "code": "KLT-IT-RL",
+      "fullCode": "434_KLT-IT-RL",
+      "german": "Rücklauf Kälteversorgung Informationstechnik",
+      "english": "IT Cooling Return",
+      "description": "Dedicated cooling return from IT/server rooms"
+    },
+    {
+      "code": "KLT-UFK-VL",
+      "fullCode": "434_KLT-UFK-VL",
+      "german": "Vorlauf Kälteversorgung Unterflurkonvektoren",
+      "english": "Underfloor Convector Supply",
+      "description": "Supply for underfloor convector units"
+    },
+    {
+      "code": "KLT-UFK-RL",
+      "fullCode": "434_KLT-UFK-RL",
+      "german": "Rücklauf Kälteversorgung Unterflurkonvektoren",
+      "english": "Underfloor Convector Return",
+      "description": "Return from underfloor convector units"
+    },
+    {
+      "code": "KLT-FL-RL",
+      "german": "Rücklauf Kälteversorgung Freie Leitung",
+      "english": "Free Line Cooling Return",
+      "description": "Miscellaneous cooling return lines"
+    }
+  ],
+  "flowDirection": {
+    "VL": {
+      "german": "Vorlauf",
+      "english": "Supply/Flow",
+      "description": "Cold water going TO the equipment"
+    },
+    "RL": {
+      "german": "Rücklauf",
+      "english": "Return",
+      "description": "Warmer water returning FROM the equipment"
+    }
+  },
+  "tagFormat": {
+    "pipeTag": {
+      "pattern": "KLT-[System]-[Direction]_DN[Size]",
+      "examples": [
+        "KLT-IT-VL_DN20",
+        "KLT-IT-RL_DN20",
+        "KLT-HKS-VL_DN40",
+        "KLT-HKS-RL_DN65",
+        "KLT-GLK-VL_DN250",
+        "KLT-UFK-VL_DN25"
+      ],
+      "components": {
+        "KLT": "Kältetechnik (Refrigeration/Cooling)",
+        "System": "IT (Information Tech), HKS (Main Cooling), GLK (Large Air Cooler), UFK (Underfloor)",
+        "Direction": "VL (Supply) or RL (Return)",
+        "DN": "Nominal diameter in mm"
+      }
+    },
+    "elevationTag": {
+      "pattern": "RA = [+/-][value] m UKRD",
+      "components": {
+        "RA": "Rohrachse (Pipe centerline)",
+        "value": "Elevation in meters (negative = below)",
+        "UKRD": "Unterkante Rohdecke (Underside of raw ceiling)"
+      },
+      "examples": [
+        "RA = -0.17 m UKRD",
+        "RA = -0.08 m UKRD",
+        "RA = -0.27 m UKRD",
+        "RA = -2.06 m UKRD"
+      ]
+    },
+    "combinedTag": {
+      "pattern": "KLT-[System]-[Direction]_DN[Size]\nRA = [value] m UKRD",
+      "multiLine": true
+    }
+  },
+  "pipeSizes": {
+    "units": "mm (DN)",
+    "branchSizes": [15, 20, 25, 32],
+    "distributionSizes": [40, 50, 65, 80],
+    "mainSizes": [250],
+    "sizesBySystem": {
+      "IT": {
+        "branch": [20, 25],
+        "distribution": [32, 40, 50, 65]
+      },
+      "HKS": {
+        "branch": [15, 25],
+        "distribution": [40, 50, 65, 80]
+      },
+      "GLK": {
+        "main": [250]
+      },
+      "UFK": {
+        "branch": [25, 32]
+      }
+    }
+  },
+  "systemHierarchy": {
+    "primary": {
+      "system": "GLK",
+      "description": "Large central air coolers - highest capacity",
+      "typicalSizes": [250]
+    },
+    "secondary": {
+      "system": "HKS",
+      "description": "Main building cooling system",
+      "typicalSizes": [40, 50, 65, 80]
+    },
+    "tertiary": [
+      {
+        "system": "IT",
+        "description": "IT/Server room dedicated cooling",
+        "typicalSizes": [20, 25, 32, 40, 50, 65]
+      },
+      {
+        "system": "UFK",
+        "description": "Underfloor convector cooling",
+        "typicalSizes": [25, 32]
+      }
+    ]
+  },
+  "rules": [
+    {
+      "condition": {
+        "systemType": "contains",
+        "value": "IT"
+      },
+      "tagSettings": {
+        "prefix": "KLT-IT",
+        "showElevation": true,
+        "elevationType": "RA"
+      }
+    },
+    {
+      "condition": {
+        "systemType": "contains",
+        "value": "Hauptkühlsystem"
+      },
+      "tagSettings": {
+        "prefix": "KLT-HKS",
+        "showElevation": true,
+        "elevationType": "RA"
+      }
+    },
+    {
+      "condition": {
+        "systemType": "contains",
+        "value": "Großluftkühler"
+      },
+      "tagSettings": {
+        "prefix": "KLT-GLK",
+        "showElevation": true,
+        "elevationType": "RA"
+      }
+    },
+    {
+      "condition": {
+        "parameter": "FlowDirection",
+        "value": "Supply"
+      },
+      "tagSettings": {
+        "suffix": "-VL"
+      }
+    },
+    {
+      "condition": {
+        "parameter": "FlowDirection",
+        "value": "Return"
+      },
+      "tagSettings": {
+        "suffix": "-RL"
+      }
+    }
+  ]
+}

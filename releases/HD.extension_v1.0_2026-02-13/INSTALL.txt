@@ -1,0 +1,34 @@
+﻿# HD Extension for Revit 2025+
+Version: 1.0
+Release Date: 2026-02-13
+
+## Installation
+
+1. Copy the 'HD.extension' folder to your pyRevit extensions folder:
+   - Default: %APPDATA%\pyRevit\Extensions\
+   - Or custom path configured in pyRevit settings
+
+2. Reload pyRevit (pyRevit tab > Reload)
+
+3. You should see a new 'HD' tab in Revit ribbon
+
+## Features
+
+### Labeling Panel
+- **SmartTag**: AI-powered auto annotation tool
+  - Auto-tagging with collision avoidance
+  - Auto-dimensioning for MEP openings
+  - German MEP standards support (HZG, KLT, SAN, RLT, etc.)
+
+### Tools Panel  
+- **Common Feature**: Multi-category element collector
+- **Check Code**: Code validation tool
+- **Parameter Manager**: Manage element parameters
+- **Show Boundary**: Visualize element boundaries
+
+## Requirements
+- Revit 2025 or later
+- pyRevit 6.0.0 or later
+
+## Support
+Contact: [Your contact info]

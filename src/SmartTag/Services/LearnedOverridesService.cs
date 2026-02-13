@@ -21,6 +21,7 @@ namespace SmartTag.Services
         private LearnedOverridesData _data;
         private string _filePath;
         private bool _loaded;
+        private bool _annotatedIngested;
 
         public static LearnedOverridesService Instance
         {
@@ -106,6 +107,76 @@ namespace SmartTag.Services
                 _data.ByCategoryAndSystem ??= new Dictionary<string, LearnedOverride>();
                 _loaded = true;
             }
+
+            EnsureAnnotatedIngested();
+        }
+
+        /// <summary>
+        /// Once per load: ingest all JSON in Data/Training/annotated (e.g. HD.extension\lib\net8\Data\Training\annotated)
+        /// and merge into learned overrides so the tool uses that folder in its algorithm.
+        /// </summary>
+        private void EnsureAnnotatedIngested()
+        {
+            if (_annotatedIngested) return;
+
+            lock (_lock)
+            {
+                if (_annotatedIngested) return;
+
+                var annotatedPath = GetAnnotatedFolderPath();
+                if (string.IsNullOrEmpty(annotatedPath) || !Directory.Exists(annotatedPath))
+                {
+                    _annotatedIngested = true;
+                    return;
+                }
+
+                var fromAnnotated = new ExportIngestionService().AggregateFromFolder(annotatedPath);
+                if (fromAnnotated != null)
+                    MergeInIngestedData(fromAnnotated);
+
+                _annotatedIngested = true;
+            }
+        }
+
+        private string GetAnnotatedFolderPath()
+        {
+            var learnedPath = GetFilePath();
+            var trainingDir = Path.GetDirectoryName(learnedPath);
+            return string.IsNullOrEmpty(trainingDir) ? null : Path.Combine(trainingDir, "annotated");
+        }
+
+        private void MergeInIngestedData(LearnedOverridesData fromAnnotated)
+        {
+            if (fromAnnotated?.ByCategory != null)
+            {
+                foreach (var kv in fromAnnotated.ByCategory)
+                {
+                    if (string.IsNullOrEmpty(kv.Key) || kv.Value?.SampleCount <= 0) continue;
+                    if (_data.ByCategory.TryGetValue(kv.Key, out var existing))
+                    {
+                        if (kv.Value.SampleCount >= existing.SampleCount)
+                            _data.ByCategory[kv.Key] = kv.Value;
+                    }
+                    else
+                        _data.ByCategory[kv.Key] = kv.Value;
+                }
+            }
+            if (fromAnnotated?.ByCategoryAndSystem != null)
+            {
+                foreach (var kv in fromAnnotated.ByCategoryAndSystem)
+                {
+                    if (string.IsNullOrEmpty(kv.Key) || kv.Value?.SampleCount <= 0) continue;
+                    if (_data.ByCategoryAndSystem.TryGetValue(kv.Key, out var existing))
+                    {
+                        if (kv.Value.SampleCount >= existing.SampleCount)
+                            _data.ByCategoryAndSystem[kv.Key] = kv.Value;
+                    }
+                    else
+                        _data.ByCategoryAndSystem[kv.Key] = kv.Value;
+                }
+            }
+            _data.UpdatedAt = DateTime.UtcNow.ToString("o");
+            Save();
         }
 
         /// <summary>

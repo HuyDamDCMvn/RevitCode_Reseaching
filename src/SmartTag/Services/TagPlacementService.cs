@@ -35,8 +35,8 @@ namespace SmartTag.Services
         private const double LINEAR_SEGMENT_LENGTH = 20.0;
         private const double MIN_LINEAR_LENGTH_FOR_SPLIT = 30.0;
         
-        // Angle thresholds for tag rotation
-        private const double VERTICAL_ANGLE_THRESHOLD = Math.PI / 4; // 45 degrees
+        // Tag rotation: force one direction (3 o'clock / horizontal)
+        private const TagRotation DEFAULT_TAG_ROTATION = TagRotation.Horizontal;
         
         // Rule engine for preferred positions
         private RuleEngine _ruleEngine;
@@ -407,25 +407,88 @@ namespace SmartTag.Services
             
             return placements;
         }
+
+        /// <summary>
+        /// Re-calculate the best placement for a specific linear segment index.
+        /// </summary>
+        private TagPlacement FindBestPlacementForSegment(TaggableElement element, TagSettings settings, int segmentIndex)
+        {
+            try
+            {
+                if (element == null || !element.StartPoint.HasValue || !element.EndPoint.HasValue)
+                    return FindBestPlacement(element, settings);
+
+                var length = element.LengthFeet;
+                if (length <= 0 || double.IsNaN(length) || double.IsInfinity(length))
+                    return FindBestPlacement(element, settings);
+
+                var numSegments = (int)Math.Ceiling(length / LINEAR_SEGMENT_LENGTH);
+                numSegments = Math.Max(1, Math.Min(numSegments, 5));
+                if (segmentIndex < 0 || segmentIndex >= numSegments)
+                    segmentIndex = Math.Max(0, Math.Min(segmentIndex, numSegments - 1));
+
+                var rotation = GetTagRotationForAngle(element.AngleRadians);
+                var start = element.StartPoint.Value;
+                var end = element.EndPoint.Value;
+                double t = (segmentIndex + 0.5) / numSegments;
+                var segmentCenter = new Point2D(
+                    start.X + (end.X - start.X) * t,
+                    start.Y + (end.Y - start.Y) * t);
+
+                if (double.IsNaN(segmentCenter.X) || double.IsNaN(segmentCenter.Y) ||
+                    double.IsInfinity(segmentCenter.X) || double.IsInfinity(segmentCenter.Y))
+                    return FindBestPlacement(element, settings);
+
+                var (tagWidth, tagHeight) = EstimateTagSize(element);
+                if (rotation == TagRotation.Vertical)
+                    (tagWidth, tagHeight) = (tagHeight, tagWidth);
+
+                var candidates = GenerateCandidatePositionsAtPoint(
+                    element, segmentCenter, tagWidth, tagHeight, settings, rotation);
+
+                if (candidates == null || candidates.Count == 0)
+                    return null;
+
+                TagPlacement bestPlacement = null;
+                double bestScore = double.MaxValue;
+
+                foreach (var candidate in candidates)
+                {
+                    if (candidate == null) continue;
+                    if (_viewCropBox.HasValue && !_viewCropBox.Value.Contains(candidate.TagLocation))
+                        continue;
+
+                    var score = ScorePlacement(candidate, element, settings);
+                    if (score < bestScore)
+                    {
+                        bestScore = score;
+                        bestPlacement = candidate;
+                    }
+                }
+
+                if (bestPlacement != null && bestScore <= MAX_ACCEPTABLE_SCORE)
+                {
+                    bestPlacement.Score = bestScore;
+                    bestPlacement.SegmentIndex = segmentIndex;
+                    bestPlacement.Rotation = rotation;
+                    return bestPlacement;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"FindBestPlacementForSegment failed: {ex.Message}");
+            }
+
+            return null;
+        }
         
         /// <summary>
-        /// #10: Get tag rotation based on element angle.
-        /// Only returns 0° (Horizontal) or 90° (Vertical).
+        /// #10: Get tag rotation (forced to a single direction).
         /// </summary>
         private TagRotation GetTagRotationForAngle(double angleRadians)
         {
-            // Normalize angle to 0-PI range (tags read left-to-right or bottom-to-top)
-            var normalizedAngle = Math.Abs(angleRadians);
-            while (normalizedAngle > Math.PI) normalizedAngle -= Math.PI;
-            
-            // If angle is closer to vertical (45° to 135°), use vertical tag
-            if (normalizedAngle > VERTICAL_ANGLE_THRESHOLD && 
-                normalizedAngle < (Math.PI - VERTICAL_ANGLE_THRESHOLD))
-            {
-                return TagRotation.Vertical;
-            }
-            
-            return TagRotation.Horizontal;
+            // Always use horizontal (3 o'clock) orientation
+            return DEFAULT_TAG_ROTATION;
         }
         
         /// <summary>
@@ -607,6 +670,9 @@ namespace SmartTag.Services
                         settings.PreferCenterline = true;
                 }
 
+                bool learnedPreferAlignRow = false;
+                bool learnedPreferAlignCol = false;
+
                 // Learned (user export): chỉ bù khi rule không chỉ định (ưu tiên rule/pattern nội bộ)
                 if (!ruleMatched)
                 {
@@ -623,8 +689,22 @@ namespace SmartTag.Services
                             settings.OffsetDistance = learnedOffset.Value;
                         if (learnedLeader.HasValue)
                             settings.AddLeader = learnedLeader.Value;
-                        if (preferAlignRow == true || preferAlignCol == true)
-                            settings.AlignmentBonus = Math.Max(settings.AlignmentBonus, 25); // stronger alignment when learned
+                        learnedPreferAlignRow = preferAlignRow == true;
+                        learnedPreferAlignCol = preferAlignCol == true;
+                    }
+                    catch { /* ignore */ }
+                }
+                else
+                {
+                    try
+                    {
+                        var learned = LearnedOverridesService.Instance;
+                        learned.EnsureLoaded();
+                        var category = element.BuiltInCategoryName ?? element.CategoryName ?? "";
+                        var systemName = element.SystemName ?? "";
+                        var (preferAlignRow, preferAlignCol) = learned.GetPreferAlignment(category, systemName);
+                        learnedPreferAlignRow = preferAlignRow == true;
+                        learnedPreferAlignCol = preferAlignCol == true;
                     }
                     catch { /* ignore */ }
                 }
@@ -642,6 +722,13 @@ namespace SmartTag.Services
                     
                     if (rule.Scoring.NearEdgeBonus > 0)
                         settings.NearEdgeBonus = rule.Scoring.NearEdgeBonus;
+                }
+
+                if (learnedPreferAlignRow || learnedPreferAlignCol)
+                {
+                    settings.AlignmentBonus = Math.Max(settings.AlignmentBonus, 30); // stronger alignment when learned
+                    settings.PreferAlignRow = learnedPreferAlignRow;
+                    settings.PreferAlignColumn = learnedPreferAlignCol;
                 }
             }
             catch (Exception ex)
@@ -665,6 +752,8 @@ namespace SmartTag.Services
             public double NearEdgeBonus { get; set; }
             public List<string> AvoidCategories { get; set; }
             public bool PreferCenterline { get; set; }
+            public bool PreferAlignRow { get; set; }
+            public bool PreferAlignColumn { get; set; }
         }
 
         /// <summary>
@@ -1038,6 +1127,25 @@ namespace SmartTag.Services
             // 9. Alignment bonus (tags that align with grid get lower score)
             var alignmentScore = GetAlignmentScore(placement.TagLocation);
             score -= alignmentScore * ruleSettings.AlignmentBonus / 10;
+
+            // 9b. Column alignment with other tags (bản mẫu: EA/SA stacked - same X)
+            var columnAlignTolerance = ruleSettings.PreferAlignColumn ? 2.0 : 1.5; // feet
+            var columnBand = new BoundingBox2D(
+                placement.TagLocation.X - columnAlignTolerance, placement.EstimatedTagBounds.MinY - 5,
+                placement.TagLocation.X + columnAlignTolerance, placement.EstimatedTagBounds.MaxY + 5);
+            var nearbyInX = _tagIndex.Query(columnBand);
+            foreach (var item in nearbyInX)
+            {
+                if (item.Bounds.Intersects(placement.EstimatedTagBounds)) continue; // exclude overlapping
+                if (Math.Abs(item.Bounds.Center.X - placement.TagLocation.X) <= columnAlignTolerance)
+                {
+                    var columnAlignBonus = ruleSettings.AlignmentBonus / 2;
+                    if (ruleSettings.PreferAlignColumn)
+                        columnAlignBonus = ruleSettings.AlignmentBonus;
+                    score -= columnAlignBonus; // stronger bonus for stacking in column
+                    break;
+                }
+            }
             
             // 10. Near-edge bonus for equipment (per rule)
             if (ruleSettings.NearEdgeBonus > 0 && !element.IsLinearElement)
@@ -1223,6 +1331,60 @@ namespace SmartTag.Services
                             placement.EstimatedTagBounds.MinY + offset,
                             placement.EstimatedTagBounds.MaxX,
                             placement.EstimatedTagBounds.MaxY + offset);
+                    }
+                }
+            }
+
+            // Column alignment (bản mẫu: EA/SA stacked vertically - same X, different Y)
+            var colTolerance = _tagWidth * 2;
+            var columns = new List<List<TagPlacement>>();
+            foreach (var placement in placements.OrderBy(p => p.TagLocation.X))
+            {
+                var addedToCol = false;
+                foreach (var col in columns)
+                {
+                    if (Math.Abs(col[0].TagLocation.X - placement.TagLocation.X) < colTolerance)
+                    {
+                        col.Add(placement);
+                        addedToCol = true;
+                        break;
+                    }
+                }
+                if (!addedToCol)
+                    columns.Add(new List<TagPlacement> { placement });
+            }
+
+            foreach (var col in columns)
+            {
+                if (col.Count < 2) continue;
+                var avgX = col.Average(p => p.TagLocation.X);
+                var safeToAlign = true;
+                foreach (var placement in col)
+                {
+                    var offset = avgX - placement.TagLocation.X;
+                    var newBounds = new BoundingBox2D(
+                        placement.EstimatedTagBounds.MinX + offset,
+                        placement.EstimatedTagBounds.MinY,
+                        placement.EstimatedTagBounds.MaxX + offset,
+                        placement.EstimatedTagBounds.MaxY);
+                    foreach (var other in placements)
+                    {
+                        if (col.Contains(other)) continue;
+                        if (newBounds.Intersects(other.EstimatedTagBounds)) { safeToAlign = false; break; }
+                    }
+                    if (!safeToAlign) break;
+                }
+                if (safeToAlign)
+                {
+                    foreach (var placement in col)
+                    {
+                        var offset = avgX - placement.TagLocation.X;
+                        placement.TagLocation = new Point2D(avgX, placement.TagLocation.Y);
+                        placement.EstimatedTagBounds = new BoundingBox2D(
+                            placement.EstimatedTagBounds.MinX + offset,
+                            placement.EstimatedTagBounds.MinY,
+                            placement.EstimatedTagBounds.MaxX + offset,
+                            placement.EstimatedTagBounds.MaxY);
                     }
                 }
             }
@@ -1413,7 +1575,7 @@ namespace SmartTag.Services
             }
 
             // Apply LARGER push to ensure clearance
-            var pushMultiplier = 1.2; // Push 20% more than needed
+            var pushMultiplier = 1.5; // Push 50% more than needed
             pushDist *= pushMultiplier;
 
             // Move tags apart in opposite directions
@@ -1517,16 +1679,23 @@ namespace SmartTag.Services
                         if (placements[j] != null && placements[j].ElementId == placement.ElementId)
                             sameElementCount++;
                     }
-                    if (sameElementCount != 1)
-                        continue; // linear element with multiple segments - skip re-place
-
                     if (!elementById.TryGetValue(placement.ElementId, out var element))
                         continue;
 
                     var tagId = placement.ElementId * 1000L + placement.SegmentIndex;
                     _tagIndex.Remove(tagId);
 
-                    var newPlacement = FindBestPlacement(element, settings);
+                    TagPlacement newPlacement = null;
+                    if (sameElementCount == 1)
+                    {
+                        newPlacement = FindBestPlacement(element, settings);
+                    }
+                    else if (element.IsLinearElement)
+                    {
+                        // Re-place only the affected segment for linear elements
+                        newPlacement = FindBestPlacementForSegment(element, settings, placement.SegmentIndex);
+                    }
+
                     if (newPlacement != null)
                     {
                         newPlacement.SegmentIndex = placement.SegmentIndex;

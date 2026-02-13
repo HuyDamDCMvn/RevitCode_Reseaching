@@ -1,0 +1,148 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "hvac_duct_accessories",
+  "name": "HVAC Duct Accessories - Dampers, Silencers, Regulators",
+  "version": "1.0.0",
+  "description": "Tagging rules for duct accessories: fire dampers, smoke dampers, silencers, volume regulators",
+  "enabled": true,
+  "priority": 86,
+  "conditions": {
+    "categories": [
+      "OST_DuctAccessory",
+      "OST_DuctFitting"
+    ],
+    "familyNamePatterns": [
+      ".*Schalldämpfer.*",
+      ".*Silencer.*",
+      ".*Klappe.*",
+      ".*Damper.*",
+      ".*Regler.*",
+      ".*Regulator.*",
+      ".*BSK.*",
+      ".*RSK.*"
+    ],
+    "viewTypes": ["FloorPlan", "CeilingPlan", "Section"]
+  },
+  "actions": {
+    "preferredPositions": ["Center", "TopCenter"],
+    "offsetDistance": 0.12,
+    "addLeader": false,
+    "leaderStyle": "None",
+    "avoidCollisionWith": [
+      "OST_DuctAccessory",
+      "OST_DuctCurves"
+    ]
+  },
+  "scoring": {
+    "collisionPenalty": -55,
+    "preferenceBonus": 40,
+    "alignmentBonus": 15
+  },
+  "tagFormat": {
+    "fireDamper": {
+      "abbreviation": "BSK",
+      "german": "Brandschutzklappe",
+      "english": "Fire Damper",
+      "patterns": {
+        "rectangular": "BSK_L[L]xW[W]xH[H]",
+        "round": "BSK_NS[Size]"
+      },
+      "examples": [
+        "BSK_L500xW350xH300",
+        "BSK_L500xW700xH400",
+        "BSK_NS100",
+        "BSK_NS160"
+      ]
+    },
+    "smokeDamper": {
+      "abbreviation": "RSK",
+      "german": "Rauchschutzklappe",
+      "english": "Smoke Damper",
+      "pattern": "RSK_W[Width]xH[Height]",
+      "examples": [
+        "RSK_W100xH100",
+        "RSK_W250xH150",
+        "RSK_W750xH500"
+      ]
+    },
+    "silencer": {
+      "abbreviation": "SD",
+      "german": "Schalldämpfer",
+      "english": "Silencer/Attenuator",
+      "patterns": {
+        "round": "SD_L[Length]_DN[Size]",
+        "rectangular": "SD_L[Length]xW[Width]xH[Height]"
+      },
+      "standardLengths_mm": [500, 1000, 1500, 2000],
+      "examples": [
+        "SD_L1000_DN100",
+        "SD_L500_DN80",
+        "SD_L1000xW350xH300",
+        "SD_L1000xW700xH400"
+      ]
+    },
+    "constantVolumeRegulator": {
+      "abbreviation": "KVR",
+      "german": "Konstantvolumenstromregler",
+      "english": "Constant Volume Regulator",
+      "patterns": {
+        "round": "KVR_DN[Size]",
+        "rectangular": "KVR_L[L]xW[W]xH[H]"
+      },
+      "examples": [
+        "KVR_DN80",
+        "KVR_DN100",
+        "KVR_DN125",
+        "KVR_L400xW350xH300",
+        "KVR_L250xW250xH150"
+      ]
+    },
+    "variableVolumeRegulator": {
+      "abbreviation": "VVR",
+      "german": "Variabel Volumenstromregler",
+      "english": "Variable Air Volume (VAV) Regulator",
+      "patterns": {
+        "round": "VVR_L[Length]_DN[Size]",
+        "rectangular": "VVR_L[L]xW[W]xH[H]"
+      },
+      "examples": [
+        "VVR_L400_DN200",
+        "VVR_L310_DN100",
+        "VVR_L400_DN160"
+      ]
+    },
+    "volumeFlowLimiter": {
+      "abbreviation": "VSR",
+      "german": "Volumenstrombegrenzer",
+      "english": "Volume Flow Limiter"
+    },
+    "louverDamper": {
+      "abbreviation": "JK",
+      "german": "Jalousieklappe",
+      "english": "Louver/Opposed Blade Damper"
+    },
+    "flexibleConnector": {
+      "abbreviation": "ST",
+      "german": "Segeltuchstutzen",
+      "english": "Flexible Connector",
+      "pattern": "ST_L[L]xW[W]xH[H]",
+      "examples": ["ST_L100xW1774xH1468"]
+    }
+  },
+  "metadata": {
+    "createdAt": "2026-02-13T18:00:00Z",
+    "author": "SmartTag",
+    "source": "MunichRE RLT drawings - 24 files",
+    "confidence": 0.92,
+    "sampleCount": 600
+  },
+  "_comments": {
+    "dimensionNotes": [
+      "L = Length (Länge)",
+      "W = Width (Breite)",
+      "H = Height (Höhe)",
+      "DN = Nominal Diameter (Nennweite)",
+      "NS = Nennweite/Size for round dampers"
+    ]
+  }
+}

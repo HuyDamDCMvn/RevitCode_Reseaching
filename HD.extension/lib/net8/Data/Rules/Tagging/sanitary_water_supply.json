@@ -1,0 +1,182 @@
+{
+  "$schema": "../Schema/TaggingRule.schema.json",
+  "id": "sanitary_water_supply",
+  "name": "Sanitary Water Supply - German PWC/PWH Standard",
+  "description": "Tagging rules for potable water supply pipes using German naming conventions (merged from TUV + MunichRE)",
+  "version": "2.0.0",
+  "enabled": true,
+  "priority": 85,
+  "conditions": {
+    "categories": [
+      "OST_PipeCurves",
+      "OST_FlexPipeCurves",
+      "OST_PipeAccessory",
+      "OST_PipeFitting"
+    ],
+    "systemClassification": ["DomesticColdWater", "DomesticHotWater", "Recirculation"],
+    "viewTypes": ["FloorPlan", "CeilingPlan", "Section"]
+  },
+  "actions": {
+    "preferredPositions": ["TopCenter", "Center", "BottomCenter"],
+    "offsetDistance": 0.15,
+    "addLeader": false,
+    "leaderStyle": "None",
+    "avoidCollisionWith": ["OST_PipeCurves", "OST_Grids", "OST_Walls"],
+    "alignToGrid": false
+  },
+  "scoring": {
+    "collisionPenalty": -80,
+    "preferenceBonus": 60,
+    "alignmentBonus": 10,
+    "leaderLengthPenalty": 0,
+    "nearEdgeBonus": 5
+  },
+  "metadata": {
+    "author": "SmartTag AI Training",
+    "category": "Sanitary/Plumbing",
+    "discipline": "SAN (Sanitär)",
+    "sources": ["Munich Arena TUV", "MunichRE Revitalization"],
+    "sampleCount": 350,
+    "updatedAt": "2026-02-13"
+  },
+  "systemTypes": [
+    {
+      "code": "PWC-TWK",
+      "fullCode": "410_PWC-TWK",
+      "german": "Trinkwasserleitung Kalt",
+      "english": "Cold Drinking Water",
+      "description": "Cold potable water supply"
+    },
+    {
+      "code": "PWC-TWK-GELB",
+      "german": "Trinkwasserleitung Kalt (Gelb markiert)",
+      "english": "Cold Water Yellow-marked",
+      "description": "Cold water with special marking"
+    },
+    {
+      "code": "PWH-TWW",
+      "fullCode": "410_PWC-TWW",
+      "german": "Trinkwasserleitung Warm",
+      "english": "Hot Drinking Water",
+      "description": "Hot potable water supply"
+    },
+    {
+      "code": "PWH-C-TWZ",
+      "fullCode": "410_PWC-TWZ",
+      "german": "Trinkwasserleitung Zirkulation",
+      "english": "Hot Water Circulation",
+      "description": "Hot water recirculation/return"
+    },
+    {
+      "code": "KN",
+      "fullCode": "410_KN",
+      "german": "Kondensatleitungen",
+      "english": "Condensate Lines",
+      "description": "HVAC condensate drainage"
+    }
+  ],
+  "tagFormat": {
+    "pipeTag": {
+      "pattern": "[System]_DN[Size]",
+      "examples": [
+        "PWC-TWK_DN20",
+        "PWC-TWK-GELB_DN25",
+        "PWH-TWW_DN32",
+        "PWH-C-TWZ_DN20",
+        "KN_DN32"
+      ],
+      "components": {
+        "System": "System abbreviation",
+        "DN": "Nominal diameter in mm"
+      }
+    },
+    "elevationTag": {
+      "pattern": "RA = [+/-][value] m UKRD",
+      "components": {
+        "RA": "Rohrachse (pipe centerline)",
+        "value": "Elevation in meters",
+        "UKRD": "Unterkante Rohdecke (underside of raw ceiling)"
+      },
+      "examples": [
+        "RA = -5.05 m UKRD",
+        "RA = -0.67 m UKRD",
+        "RA = -3.94 m UKRD"
+      ]
+    },
+    "condensateElevation": {
+      "pattern": "RS = [value] m (bez. ±0.00)",
+      "components": {
+        "RS": "Rohrsohle (pipe invert)",
+        "bez. ±0.00": "Reference to ground level"
+      },
+      "examples": [
+        "RS = 2.53 m (bez. ±0.00)",
+        "RS = -0.87 m (bez. ±0.00)"
+      ]
+    },
+    "combinedTag": {
+      "pattern": "[System]_DN[Size]\nRA = [value] m UKRD",
+      "multiLine": true
+    }
+  },
+  "pipeSizes": {
+    "units": "mm (DN)",
+    "waterSizes": [15, 20, 25, 32, 40],
+    "condensateSizes": [25, 32, 40, 65],
+    "commonSizes": {
+      "fixture_branch": [15, 20],
+      "main_branch": [25, 32],
+      "riser": [40]
+    }
+  },
+  "temperatureSystems": {
+    "cold": {
+      "codes": ["PWC-TWK", "PWC-TWK-GELB"],
+      "color": "Blue/Green (Yellow for special)"
+    },
+    "hot": {
+      "codes": ["PWH-TWW"],
+      "color": "Red"
+    },
+    "circulation": {
+      "codes": ["PWH-C-TWZ"],
+      "color": "Red-dashed"
+    }
+  },
+  "elevationReference": {
+    "waterSupply": {
+      "datum": "UKRD",
+      "type": "RA",
+      "description": "Rohrachse (pipe centerline) referenced to underside of raw ceiling"
+    },
+    "condensate": {
+      "datum": "bez. ±0.00",
+      "type": "RS",
+      "description": "Rohrsohle (pipe invert) referenced to ground level"
+    }
+  },
+  "legacyCodeMapping": {
+    "_comment": "Mapping from old TUV codes to new German standard",
+    "BCWS": "PWC-TWK",
+    "HWSF": "PWH-TWW",
+    "HWSR": "PWH-C-TWZ"
+  },
+  "rules": [
+    {
+      "condition": { "systemType": "contains", "value": "Cold" },
+      "tagSettings": { "prefix": "PWC-TWK", "showElevation": true, "elevationType": "RA", "elevationDatum": "UKRD" }
+    },
+    {
+      "condition": { "systemType": "contains", "value": "Hot" },
+      "tagSettings": { "prefix": "PWH-TWW", "showElevation": true, "elevationType": "RA", "elevationDatum": "UKRD" }
+    },
+    {
+      "condition": { "systemType": "contains", "value": "Circulation" },
+      "tagSettings": { "prefix": "PWH-C-TWZ", "showElevation": true, "elevationType": "RA", "elevationDatum": "UKRD" }
+    },
+    {
+      "condition": { "systemType": "contains", "value": "Condensate" },
+      "tagSettings": { "prefix": "KN", "showElevation": true, "elevationType": "RS", "elevationDatum": "bez. ±0.00" }
+    }
+  ]
+}

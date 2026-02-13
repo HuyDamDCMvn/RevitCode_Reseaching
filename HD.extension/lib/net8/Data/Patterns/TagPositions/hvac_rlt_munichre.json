@@ -1,0 +1,241 @@
+{
+  "_description": "HVAC/RLT (Raumlufttechnik) patterns from MunichRE Revitalization project - detailed ventilation execution drawings",
+  "source": {
+    "projectName": "MunichRE Revitalization (Königinstraße 107, München)",
+    "drawings": [
+      {
+        "number": "HG--_ASS_430_5-_GR-_[Level]_[Sheet]_A_FG",
+        "title": "[Level] - Gewerk RLT Planteil [A/B/C]",
+        "discipline": "RLT (Raumlufttechnik / HVAC Ventilation)",
+        "levels": ["U2", "U1", "00", "01", "02", "03", "04", "05"],
+        "sheets": ["0001", "0002", "0003"],
+        "scale": "1:50"
+      }
+    ],
+    "company": "Assmann Beraten + Planen GmbH",
+    "client": "Münchener Rückversicherungs-Gesellschaft AG",
+    "date": "12.02.2026",
+    "phase": "LP5 (Ausführungsplanung)",
+    "totalFiles": 24
+  },
+  "legend": {
+    "airTypes": {
+      "ZUL": { "german": "Zuluft", "english": "Supply Air", "color": "Blue" },
+      "ABL": { "german": "Abluft", "english": "Exhaust Air", "color": "Yellow" },
+      "AUL": { "german": "Außenluft", "english": "Outside Air", "color": "Green" },
+      "FOL": { "german": "Fortluft", "english": "Exhaust to Outside", "color": "Brown" },
+      "UML": { "german": "Umluft", "english": "Recirculation Air" }
+    },
+    "components": {
+      "SD": { "german": "Schalldämpfer allgemein", "english": "Silencer/Attenuator" },
+      "KVR": { "german": "Volumenstromregler mechanisch - konstant", "english": "Constant Volume Regulator" },
+      "VVR": { "german": "Volumenstromregler variabel", "english": "Variable Volume Regulator" },
+      "VSR": { "german": "Volumenstrombegrenzer", "english": "Volume Flow Limiter" },
+      "BSK": { "german": "Brandschutzklappe", "english": "Fire Damper" },
+      "RSK": { "german": "Rauchschutzklappe", "english": "Smoke Damper" },
+      "JK": { "german": "Jalousieklappe", "english": "Louver Damper" },
+      "ST": { "german": "Segeltuchstutzen", "english": "Flexible Connector" }
+    },
+    "diffusers": {
+      "Tellerventile": "Disc Valve (circular diffuser)",
+      "Lüftungsgitter": "Ventilation Grille",
+      "Bodendiffusor": "Floor Diffuser",
+      "Bodenluftauslass": "Floor Air Outlet",
+      "Quellluftdurchlass": "Displacement Diffuser"
+    },
+    "abbreviations": {
+      "OK": "Oberkante (Top edge)",
+      "OKK": "Oberkante Kanal (Top of duct)",
+      "RA": "Rohrachse (Pipe/duct centerline)",
+      "RS": "Rohrsohle (Pipe/duct invert)",
+      "UK": "Unterkante (Bottom edge)",
+      "UKRD": "Unterkante Rohdecke (Underside of structural slab)"
+    }
+  },
+  "observations": [
+    {
+      "elementType": "Duct Tag - Round",
+      "labelingPattern": "L_[AirType]-[System]_DN[Size]",
+      "examples": [
+        "L_ZUL-RLT20_DN125",
+        "L_ABL-RLT40_DN200",
+        "L_FOL-RLT90_DN100",
+        "L_AUL-RLT30&RLT20&RLT35&RLT40_1500x600"
+      ],
+      "components": {
+        "L": "Leitung (Duct/Line)",
+        "AirType": "ZUL/ABL/AUL/FOL",
+        "System": "RLT01, RLT05, RLT10, RLT20, RLT25, RLT30, RLT35, RLT40, RLT45, RLT85, RLT90",
+        "DN": "Nominal diameter in mm"
+      },
+      "position": "Along duct centerline"
+    },
+    {
+      "elementType": "Duct Tag - Rectangular",
+      "labelingPattern": "L_[AirType]-[System]_[Width]x[Height]",
+      "examples": [
+        "L_ZUL-RLT35_450x350",
+        "L_ABL-RLT40_550x300",
+        "L_ZUL-RLT20_200x200"
+      ],
+      "notes": "Dimensions in mm (Width x Height)"
+    },
+    {
+      "elementType": "Elevation Tag",
+      "labelingPatterns": [
+        "RA = [+/-][value] m UKRD",
+        "OKK = [+/-][value] m UKRD"
+      ],
+      "examples": [
+        "RA = -0.15 m UKRD",
+        "OKK = -0.08 m UKRD",
+        "RA = -0.53 m UKRD"
+      ],
+      "reference": "UKRD (Unterkante Rohdecke - underside of structural slab)"
+    },
+    {
+      "elementType": "Air Terminal - Tellerventile",
+      "labelingPattern": "Tellerventile_DN[Size]",
+      "flowRateFormat": "[Value] m³/h",
+      "examples": [
+        "Tellerventile_DN125",
+        "80 m³/h",
+        "Tellerventile_DN100",
+        "40 m³/h"
+      ],
+      "sizeRange": "DN80, DN100, DN125, DN150, DN160, DN200, DN250"
+    },
+    {
+      "elementType": "Air Terminal - Rectangular Tellerventile",
+      "labelingPattern": "Tellerventile_L[L]xW[W]xH[H]_DN[Size]",
+      "examples": [
+        "Tellerventile_L600xW600xH345_DN250",
+        "Tellerventile_L500xW500xH200_DN200"
+      ]
+    },
+    {
+      "elementType": "Lüftungsgitter (Grille)",
+      "labelingPattern": "Lüftungsgitter_W[Width]xH[Height]",
+      "flowRateFormat": "[Value] m³/h",
+      "examples": [
+        "Lüftungsgitter_W325xH225",
+        "410 m³/h",
+        "Lüftungsgitter_W425xH125",
+        "440 m³/h"
+      ]
+    },
+    {
+      "elementType": "Bodendiffusor (Floor Diffuser)",
+      "labelingPattern": "Bodendiffusor_B[Width]xH[Height]xT[Depth]",
+      "flowRateFormat": "[Value] m³/h",
+      "examples": [
+        "Bodendiffusor_B500xH1000xT350",
+        "299 m³/h",
+        "Bodendiffusor_B400xH800xT300",
+        "220 m³/h"
+      ]
+    },
+    {
+      "elementType": "Bodenluftauslass (Floor Outlet)",
+      "labelingPattern": "Bodenluftauslass_L[L]xW[W]xH[H]",
+      "examples": ["Bodenluftauslass_L1000xW390xH200"]
+    },
+    {
+      "elementType": "Kitchen Hood",
+      "labelingPattern": "Kü._Haube",
+      "flowRateFormat": "[Value] m³/h",
+      "examples": [
+        "Kü._Haube",
+        "340 m³/h",
+        "Kü._Haube",
+        "1834 m³/h"
+      ],
+      "flowRateRange": "125-1834 m³/h"
+    },
+    {
+      "elementType": "Fire Damper (BSK)",
+      "labelingPattern": "BSK_L[L]xW[W]xH[H] or BSK_NS[Size]",
+      "examples": [
+        "BSK_L500xW350xH300",
+        "BSK_L500xW700xH400",
+        "BSK_NS100",
+        "BSK_NS160"
+      ]
+    },
+    {
+      "elementType": "Silencer (SD)",
+      "labelingPatterns": [
+        "SD_L[Length]_DN[Size]",
+        "SD_L[Length]xW[Width]xH[Height]"
+      ],
+      "examples": [
+        "SD_L1000_DN100",
+        "SD_L500_DN80",
+        "SD_L1000xW350xH300"
+      ]
+    },
+    {
+      "elementType": "Volume Regulator (KVR/VVR)",
+      "labelingPatterns": [
+        "KVR_DN[Size]",
+        "KVR_L[L]xW[W]xH[H]",
+        "VVR_L[L]_DN[Size]"
+      ],
+      "examples": [
+        "KVR_DN100",
+        "KVR_L400xW350xH300",
+        "VVR_L400_DN200"
+      ]
+    },
+    {
+      "elementType": "Room Tag",
+      "labelingPattern": "[Level].[RoomCode]-HG",
+      "examples": [
+        "0.5136-HG Müllraum",
+        "3.6176-HG Studio TV-Studio 3",
+        "-1.7214-HG Ventilatorraum für Garten Casino"
+      ],
+      "note": "Level.RoomNumber-HG (HG = Hauptgebäude)"
+    },
+    {
+      "elementType": "Smoke Damper (RSK)",
+      "labelingPattern": "RSK_W[Width]xH[Height]",
+      "examples": ["RSK_W250xH150", "RSK_W750xH500"]
+    },
+    {
+      "elementType": "AHU/Ventilator",
+      "labelingPattern": "Ventilator L[L]xW[W]xH[H] or RLT[Number] L[L]xW[W]xH[H]",
+      "flowRateFormat": "FOL: [Value] m³/h",
+      "examples": [
+        "Ventilator L4342xW1630xH1760",
+        "RLT85 L700xW700xH700 FOL: 0 m³/h"
+      ]
+    }
+  ],
+  "ductDimensionFormat": {
+    "round": "DN[Size] (mm)",
+    "rectangular": "[Width]x[Height] (mm)",
+    "flowRate": "[Value] m³/h"
+  },
+  "rltSystems": {
+    "RLT01": "Main ventilation system 01",
+    "RLT05": "Ventilation system 05",
+    "RLT10": "Ventilation system 10",
+    "RLT20": "Ventilation system 20 (general areas)",
+    "RLT25": "Ventilation system 25",
+    "RLT30": "Ventilation system 30 (technical rooms)",
+    "RLT35": "Ventilation system 35",
+    "RLT40": "Ventilation system 40 (kitchen/restaurant)",
+    "RLT45": "Ventilation system 45 (supply only)",
+    "RLT85": "Special exhaust system 85",
+    "RLT90": "Exhaust system 90",
+    "RLT-Kitchen": "Kitchen exhaust system"
+  },
+  "generalNotes": [
+    "Scale 1:50 for detailed execution drawings",
+    "Elevations referenced to UKRD (underside of structural slab)",
+    "All dimensions in mm",
+    "Flow rates in m³/h",
+    "Multi-system ducts use & separator (e.g., RLT30&RLT20&RLT35&RLT40)"
+  ]
+}
