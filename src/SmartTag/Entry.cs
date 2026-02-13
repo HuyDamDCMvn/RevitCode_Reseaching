@@ -59,19 +59,28 @@ namespace SmartTag
 
                 // Show modeless (non-blocking)
                 _window.Show();
-                
-                // AFTER window is shown, trigger initial load
-                // Use Dispatcher to defer execution so UI can render first
+
+                // Queue category load immediately (same thread as Revit caller) so Revit processes it
+                // when control returns - avoids user having to press Refresh on first open
+                try
+                {
+                    viewModel.RefreshCategoriesCommand.Execute(null);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Initial RefreshCategories: {ex.Message}");
+                }
+
+                // Defer dimension types load so UI is ready
                 _window.Dispatcher.BeginInvoke(new Action(() =>
                 {
                     try
                     {
-                        viewModel.RefreshCategoriesCommand.Execute(null);
-                        viewModel.LoadDimensionTypesCommand.Execute(null);
+                        viewModel.LoadDimensionTypesCommand?.Execute(null);
                     }
                     catch (Exception initEx)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Initial load error: {initEx.Message}");
+                        System.Diagnostics.Debug.WriteLine($"Initial LoadDimensionTypes: {initEx.Message}");
                     }
                 }), System.Windows.Threading.DispatcherPriority.Background);
             }

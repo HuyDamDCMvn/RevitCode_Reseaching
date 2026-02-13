@@ -48,18 +48,29 @@ namespace SmartTag.Services
                 // 2. Collect all elements for context analysis
                 var allElements = CollectAllTaggableElements();
 
-                // 3. Build training samples
-                var samples = new List<TrainingSample>();
-                
-                foreach (var (element, tag) in taggedPairs)
+                // 3. Collect all tag locations (for alignment-between-tags detection)
+                var allTagLocations = new List<Point2D>();
+                foreach (var (_, tag) in taggedPairs)
                 {
                     try
                     {
-                        var sample = BuildTrainingSample(element, tag, allElements);
+                        var tagHead = tag.TagHeadPosition;
+                        allTagLocations.Add(ConvertToViewCoordinates(tagHead));
+                    }
+                    catch { /* skip */ }
+                }
+
+                // 4. Build training samples (alignment = tag vs other tags)
+                var samples = new List<TrainingSample>();
+                for (int i = 0; i < taggedPairs.Count; i++)
+                {
+                    var (element, tag) = taggedPairs[i];
+                    try
+                    {
+                        var otherTagLocations = allTagLocations.Where((_, idx) => idx != i).ToList();
+                        var sample = BuildTrainingSample(element, tag, allElements, otherTagLocations);
                         if (sample != null)
-                        {
                             samples.Add(sample);
-                        }
                     }
                     catch (Exception ex)
                     {
@@ -235,10 +246,12 @@ namespace SmartTag.Services
         /// <summary>
         /// Build a training sample from an element and its tag.
         /// </summary>
+        /// <param name="otherTagLocations">Other tags' head positions in view coords (for alignment-between-tags).</param>
         private TrainingSample BuildTrainingSample(
             Element element,
             IndependentTag tag,
-            List<TaggableElement> allElements)
+            List<TaggableElement> allElements,
+            List<Point2D> otherTagLocations = null)
         {
             // Get element info
             var taggable = ConvertToTaggableElement(element);
@@ -267,8 +280,8 @@ namespace SmartTag.Services
             // Get tag bounds (approximate)
             var (tagWidth, tagHeight) = EstimateTagSize(tag, tagText);
 
-            // Check alignment
-            var (alignedRow, alignedCol) = CheckAlignment(tagLocation, allElements);
+            // Alignment between tags: same Y = row, same X = column
+            var (alignedRow, alignedCol) = CheckAlignmentWithOtherTags(tagLocation, otherTagLocations ?? new List<Point2D>());
 
             // Calculate leader length
             var leaderLength = tag.HasLeader ? CalculateLeaderLength(tag, element) : 0;
@@ -572,18 +585,20 @@ namespace SmartTag.Services
             }
         }
 
-        private (bool alignedRow, bool alignedCol) CheckAlignment(Point2D tagLocation, List<TaggableElement> allElements)
+        /// <summary>
+        /// Check if this tag aligns with other tags (same Y = row, same X = column).
+        /// </summary>
+        private (bool alignedRow, bool alignedCol) CheckAlignmentWithOtherTags(Point2D tagLocation, List<Point2D> otherTagLocations)
         {
-            // Simplified: check if tag aligns with other elements' centers
-            var tolerance = 1.0; // feet
+            const double tolerance = 1.0; // feet
 
-            var alignedRow = allElements.Any(e => 
-                Math.Abs(e.Center.Y - tagLocation.Y) < tolerance && 
-                Math.Abs(e.Center.X - tagLocation.X) > tolerance);
+            var alignedRow = otherTagLocations.Any(p =>
+                Math.Abs(p.Y - tagLocation.Y) <= tolerance &&
+                Math.Abs(p.X - tagLocation.X) > tolerance);
 
-            var alignedCol = allElements.Any(e => 
-                Math.Abs(e.Center.X - tagLocation.X) < tolerance && 
-                Math.Abs(e.Center.Y - tagLocation.Y) > tolerance);
+            var alignedCol = otherTagLocations.Any(p =>
+                Math.Abs(p.X - tagLocation.X) <= tolerance &&
+                Math.Abs(p.Y - tagLocation.Y) > tolerance);
 
             return (alignedRow, alignedCol);
         }

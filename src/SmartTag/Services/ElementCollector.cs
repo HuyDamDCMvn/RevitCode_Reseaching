@@ -336,6 +336,34 @@ namespace SmartTag.Services
                 }
             }
             catch { /* Grid collection failed */ }
+
+            // Collect ClearanceZone elements (e.g. ClearanceZone_Rectangular) - tags must not overlap these
+            const double clearanceMargin = 0.5; // feet - buffer so tags don't sit on zone edge
+            try
+            {
+                var fiCollector = new FilteredElementCollector(_doc, _view.Id)
+                    .OfClass(typeof(FamilyInstance))
+                    .WhereElementIsNotElementType();
+                foreach (FamilyInstance fi in fiCollector)
+                {
+                    try
+                    {
+                        var familyName = fi.Symbol?.Family?.Name ?? "";
+                        if (string.IsNullOrEmpty(familyName) || familyName.IndexOf("ClearanceZone", StringComparison.OrdinalIgnoreCase) < 0)
+                            continue;
+                        var bounds = GetViewBounds(fi);
+                        if (bounds.HasValue)
+                        {
+                            var b = bounds.Value;
+                            result.Add(new BoundingBox2D(
+                                b.MinX - clearanceMargin, b.MinY - clearanceMargin,
+                                b.MaxX + clearanceMargin, b.MaxY + clearanceMargin));
+                        }
+                    }
+                    catch { /* skip single element */ }
+                }
+            }
+            catch { /* ClearanceZone collection failed */ }
             
             return result;
         }

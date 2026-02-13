@@ -149,6 +149,24 @@ namespace SmartTag.Services
         }
 
         /// <summary>
+        /// Get alignment hints from learned data. Returns null if no learned data.
+        /// </summary>
+        public (bool? alignRow, bool? alignCol) GetPreferAlignment(string category, string systemName = null)
+        {
+            EnsureLoaded();
+            LearnedOverride o = null;
+            if (!string.IsNullOrEmpty(systemName))
+            {
+                var key = $"{category}|{systemName}";
+                _data.ByCategoryAndSystem.TryGetValue(key, out o);
+            }
+            if (o == null)
+                _data.ByCategory.TryGetValue(category ?? "", out o);
+            if (o == null) return (null, null);
+            return (o.PreferAlignRow, o.PreferAlignColumn);
+        }
+
+        /// <summary>
         /// Get offset distance hint (feet). Returns null if no learned data.
         /// </summary>
         public double? GetOffsetDistance(string category, string systemName = null)
@@ -256,6 +274,14 @@ namespace SmartTag.Services
 
         [JsonPropertyName("offsetDistance")]
         public double? OffsetDistance { get; set; }
+
+        /// <summary>When true, majority of samples had tag aligned with other tags in row (same Y).</summary>
+        [JsonPropertyName("preferAlignRow")]
+        public bool? PreferAlignRow { get; set; }
+
+        /// <summary>When true, majority of samples had tag aligned with other tags in column (same X).</summary>
+        [JsonPropertyName("preferAlignColumn")]
+        public bool? PreferAlignColumn { get; set; }
 
         [JsonPropertyName("sampleCount")]
         public int SampleCount { get; set; }

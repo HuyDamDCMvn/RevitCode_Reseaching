@@ -190,6 +190,11 @@ namespace SmartTag.Services
             var hasLeaderCount = valid.Count(s => s.Tag?.HasLeader == true);
             var addLeader = valid.Count > 0 && hasLeaderCount > (valid.Count / 2);
 
+            var alignRowCount = valid.Count(s => s.Tag != null && s.Tag.AlignedWithRow);
+            var alignColCount = valid.Count(s => s.Tag != null && s.Tag.AlignedWithColumn);
+            var preferAlignRow = valid.Count > 0 && alignRowCount > (valid.Count / 2);
+            var preferAlignColumn = valid.Count > 0 && alignColCount > (valid.Count / 2);
+
             double? avgOffset = null;
             var withOffset = valid.Where(s => s.Tag != null).ToList();
             if (withOffset.Count > 0)
@@ -205,6 +210,8 @@ namespace SmartTag.Services
                 PreferredPositions = positionCounts.Count > 0 ? positionCounts : new List<string> { "TopRight" },
                 AddLeader = addLeader,
                 OffsetDistance = avgOffset,
+                PreferAlignRow = preferAlignRow,
+                PreferAlignColumn = preferAlignColumn,
                 SampleCount = valid.Count
             };
         }

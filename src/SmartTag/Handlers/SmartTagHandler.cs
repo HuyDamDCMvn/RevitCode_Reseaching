@@ -306,6 +306,10 @@ namespace SmartTag
             OnStatusUpdate?.Invoke("Resolving collisions...");
             placementService.ResolveCollisions(placements);
 
+            // 4. Refinement loop: re-scan overlap, re-place or align until clean (max 3 iterations)
+            OnStatusUpdate?.Invoke("Refining placements (re-place/align)...");
+            placementService.RefinePlacementsIterative(placements, elements, settings, maxRefineIterations: 3);
+
             OnStatusUpdate?.Invoke($"Creating {placements.Count} tags...");
 
             // 4. Create tags in transaction with error handling
@@ -515,9 +519,13 @@ namespace SmartTag
             OnStatusUpdate?.Invoke("Resolving collisions...");
             placementService.ResolveCollisions(placements);
 
+            // 4. Refinement loop: re-scan overlap, re-place or align (max 3 iterations)
+            OnStatusUpdate?.Invoke("Refining placements (re-place/align)...");
+            placementService.RefinePlacementsIterative(placements, elements, settings, maxRefineIterations: 3);
+
             OnStatusUpdate?.Invoke($"Creating {placements.Count} preview tags...");
 
-            // 4. Create tags in transaction
+            // 5. Create tags in transaction
             var creationService = new TagCreationService(doc, view);
             TagResult result = new TagResult();
             _previewTagIds.Clear();

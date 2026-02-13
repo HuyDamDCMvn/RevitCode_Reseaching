@@ -28,6 +28,7 @@ namespace SmartTag.Services
         private const double MAX_ACCEPTABLE_SCORE = 800;
         private const double COLLISION_PENALTY = 500;
         private const double ELEMENT_COLLISION_PENALTY = 150;
+        private const double ANNOTATION_COLLISION_PENALTY = 220; // dimensions, text, ClearanceZone - avoid overlap
         private const double LEADER_COLLISION_PENALTY = 50;
         
         // Linear element thresholds
@@ -617,10 +618,13 @@ namespace SmartTag.Services
                         var systemName = element.SystemName ?? "";
                         var learnedOffset = learned.GetOffsetDistance(category, systemName);
                         var learnedLeader = learned.GetAddLeader(category, systemName);
+                        var (preferAlignRow, preferAlignCol) = learned.GetPreferAlignment(category, systemName);
                         if (learnedOffset.HasValue && learnedOffset.Value > 0)
                             settings.OffsetDistance = learnedOffset.Value;
                         if (learnedLeader.HasValue)
                             settings.AddLeader = learnedLeader.Value;
+                        if (preferAlignRow == true || preferAlignCol == true)
+                            settings.AlignmentBonus = Math.Max(settings.AlignmentBonus, 25); // stronger alignment when learned
                     }
                     catch { /* ignore */ }
                 }
@@ -986,9 +990,9 @@ namespace SmartTag.Services
                 }
             }
             
-            // 4. Tag-to-annotation collision (dimensions, text notes)
+            // 4. Tag-to-annotation collision (dimensions, text notes, ClearanceZone) - strong penalty to avoid overlap
             var annotationCollisions = _annotationIndex.GetCollisions(placement.EstimatedTagBounds);
-            score += annotationCollisions.Count * ELEMENT_COLLISION_PENALTY;
+            score += annotationCollisions.Count * ANNOTATION_COLLISION_PENALTY;
             
             // 5. Leader collision check (if has leader)
             if (placement.HasLeader)
@@ -1226,6 +1230,7 @@ namespace SmartTag.Services
 
         /// <summary>
         /// #11: Resolve collisions by pushing tags apart - OPTIMIZED using spatial index.
+        /// First pushes tags away from annotations (dimensions, text, ClearanceZone), then tag-vs-tag.
         /// </summary>
         public void ResolveCollisions(List<TagPlacement> placements, int maxIterations = 20) // Increased iterations
         {
@@ -1233,6 +1238,24 @@ namespace SmartTag.Services
             
             try
             {
+                // 1) Push away from annotations (ClearanceZone, dimensions, text) so tags don't overlap
+                const int maxAnnotationPushIter = 5;
+                for (int iter = 0; iter < maxAnnotationPushIter; iter++)
+                {
+                    bool anyPushed = false;
+                    foreach (var placement in placements)
+                    {
+                        if (placement == null) continue;
+                        var hits = _annotationIndex.GetCollisions(placement.EstimatedTagBounds);
+                        foreach (var hit in hits)
+                        {
+                            if (PushAwayFromAnnotation(placement, hit.Bounds))
+                                anyPushed = true;
+                        }
+                    }
+                    if (!anyPushed) break;
+                }
+
                 // Validate cell size
                 var cellSize = Math.Max(_tagWidth, _tagHeight) * 2;
                 if (cellSize <= 0 || double.IsNaN(cellSize) || double.IsInfinity(cellSize))
@@ -1411,6 +1434,126 @@ namespace SmartTag.Services
                 placement.EstimatedTagBounds.MinY + dy,
                 placement.EstimatedTagBounds.MaxX + dx,
                 placement.EstimatedTagBounds.MaxY + dy);
+        }
+
+        /// <summary>
+        /// Push placement away from an annotation/clearance box so it no longer overlaps. Returns true if moved.
+        /// </summary>
+        private bool PushAwayFromAnnotation(TagPlacement placement, BoundingBox2D annotationBounds)
+        {
+            if (!placement.EstimatedTagBounds.Intersects(annotationBounds)) return false;
+            var tagCenter = placement.EstimatedTagBounds.Center;
+            var annCenter = annotationBounds.Center;
+            var dx = tagCenter.X - annCenter.X;
+            var dy = tagCenter.Y - annCenter.Y;
+            var len = Math.Sqrt(dx * dx + dy * dy);
+            if (len < 0.001)
+            {
+                dx = _minSpacing; dy = _minSpacing;
+                len = Math.Sqrt(dx * dx + dy * dy);
+            }
+            var nx = dx / len;
+            var ny = dy / len;
+            // Minimum push to clear overlap (half tag width/height + half annotation + margin)
+            var pushDist = (placement.EstimatedTagBounds.Width + placement.EstimatedTagBounds.Height) / 4
+                + (annotationBounds.Width + annotationBounds.Height) / 4 + _minSpacing;
+            pushDist = Math.Max(pushDist, _minSpacing * 2);
+            MoveTag(placement, nx * pushDist, ny * pushDist);
+            return true;
+        }
+
+        /// <summary>
+        /// Refinement loop: scan newly placed tags that still overlap, re-place or re-run collision/alignment.
+        /// Run after initial ResolveCollisions. Repeats: resolve + align → detect overlap → re-place overlapping → until clean or max iterations.
+        /// </summary>
+        public void RefinePlacementsIterative(List<TagPlacement> placements, List<TaggableElement> elements, TagSettings settings, int maxRefineIterations = 3)
+        {
+            if (placements == null || placements.Count == 0 || elements == null || settings == null || maxRefineIterations <= 0)
+                return;
+
+            var elementById = new Dictionary<long, TaggableElement>();
+            foreach (var e in elements)
+            {
+                if (e == null) continue;
+                if (!elementById.ContainsKey(e.ElementId))
+                    elementById[e.ElementId] = e;
+            }
+
+            for (int refineIter = 0; refineIter < maxRefineIterations; refineIter++)
+            {
+                // 1) Resolve collisions and alignment
+                ResolveCollisions(placements);
+                if (settings.AlignTags)
+                    AlignTagPlacements(placements, settings);
+
+                // 2) Ensure _tagIndex reflects current placements (in case we replaced some)
+                SyncTagIndexFromPlacements(placements);
+
+                // 3) Find placements that still overlap (tag or annotation)
+                var overlappingIndices = new List<int>();
+                for (int i = 0; i < placements.Count; i++)
+                {
+                    var p = placements[i];
+                    if (p == null) continue;
+                    var tagId = p.ElementId * 1000L + p.SegmentIndex;
+                    var tagCollisions = _tagIndex.GetCollisions(p.EstimatedTagBounds, tagId);
+                    var annCollisions = _annotationIndex.GetCollisions(p.EstimatedTagBounds);
+                    if (tagCollisions.Count > 0 || annCollisions.Count > 0)
+                        overlappingIndices.Add(i);
+                }
+
+                if (overlappingIndices.Count == 0)
+                    break;
+
+                // 4) Re-place only single-placement elements (skip linear multi-segment)
+                foreach (var index in overlappingIndices)
+                {
+                    var placement = placements[index];
+                    if (placement == null) continue;
+
+                    int sameElementCount = 0;
+                    for (int j = 0; j < placements.Count; j++)
+                    {
+                        if (placements[j] != null && placements[j].ElementId == placement.ElementId)
+                            sameElementCount++;
+                    }
+                    if (sameElementCount != 1)
+                        continue; // linear element with multiple segments - skip re-place
+
+                    if (!elementById.TryGetValue(placement.ElementId, out var element))
+                        continue;
+
+                    var tagId = placement.ElementId * 1000L + placement.SegmentIndex;
+                    _tagIndex.Remove(tagId);
+
+                    var newPlacement = FindBestPlacement(element, settings);
+                    if (newPlacement != null)
+                    {
+                        newPlacement.SegmentIndex = placement.SegmentIndex;
+                        placements[index] = newPlacement;
+                        _tagIndex.Add(tagId, newPlacement.EstimatedTagBounds);
+                    }
+                    else
+                    {
+                        _tagIndex.Add(tagId, placement.EstimatedTagBounds);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Update _tagIndex so placement IDs point to current bounds (after ResolveCollisions/Align changed positions).
+        /// </summary>
+        private void SyncTagIndexFromPlacements(List<TagPlacement> placements)
+        {
+            if (placements == null) return;
+            foreach (var p in placements)
+            {
+                if (p == null) continue;
+                var id = p.ElementId * 1000L + p.SegmentIndex;
+                _tagIndex.Remove(id);
+                _tagIndex.Add(id, p.EstimatedTagBounds);
+            }
         }
     }
 }
