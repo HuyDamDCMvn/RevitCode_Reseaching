@@ -77,6 +77,30 @@ namespace SmartTag.Services
             return best.Radius;
         }
 
+        public void Reset()
+        {
+            lock (_lock)
+            {
+                _entries.Clear();
+                _radiusPath = null;
+            }
+        }
+
+        public void ForceReload()
+        {
+            lock (_lock)
+            {
+                _entries.Clear();
+                var annotatedPath = GetAnnotatedFolderPath();
+                var built = BuildFromAnnotatedFolder(annotatedPath);
+                if (built?.Radii != null && built.Radii.Count > 0)
+                {
+                    _entries.AddRange(built.Radii);
+                    SaveToFile(GetRadiusPath(), built);
+                }
+            }
+        }
+
         private void EnsureLoaded()
         {
             if (_entries.Count > 0) return;

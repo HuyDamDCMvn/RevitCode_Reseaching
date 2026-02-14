@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-13T18:36:16.0724050Z",
+  "updatedAt": "2026-02-13T19:33:16.6517986Z",
   "byCategory": {
     "OST_DuctCurves": {
       "preferredPositions": [
@@ -22,16 +22,16 @@
       "preferredPositions": [
         "Right",
         "BottomRight",
+        "TopRight",
         "BottomLeft",
-        "Left",
         "TopLeft",
-        "TopRight"
+        "Left"
       ],
       "addLeader": true,
-      "offsetDistance": 7.082770525672311,
+      "offsetDistance": 5.713763806406671,
       "preferAlignRow": true,
       "preferAlignColumn": true,
-      "sampleCount": 34
+      "sampleCount": 47
     },
     "OST_MechanicalEquipment": {
       "preferredPositions": [
@@ -49,15 +49,16 @@
     },
     "OST_DuctAccessory": {
       "preferredPositions": [
+        "TopLeft",
         "Right",
-        "BottomRight",
-        "TopRight"
+        "BottomLeft",
+        "BottomRight"
       ],
       "addLeader": true,
-      "offsetDistance": 7.9047370129604655,
-      "preferAlignRow": true,
-      "preferAlignColumn": false,
-      "sampleCount": 4
+      "offsetDistance": 6.718864805323822,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 12
     },
     "OST_PipeCurves": {
       "preferredPositions": [
@@ -382,22 +383,22 @@
     },
     "OST_DuctCurves|KE 2": {
       "preferredPositions": [
-        "TopLeft"
+        "Right"
       ],
       "addLeader": true,
-      "offsetDistance": 10.247107152953966,
-      "preferAlignRow": true,
-      "preferAlignColumn": false,
+      "offsetDistance": 2.5201060738845626,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
       "sampleCount": 1
     },
     "OST_DuctCurves|KS 7": {
       "preferredPositions": [
-        "Left"
+        "TopRight"
       ],
       "addLeader": true,
-      "offsetDistance": 8.762535807969115,
-      "preferAlignRow": true,
-      "preferAlignColumn": false,
+      "offsetDistance": 4.755199414497682,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
       "sampleCount": 1
     },
     "OST_DuctTerminal|EA 75": {
@@ -1566,6 +1567,839 @@
       "preferAlignRow": true,
       "preferAlignColumn": true,
       "sampleCount": 143
+    },
+    "OST_MechanicalEquipment|SA 92,EA 118,FA 87,FO 55": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 16.252038675718268,
+      "preferAlignRow": false,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 107,EA 120,FA 88,FO 56": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 16.59971705217693,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|EA 120": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.370652229003152,
+      "preferAlignRow": false,
+      "preferAlignColumn": false,
+      "sampleCount": 2
+    },
+    "OST_DuctTerminal|FA 68": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 1.3706666848827211,
+      "preferAlignRow": false,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 62": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 1.8348612383364866,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|EA 36": {
+      "preferredPositions": [
+        "Right",
+        "TopRight",
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 7.353621331886326,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 3
+    },
+    "OST_DuctTerminal|FO 25": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.5246145076979545,
+      "preferAlignRow": false,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FA 26": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 1.693590858743839,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 37,EA 36,FA 26,FO 25": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 12.225422020482036,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 120,EA 96,FA 81,FO 79": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 11.968997951766234,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 79": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 2.180230710495394,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FA 81": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 2.801991705279466,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FA 88": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 12.729746867519808,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 56": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 12.892672967086959,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FA 87": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 11.93280441389215,
+      "preferAlignRow": false,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 55": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 11.348028790947815,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctAccessory|EA 36": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 7.691380933153518,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctAccessory|SA 37": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 12.379055117068791,
+      "preferAlignRow": false,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctAccessory|SA 92": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 2.857821157523894,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctAccessory|EA 118": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 8.34550871811129,
+      "preferAlignRow": false,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctAccessory|SA 120": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.690793645684796,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctAccessory|EA 96": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 7.9061718969912285,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctAccessory|SA 55": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.940851438730178,
+      "preferAlignRow": false,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctAccessory|EA 9": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 6.270730453513011,
+      "preferAlignRow": false,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 55,EA 9,FA 68,FO 62": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 8.837813077734722,
+      "preferAlignRow": false,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 33": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 1.4727706314027955,
+      "preferAlignRow": false,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FA 63": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 1.4265751867060885,
+      "preferAlignRow": false,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 36,EA 38,FA 63,FO 33": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 7.449765445294467,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|EA 38": {
+      "preferredPositions": [
+        "Right",
+        "TopRight",
+        "TopLeft",
+        "BottomRight",
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.602080808327602,
+      "preferAlignRow": false,
+      "preferAlignColumn": false,
+      "sampleCount": 7
+    },
+    "OST_DuctTerminal|EA 118": {
+      "preferredPositions": [
+        "Right",
+        "Left"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.603572394520924,
+      "preferAlignRow": false,
+      "preferAlignColumn": false,
+      "sampleCount": 2
+    },
+    "OST_DuctCurves|EA 107": {
+      "preferredPositions": [
+        "BottomRight",
+        "BottomLeft",
+        "TopLeft",
+        "BottomCenter",
+        "Right",
+        "Left",
+        "TopCenter"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.5428837748569064,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 22
+    },
+    "OST_DuctCurves|SA 147": {
+      "preferredPositions": [
+        "BottomRight",
+        "BottomLeft",
+        "Left",
+        "TopRight",
+        "Right",
+        "TopLeft",
+        "BottomCenter",
+        "TopCenter"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.1666785759297555,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 21
+    },
+    "OST_DuctTerminal|EA 107": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.3483889677813465,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctAccessory|EA 107": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.08893621126839,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctAccessory|SA 147": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.536439445917914,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 74": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 8.620004206797326,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FA 78": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 10.964484778018786,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FA 78": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 9.055216027424834,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FO 74": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 6.428890605466378,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 147,EA 107,FA 78,FO 74,Hydronic Supply 17,Hydronic Supply 16": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 22.25943688711628,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|SA 124": {
+      "preferredPositions": [
+        "BottomLeft",
+        "BottomRight",
+        "TopLeft",
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.780815479795507,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 12
+    },
+    "OST_DuctCurves|EA 126": {
+      "preferredPositions": [
+        "BottomLeft",
+        "BottomRight",
+        "TopLeft",
+        "TopRight",
+        "TopCenter",
+        "BottomCenter",
+        "Right",
+        "Left"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.283659429093598,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 26
+    },
+    "OST_DuctTerminal|FO 73": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 8.851253308467381,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FA 76": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.051004059495515,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FO 73": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 6.441659276151931,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FA 76": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.806696597980665,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 49,EA 126,FA 76,FO 73": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 11.793028248243896,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 71": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 10.087263484107037,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FA 75": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.1726585852526625,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 124,EA 126,FA 75,FO 71": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 11.5188726915538,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FA 75": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.4911510206079015,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FO 71": {
+      "preferredPositions": [
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.509426357811726,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctAccessory|SA 49": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 7.706438195032156,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctAccessory|EA 126": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 10.2122504508907,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|SA 49": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.353479849980834,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|EA 126": {
+      "preferredPositions": [
+        "BottomRight",
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 9.08464548443462,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 2
+    },
+    "OST_DuctTerminal|FA 77": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 2.5579279220132065,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 72": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.373205198672274,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FA 77": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.406607778872271,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FO 72": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.6325170456956855,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 51,EA 102,FA 77,FO 72": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 13.424128555102804,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|SA 51": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.4993280281913073,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|EA 102": {
+      "preferredPositions": [
+        "Left",
+        "BottomRight",
+        "BottomCenter",
+        "TopLeft",
+        "TopRight",
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.7598933322416404,
+      "preferAlignRow": true,
+      "preferAlignColumn": false,
+      "sampleCount": 15
+    },
+    "OST_DuctTerminal|EA 102": {
+      "preferredPositions": [
+        "Right",
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.7200301605380375,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 2
+    },
+    "OST_DuctTerminal|FA 15": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.3712509647431688,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 66": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.47376860730472,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FA 15": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.358599846539022,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FO 66": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.994381657720865,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 105,EA 67,FA 15,FO 66": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 8.805977213613616,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|EA 67": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.979773394809705,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|SA 105": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.2358671444171065,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FA 79": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 2.341857095903663,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctTerminal|FO 30": {
+      "preferredPositions": [
+        "Right"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.0635347386668528,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FA 79": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.8999837961670565,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_MechanicalEquipment|SA 62,EA 113,FA 79,FO 30": {
+      "preferredPositions": [
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 7.8626654029248115,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|FO 30": {
+      "preferredPositions": [
+        "BottomRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.084507280771142,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|SA 62": {
+      "preferredPositions": [
+        "TopLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 4.173542503858194,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 1
+    },
+    "OST_DuctCurves|EA 113": {
+      "preferredPositions": [
+        "Right",
+        "BottomLeft",
+        "TopLeft",
+        "BottomRight",
+        "TopRight"
+      ],
+      "addLeader": true,
+      "offsetDistance": 3.608040639946363,
+      "preferAlignRow": true,
+      "preferAlignColumn": true,
+      "sampleCount": 15
+    },
+    "OST_DuctTerminal|EA 113": {
+      "preferredPositions": [
+        "BottomRight",
+        "Right",
+        "BottomLeft"
+      ],
+      "addLeader": true,
+      "offsetDistance": 5.057128057488121,
+      "preferAlignRow": false,
+      "preferAlignColumn": true,
+      "sampleCount": 4
     }
   }
 }

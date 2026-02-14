@@ -288,6 +288,11 @@ namespace SmartTag.Models
         /// Distance multiplier used for this position (higher = farther from element).
         /// </summary>
         public double DistanceMultiplier { get; set; } = 1.0;
+
+        /// <summary>
+        /// True if this placement comes from learned templates.
+        /// </summary>
+        public bool IsTemplateCandidate { get; set; }
     }
 
     /// <summary>

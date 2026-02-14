@@ -27,6 +27,7 @@ namespace SmartTag.ML
         private readonly TagSizeCalibration _calibration;
         private readonly RuleEngine _ruleEngine;
         private readonly TagPositionPatternLoader _patternLoader;
+        private readonly TemplateLibrary _templateLibrary = TemplateLibrary.Instance;
         private readonly TagPlacementRadiusService _radiusService = TagPlacementRadiusService.Instance;
 
         // Configuration
@@ -255,6 +256,12 @@ namespace SmartTag.ML
 
             // Suggested positions: Rules (repo) first, then context
             var suggestedPositions = GetSuggestedPositions(element, context);
+            var template = _templateLibrary.GetBestTemplate(element, context);
+            var templatePositions = ResolveTemplatePositions(template);
+            if (templatePositions.Count > 0)
+            {
+                suggestedPositions = templatePositions;
+            }
 
             // Rule-based offset and leader (from Data/Rules/Tagging, then Patterns)
             var ruleOffset = _leaderLength;
@@ -330,6 +337,8 @@ namespace SmartTag.ML
                 }
             }
 
+            TryAddTemplateCandidate(candidates, element, context, center, tagWidth, tagHeight, radius);
+
             // Always add center option (no leader)
             var centerBounds = new BoundingBox2D(
                 center.X - tagWidth / 2 - _minSpacing / 2,
@@ -349,7 +358,18 @@ namespace SmartTag.ML
             });
 
             // Sort by rule preferred positions first, then by pattern positions
-            if (_useRules)
+            if (templatePositions.Count > 0)
+            {
+                candidates = candidates
+                    .OrderByDescending(c => c.IsTemplateCandidate)
+                    .ThenBy(c => {
+                        var idx = templatePositions.IndexOf(c.Position);
+                        return idx >= 0 ? idx : 999;
+                    })
+                    .ThenBy(c => c.DistanceMultiplier)
+                    .ToList();
+            }
+            else if (_useRules)
             {
                 var preferred = GetPreferredPositionsFromRule(element);
                 if (preferred.Count > 0)
@@ -386,6 +406,70 @@ namespace SmartTag.ML
                 DensityLevel.High => 0.75,
                 _ => 0.85
             };
+        }
+
+        private static TagPosition InferPositionFromOffset(double offsetX, double offsetY)
+        {
+            const double tol = 0.05;
+            var absX = Math.Abs(offsetX);
+            var absY = Math.Abs(offsetY);
+
+            if (absX < tol && absY < tol) return TagPosition.Center;
+            if (absX < tol) return offsetY >= 0 ? TagPosition.TopCenter : TagPosition.BottomCenter;
+            if (absY < tol) return offsetX >= 0 ? TagPosition.Right : TagPosition.Left;
+            if (offsetX >= 0 && offsetY >= 0) return TagPosition.TopRight;
+            if (offsetX < 0 && offsetY >= 0) return TagPosition.TopLeft;
+            if (offsetX >= 0 && offsetY < 0) return TagPosition.BottomRight;
+            return TagPosition.BottomLeft;
+        }
+
+        private void TryAddTemplateCandidate(
+            List<TagPlacement> candidates,
+            TaggableElement element,
+            ElementContext context,
+            Point2D center,
+            double tagWidth,
+            double tagHeight,
+            double radius)
+        {
+            if (candidates == null || element == null) return;
+            var template = _templateLibrary.GetBestTemplate(element, context);
+            if (template == null) return;
+
+            if (Math.Abs(template.AvgOffsetX) < 0.001 && Math.Abs(template.AvgOffsetY) < 0.001)
+                return;
+
+            var compactness = GetCompactnessFactor(context);
+            var offsetX = template.AvgOffsetX * compactness;
+            var offsetY = template.AvgOffsetY * compactness;
+
+            ClampOffsetToRadius(ref offsetX, ref offsetY, radius);
+
+            var tagLocation = new Point2D(center.X + offsetX, center.Y + offsetY);
+            if (candidates.Any(c => c.TagLocation.DistanceTo(tagLocation) < 0.05))
+                return;
+
+            var position = InferPositionFromOffset(offsetX, offsetY);
+            var hasLeader = template.HasLeader && position != TagPosition.Center;
+            var leaderEnd = position == TagPosition.Center ? tagLocation : center;
+
+            var tagBounds = new BoundingBox2D(
+                tagLocation.X - tagWidth / 2 - _minSpacing / 2,
+                tagLocation.Y - tagHeight / 2 - _minSpacing / 2,
+                tagLocation.X + tagWidth / 2 + _minSpacing / 2,
+                tagLocation.Y + tagHeight / 2 + _minSpacing / 2);
+
+            candidates.Add(new TagPlacement
+            {
+                ElementId = element.ElementId,
+                TagLocation = tagLocation,
+                LeaderEnd = leaderEnd,
+                HasLeader = hasLeader,
+                Position = position,
+                EstimatedTagBounds = tagBounds,
+                DistanceMultiplier = 0,
+                IsTemplateCandidate = true
+            });
         }
 
         private double GetUsefulRadius(
@@ -473,6 +557,21 @@ namespace SmartTag.ML
             }
 
             return _contextAnalyzer.SuggestPositions(element, context);
+        }
+
+        private static List<TagPosition> ResolveTemplatePositions(PlacementTemplate template)
+        {
+            var positions = new List<TagPosition>();
+            if (template?.PreferredPositions == null || template.PreferredPositions.Count == 0)
+                return positions;
+
+            foreach (var pos in template.PreferredPositions)
+            {
+                if (Enum.TryParse<TagPosition>(pos, out var parsed) && parsed != TagPosition.Auto)
+                    positions.Add(parsed);
+            }
+
+            return positions;
         }
 
         /// <summary>

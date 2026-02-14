@@ -1,6 +1,6 @@
 {
   "Version": "1.0",
-  "UpdatedAt": "2026-02-13T18:36:13.6053513Z",
+  "UpdatedAt": "2026-02-13T19:33:15.4608547Z",
   "Templates": [
     {
       "Key": "OST_GenericModel||medium|0|H|False",
@@ -325,6 +325,30 @@
       "Rotation": "Horizontal"
     },
     {
+      "Key": "OST_DuctCurves|EA 126|high|3\u002B|H|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 126",
+      "Density": "high",
+      "ParallelBucket": "3\u002B",
+      "OrientationBucket": "H",
+      "IsLinear": true,
+      "SampleCount": 16,
+      "PreferredPositions": [
+        "BottomLeft",
+        "TopLeft",
+        "BottomRight",
+        "TopCenter",
+        "Right"
+      ],
+      "AvgOffsetX": -2.6856281358651324,
+      "AvgOffsetY": -0.39791230662144095,
+      "HasLeader": true,
+      "LeaderLength": 5.745349210625818,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
       "Key": "OST_PipeCurves|Sanitary|medium|0|D|True",
       "Category": "OST_PipeCurves",
       "SystemType": "Sanitary",
@@ -410,6 +434,28 @@
       "Rotation": "Horizontal"
     },
     {
+      "Key": "OST_DuctCurves|EA 102|high|3\u002B|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 102",
+      "Density": "high",
+      "ParallelBucket": "3\u002B",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 8,
+      "PreferredPositions": [
+        "Left",
+        "BottomCenter",
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -2.9545647652673406,
+      "AvgOffsetY": -1.0071629875012142,
+      "HasLeader": true,
+      "LeaderLength": 3.6209233160420844,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
       "Key": "OST_PipeCurves|Heating|medium|0|D|True",
       "Category": "OST_PipeCurves",
       "SystemType": "Heating",
@@ -475,6 +521,30 @@
       "LeaderLength": 4.36254904589008,
       "PreferAlignRow": true,
       "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|EA 38|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "EA 38",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 7,
+      "PreferredPositions": [
+        "Right",
+        "TopRight",
+        "TopLeft",
+        "BottomRight",
+        "BottomLeft"
+      ],
+      "AvgOffsetX": 1.2999421396923805,
+      "AvgOffsetY": 1.5002946108007182,
+      "HasLeader": true,
+      "LeaderLength": 9.240409095538473,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": false,
       "Rotation": "Horizontal"
     },
     {
@@ -545,6 +615,29 @@
       "Rotation": "Horizontal"
     },
     {
+      "Key": "OST_DuctCurves|SA 124|high|3\u002B|H|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "SA 124",
+      "Density": "high",
+      "ParallelBucket": "3\u002B",
+      "OrientationBucket": "H",
+      "IsLinear": true,
+      "SampleCount": 6,
+      "PreferredPositions": [
+        "BottomRight",
+        "TopLeft",
+        "BottomLeft",
+        "TopRight"
+      ],
+      "AvgOffsetX": -3.0365223628557634,
+      "AvgOffsetY": -0.8371246131504743,
+      "HasLeader": true,
+      "LeaderLength": 5.677236360882623,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
       "Key": "OST_DuctCurves|EA 58|high|1-2|D|True",
       "Category": "OST_DuctCurves",
       "SystemType": "EA 58",
@@ -608,6 +701,95 @@
       "AvgOffsetY": -0.135992441075598,
       "HasLeader": true,
       "LeaderLength": 5.627820614895562,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 107|high|1-2|H|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 107",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "H",
+      "IsLinear": true,
+      "SampleCount": 5,
+      "PreferredPositions": [
+        "BottomLeft",
+        "BottomCenter",
+        "TopCenter"
+      ],
+      "AvgOffsetX": -4.080395863381707,
+      "AvgOffsetY": -1.7536171965514313,
+      "HasLeader": true,
+      "LeaderLength": 6.167939342457759,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|SA 147|high|1-2|H|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "SA 147",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "H",
+      "IsLinear": true,
+      "SampleCount": 5,
+      "PreferredPositions": [
+        "BottomLeft",
+        "BottomRight",
+        "TopRight"
+      ],
+      "AvgOffsetX": -2.1469955519167163,
+      "AvgOffsetY": -3.8888530120884184,
+      "HasLeader": true,
+      "LeaderLength": 5.824088460487722,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|SA 147|high|3\u002B|H|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "SA 147",
+      "Density": "high",
+      "ParallelBucket": "3\u002B",
+      "OrientationBucket": "H",
+      "IsLinear": true,
+      "SampleCount": 5,
+      "PreferredPositions": [
+        "BottomLeft",
+        "TopCenter",
+        "TopRight",
+        "BottomRight"
+      ],
+      "AvgOffsetX": -0.8888884627513562,
+      "AvgOffsetY": -1.2680119393720417,
+      "HasLeader": true,
+      "LeaderLength": 4.324608654682974,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 102|high|1-2|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 102",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 5,
+      "PreferredPositions": [
+        "BottomRight",
+        "TopLeft",
+        "TopRight"
+      ],
+      "AvgOffsetX": 6.876937360064295,
+      "AvgOffsetY": -0.9230391098176142,
+      "HasLeader": true,
+      "LeaderLength": 10.668417360382135,
       "PreferAlignRow": true,
       "PreferAlignColumn": true,
       "Rotation": "Horizontal"
@@ -747,6 +929,140 @@
       "Rotation": "Horizontal"
     },
     {
+      "Key": "OST_DuctCurves|SA 147|high|3\u002B|V|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "SA 147",
+      "Density": "high",
+      "ParallelBucket": "3\u002B",
+      "OrientationBucket": "V",
+      "IsLinear": true,
+      "SampleCount": 4,
+      "PreferredPositions": [
+        "Left",
+        "Right",
+        "BottomRight",
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -0.27066798631188904,
+      "AvgOffsetY": -1.7023810536354702,
+      "HasLeader": true,
+      "LeaderLength": 4.740621878419745,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 107|high|3\u002B|H|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 107",
+      "Density": "high",
+      "ParallelBucket": "3\u002B",
+      "OrientationBucket": "H",
+      "IsLinear": true,
+      "SampleCount": 4,
+      "PreferredPositions": [
+        "BottomLeft",
+        "TopLeft",
+        "BottomRight"
+      ],
+      "AvgOffsetX": -2.0922845068991647,
+      "AvgOffsetY": -1.7320204712866953,
+      "HasLeader": true,
+      "LeaderLength": 5.607190191436406,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 107|high|1-2|V|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 107",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "V",
+      "IsLinear": true,
+      "SampleCount": 4,
+      "PreferredPositions": [
+        "BottomLeft",
+        "BottomRight",
+        "TopLeft",
+        "Left"
+      ],
+      "AvgOffsetX": -4.813533889925679,
+      "AvgOffsetY": -1.6601967006335911,
+      "HasLeader": true,
+      "LeaderLength": 6.380088873100432,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 126|high|1-2|H|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 126",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "H",
+      "IsLinear": true,
+      "SampleCount": 4,
+      "PreferredPositions": [
+        "BottomLeft",
+        "Left",
+        "TopRight"
+      ],
+      "AvgOffsetX": -3.3263918151347776,
+      "AvgOffsetY": -0.9849371925506247,
+      "HasLeader": true,
+      "LeaderLength": 5.964386144568303,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|EA 113|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "EA 113",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 4,
+      "PreferredPositions": [
+        "BottomRight",
+        "Right",
+        "BottomLeft"
+      ],
+      "AvgOffsetX": 0.17211448563570997,
+      "AvgOffsetY": -0.9933018151108328,
+      "HasLeader": true,
+      "LeaderLength": 9.280927783473391,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 113|high|1-2|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 113",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 4,
+      "PreferredPositions": [
+        "BottomLeft",
+        "Right",
+        "TopLeft"
+      ],
+      "AvgOffsetX": -2.7351543847688404,
+      "AvgOffsetY": 0.10571590566664568,
+      "HasLeader": true,
+      "LeaderLength": 7.2700232333636965,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
       "Key": "OST_DuctCurves|SupplyAir|medium|0|H|True",
       "Category": "OST_DuctCurves",
       "SystemType": "SupplyAir",
@@ -829,6 +1145,27 @@
       "LeaderLength": 3.9958078045869763,
       "PreferAlignRow": true,
       "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|KE 2|low|0|H|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "KE 2",
+      "Density": "low",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": true,
+      "SampleCount": 3,
+      "PreferredPositions": [
+        "TopLeft",
+        "Right"
+      ],
+      "AvgOffsetX": -9.462703632653112,
+      "AvgOffsetY": 0.7561900378238372,
+      "HasLeader": true,
+      "LeaderLength": 12.853171165564646,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": false,
       "Rotation": "Horizontal"
     },
     {
@@ -977,6 +1314,133 @@
       "AvgOffsetY": -1.565189987423916,
       "HasLeader": true,
       "LeaderLength": 3.344438064974535,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|EA 36|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "EA 36",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 3,
+      "PreferredPositions": [
+        "Right",
+        "TopRight",
+        "TopLeft"
+      ],
+      "AvgOffsetX": 2.379215949479866,
+      "AvgOffsetY": 4.23892605443416,
+      "HasLeader": true,
+      "LeaderLength": 11.50061203591401,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 107|high|0|V|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 107",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "V",
+      "IsLinear": true,
+      "SampleCount": 3,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 5.382390212688752,
+      "AvgOffsetY": -2.993182083677406,
+      "HasLeader": true,
+      "LeaderLength": 6.533470198722855,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 107|high|3\u002B|V|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 107",
+      "Density": "high",
+      "ParallelBucket": "3\u002B",
+      "OrientationBucket": "V",
+      "IsLinear": true,
+      "SampleCount": 3,
+      "PreferredPositions": [
+        "Right",
+        "BottomCenter",
+        "BottomRight"
+      ],
+      "AvgOffsetX": 1.346054088742335,
+      "AvgOffsetY": -1.417803987423639,
+      "HasLeader": true,
+      "LeaderLength": 2.3442122707439275,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|SA 147|high|0|V|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "SA 147",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "V",
+      "IsLinear": true,
+      "SampleCount": 3,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 1.4512565134021405,
+      "AvgOffsetY": -4.199392246310225,
+      "HasLeader": true,
+      "LeaderLength": 4.463724146829819,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|SA 124|high|1-2|V|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "SA 124",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "V",
+      "IsLinear": true,
+      "SampleCount": 3,
+      "PreferredPositions": [
+        "BottomLeft",
+        "TopLeft"
+      ],
+      "AvgOffsetX": -6.68998402923707,
+      "AvgOffsetY": -1.6541910931621355,
+      "HasLeader": true,
+      "LeaderLength": 8.07959563105828,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 113|high|3\u002B|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 113",
+      "Density": "high",
+      "ParallelBucket": "3\u002B",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 3,
+      "PreferredPositions": [
+        "BottomRight",
+        "Right",
+        "BottomLeft"
+      ],
+      "AvgOffsetX": 5.760468834886798,
+      "AvgOffsetY": -0.9377892268215812,
+      "HasLeader": true,
+      "LeaderLength": 9.577869722045467,
       "PreferAlignRow": true,
       "PreferAlignColumn": true,
       "Rotation": "Horizontal"
@@ -1226,26 +1690,6 @@
       "AvgOffsetY": -1.6424084498755036,
       "HasLeader": true,
       "LeaderLength": 7.3045905308225105,
-      "PreferAlignRow": true,
-      "PreferAlignColumn": false,
-      "Rotation": "Horizontal"
-    },
-    {
-      "Key": "OST_DuctCurves|KE 2|low|0|H|True",
-      "Category": "OST_DuctCurves",
-      "SystemType": "KE 2",
-      "Density": "low",
-      "ParallelBucket": "0",
-      "OrientationBucket": "H",
-      "IsLinear": true,
-      "SampleCount": 2,
-      "PreferredPositions": [
-        "TopLeft"
-      ],
-      "AvgOffsetX": -16.71416152286423,
-      "AvgOffsetY": 1.1342850567357559,
-      "HasLeader": true,
-      "LeaderLength": 16.759650674462407,
       "PreferAlignRow": true,
       "PreferAlignColumn": false,
       "Rotation": "Horizontal"
@@ -1984,6 +2428,214 @@
       "AvgOffsetY": -5.264100860001548,
       "HasLeader": true,
       "LeaderLength": 20.130051293117646,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|EA 120|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "EA 120",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 2,
+      "PreferredPositions": [
+        "TopRight"
+      ],
+      "AvgOffsetX": 3.1081029828463818,
+      "AvgOffsetY": 7.633201475159922,
+      "HasLeader": true,
+      "LeaderLength": 8.253926826215535,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|EA 118|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "EA 118",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 2,
+      "PreferredPositions": [
+        "Right",
+        "Left"
+      ],
+      "AvgOffsetX": -3.811446652451238,
+      "AvgOffsetY": -0.00045146028706710695,
+      "HasLeader": true,
+      "LeaderLength": 9.206693342113123,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 107|high|1-2|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 107",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 2,
+      "PreferredPositions": [
+        "TopLeft",
+        "BottomRight"
+      ],
+      "AvgOffsetX": -0.9891839188358844,
+      "AvgOffsetY": -0.6541342671031316,
+      "HasLeader": true,
+      "LeaderLength": 7.038008491388625,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|SA 147|high|1-2|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "SA 147",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 2,
+      "PreferredPositions": [
+        "Left",
+        "BottomCenter"
+      ],
+      "AvgOffsetX": -3.3934272201071423,
+      "AvgOffsetY": -1.984258247446391,
+      "HasLeader": true,
+      "LeaderLength": 5.510301565663571,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 126|high|1-2|V|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 126",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "V",
+      "IsLinear": true,
+      "SampleCount": 2,
+      "PreferredPositions": [
+        "BottomRight",
+        "BottomCenter"
+      ],
+      "AvgOffsetX": 0.8307030898981971,
+      "AvgOffsetY": -3.7179302897903597,
+      "HasLeader": true,
+      "LeaderLength": 3.8977066219876813,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 126|high|3\u002B|V|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 126",
+      "Density": "high",
+      "ParallelBucket": "3\u002B",
+      "OrientationBucket": "V",
+      "IsLinear": true,
+      "SampleCount": 2,
+      "PreferredPositions": [
+        "BottomRight",
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -2.6361520850075792,
+      "AvgOffsetY": -4.571793021838246,
+      "HasLeader": true,
+      "LeaderLength": 6.566679112018866,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|EA 126|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "EA 126",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 2,
+      "PreferredPositions": [
+        "BottomRight",
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -4.2030550496887376,
+      "AvgOffsetY": -11.841921174900705,
+      "HasLeader": true,
+      "LeaderLength": 13.93887410399618,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|EA 102|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "EA 102",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 2,
+      "PreferredPositions": [
+        "Right",
+        "BottomRight"
+      ],
+      "AvgOffsetX": 8.085428230600499,
+      "AvgOffsetY": -3.354632090475576,
+      "HasLeader": true,
+      "LeaderLength": 9.625676366326655,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 113|high|3\u002B|H|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 113",
+      "Density": "high",
+      "ParallelBucket": "3\u002B",
+      "OrientationBucket": "H",
+      "IsLinear": true,
+      "SampleCount": 2,
+      "PreferredPositions": [
+        "BottomRight",
+        "TopLeft"
+      ],
+      "AvgOffsetX": -3.289330671194236,
+      "AvgOffsetY": -0.46528883807283705,
+      "HasLeader": true,
+      "LeaderLength": 5.353029901376679,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 113|high|3\u002B|V|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 113",
+      "Density": "high",
+      "ParallelBucket": "3\u002B",
+      "OrientationBucket": "V",
+      "IsLinear": true,
+      "SampleCount": 2,
+      "PreferredPositions": [
+        "Right"
+      ],
+      "AvgOffsetX": 3.25682517966122,
+      "AvgOffsetY": -0.1269161449766223,
+      "HasLeader": true,
+      "LeaderLength": 3.2765893736365364,
       "PreferAlignRow": true,
       "PreferAlignColumn": true,
       "Rotation": "Horizontal"
@@ -4464,6 +5116,1666 @@
       "AvgOffsetY": 2.000318580435959,
       "HasLeader": true,
       "LeaderLength": 10.477867657357917,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_MechanicalEquipment|SA 92,EA 118,FA 87,FO 55|high|0|H|False",
+      "Category": "OST_MechanicalEquipment",
+      "SystemType": "SA 92,EA 118,FA 87,FO 55",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopLeft"
+      ],
+      "AvgOffsetX": -19.037936610421013,
+      "AvgOffsetY": 13.466140741015522,
+      "HasLeader": true,
+      "LeaderLength": 23.319090394765546,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_MechanicalEquipment|SA 107,EA 120,FA 88,FO 56|high|0|H|False",
+      "Category": "OST_MechanicalEquipment",
+      "SystemType": "SA 107,EA 120,FA 88,FO 56",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopLeft"
+      ],
+      "AvgOffsetX": -18.875992332608043,
+      "AvgOffsetY": 14.32344177174582,
+      "HasLeader": true,
+      "LeaderLength": 23.695233080290024,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FA 68|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FA 68",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopRight"
+      ],
+      "AvgOffsetX": 2.165630363741201,
+      "AvgOffsetY": 0.5757030060242414,
+      "HasLeader": true,
+      "LeaderLength": 2.240845559940085,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FO 62|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FO 62",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 2.924081304156033,
+      "AvgOffsetY": -0.7456411725169403,
+      "HasLeader": true,
+      "LeaderLength": 3.017653431305073,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FO 25|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FO 25",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "Right"
+      ],
+      "AvgOffsetX": 6.620552449524482,
+      "AvgOffsetY": -0.42867656587142733,
+      "HasLeader": true,
+      "LeaderLength": 6.63441620152308,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FA 26|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FA 26",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopRight"
+      ],
+      "AvgOffsetX": 1.6706770753094844,
+      "AvgOffsetY": 1.7165046421781938,
+      "HasLeader": true,
+      "LeaderLength": 2.395318366435648,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_MechanicalEquipment|SA 37,EA 36,FA 26,FO 25|high|0|H|False",
+      "Category": "OST_MechanicalEquipment",
+      "SystemType": "SA 37,EA 36,FA 26,FO 25",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopRight"
+      ],
+      "AvgOffsetX": 19.386283454045426,
+      "AvgOffsetY": 5.064560586918645,
+      "HasLeader": true,
+      "LeaderLength": 20.0369099438802,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_MechanicalEquipment|SA 120,EA 96,FA 81,FO 79|high|0|H|False",
+      "Category": "OST_MechanicalEquipment",
+      "SystemType": "SA 120,EA 96,FA 81,FO 79",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopRight"
+      ],
+      "AvgOffsetX": 12.496466791399584,
+      "AvgOffsetY": 11.441529112132883,
+      "HasLeader": true,
+      "LeaderLength": 16.94314819307017,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FO 79|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FO 79",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopRight"
+      ],
+      "AvgOffsetX": 1.665434955135055,
+      "AvgOffsetY": 2.695026465855733,
+      "HasLeader": true,
+      "LeaderLength": 3.1680974166601232,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FA 81|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FA 81",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopRight"
+      ],
+      "AvgOffsetX": 1.5955741692042196,
+      "AvgOffsetY": 4.0084092413547125,
+      "HasLeader": true,
+      "LeaderLength": 4.3143019801133065,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FA 88|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FA 88",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopLeft"
+      ],
+      "AvgOffsetX": -23.724630146784477,
+      "AvgOffsetY": 1.7348635882551378,
+      "HasLeader": true,
+      "LeaderLength": 23.7879765274722,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FO 56|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FO 56",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopLeft"
+      ],
+      "AvgOffsetX": -20.062627368595244,
+      "AvgOffsetY": 5.722718565578674,
+      "HasLeader": true,
+      "LeaderLength": 20.86285034965083,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FA 87|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FA 87",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopLeft"
+      ],
+      "AvgOffsetX": -22.694518949667682,
+      "AvgOffsetY": 1.171089878116618,
+      "HasLeader": true,
+      "LeaderLength": 22.724714340546786,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FO 55|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FO 55",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopLeft"
+      ],
+      "AvgOffsetX": -21.000200000417536,
+      "AvgOffsetY": 1.6958575814780943,
+      "HasLeader": true,
+      "LeaderLength": 21.068562670343542,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctAccessory|EA 36|high|0|H|False",
+      "Category": "OST_DuctAccessory",
+      "SystemType": "EA 36",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopLeft"
+      ],
+      "AvgOffsetX": -14.532765683887064,
+      "AvgOffsetY": 0.8499961824199715,
+      "HasLeader": true,
+      "LeaderLength": 14.557601860639476,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctAccessory|SA 37|high|0|H|False",
+      "Category": "OST_DuctAccessory",
+      "SystemType": "SA 37",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopLeft"
+      ],
+      "AvgOffsetX": -20.50615790088188,
+      "AvgOffsetY": 4.251952333255701,
+      "HasLeader": true,
+      "LeaderLength": 20.942340139062278,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctAccessory|SA 92|high|0|H|False",
+      "Category": "OST_DuctAccessory",
+      "SystemType": "SA 92",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "Right"
+      ],
+      "AvgOffsetX": 5.715642315047788,
+      "AvgOffsetY": 0,
+      "HasLeader": true,
+      "LeaderLength": 5.715642315047788,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctAccessory|EA 118|high|0|H|False",
+      "Category": "OST_DuctAccessory",
+      "SystemType": "EA 118",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -10.872666983696092,
+      "AvgOffsetY": -5.818350452526488,
+      "HasLeader": true,
+      "LeaderLength": 12.331589083600306,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctAccessory|SA 120|high|0|H|False",
+      "Category": "OST_DuctAccessory",
+      "SystemType": "SA 120",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 4.599031134602718,
+      "AvgOffsetY": -4.782556156766873,
+      "HasLeader": true,
+      "LeaderLength": 6.63505318514282,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctAccessory|EA 96|high|0|H|False",
+      "Category": "OST_DuctAccessory",
+      "SystemType": "EA 96",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 8.2678917565485,
+      "AvgOffsetY": -7.544452037433956,
+      "HasLeader": true,
+      "LeaderLength": 11.192711496466975,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctAccessory|SA 55|high|0|H|False",
+      "Category": "OST_DuctAccessory",
+      "SystemType": "SA 55",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -3.7549146410556773,
+      "AvgOffsetY": -6.126788236404678,
+      "HasLeader": true,
+      "LeaderLength": 7.185883248102563,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctAccessory|EA 9|high|0|H|False",
+      "Category": "OST_DuctAccessory",
+      "SystemType": "EA 9",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopLeft"
+      ],
+      "AvgOffsetX": -12.010213293013521,
+      "AvgOffsetY": 0.5312476140125,
+      "HasLeader": true,
+      "LeaderLength": 12.02195688609274,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_MechanicalEquipment|SA 55,EA 9,FA 68,FO 62|high|0|H|False",
+      "Category": "OST_MechanicalEquipment",
+      "SystemType": "SA 55,EA 9,FA 68,FO 62",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopRight"
+      ],
+      "AvgOffsetX": 14.301350195011906,
+      "AvgOffsetY": 3.3742759604575383,
+      "HasLeader": true,
+      "LeaderLength": 14.694024488127434,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FO 33|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FO 33",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "Right"
+      ],
+      "AvgOffsetX": 2.717944454779939,
+      "AvgOffsetY": -0.22759680802565185,
+      "HasLeader": true,
+      "LeaderLength": 2.7274571245562207,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FA 63|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FA 63",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "Right"
+      ],
+      "AvgOffsetX": 2.6255535653864968,
+      "AvgOffsetY": -0.22759680802568028,
+      "HasLeader": true,
+      "LeaderLength": 2.63539974799597,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_MechanicalEquipment|SA 36,EA 38,FA 63,FO 33|high|0|H|False",
+      "Category": "OST_MechanicalEquipment",
+      "SystemType": "SA 36,EA 38,FA 63,FO 33",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "Right"
+      ],
+      "AvgOffsetX": 14.89907943030181,
+      "AvgOffsetY": -0.00045146028712395037,
+      "HasLeader": true,
+      "LeaderLength": 14.89907943714171,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|KS 7|medium|0|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "KS 7",
+      "Density": "medium",
+      "ParallelBucket": "0",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopRight"
+      ],
+      "AvgOffsetX": 7.1565572077957995,
+      "AvgOffsetY": 2.353841621199564,
+      "HasLeader": true,
+      "LeaderLength": 7.533716310437061,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|EA 107|high|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "EA 107",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 8.50709942234235,
+      "AvgOffsetY": -2.1896785132203433,
+      "HasLeader": true,
+      "LeaderLength": 8.78438572541509,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctAccessory|EA 107|high|0|H|False",
+      "Category": "OST_DuctAccessory",
+      "SystemType": "EA 107",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "Right"
+      ],
+      "AvgOffsetX": 5.784171635135209,
+      "AvgOffsetY": -0.39370078740157055,
+      "HasLeader": true,
+      "LeaderLength": 5.7975548134281,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctAccessory|SA 147|high|0|H|False",
+      "Category": "OST_DuctAccessory",
+      "SystemType": "SA 147",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "Right"
+      ],
+      "AvgOffsetX": 9.072427431548547,
+      "AvgOffsetY": -0.00045146028728026977,
+      "HasLeader": true,
+      "LeaderLength": 9.072427442781285,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FO 74|medium|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FO 74",
+      "Density": "medium",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -15.991281818231911,
+      "AvgOffsetY": -1.24872659536274,
+      "HasLeader": true,
+      "LeaderLength": 16.039962976892458,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FA 78|medium|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FA 78",
+      "Density": "medium",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -18.374779619539453,
+      "AvgOffsetY": -3.554189936498119,
+      "HasLeader": true,
+      "LeaderLength": 18.71536246433253,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|FA 78|medium|1-2|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "FA 78",
+      "Density": "medium",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -10.791831846011974,
+      "AvgOffsetY": -7.318600208837694,
+      "HasLeader": true,
+      "LeaderLength": 13.039384326316842,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|FO 74|medium|1-2|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "FO 74",
+      "Density": "medium",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -8.083998807192103,
+      "AvgOffsetY": -4.773782403740654,
+      "HasLeader": true,
+      "LeaderLength": 9.388292451396433,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_MechanicalEquipment|SA 147,EA 107,FA 78,FO 74,Hydronic Supply 17,Hydronic Supply 16|medium|0|H|False",
+      "Category": "OST_MechanicalEquipment",
+      "SystemType": "SA 147,EA 107,FA 78,FO 74,Hydronic Supply 17,Hydronic Supply 16",
+      "Density": "medium",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -25.356173061076248,
+      "AvgOffsetY": -19.162700713156312,
+      "HasLeader": true,
+      "LeaderLength": 31.782772234738275,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|SA 124|high|0|V|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "SA 124",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "V",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -4.8465482173958065,
+      "AvgOffsetY": -3.131456769984794,
+      "HasLeader": true,
+      "LeaderLength": 5.770186403039859,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|SA 124|high|3\u002B|V|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "SA 124",
+      "Density": "high",
+      "ParallelBucket": "3\u002B",
+      "OrientationBucket": "V",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -5.286471573749955,
+      "AvgOffsetY": -1.4032588704313298,
+      "HasLeader": true,
+      "LeaderLength": 5.469544510972604,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FO 73|medium|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FO 73",
+      "Density": "medium",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -15.68252833339455,
+      "AvgOffsetY": -2.019978283540212,
+      "HasLeader": true,
+      "LeaderLength": 15.812084214097045,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FA 76|medium|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FA 76",
+      "Density": "medium",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 3.2788182122458878,
+      "AvgOffsetY": -4.823189906745142,
+      "HasLeader": true,
+      "LeaderLength": 5.832135950531635,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|FO 73|medium|1-2|V|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "FO 73",
+      "Density": "medium",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "V",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -7.09967866241827,
+      "AvgOffsetY": -5.783639889885592,
+      "HasLeader": true,
+      "LeaderLength": 9.157288216796122,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|FA 76|medium|1-2|V|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "FA 76",
+      "Density": "medium",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "V",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 2.9223922669843105,
+      "AvgOffsetY": -8.691000928977019,
+      "HasLeader": true,
+      "LeaderLength": 9.169180645488947,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_MechanicalEquipment|SA 49,EA 126,FA 76,FO 73|high|0|H|False",
+      "Category": "OST_MechanicalEquipment",
+      "SystemType": "SA 49,EA 126,FA 76,FO 73",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 2.8262484174969345,
+      "AvgOffsetY": -20.759808078990858,
+      "HasLeader": true,
+      "LeaderLength": 20.9513081117609,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 107|high|3\u002B|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 107",
+      "Density": "high",
+      "ParallelBucket": "3\u002B",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 2.736601908649888,
+      "AvgOffsetY": -3.49972096040824,
+      "HasLeader": true,
+      "LeaderLength": 4.4426384961132035,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|SA 147|high|3\u002B|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "SA 147",
+      "Density": "high",
+      "ParallelBucket": "3\u002B",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopLeft"
+      ],
+      "AvgOffsetX": -6.1240140016262785,
+      "AvgOffsetY": 1.258941010046982,
+      "HasLeader": true,
+      "LeaderLength": 6.252078051247667,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": false,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|SA 124|high|0|H|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "SA 124",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopLeft"
+      ],
+      "AvgOffsetX": -1.7017373718994477,
+      "AvgOffsetY": 1.9270568525000442,
+      "HasLeader": true,
+      "LeaderLength": 2.570886655550302,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FO 71|medium|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FO 71",
+      "Density": "medium",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -14.80304078938186,
+      "AvgOffsetY": -5.371486178832214,
+      "HasLeader": true,
+      "LeaderLength": 15.747472190211628,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FA 75|medium|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FA 75",
+      "Density": "medium",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 3.079333735251538,
+      "AvgOffsetY": -3.265983435253787,
+      "HasLeader": true,
+      "LeaderLength": 4.488757517666812,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_MechanicalEquipment|SA 124,EA 126,FA 75,FO 71|high|0|H|False",
+      "Category": "OST_MechanicalEquipment",
+      "SystemType": "SA 124,EA 126,FA 75,FO 71",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 6.616817593395361,
+      "AvgOffsetY": -16.420927789712238,
+      "HasLeader": true,
+      "LeaderLength": 17.70393020035975,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|FA 75|medium|1-2|V|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "FA 75",
+      "Density": "medium",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "V",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 3.4082465963542745,
+      "AvgOffsetY": -3.5740554448615285,
+      "HasLeader": true,
+      "LeaderLength": 4.938625029753204,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|FO 71|medium|1-2|V|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "FO 71",
+      "Density": "medium",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "V",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -5.538551849508437,
+      "AvgOffsetY": -5.480300866115016,
+      "HasLeader": true,
+      "LeaderLength": 7.791614349596258,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctAccessory|SA 49|high|0|H|False",
+      "Category": "OST_DuctAccessory",
+      "SystemType": "SA 49",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopLeft"
+      ],
+      "AvgOffsetX": -8.39376763401161,
+      "AvgOffsetY": 7.019108756052702,
+      "HasLeader": true,
+      "LeaderLength": 10.941810765274484,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctAccessory|EA 126|high|0|H|False",
+      "Category": "OST_DuctAccessory",
+      "SystemType": "EA 126",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopLeft"
+      ],
+      "AvgOffsetX": -10.817313791908461,
+      "AvgOffsetY": 9.607187109872939,
+      "HasLeader": true,
+      "LeaderLength": 14.46763013892468,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|SA 49|high|3\u002B|H|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "SA 49",
+      "Density": "high",
+      "ParallelBucket": "3\u002B",
+      "OrientationBucket": "H",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopLeft"
+      ],
+      "AvgOffsetX": -5.08828451849261,
+      "AvgOffsetY": 3.618675181469058,
+      "HasLeader": true,
+      "LeaderLength": 6.243832910169178,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 126|high|0|V|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 126",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "V",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopRight"
+      ],
+      "AvgOffsetX": 3.50553184987307,
+      "AvgOffsetY": 2.031185823515955,
+      "HasLeader": true,
+      "LeaderLength": 4.051477434236392,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FA 77|medium|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FA 77",
+      "Density": "medium",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 3.8202764772359785,
+      "AvgOffsetY": -1.2955793667904345,
+      "HasLeader": true,
+      "LeaderLength": 4.033985406291852,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FO 72|medium|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FO 72",
+      "Density": "medium",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 6.589198085538058,
+      "AvgOffsetY": -4.157212311806489,
+      "HasLeader": true,
+      "LeaderLength": 7.791016982133582,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|FA 77|high|1-2|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "FA 77",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 4.542884233268097,
+      "AvgOffsetY": -4.2703313244764445,
+      "HasLeader": true,
+      "LeaderLength": 6.234863813884038,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|FO 72|high|1-2|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "FO 72",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 7.304149768967406,
+      "AvgOffsetY": -3.960884322423965,
+      "HasLeader": true,
+      "LeaderLength": 8.308983599883355,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_MechanicalEquipment|SA 51,EA 102,FA 77,FO 72|high|0|H|False",
+      "Category": "OST_MechanicalEquipment",
+      "SystemType": "SA 51,EA 102,FA 77,FO 72",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 10.21451939737095,
+      "AvgOffsetY": -16.63373771283466,
+      "HasLeader": true,
+      "LeaderLength": 19.519673071510326,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|SA 51|high|1-2|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "SA 51",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopRight"
+      ],
+      "AvgOffsetX": 2.1553344197386224,
+      "AvgOffsetY": 4.843321636643992,
+      "HasLeader": true,
+      "LeaderLength": 5.301248054646553,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 102|medium|0|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 102",
+      "Density": "medium",
+      "ParallelBucket": "0",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopLeft"
+      ],
+      "AvgOffsetX": -11.007970913997156,
+      "AvgOffsetY": 0.9419587566654855,
+      "HasLeader": true,
+      "LeaderLength": 11.04819939821264,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FA 15|medium|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FA 15",
+      "Density": "medium",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "Right"
+      ],
+      "AvgOffsetX": 6.4229378874169925,
+      "AvgOffsetY": 0.3195640420693451,
+      "HasLeader": true,
+      "LeaderLength": 6.430882698557046,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FO 66|medium|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FO 66",
+      "Density": "medium",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "Right"
+      ],
+      "AvgOffsetX": 8.627973172540067,
+      "AvgOffsetY": 0.3195640420693735,
+      "HasLeader": true,
+      "LeaderLength": 8.633889172502437,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|FA 15|high|1-2|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "FA 15",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopRight"
+      ],
+      "AvgOffsetX": 7.520489185844838,
+      "AvgOffsetY": 1.196710507233206,
+      "HasLeader": true,
+      "LeaderLength": 7.61510824824779,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|FO 66|high|1-2|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "FO 66",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 9.573189038114634,
+      "AvgOffsetY": -2.415574277327096,
+      "HasLeader": true,
+      "LeaderLength": 9.873244018495772,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_MechanicalEquipment|SA 105,EA 67,FA 15,FO 66|high|0|H|False",
+      "Category": "OST_MechanicalEquipment",
+      "SystemType": "SA 105,EA 67,FA 15,FO 66",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 15.45033102623242,
+      "AvgOffsetY": -2.161623400994813,
+      "HasLeader": true,
+      "LeaderLength": 15.600812304104185,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 67|medium|1-2|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 67",
+      "Density": "medium",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopLeft"
+      ],
+      "AvgOffsetX": -9.007215901735009,
+      "AvgOffsetY": 2.9523308878844006,
+      "HasLeader": true,
+      "LeaderLength": 9.478723330281579,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|SA 105|medium|1-2|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "SA 105",
+      "Density": "medium",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopLeft"
+      ],
+      "AvgOffsetX": -6.867858867396791,
+      "AvgOffsetY": 3.6038754214374222,
+      "HasLeader": true,
+      "LeaderLength": 7.75599145665604,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|KS 3|medium|0|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "KS 3",
+      "Density": "medium",
+      "ParallelBucket": "0",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -5.351252683420313,
+      "AvgOffsetY": -2.7952228367741156,
+      "HasLeader": true,
+      "LeaderLength": 6.037315296473809,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|KE 4|medium|1-2|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "KE 4",
+      "Density": "medium",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -3.9593102071875137,
+      "AvgOffsetY": -2.729023356770682,
+      "HasLeader": true,
+      "LeaderLength": 4.808711448874756,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FA 79|medium|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FA 79",
+      "Density": "medium",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "Right"
+      ],
+      "AvgOffsetX": 4.458972850074417,
+      "AvgOffsetY": 0.2247413417329085,
+      "HasLeader": true,
+      "LeaderLength": 4.464632969056323,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctTerminal|FO 30|medium|0|H|False",
+      "Category": "OST_DuctTerminal",
+      "SystemType": "FO 30",
+      "Density": "medium",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "Right"
+      ],
+      "AvgOffsetX": 5.9027795958880915,
+      "AvgOffsetY": 0.22428988144561401,
+      "HasLeader": true,
+      "LeaderLength": 5.9070392675647305,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|FA 79|high|1-2|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "FA 79",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopRight"
+      ],
+      "AvgOffsetX": 6.259933034706393,
+      "AvgOffsetY": 1.5400345576277203,
+      "HasLeader": true,
+      "LeaderLength": 6.446585765945877,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_MechanicalEquipment|SA 62,EA 113,FA 79,FO 30|high|0|H|False",
+      "Category": "OST_MechanicalEquipment",
+      "SystemType": "SA 62,EA 113,FA 79,FO 30",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "H",
+      "IsLinear": false,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopRight"
+      ],
+      "AvgOffsetX": 15.200720328723776,
+      "AvgOffsetY": 0.5246104771258473,
+      "HasLeader": true,
+      "LeaderLength": 15.209770368575144,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|FO 30|high|1-2|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "FO 30",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomRight"
+      ],
+      "AvgOffsetX": 7.352194834526699,
+      "AvgOffsetY": -2.8168197270155844,
+      "HasLeader": true,
+      "LeaderLength": 7.873324727162295,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|SA 62|medium|0|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "SA 62",
+      "Density": "medium",
+      "ParallelBucket": "0",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopLeft"
+      ],
+      "AvgOffsetX": -7.736087209756562,
+      "AvgOffsetY": 0.6109977979598256,
+      "HasLeader": true,
+      "LeaderLength": 7.760178066647106,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 113|medium|0|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 113",
+      "Density": "medium",
+      "ParallelBucket": "0",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopLeft"
+      ],
+      "AvgOffsetX": -8.612305063933974,
+      "AvgOffsetY": 0.917300038749147,
+      "HasLeader": true,
+      "LeaderLength": 8.661018293211944,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 113|high|1-2|V|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 113",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "V",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "BottomLeft"
+      ],
+      "AvgOffsetX": -5.983350163247849,
+      "AvgOffsetY": -0.5002993610170989,
+      "HasLeader": true,
+      "LeaderLength": 6.004230061104602,
+      "PreferAlignRow": false,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 113|high|0|V|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 113",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "V",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "Right"
+      ],
+      "AvgOffsetX": 2.3469836926558116,
+      "AvgOffsetY": -0.05402055078415202,
+      "HasLeader": true,
+      "LeaderLength": 2.347605306157603,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 113|high|1-2|H|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 113",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "H",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopRight"
+      ],
+      "AvgOffsetX": 4.397239127259496,
+      "AvgOffsetY": 0.9528212534062988,
+      "HasLeader": true,
+      "LeaderLength": 4.4992866415960435,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 102|high|0|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 102",
+      "Density": "high",
+      "ParallelBucket": "0",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopRight"
+      ],
+      "AvgOffsetX": 0.7738097693988095,
+      "AvgOffsetY": 1.5554313253523162,
+      "HasLeader": true,
+      "LeaderLength": 1.7372818329517814,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|SA 147|high|1-2|V|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "SA 147",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "V",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "Left"
+      ],
+      "AvgOffsetX": -4.626297207592373,
+      "AvgOffsetY": -0.1829720693215222,
+      "HasLeader": true,
+      "LeaderLength": 4.6299141062366145,
+      "PreferAlignRow": true,
+      "PreferAlignColumn": true,
+      "Rotation": "Horizontal"
+    },
+    {
+      "Key": "OST_DuctCurves|EA 126|high|1-2|D|True",
+      "Category": "OST_DuctCurves",
+      "SystemType": "EA 126",
+      "Density": "high",
+      "ParallelBucket": "1-2",
+      "OrientationBucket": "D",
+      "IsLinear": true,
+      "SampleCount": 1,
+      "PreferredPositions": [
+        "TopRight"
+      ],
+      "AvgOffsetX": 1.713624998023512,
+      "AvgOffsetY": 0.7023788617546813,
+      "HasLeader": true,
+      "LeaderLength": 1.8519845299815234,
       "PreferAlignRow": true,
       "PreferAlignColumn": false,
       "Rotation": "Horizontal"

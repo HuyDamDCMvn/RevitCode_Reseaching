@@ -763,6 +763,11 @@ namespace SmartTag
                     var ingestResult = ingestion.IngestAndUpdate(result.OutputPath);
                     if (ingestResult.Success)
                     {
+                        // Refresh template + radius + weights from newly exported ground truth
+                        TemplateLibrary.Instance.ForceReload();
+                        TagPlacementRadiusService.Instance.Reset();
+                        AutoTuneWeightsService.Instance.Reset();
+
                         OnStatusUpdate?.Invoke($"Exported {result.ExportedSamples} samples. Learned: {ingestResult.Message}");
                     }
                     else

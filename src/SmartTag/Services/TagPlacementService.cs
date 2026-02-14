@@ -602,6 +602,15 @@ namespace SmartTag.Services
                         element, segmentCenter, tagWidth, tagHeight, settings, rotation);
                     
                     if (candidates == null || candidates.Count == 0) continue;
+
+                    if (TryPickTemplateFirst(candidates, element, settings, out var templatePlacement, out var templateScore))
+                    {
+                        templatePlacement.Score = templateScore;
+                        templatePlacement.SegmentIndex = i;
+                        templatePlacement.Rotation = rotation;
+                        placements.Add(templatePlacement);
+                        continue;
+                    }
                     
                     TagPlacement bestPlacement = null;
                     double bestScore = double.MaxValue;
@@ -684,6 +693,14 @@ namespace SmartTag.Services
 
                 if (candidates == null || candidates.Count == 0)
                     return null;
+
+                if (TryPickTemplateFirst(candidates, element, settings, out var templatePlacement, out var templateScore))
+                {
+                    templatePlacement.Score = templateScore;
+                    templatePlacement.SegmentIndex = segmentIndex;
+                    templatePlacement.Rotation = rotation;
+                    return templatePlacement;
+                }
 
                 TagPlacement bestPlacement = null;
                 double bestScore = double.MaxValue;
@@ -952,7 +969,8 @@ namespace SmartTag.Services
                 Position = position,
                 EstimatedTagBounds = tagBounds,
                 Rotation = rotation,
-                DistanceMultiplier = 0
+                DistanceMultiplier = 0,
+                IsTemplateCandidate = true
             });
         }
 
@@ -1150,6 +1168,62 @@ namespace SmartTag.Services
             public double ColumnAlignBonusMultiplier { get; set; }
         }
 
+        private bool HasHardCollision(TagPlacement placement, TaggableElement element)
+        {
+            if (placement == null) return true;
+            var bounds = placement.EstimatedTagBounds.Expand(_minSpacing * 0.5);
+
+            if (_tagIndex.GetCollisions(bounds).Count > 0)
+                return true;
+
+            var elementCollisions = _elementIndex.GetCollisions(
+                placement.EstimatedTagBounds.Expand(-0.1),
+                element?.ElementId ?? -1);
+            if (elementCollisions.Count > 0)
+                return true;
+
+            if (_annotationIndex.GetCollisions(placement.EstimatedTagBounds).Count > 0)
+                return true;
+
+            return false;
+        }
+
+        private bool TryPickTemplateFirst(
+            List<TagPlacement> candidates,
+            TaggableElement element,
+            TagSettings settings,
+            out TagPlacement bestPlacement,
+            out double bestScore)
+        {
+            bestPlacement = null;
+            bestScore = double.MaxValue;
+
+            if (candidates == null || candidates.Count == 0)
+                return false;
+
+            var templateCandidates = candidates
+                .Where(c => c?.IsTemplateCandidate == true)
+                .ToList();
+
+            if (templateCandidates.Count == 0)
+                return false;
+
+            var scored = templateCandidates
+                .Select(c => (placement: c, score: ScorePlacement(c, element, settings)))
+                .OrderBy(x => x.score)
+                .First();
+
+            if (scored.score > MAX_ACCEPTABLE_SCORE)
+                return false;
+
+            if (HasHardCollision(scored.placement, element))
+                return false;
+
+            bestPlacement = scored.placement;
+            bestScore = scored.score;
+            return true;
+        }
+
         /// <summary>
         /// Find the best placement for a single element's tag.
         /// PRIORITIZES non-colliding positions over ANY colliding position.
@@ -1157,6 +1231,14 @@ namespace SmartTag.Services
         private TagPlacement FindBestPlacement(TaggableElement element, TagSettings settings)
         {
             var candidates = GenerateCandidatePositions(element, settings);
+
+            if (TryPickTemplateFirst(candidates, element, settings, out var templatePlacement, out var templateScore))
+            {
+                templatePlacement.Score = templateScore;
+                System.Diagnostics.Debug.WriteLine(
+                    $"Element {element.ElementId}: Template-first placement at {templatePlacement.Position} with score {templateScore}");
+                return templatePlacement;
+            }
             
             // Separate into collision-free and colliding candidates
             var collisionFreeCandidates = new List<(TagPlacement placement, double score)>();
@@ -1574,35 +1656,38 @@ namespace SmartTag.Services
             var proximity = placement.TagLocation.DistanceTo(element.Center);
             score += proximity * 0.6;
 
-            // 9. Alignment bonus (tags that align with grid get lower score)
-            var alignmentScore = GetAlignmentScore(placement.TagLocation);
-            score -= alignmentScore * ruleSettings.AlignmentBonus / 10;
-
-            // 9a. Cluster-aware column target (parallel groups)
-            var cluster = GetClusterForElement(element);
-            if (cluster?.PreferColumnStack == true)
+            if (settings.AlignTags)
             {
-                var deltaX = Math.Abs(placement.TagLocation.X - cluster.PreferredColumnX);
-                if (deltaX <= cluster.ColumnTolerance)
-                    score -= ruleSettings.AlignmentBonus * ruleSettings.ColumnAlignBonusMultiplier;
-            }
+                // 9. Alignment bonus (tags that align with grid get lower score)
+                var alignmentScore = GetAlignmentScore(placement.TagLocation);
+                score -= alignmentScore * ruleSettings.AlignmentBonus / 10;
 
-            // 9b. Column alignment with other tags (bản mẫu: EA/SA stacked - same X)
-            var columnAlignTolerance = ruleSettings.PreferAlignColumn ? 2.0 : 1.5; // feet
-            var columnBand = new BoundingBox2D(
-                placement.TagLocation.X - columnAlignTolerance, placement.EstimatedTagBounds.MinY - 5,
-                placement.TagLocation.X + columnAlignTolerance, placement.EstimatedTagBounds.MaxY + 5);
-            var nearbyInX = _tagIndex.Query(columnBand);
-            foreach (var item in nearbyInX)
-            {
-                if (item.Bounds.Intersects(placement.EstimatedTagBounds)) continue; // exclude overlapping
-                if (Math.Abs(item.Bounds.Center.X - placement.TagLocation.X) <= columnAlignTolerance)
+                // 9a. Cluster-aware column target (parallel groups)
+                var cluster = GetClusterForElement(element);
+                if (cluster?.PreferColumnStack == true)
                 {
-                    var columnAlignBonus = ruleSettings.AlignmentBonus / 2;
-                    if (ruleSettings.PreferAlignColumn)
-                        columnAlignBonus = ruleSettings.AlignmentBonus;
-                    score -= columnAlignBonus * ruleSettings.ColumnAlignBonusMultiplier; // stronger bonus for stacking in column
-                    break;
+                    var deltaX = Math.Abs(placement.TagLocation.X - cluster.PreferredColumnX);
+                    if (deltaX <= cluster.ColumnTolerance)
+                        score -= ruleSettings.AlignmentBonus * ruleSettings.ColumnAlignBonusMultiplier;
+                }
+
+                // 9b. Column alignment with other tags (bản mẫu: EA/SA stacked - same X)
+                var columnAlignTolerance = ruleSettings.PreferAlignColumn ? 2.0 : 1.5; // feet
+                var columnBand = new BoundingBox2D(
+                    placement.TagLocation.X - columnAlignTolerance, placement.EstimatedTagBounds.MinY - 5,
+                    placement.TagLocation.X + columnAlignTolerance, placement.EstimatedTagBounds.MaxY + 5);
+                var nearbyInX = _tagIndex.Query(columnBand);
+                foreach (var item in nearbyInX)
+                {
+                    if (item.Bounds.Intersects(placement.EstimatedTagBounds)) continue; // exclude overlapping
+                    if (Math.Abs(item.Bounds.Center.X - placement.TagLocation.X) <= columnAlignTolerance)
+                    {
+                        var columnAlignBonus = ruleSettings.AlignmentBonus / 2;
+                        if (ruleSettings.PreferAlignColumn)
+                            columnAlignBonus = ruleSettings.AlignmentBonus;
+                        score -= columnAlignBonus * ruleSettings.ColumnAlignBonusMultiplier; // stronger bonus for stacking in column
+                        break;
+                    }
                 }
             }
             

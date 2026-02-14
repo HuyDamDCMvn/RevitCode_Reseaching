@@ -29,6 +29,15 @@ namespace SmartTag.Services
 
         private AutoTuneWeightsService() { }
 
+        public void Reset()
+        {
+            lock (_lock)
+            {
+                _cached = null;
+                _weightsPath = null;
+            }
+        }
+
         public AutoTunedWeights GetWeights()
         {
             if (_cached != null) return _cached;

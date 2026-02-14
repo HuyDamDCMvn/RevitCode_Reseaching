@@ -34,6 +34,17 @@ namespace SmartTag.Services
 
         private TemplateLibrary() { }
 
+        public void ForceReload()
+        {
+            lock (_lock)
+            {
+                _templatesByKey.Clear();
+                var annotatedPath = GetAnnotatedFolderPath();
+                BuildFromAnnotatedFolder(annotatedPath);
+                SaveToFile(GetTemplatesPath());
+            }
+        }
+
         public void EnsureLoaded()
         {
             if (_templatesByKey.Count > 0) return;
