@@ -181,6 +181,14 @@ Version: $Version
 
 Write-Host "   Done." -ForegroundColor Green
 
+# Copy install.bat to release folder (alongside HD.extension)
+$InstallBat = Join-Path $RootDir "install.bat"
+if (Test-Path $InstallBat) {
+    Copy-Item $InstallBat $ReleaseDir -Force
+    Write-Host "   Copied: install.bat" -ForegroundColor Gray
+}
+Write-Host "   Done." -ForegroundColor Green
+
 # Summary
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Cyan
@@ -192,15 +200,17 @@ Write-Host ""
 
 # List files
 Write-Host "Files included:" -ForegroundColor Yellow
-Get-ChildItem $ExtensionDir -Recurse -File | ForEach-Object {
-    $relativePath = $_.FullName.Replace("$ExtensionDir\", "")
+Get-ChildItem $ReleaseDir -Recurse -File | ForEach-Object {
+    $relativePath = $_.FullName.Replace("$ReleaseDir\", "")
     $size = "{0:N0} KB" -f ($_.Length / 1KB)
     Write-Host "   $relativePath ($size)" -ForegroundColor Gray
 }
 
 # Total size
-$totalSize = (Get-ChildItem $ExtensionDir -Recurse -File | Measure-Object -Property Length -Sum).Sum
+$totalSize = (Get-ChildItem $ReleaseDir -Recurse -File | Measure-Object -Property Length -Sum).Sum
 Write-Host ""
 Write-Host "Total size: $("{0:N0} KB" -f ($totalSize / 1KB))" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "To distribute: ZIP the 'release\HD.extension' folder" -ForegroundColor Cyan
+Write-Host "Next steps:" -ForegroundColor Cyan
+Write-Host "  .\package-release.ps1 -Version $Version" -ForegroundColor Gray
+Write-Host "  .\deploy.ps1 -SharedPath '\\server\share\HD-Extension' -Version $Version" -ForegroundColor Gray

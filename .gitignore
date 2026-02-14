@@ -16,8 +16,9 @@
 *.suo
 *.cache
 
-# Release folder (distributable - don't commit binaries)
+# Release & distribution (don't commit binaries/packages)
 /release/
+/dist/
 
 # Python
 __pycache__/
