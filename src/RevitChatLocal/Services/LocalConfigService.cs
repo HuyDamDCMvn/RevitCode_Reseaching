@@ -11,6 +11,7 @@ namespace RevitChatLocal.Services
         public string Model { get; set; } = "qwen2.5:7b";
         public int MaxTokens { get; set; } = 4096;
         public int MaxConversationMessages { get; set; } = 40;
+        public int MaxTools { get; set; } = 30;
     }
 
     public static class LocalConfigService
