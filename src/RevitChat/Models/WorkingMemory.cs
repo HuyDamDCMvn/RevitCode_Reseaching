@@ -34,7 +34,7 @@ namespace RevitChat.Models
 
                 if (toolName == "count_elements")
                 {
-                    var countMatch = Regex.Match(resultJson, @"Total:\s*(\d+)");
+                    var countMatch = Regex.Match(resultJson, @"""total""\s*:\s*(\d+)");
                     if (countMatch.Success)
                         LastCount = int.Parse(countMatch.Groups[1].Value);
                     return;

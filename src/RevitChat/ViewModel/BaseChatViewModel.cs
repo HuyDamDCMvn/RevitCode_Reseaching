@@ -347,6 +347,12 @@ namespace RevitChat.ViewModel
             var t = text.Trim();
             if (t.StartsWith("[Executing") || t == "(tool call)" || t == "...")
                 return true;
+            if (t.Contains("<tool_call>") || t.Contains("</tool_call>"))
+                return true;
+            if (t.Contains("\"name\"") && t.Contains("\"arguments\"") && t.Contains("{"))
+                return true;
+            if (System.Text.RegularExpressions.Regex.IsMatch(t, @"^\s*[\{\};,"":\[\]]+\s*$"))
+                return true;
             return false;
         }
 
@@ -472,7 +478,7 @@ namespace RevitChat.ViewModel
             foreach (var kvp in results)
             {
                 if (string.IsNullOrWhiteSpace(kvp.Value)) continue;
-                var snippet = kvp.Value.Length > 600 ? kvp.Value[..600] + "...[TRUNCATED]" : kvp.Value;
+                var snippet = kvp.Value.Length > 2000 ? kvp.Value[..2000] + "...[TRUNCATED]" : kvp.Value;
                 sb.AppendLine($"{kvp.Key}: {snippet}");
             }
 

@@ -336,7 +336,12 @@ namespace RevitChat.Skills
             var elemIds = ResolveValidIds(doc, view, ids, out var notFound);
             if (elemIds.Count == 0) return JsonError("No valid, visible elements found for the given IDs.");
 
-            var canHide = elemIds.Where(id => view.CanCategoryBeHidden(doc.GetElement(id).Category?.Id ?? ElementId.InvalidElementId)).ToList();
+            var canHide = elemIds.Where(id =>
+            {
+                var elem = doc.GetElement(id);
+                if (elem?.Category == null) return false;
+                return view.CanCategoryBeHidden(elem.Category.Id);
+            }).ToList();
             if (canHide.Count == 0) return JsonError("None of the elements can be hidden in this view.");
 
             using (var trans = new Transaction(doc, "AI: Hide Elements"))
@@ -762,10 +767,19 @@ namespace RevitChat.Skills
                     message = "No elements are currently selected."
                 }, JsonOpts);
 
-            var elements = selectedIds
+            var allElements = selectedIds
                 .Select(id => doc.GetElement(id))
                 .Where(e => e != null)
-                .Take(200)
+                .ToList();
+
+            var byCategory = allElements
+                .GroupBy(e => e.Category?.Name ?? "Unknown")
+                .Select(g => new { category = g.Key, count = g.Count() })
+                .OrderByDescending(g => g.count)
+                .ToList();
+
+            var detailList = allElements
+                .Take(50)
                 .Select(e => new
                 {
                     id = e.Id.Value,
@@ -776,19 +790,13 @@ namespace RevitChat.Skills
                 })
                 .ToList();
 
-            var byCategory = elements
-                .GroupBy(e => e.category)
-                .Select(g => new { category = g.Key, count = g.Count() })
-                .OrderByDescending(g => g.count)
-                .ToList();
-
             return JsonSerializer.Serialize(new
             {
                 count = selectedIds.Count,
-                elements = elements.Count <= 50 ? elements : elements.Take(50),
-                truncated = elements.Count > 50,
+                message = $"{selectedIds.Count} element(s) currently selected.",
                 summary_by_category = byCategory,
-                message = $"{selectedIds.Count} element(s) currently selected."
+                elements = detailList,
+                truncated = allElements.Count > 50
             }, JsonOpts);
         }
 

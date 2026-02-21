@@ -418,6 +418,16 @@ namespace RevitChatLocal.Services
             (new[] { "zoom", "phóng to", "focus" },
                 "User: zoom to elements 100, 200\nAssistant:\n<tool_call>\n{\"name\": \"zoom_to_elements\", \"arguments\": {\"element_ids\": [100, 200]}}\n</tool_call>"),
 
+            // Multi-step: count then export, query then modify
+            (new[] { "count", "export", "csv" },
+                "User: count all ducts then export to CSV\nAssistant:\nI'll count the ducts first.\n<tool_call>\n{\"name\": \"count_elements\", \"arguments\": {\"category\": \"Ducts\"}}\n</tool_call>"),
+            (new[] { "list", "export", "csv" },
+                "User: list all walls and export to CSV\nAssistant:\nI'll start by getting the wall data.\n<tool_call>\n{\"name\": \"get_elements\", \"arguments\": {\"category\": \"Walls\"}}\n</tool_call>"),
+            (new[] { "count", "color", "override" },
+                "User: count all pipes then change them to blue\nAssistant:\nI'll count the pipes first.\n<tool_call>\n{\"name\": \"count_elements\", \"arguments\": {\"category\": \"Pipes\"}}\n</tool_call>"),
+            (new[] { "get", "then", "select" },
+                "User: find all doors on Level 1 and select them\nAssistant:\nI'll get the door elements first.\n<tool_call>\n{\"name\": \"get_elements\", \"arguments\": {\"category\": \"Doors\", \"level\": \"Level 1\"}}\n</tool_call>"),
+
             // Project info
             (new[] { "project", "dự án", "info", "thông tin" },
                 "User: thông tin dự án\nAssistant:\n<tool_call>\n{\"name\": \"get_project_info\", \"arguments\": {}}\n</tool_call>"),
@@ -800,7 +810,9 @@ namespace RevitChatLocal.Services
             if (totalChars > 6000)
                 sb.AppendLine("NOTE: The data above is large. Provide a concise summary to the user. Do NOT repeat the raw data.");
 
-            sb.AppendLine("Analyze the results and answer the user's original question. If you need more data, output ONE <tool_call>. Otherwise respond directly with NO <tool_call> tags.");
+            sb.AppendLine("Analyze the results and answer the user's original question.");
+            sb.AppendLine("If the user's request has more steps remaining (e.g. they asked to count THEN export), output ONE <tool_call> for the next step.");
+            sb.AppendLine("If all steps are done, respond directly with NO <tool_call> tags.");
 
             _conversationHistory.Add(new UserChatMessage(sb.ToString()));
 
@@ -875,31 +887,38 @@ namespace RevitChatLocal.Services
             var config = LocalConfigService.Load();
             var options = new ChatCompletionOptions { MaxOutputTokenCount = config.MaxTokens };
 
-            // Stage 1: ask LLM to pick tool names from the full list
             var stage1Messages = BuildTwoStageSelectionMessages();
             var stage1Response = await _client.CompleteChatAsync(stage1Messages, options, ct);
             var stage1Text = StripQwenTokens(stage1Response.Value.Content?.FirstOrDefault()?.Text ?? "");
 
             var selectedTools = ParseSelectedToolNames(stage1Text);
-
             if (selectedTools.Count == 0)
                 selectedTools = CoreTools.ToList();
 
-            // Stage 2: send the conversation with only the selected tools
-            var stage2Messages = BuildMessages(selectedTools);
-            var stage2Response = await _client.CompleteChatAsync(stage2Messages, options, ct);
-            var stage2Text = StripQwenTokens(stage2Response.Value.Content?.FirstOrDefault()?.Text ?? "");
-
-            var parsed = ParseResponse(stage2Text, out var cleanText, out var toolCalls);
-            if (LooksLikeToolCall(stage2Text) && toolCalls.Count == 0)
+            for (int attempt = 0; attempt < 2; attempt++)
             {
-                var fallback = BuildFallbackSuggestion(_lastUserMessage);
-                _conversationHistory.Add(new AssistantChatMessage(fallback));
-                return (fallback, new List<RevitChat.Models.ToolCallRequest>());
+                var stage2Messages = BuildMessages(selectedTools);
+                if (attempt > 0)
+                {
+                    stage2Messages.Add(new UserChatMessage(
+                        "Your last response was invalid. Output ONLY one <tool_call> or a direct answer. " +
+                        "Do NOT use code fences or extra text."));
+                }
+
+                var stage2Response = await _client.CompleteChatAsync(stage2Messages, options, ct);
+                var stage2Text = StripQwenTokens(stage2Response.Value.Content?.FirstOrDefault()?.Text ?? "");
+
+                var parsed = ParseResponse(stage2Text, out var cleanText, out var toolCalls);
+                if (LooksLikeToolCall(stage2Text) && toolCalls.Count == 0)
+                    continue;
+
+                AddToHistory(parsed, cleanText, toolCalls);
+                return parsed;
             }
 
-            AddToHistory(parsed, cleanText, toolCalls);
-            return parsed;
+            var fallback = BuildFallbackSuggestion(_lastUserMessage);
+            _conversationHistory.Add(new AssistantChatMessage(fallback));
+            return (fallback, new List<RevitChat.Models.ToolCallRequest>());
         }
 
         private List<OaiMessage> BuildTwoStageSelectionMessages()
@@ -1036,7 +1055,19 @@ Example:
                 return (null, toolCalls);
             }
 
-            return (text, new List<RevitChat.Models.ToolCallRequest>());
+            var sanitized = SanitizeForDisplay(text);
+            return (sanitized, new List<RevitChat.Models.ToolCallRequest>());
+        }
+
+        private static string SanitizeForDisplay(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return text;
+            var result = Regex.Replace(text, @"</?tool_call>", "", RegexOptions.IgnoreCase);
+            result = Regex.Replace(result, @"\{[^{}]*""name""\s*:\s*""[a-z_]+""[^{}]*\}", "", RegexOptions.Singleline);
+            result = Regex.Replace(result, @"\{[^{}]*""arguments""[^{}]*\}", "", RegexOptions.Singleline);
+            result = Regex.Replace(result, @"```json?\s*```", "", RegexOptions.IgnoreCase);
+            result = result.Trim();
+            return string.IsNullOrWhiteSpace(result) ? "" : result;
         }
 
         private void AddToHistory(
@@ -1070,6 +1101,7 @@ Example:
             var stripped = Regex.Replace(text, @"```(?:json)?\s*", "", RegexOptions.IgnoreCase);
             stripped = stripped.Replace("```", "");
 
+            // 1) Well-formed <tool_call>...</tool_call>
             var tagPattern = new Regex(
                 @"<tool_call>\s*(\{.+?\})\s*</tool_call>",
                 RegexOptions.Singleline);
@@ -1082,6 +1114,24 @@ Example:
 
             if (results.Count > 0) return results;
 
+            // 2) Multiple JSON objects inside a single <tool_call> block (merged calls)
+            var mergedPattern = new Regex(
+                @"<tool_call>\s*(.*?)\s*</tool_call>",
+                RegexOptions.Singleline);
+            foreach (Match match in mergedPattern.Matches(stripped))
+            {
+                var inner = match.Groups[1].Value;
+                var jsonObjects = Regex.Matches(inner, @"\{[^{}]*""name""[^{}]*\}", RegexOptions.Singleline);
+                foreach (Match jm in jsonObjects)
+                {
+                    var call = TryParseOneToolCall(jm.Value);
+                    if (call != null) results.Add(call);
+                }
+            }
+
+            if (results.Count > 0) return results;
+
+            // 3) JSON inside markdown fences
             var jsonBlockPattern = new Regex(
                 @"```(?:json)?\s*(\{[^`]*?""name""\s*:\s*""[a-z_]+""\s*[^`]*?\})\s*```",
                 RegexOptions.Singleline | RegexOptions.IgnoreCase);
@@ -1094,6 +1144,7 @@ Example:
 
             if (results.Count > 0) return results;
 
+            // 4) Inline JSON: {"name":"...", "arguments":{...}}
             var inlinePattern = new Regex(
                 @"\{\s*""name""\s*:\s*""([a-z_]+)""\s*,\s*""(?:arguments|args|parameters)""\s*:\s*(\{(?:[^{}]|\{[^{}]*\})*\})\s*\}",
                 RegexOptions.Singleline);
@@ -1112,10 +1163,55 @@ Example:
                 });
             }
 
+            if (results.Count > 0) return results;
+
+            // 5) Last resort: find any known tool name followed by JSON-like args in garbled text
+            foreach (var toolName in _allToolNames)
+            {
+                var pattern = new Regex(
+                    $@"(?:^|[\s""':,])({Regex.Escape(toolName)})\s*[\(,:]?\s*\{{(.*?)\}}",
+                    RegexOptions.Singleline | RegexOptions.IgnoreCase);
+                var m = pattern.Match(text);
+                if (m.Success)
+                {
+                    var argsText = "{" + m.Groups[2].Value + "}";
+                    var call = TryParseOneToolCallWithName(toolName, argsText);
+                    if (call != null) results.Add(call);
+                }
+            }
+
             if (results.Count > 5)
-                results = results.Take(1).ToList();
+                results = results.Take(2).ToList();
 
             return results;
+        }
+
+        private RevitChat.Models.ToolCallRequest TryParseOneToolCallWithName(string knownName, string argsJson)
+        {
+            try
+            {
+                var sanitized = SanitizeJsonLike(argsJson);
+                using var doc = JsonDocument.Parse(sanitized);
+                var args = new Dictionary<string, object>();
+                foreach (var prop in doc.RootElement.EnumerateObject())
+                    args[prop.Name] = prop.Value.Clone();
+
+                return new RevitChat.Models.ToolCallRequest
+                {
+                    ToolCallId = GenerateCallId(knownName),
+                    FunctionName = knownName,
+                    Arguments = args
+                };
+            }
+            catch
+            {
+                return new RevitChat.Models.ToolCallRequest
+                {
+                    ToolCallId = GenerateCallId(knownName),
+                    FunctionName = knownName,
+                    Arguments = new Dictionary<string, object>()
+                };
+            }
         }
 
         private RevitChat.Models.ToolCallRequest TryParseOneToolCall(string json)
@@ -1253,8 +1349,14 @@ Example:
         private static bool LooksLikeToolCall(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return false;
-            return text.Contains("<tool_call>", StringComparison.OrdinalIgnoreCase)
-                || Regex.IsMatch(text, @"""name""\s*:\s*""[a-z_]+""", RegexOptions.IgnoreCase);
+            if (text.Contains("<tool_call>", StringComparison.OrdinalIgnoreCase)) return true;
+            if (text.Contains("</tool_call>", StringComparison.OrdinalIgnoreCase)) return true;
+            if (text.Contains("tool_call", StringComparison.OrdinalIgnoreCase)
+                && text.Contains("{")) return true;
+            if (Regex.IsMatch(text, @"""name""\s*:\s*""[a-z_]+""", RegexOptions.IgnoreCase)) return true;
+            if (Regex.IsMatch(text, @"[a-z_]{3,}\(.*\)", RegexOptions.IgnoreCase)
+                && text.Contains("\"")) return true;
+            return false;
         }
 
         private string BuildFallbackSuggestion(string userMessage)
@@ -1285,6 +1387,9 @@ Example:
         private string RemoveToolCallTags(string text)
         {
             text = Regex.Replace(text, @"<tool_call>.*?</tool_call>", "", RegexOptions.Singleline);
+            text = Regex.Replace(text, @"<tool_call>.*$", "", RegexOptions.Singleline);
+            text = Regex.Replace(text, @"^.*?</tool_call>", "", RegexOptions.Singleline);
+            text = Regex.Replace(text, @"</?tool_call>", "", RegexOptions.IgnoreCase);
             text = Regex.Replace(text, @"```json?\s*\{[^`]*?""name""[^`]*?\}\s*```", "", RegexOptions.Singleline);
             text = Regex.Replace(text, @"```json?\s*<tool_call>.*?</tool_call>\s*```", "", RegexOptions.Singleline);
             return text.Trim();
@@ -1327,14 +1432,15 @@ To call a tool, output EXACTLY this (no code fences, no extra text after it):
 
 ## RULES
 1. When the user asks about model data, output a <tool_call> immediately. Do NOT describe what you will do.
-2. Output ONLY ONE <tool_call> per response. Stop writing after </tool_call>.
+2. Output ONLY ONE <tool_call> per response. Stop writing IMMEDIATELY after </tool_call>.
 3. Do NOT wrap <tool_call> in ```json``` code blocks.
 4. The ""arguments"" field MUST be a JSON object with the tool's parameters inside it.
-5. After receiving tool results, answer the user directly. Do NOT output another <tool_call> unless you need more data.
-6. For destructive operations (delete, modify), confirm with the user FIRST before calling the tool.
-7. NEVER invent data. Only use tool results.
-8. Reply in the same language the user uses.
-9. Vietnamese category mapping: tường=Walls, cửa=Doors, cửa sổ=Windows, ống=Ducts/Pipes, phòng=Rooms, sàn=Floors, cột=Columns, dầm=Structural Framing, trần=Ceilings, mái=Roofs, cầu thang=Stairs, lan can=Railings, thiết bị vệ sinh=Plumbing Fixtures, khay cáp=Cable Trays, ống dẫn=Conduits, đèn=Lighting Fixtures.
+5. After receiving tool results, answer the user directly. If you need more data, output ONE more <tool_call>.
+6. For multi-step requests (e.g. ""count ducts then export""), handle the FIRST step only. You will get results back and can do the next step then.
+7. For destructive operations (delete, modify), confirm with the user FIRST before calling the tool.
+8. NEVER invent data. Only use tool results.
+9. Reply in the same language the user uses.
+10. Vietnamese category mapping: tường=Walls, cửa=Doors, cửa sổ=Windows, ống=Ducts/Pipes, phòng=Rooms, sàn=Floors, cột=Columns, dầm=Structural Framing, trần=Ceilings, mái=Roofs, cầu thang=Stairs, lan can=Railings, thiết bị vệ sinh=Plumbing Fixtures, khay cáp=Cable Trays, ống dẫn=Conduits, đèn=Lighting Fixtures.
 
 ## WRONG (do NOT do this):
 ```json

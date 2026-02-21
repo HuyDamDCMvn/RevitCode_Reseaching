@@ -242,13 +242,21 @@ namespace RevitChat.Skills
             var ids = GetArgLongArray(args, "element_ids");
             if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
 
-            var elemIds = ids.Select(id => new ElementId(id)).ToList();
+            var doc = uidoc.Document;
+            var elemIds = ids
+                .Select(id => new ElementId(id))
+                .Where(id => doc.GetElement(id) != null)
+                .ToList();
+
+            if (elemIds.Count == 0) return JsonError("No valid elements found for the given IDs.");
+
             uidoc.Selection.SetElementIds(elemIds);
 
             return JsonSerializer.Serialize(new
             {
+                requested = ids.Count,
                 selected = elemIds.Count,
-                message = $"Selected {elemIds.Count} element(s) in the active view."
+                message = $"Selected {elemIds.Count} of {ids.Count} element(s) in the active view."
             }, JsonOpts);
         }
 

@@ -203,6 +203,7 @@ namespace RevitChat.Skills
             int maxSelect = GetArg(args, "max_select", 500);
 
             var view = doc.ActiveView;
+            if (view == null) return JsonError("No active view.");
 
             var collector = new FilteredElementCollector(doc, view.Id)
                 .WhereElementIsNotElementType();
