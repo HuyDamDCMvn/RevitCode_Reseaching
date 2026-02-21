@@ -55,6 +55,10 @@ namespace RevitChat.Skills
                 filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
                     $"Revit_{category}_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
 
+            filePath = Path.GetFullPath(filePath);
+            if (!filePath.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+                return JsonError("file_path must end with .csv");
+
             var collector = BuildCollector(doc, category);
             bool needsCategoryFallback = !string.IsNullOrEmpty(category) && ResolveCategoryFilter(doc, category) == null;
 

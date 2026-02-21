@@ -189,7 +189,7 @@ namespace RevitChatLocal.Services
                     argsProp.ValueKind == JsonValueKind.Object)
                 {
                     foreach (var prop in argsProp.EnumerateObject())
-                        args[prop.Name] = prop.Value;
+                        args[prop.Name] = prop.Value.Clone();
                 }
 
                 return new RevitChat.Models.ToolCallRequest
@@ -309,10 +309,10 @@ Assistant: Let me retrieve the categories.
             if (string.IsNullOrEmpty(json)) return new Dictionary<string, object>();
             try
             {
-                var doc = JsonDocument.Parse(json);
+                using var doc = JsonDocument.Parse(json);
                 var dict = new Dictionary<string, object>();
                 foreach (var prop in doc.RootElement.EnumerateObject())
-                    dict[prop.Name] = prop.Value;
+                    dict[prop.Name] = prop.Value.Clone();
                 return dict;
             }
             catch

@@ -18,11 +18,24 @@ namespace RevitChat
 
         public static void ShowTool(UIApplication uiapp)
         {
+            if (uiapp == null)
+            {
+                TaskDialog.Show("RevitChat Error", "UIApplication is null. Cannot open chat window.");
+                return;
+            }
+
             try
             {
                 if (_window != null && _window.IsVisible)
                 {
                     _window.Activate();
+                    return;
+                }
+
+                var uidoc = uiapp.ActiveUIDocument;
+                if (uidoc?.Document == null)
+                {
+                    TaskDialog.Show("RevitChat", "Please open a Revit project first.");
                     return;
                 }
 

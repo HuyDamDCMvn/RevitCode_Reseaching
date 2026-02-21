@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Reflection;
 using System.Text.Json;
 
 namespace RevitChatLocal.Services
@@ -16,45 +15,60 @@ namespace RevitChatLocal.Services
 
     public static class LocalConfigService
     {
-        private static readonly string DllDir =
-            Path.GetDirectoryName(typeof(LocalConfigService).Assembly.Location);
-        private static readonly string ConfigDir = Path.Combine(DllDir, "Data", "Config");
-        private static readonly string ConfigPath = Path.Combine(ConfigDir, "ollama_config.json");
+        private static readonly object _lock = new();
+        private static readonly string ConfigDir;
+        private static readonly string ConfigPath;
         private static OllamaConfig _cached;
+
+        static LocalConfigService()
+        {
+            var loc = typeof(LocalConfigService).Assembly.Location;
+            var dllDir = !string.IsNullOrEmpty(loc)
+                ? Path.GetDirectoryName(loc)
+                : AppContext.BaseDirectory;
+            ConfigDir = Path.Combine(dllDir, "Data", "Config");
+            ConfigPath = Path.Combine(ConfigDir, "ollama_config.json");
+        }
 
         public static OllamaConfig Load()
         {
-            if (_cached != null) return _cached;
-
-            try
+            lock (_lock)
             {
-                if (File.Exists(ConfigPath))
+                if (_cached != null) return _cached;
+
+                try
                 {
-                    var json = File.ReadAllText(ConfigPath);
-                    _cached = JsonSerializer.Deserialize<OllamaConfig>(json) ?? new OllamaConfig();
-                    return _cached;
+                    if (File.Exists(ConfigPath))
+                    {
+                        var json = File.ReadAllText(ConfigPath);
+                        _cached = JsonSerializer.Deserialize<OllamaConfig>(json) ?? new OllamaConfig();
+                        return _cached;
+                    }
                 }
-            }
-            catch
-            {
-            }
+                catch
+                {
+                }
 
-            _cached = new OllamaConfig();
-            return _cached;
+                _cached = new OllamaConfig();
+                return _cached;
+            }
         }
 
         public static void Save(OllamaConfig config)
         {
-            try
+            lock (_lock)
             {
-                Directory.CreateDirectory(ConfigDir);
-                var json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(ConfigPath, json);
-                _cached = config;
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Failed to save config: {ex.Message}", ex);
+                try
+                {
+                    Directory.CreateDirectory(ConfigDir);
+                    var json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
+                    File.WriteAllText(ConfigPath, json);
+                    _cached = config;
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Failed to save config: {ex.Message}", ex);
+                }
             }
         }
 
@@ -64,6 +78,9 @@ namespace RevitChatLocal.Services
             return !string.IsNullOrWhiteSpace(config.EndpointUrl);
         }
 
-        public static void InvalidateCache() => _cached = null;
+        public static void InvalidateCache()
+        {
+            lock (_lock) { _cached = null; }
+        }
     }
 }

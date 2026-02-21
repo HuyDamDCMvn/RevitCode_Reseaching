@@ -230,6 +230,10 @@ namespace RevitChat.Skills
             var filePath = GetArg<string>(args, "file_path");
             if (string.IsNullOrEmpty(filePath)) return JsonError("file_path required.");
 
+            filePath = System.IO.Path.GetFullPath(filePath);
+            if (!filePath.EndsWith(".rfa", StringComparison.OrdinalIgnoreCase))
+                return JsonError("file_path must be a .rfa file.");
+
             if (!System.IO.File.Exists(filePath))
                 return JsonError($"File not found: {filePath}");
 

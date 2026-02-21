@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Reflection;
 using System.Text.Json;
 
 namespace RevitChat.Services
@@ -15,46 +14,60 @@ namespace RevitChat.Services
 
     public static class ConfigService
     {
-        private static readonly string DllDir =
-            Path.GetDirectoryName(typeof(ConfigService).Assembly.Location);
-        private static readonly string ConfigDir = Path.Combine(DllDir, "Data", "Config");
-        private static readonly string ConfigPath = Path.Combine(ConfigDir, "openai_config.json");
+        private static readonly object _lock = new();
+        private static readonly string ConfigDir;
+        private static readonly string ConfigPath;
         private static ChatConfig _cached;
+
+        static ConfigService()
+        {
+            var loc = typeof(ConfigService).Assembly.Location;
+            var dllDir = !string.IsNullOrEmpty(loc)
+                ? Path.GetDirectoryName(loc)
+                : AppContext.BaseDirectory;
+            ConfigDir = Path.Combine(dllDir, "Data", "Config");
+            ConfigPath = Path.Combine(ConfigDir, "openai_config.json");
+        }
 
         public static ChatConfig Load()
         {
-            if (_cached != null) return _cached;
-
-            try
+            lock (_lock)
             {
-                if (File.Exists(ConfigPath))
+                if (_cached != null) return _cached;
+
+                try
                 {
-                    var json = File.ReadAllText(ConfigPath);
-                    _cached = JsonSerializer.Deserialize<ChatConfig>(json) ?? new ChatConfig();
-                    return _cached;
+                    if (File.Exists(ConfigPath))
+                    {
+                        var json = File.ReadAllText(ConfigPath);
+                        _cached = JsonSerializer.Deserialize<ChatConfig>(json) ?? new ChatConfig();
+                        return _cached;
+                    }
                 }
-            }
-            catch
-            {
-                // Fall through to default
-            }
+                catch
+                {
+                }
 
-            _cached = new ChatConfig();
-            return _cached;
+                _cached = new ChatConfig();
+                return _cached;
+            }
         }
 
         public static void Save(ChatConfig config)
         {
-            try
+            lock (_lock)
             {
-                Directory.CreateDirectory(ConfigDir);
-                var json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(ConfigPath, json);
-                _cached = config;
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Failed to save config: {ex.Message}", ex);
+                try
+                {
+                    Directory.CreateDirectory(ConfigDir);
+                    var json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
+                    File.WriteAllText(ConfigPath, json);
+                    _cached = config;
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Failed to save config: {ex.Message}", ex);
+                }
             }
         }
 
@@ -64,6 +77,9 @@ namespace RevitChat.Services
             return !string.IsNullOrWhiteSpace(config.ApiKey);
         }
 
-        public static void InvalidateCache() => _cached = null;
+        public static void InvalidateCache()
+        {
+            lock (_lock) { _cached = null; }
+        }
     }
 }

@@ -8,11 +8,14 @@ namespace RevitChat.UI
 {
     public partial class RevitChatWindow : Window
     {
+        private INotifyCollectionChanged _messagesCollection;
+
         public RevitChatWindow()
         {
             InitializeComponent();
 
             Loaded += OnLoaded;
+            Closed += OnClosed;
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
@@ -21,20 +24,24 @@ namespace RevitChat.UI
 
             if (DataContext is RevitChatViewModel vm)
             {
-                ((INotifyCollectionChanged)vm.Messages).CollectionChanged += OnMessagesChanged;
+                _messagesCollection = (INotifyCollectionChanged)vm.Messages;
+                _messagesCollection.CollectionChanged += OnMessagesChanged;
 
-                // Sync API key to PasswordBox (one-time)
                 if (!string.IsNullOrEmpty(vm.ApiKey))
                     ApiKeyBox.Password = vm.ApiKey;
             }
         }
 
+        private void OnClosed(object sender, System.EventArgs e)
+        {
+            if (_messagesCollection != null)
+                _messagesCollection.CollectionChanged -= OnMessagesChanged;
+        }
+
         private void OnMessagesChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (ChatList.Items.Count > 0)
-            {
                 ChatList.ScrollIntoView(ChatList.Items[ChatList.Items.Count - 1]);
-            }
         }
 
         private void InputBox_KeyDown(object sender, KeyEventArgs e)
@@ -52,9 +59,7 @@ namespace RevitChat.UI
         private void ApiKeyBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
             if (DataContext is RevitChatViewModel vm)
-            {
                 vm.ApiKey = ApiKeyBox.Password;
-            }
         }
     }
 }

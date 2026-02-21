@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using Autodesk.Revit.UI;
 using RevitChat.Models;
 using RevitChat.Skills;
@@ -46,7 +47,7 @@ namespace RevitChat.Handler
                     catch (Exception ex)
                     {
                         results[request.ToolCallId] =
-                            $"{{\"error\":\"{ex.Message.Replace("\"", "'")}\"}}";
+                            JsonSerializer.Serialize(new { error = ex.Message });
                     }
                 }
 

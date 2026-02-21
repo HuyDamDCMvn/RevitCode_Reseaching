@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using Autodesk.Revit.UI;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -21,9 +22,11 @@ namespace RevitChat.ViewModel
         private readonly ChatRequestQueue _queue;
         private readonly SkillRegistry _skillRegistry;
         private readonly OpenAiChatService _chatService;
+        private readonly Dispatcher _dispatcher;
 
         private CancellationTokenSource _cts;
         private TaskCompletionSource<Dictionary<string, string>> _toolResultsTcs;
+        private const int ToolTimeoutMs = 60_000;
 
         public ObservableCollection<ChatMessage> Messages { get; } = new();
 
@@ -64,6 +67,7 @@ namespace RevitChat.ViewModel
             _queue = queue;
             _skillRegistry = skillRegistry;
             _chatService = new OpenAiChatService(skillRegistry);
+            _dispatcher = Dispatcher.CurrentDispatcher;
 
             _handler.OnToolCallsCompleted += HandleToolCallsCompleted;
             _handler.OnError += HandleHandlerError;
@@ -130,10 +134,8 @@ namespace RevitChat.ViewModel
                 while (toolCalls != null && toolCalls.Count > 0)
                 {
                     foreach (var tc in toolCalls)
-                    {
-                        var progress = ChatMessage.ToolProgress(tc.FunctionName);
-                        Messages.Add(progress);
-                    }
+                        Messages.Add(ChatMessage.ToolProgress(tc.FunctionName));
+
                     StatusMessage = $"Executing {toolCalls.Count} tool(s)...";
 
                     var toolResults = await ExecuteToolCallsAsync(toolCalls);
@@ -144,9 +146,7 @@ namespace RevitChat.ViewModel
                 }
 
                 if (!string.IsNullOrEmpty(response))
-                {
                     Messages.Add(ChatMessage.FromAssistant(response));
-                }
 
                 StatusMessage = "Ready";
             }
@@ -174,28 +174,45 @@ namespace RevitChat.ViewModel
         {
             _toolResultsTcs = new TaskCompletionSource<Dictionary<string, string>>();
 
+            using var ctReg = _cts?.Token.Register(() =>
+                _toolResultsTcs.TrySetCanceled());
+
             _queue.Clear();
             _queue.EnqueueAll(toolCalls);
             _externalEvent.Raise();
+
+            var timeoutTask = Task.Delay(ToolTimeoutMs);
+            var completed = await Task.WhenAny(_toolResultsTcs.Task, timeoutTask);
+
+            if (completed == timeoutTask)
+            {
+                _toolResultsTcs.TrySetCanceled();
+                throw new TimeoutException("Tool execution timed out. Revit may be busy or a modal dialog is open.");
+            }
 
             return await _toolResultsTcs.Task;
         }
 
         private void HandleToolCallsCompleted(Dictionary<string, string> results)
         {
-            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                _toolResultsTcs?.TrySetResult(results);
-            }));
+            InvokeOnDispatcher(() => _toolResultsTcs?.TrySetResult(results));
         }
 
         private void HandleHandlerError(string error)
         {
-            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+            InvokeOnDispatcher(() => _toolResultsTcs?.TrySetException(
+                new InvalidOperationException($"Revit handler error: {error}")));
+        }
+
+        private void InvokeOnDispatcher(Action action)
+        {
+            var dispatcher = Application.Current?.Dispatcher ?? _dispatcher;
+            if (dispatcher == null || dispatcher.HasShutdownStarted)
             {
-                _toolResultsTcs?.TrySetException(
-                    new InvalidOperationException($"Revit handler error: {error}"));
-            }));
+                action();
+                return;
+            }
+            dispatcher.BeginInvoke(action);
         }
 
         private void RemoveToolProgressMessages()
@@ -211,6 +228,7 @@ namespace RevitChat.ViewModel
         private void Cancel()
         {
             _cts?.Cancel();
+            _toolResultsTcs?.TrySetCanceled();
             StatusMessage = "Cancelling...";
         }
 
@@ -263,6 +281,7 @@ namespace RevitChat.ViewModel
         {
             _handler.OnToolCallsCompleted -= HandleToolCallsCompleted;
             _handler.OnError -= HandleHandlerError;
+            _toolResultsTcs?.TrySetCanceled();
             _cts?.Cancel();
             _cts?.Dispose();
         }

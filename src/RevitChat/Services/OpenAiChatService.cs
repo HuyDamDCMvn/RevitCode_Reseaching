@@ -137,6 +137,9 @@ Rules:
             while (_conversationHistory.Count > max)
             {
                 _conversationHistory.RemoveAt(0);
+                // Don't leave orphan ToolChatMessages at the start
+                while (_conversationHistory.Count > 0 && _conversationHistory[0] is ToolChatMessage)
+                    _conversationHistory.RemoveAt(0);
             }
         }
 
@@ -145,12 +148,10 @@ Rules:
             if (string.IsNullOrEmpty(json)) return new Dictionary<string, object>();
             try
             {
-                var doc = JsonDocument.Parse(json);
+                using var doc = JsonDocument.Parse(json);
                 var dict = new Dictionary<string, object>();
                 foreach (var prop in doc.RootElement.EnumerateObject())
-                {
-                    dict[prop.Name] = prop.Value;
-                }
+                    dict[prop.Name] = prop.Value.Clone();
                 return dict;
             }
             catch
