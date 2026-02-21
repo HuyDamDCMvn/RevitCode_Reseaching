@@ -16,6 +16,23 @@ namespace RevitChat.Skills
         private readonly List<IRevitSkill> _skills = new();
         private IReadOnlyList<ChatTool> _cachedTools;
 
+        public static readonly Dictionary<string, string[]> PackToSkills = new()
+        {
+            ["Core"] = new[] { "Query", "ProjectInfo", "Modify", "Export" },
+            ["ViewControl"] = new[] { "ViewControl", "SelectionFilter" },
+            ["MEP"] = new[] { "MepSystemAnalysis", "MepEquipment", "MepSpace", "MepQuantityTakeoff", "MepValidation" },
+            ["Modeler"] = new[] {
+                "FamilyPlacement", "SheetManagement", "FilterTemplate",
+                "DimensionTag", "WorksetPhase", "Group", "Material",
+                "RoomArea", "GridLevel", "SharedParameter", "RevisionMarkup"
+            },
+            ["BIMCoordinator"] = new[] {
+                "ModelHealth", "NamingAudit", "PurgeAudit",
+                "CoordinationReport", "ClashDetection"
+            },
+            ["LinkedModels"] = new[] { "RevitLink" }
+        };
+
         public IReadOnlyList<IRevitSkill> Skills => _skills;
 
         public void Register(IRevitSkill skill)
@@ -34,6 +51,22 @@ namespace RevitChat.Skills
         public IReadOnlyList<ChatTool> GetAllToolDefinitions()
         {
             return _cachedTools ??= _skills.SelectMany(s => s.GetToolDefinitions()).ToList();
+        }
+
+        public IReadOnlyList<ChatTool> GetToolDefinitionsByPacks(IEnumerable<string> enabledPacks)
+        {
+            var allowedSkills = new HashSet<string>();
+            foreach (var pack in enabledPacks)
+            {
+                if (PackToSkills.TryGetValue(pack, out var skillNames))
+                    foreach (var s in skillNames)
+                        allowedSkills.Add(s);
+            }
+
+            return _skills
+                .Where(s => allowedSkills.Contains(s.Name))
+                .SelectMany(s => s.GetToolDefinitions())
+                .ToList();
         }
 
         public string ExecuteTool(string functionName, UIApplication app, Dictionary<string, object> args)

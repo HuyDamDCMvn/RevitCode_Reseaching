@@ -150,29 +150,67 @@
             </Grid>
         </Border>
 
-        <!-- Settings panel (collapsible) -->
-        <Border Grid.Row="1" Background="#FAFAFA" Padding="14" 
+        <!-- Settings panel (collapsible, scrollable) -->
+        <Border Grid.Row="1" Background="#FAFAFA"
                 BorderBrush="#E0E0E0" BorderThickness="0,0,0,1"
                 Visibility="{Binding IsSettingsVisible, Converter={StaticResource BoolToVis}}"
                 Panel.ZIndex="10">
-            <StackPanel>
-                <TextBlock Text="Ollama Settings" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,10"/>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="480" Padding="14">
+                <StackPanel>
+                    <!-- Connection -->
+                    <TextBlock Text="Connection" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
 
-                <TextBlock Text="Endpoint URL" FontSize="12" Foreground="#616161" Margin="0,0,0,4"/>
-                <TextBox Text="{Binding EndpointUrl, UpdateSourceTrigger=PropertyChanged}"
-                         FontSize="12" Padding="8,6" Margin="0,0,0,10"/>
+                    <TextBlock Text="Endpoint URL" FontSize="11" Foreground="#616161" Margin="0,0,0,3"/>
+                    <TextBox Text="{Binding EndpointUrl, UpdateSourceTrigger=PropertyChanged}"
+                             FontSize="12" Padding="8,5" Margin="0,0,0,8"/>
 
-                <TextBlock Text="Model" FontSize="12" Foreground="#616161" Margin="0,0,0,4"/>
-                <ComboBox ItemsSource="{Binding AvailableModels}" 
-                          SelectedItem="{Binding SelectedModel}"
-                          IsEditable="True"
-                          FontSize="12" Padding="6,4" Margin="0,0,0,6"/>
-                <TextBlock Text="Type any Ollama model name or pick from list" 
-                           FontSize="10" Foreground="#9E9E9E" Margin="0,0,0,14"/>
+                    <TextBlock Text="Model" FontSize="11" Foreground="#616161" Margin="0,0,0,3"/>
+                    <ComboBox ItemsSource="{Binding AvailableModels}" 
+                              SelectedItem="{Binding SelectedModel}"
+                              IsEditable="True"
+                              FontSize="12" Padding="6,3" Margin="0,0,0,4"/>
+                    <TextBlock Text="Type any Ollama model name or pick from list" 
+                               FontSize="10" Foreground="#9E9E9E" Margin="0,0,0,12"/>
 
-                <Button Content="Save" Style="{StaticResource SendButtonStyle}" 
-                        HorizontalAlignment="Left" Command="{Binding SaveSettingsCommand}"/>
-            </StackPanel>
+                    <!-- Tool Selection Mode -->
+                    <Border BorderBrush="#E0E0E0" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="Tool Selection" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <RadioButton Content="Smart Selection (recommended)" 
+                                         IsChecked="{Binding IsModeSmart}" Margin="0,2" FontSize="12"
+                                         ToolTip="Auto-pick relevant tools based on your message keywords"/>
+                            <RadioButton Content="Two-Stage (slower, more accurate)" 
+                                         IsChecked="{Binding IsModeTwoStage}" Margin="0,2" FontSize="12"
+                                         ToolTip="LLM first selects tools, then executes — two API calls per message"/>
+                            <RadioButton Content="Show All Tools (needs 14b+ model)" 
+                                         IsChecked="{Binding IsModeShowAll}" Margin="0,2" FontSize="12"
+                                         ToolTip="Send all tools to LLM — only works with larger models"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Skill Packs -->
+                    <Border BorderBrush="#E0E0E0" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Skill Packs" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <CheckBox Content="Core (Query, Modify, Export)" IsChecked="True" IsEnabled="False" 
+                                      Margin="0,2" FontSize="12"/>
+                            <CheckBox Content="View Control (hide/show, color, zoom)" 
+                                      IsChecked="{Binding IsPackViewControl}" Margin="0,2" FontSize="12"/>
+                            <CheckBox Content="MEP (systems, equipment, validation)" 
+                                      IsChecked="{Binding IsPackMep}" Margin="0,2" FontSize="12"/>
+                            <CheckBox Content="Modeler (family, sheet, grid, level, tag)" 
+                                      IsChecked="{Binding IsPackModeler}" Margin="0,2" FontSize="12"/>
+                            <CheckBox Content="BIM Coordinator (health, audit, clash)" 
+                                      IsChecked="{Binding IsPackBimCoord}" Margin="0,2" FontSize="12"/>
+                            <CheckBox Content="Linked Models" 
+                                      IsChecked="{Binding IsPackLinked}" Margin="0,2" FontSize="12"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Button Content="Save" Style="{StaticResource SendButtonStyle}" 
+                            HorizontalAlignment="Left" Command="{Binding SaveSettingsCommand}"/>
+                </StackPanel>
+            </ScrollViewer>
         </Border>
 
         <!-- Chat messages -->

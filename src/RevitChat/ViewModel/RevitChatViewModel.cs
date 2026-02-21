@@ -18,16 +18,7 @@ namespace RevitChat.ViewModel
         protected override int ToolTimeoutMs => 60_000;
         protected override TimeSpan SendTimeout => TimeSpan.FromMinutes(3);
         protected override string NotInitializedMessage => "Please set your API key first (click Settings)";
-        protected override string WelcomeText =>
-            "Hello, I'm HD's Assistant.\n\n" +
-            "I can help you:\n" +
-            "- Query & search elements, parameters\n" +
-            "- MEP: systems, equipment, spaces, airflow\n" +
-            "- MEP: quantity takeoff, insulation, hangers\n" +
-            "- MEP: validation, disconnected, warnings\n" +
-            "- Modify parameters, select, delete\n" +
-            "- Export data to CSV / BOQ\n\n" +
-            "Ask me anything about your Revit model!";
+        protected override string WelcomeText => "Hello, I'm HD's Assistant.";
 
         [ObservableProperty]
         private string _apiKey = "";
