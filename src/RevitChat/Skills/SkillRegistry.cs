@@ -71,6 +71,14 @@ namespace RevitChat.Skills
             registry.Register(new ClashDetectionSkill());
             registry.Register(new MaterialSkill());
             registry.Register(new RoomAreaSkill());
+            registry.Register(new ModelHealthSkill());
+            registry.Register(new NamingAuditSkill());
+            registry.Register(new SharedParameterSkill());
+            registry.Register(new GridLevelSkill());
+            registry.Register(new PurgeAuditSkill());
+            registry.Register(new CoordinationReportSkill());
+            registry.Register(new RevisionMarkupSkill());
+            registry.Register(new SelectionFilterSkill());
             return registry;
         }
     }
