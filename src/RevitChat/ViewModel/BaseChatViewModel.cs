@@ -25,6 +25,9 @@ namespace RevitChat.ViewModel
 
         private CancellationTokenSource _cts;
         private TaskCompletionSource<Dictionary<string, string>> _toolResultsTcs;
+        private List<ToolCallRequest> _pendingToolCalls;
+
+        private const int AnalyzeThresholdChars = 1200;
 
         protected abstract IChatService ChatService { get; }
         protected abstract int ToolTimeoutMs { get; }
@@ -81,6 +84,96 @@ namespace RevitChat.ViewModel
                 return;
             }
 
+            if (_pendingToolCalls != null)
+            {
+                if (IsConfirmMessage(text))
+                {
+                    Messages.Add(ChatMessage.FromUser(text));
+                    InputText = "";
+                    IsBusy = true;
+                    StatusMessage = "Executing confirmed action...";
+
+                    _cts = new CancellationTokenSource(SendTimeout);
+
+                    try
+                    {
+                        var confirmedCalls = _pendingToolCalls;
+                        _pendingToolCalls = null;
+
+                        foreach (var tc in confirmedCalls)
+                            Messages.Add(ChatMessage.ToolProgress(tc.FunctionName));
+
+                        StatusMessage = $"Executing {confirmedCalls.Count} tool(s)...";
+                        var toolResults = await ExecuteToolCallsAsync(confirmedCalls);
+                        RemoveToolProgressMessages();
+
+                        var truncated = TruncateToolResults(toolResults);
+                        var totalChars = GetTotalChars(truncated);
+                        StatusMessage = totalChars > AnalyzeThresholdChars ? "Analyzing results..." : "Finalizing...";
+
+                        var (response, toolCalls) = await ChatService.ContinueWithToolResultsAsync(truncated, _cts.Token);
+
+                        while (toolCalls != null && toolCalls.Count > 0)
+                        {
+                            if (RequiresConfirmation(toolCalls, out var prompt))
+                            {
+                                _pendingToolCalls = toolCalls;
+                                Messages.Add(ChatMessage.FromAssistant(prompt));
+                                StatusMessage = "Awaiting confirmation";
+                                return;
+                            }
+
+                            foreach (var tc in toolCalls)
+                                Messages.Add(ChatMessage.ToolProgress(tc.FunctionName));
+
+                            StatusMessage = $"Executing {toolCalls.Count} tool(s)...";
+                            toolResults = await ExecuteToolCallsAsync(toolCalls);
+                            RemoveToolProgressMessages();
+
+                            truncated = TruncateToolResults(toolResults);
+                            totalChars = GetTotalChars(truncated);
+                            StatusMessage = totalChars > AnalyzeThresholdChars ? "Analyzing results..." : "Finalizing...";
+
+                            (response, toolCalls) = await ChatService.ContinueWithToolResultsAsync(truncated, _cts.Token);
+                        }
+
+                        if (!string.IsNullOrEmpty(response))
+                            Messages.Add(ChatMessage.FromAssistant(response));
+                        StatusMessage = "Ready";
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        Messages.Add(ChatMessage.FromAssistant("Request was cancelled."));
+                        StatusMessage = "Cancelled";
+                    }
+                    catch (Exception ex)
+                    {
+                        Messages.Add(ChatMessage.FromAssistant($"Error: {ex.Message}"));
+                        StatusMessage = "Error occurred";
+                    }
+                    finally
+                    {
+                        RemoveToolProgressMessages();
+                        IsBusy = false;
+                        _cts?.Dispose();
+                        _cts = null;
+                    }
+                    return;
+                }
+
+                if (IsCancelMessage(text))
+                {
+                    Messages.Add(ChatMessage.FromUser(text));
+                    _pendingToolCalls = null;
+                    Messages.Add(ChatMessage.FromAssistant("Okay, cancelled."));
+                    InputText = "";
+                    StatusMessage = "Cancelled";
+                    return;
+                }
+
+                _pendingToolCalls = null;
+            }
+
             Messages.Add(ChatMessage.FromUser(text));
             InputText = "";
             IsBusy = true;
@@ -90,10 +183,23 @@ namespace RevitChat.ViewModel
 
             try
             {
-                var (response, toolCalls) = await ChatService.SendMessageAsync(text, _cts.Token);
+                var contextText = await CollectContextAsync(text);
+                var llmText = string.IsNullOrWhiteSpace(contextText)
+                    ? text
+                    : $"{text}\n\n[Context]\n{contextText}";
+
+                var (response, toolCalls) = await ChatService.SendMessageAsync(llmText, _cts.Token);
 
                 while (toolCalls != null && toolCalls.Count > 0)
                 {
+                    if (RequiresConfirmation(toolCalls, out var prompt))
+                    {
+                        _pendingToolCalls = toolCalls;
+                        Messages.Add(ChatMessage.FromAssistant(prompt));
+                        StatusMessage = "Awaiting confirmation";
+                        return;
+                    }
+
                     foreach (var tc in toolCalls)
                         Messages.Add(ChatMessage.ToolProgress(tc.FunctionName));
 
@@ -104,7 +210,8 @@ namespace RevitChat.ViewModel
 
                     var truncated = TruncateToolResults(toolResults);
 
-                    StatusMessage = "Analyzing results...";
+                    var totalChars = GetTotalChars(truncated);
+                    StatusMessage = totalChars > AnalyzeThresholdChars ? "Analyzing results..." : "Finalizing...";
                     (response, toolCalls) = await ChatService.ContinueWithToolResultsAsync(truncated, _cts.Token);
                 }
 
@@ -207,11 +314,113 @@ namespace RevitChat.ViewModel
             }
         }
 
+        private static bool IsConfirmMessage(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return false;
+            var lower = text.Trim().ToLowerInvariant();
+            return lower is "yes" or "y" or "ok" or "okay" or "confirm" or "confirmed"
+                || lower.Contains("xác nhận") || lower.Contains("đồng ý") || lower.Contains("tiếp tục")
+                || lower.Contains("thực hiện") || lower.Contains("làm đi") || lower.Contains("được");
+        }
+
+        private static bool IsCancelMessage(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return false;
+            var lower = text.Trim().ToLowerInvariant();
+            return lower is "no" or "n" or "cancel" or "stop"
+                || lower.Contains("hủy") || lower.Contains("không") || lower.Contains("dừng");
+        }
+
+        private bool RequiresConfirmation(List<ToolCallRequest> toolCalls, out string prompt)
+        {
+            prompt = null;
+            if (toolCalls == null || toolCalls.Count == 0) return false;
+
+            var risky = toolCalls.Where(IsRiskyToolCall).ToList();
+            if (risky.Count == 0) return false;
+
+            var list = string.Join(", ", risky.Select(t => t.FunctionName));
+            prompt = $"Bạn có muốn thực hiện thao tác sau không? {list}\nTrả lời 'xác nhận' để tiếp tục hoặc 'hủy' để bỏ.";
+            return true;
+        }
+
+        private static bool IsRiskyToolCall(ToolCallRequest call)
+        {
+            var riskyTools = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "delete_elements", "set_parameter_value", "rename_elements",
+                "move_elements", "copy_elements", "mirror_elements",
+                "duplicate_views", "duplicate_sheets"
+            };
+
+            if (!riskyTools.Contains(call.FunctionName)) return false;
+            if (call.Arguments == null || call.Arguments.Count == 0) return true;
+
+            if (call.Arguments.ContainsKey("element_id")) return false;
+
+            if (call.Arguments.TryGetValue("element_ids", out var idsObj))
+            {
+                if (idsObj is System.Text.Json.JsonElement je && je.ValueKind == System.Text.Json.JsonValueKind.Array)
+                {
+                    return je.GetArrayLength() > 20;
+                }
+                return false;
+            }
+
+            return true;
+        }
+
+        private static int GetTotalChars(Dictionary<string, string> results)
+        {
+            if (results == null) return 0;
+            int total = 0;
+            foreach (var kvp in results)
+                total += kvp.Value?.Length ?? 0;
+            return total;
+        }
+
+        private async Task<string> CollectContextAsync(string userText)
+        {
+            var lower = userText?.ToLowerInvariant() ?? "";
+            var needsView = lower.Contains("current view") || lower.Contains("active view")
+                || lower.Contains("view hiện tại") || lower.Contains("view đang mở");
+            var needsSelection = lower.Contains("selected") || lower.Contains("selection")
+                || lower.Contains("đang chọn") || lower.Contains("được chọn");
+
+            if (!needsView && !needsSelection) return "";
+
+            var calls = new List<ToolCallRequest>();
+            if (needsView)
+                calls.Add(new ToolCallRequest { ToolCallId = CreateCallId("get_current_view"), FunctionName = "get_current_view", Arguments = new Dictionary<string, object>() });
+            if (needsSelection)
+                calls.Add(new ToolCallRequest { ToolCallId = CreateCallId("get_current_selection"), FunctionName = "get_current_selection", Arguments = new Dictionary<string, object>() });
+
+            if (calls.Count == 0) return "";
+
+            StatusMessage = "Collecting context...";
+            var results = await ExecuteToolCallsAsync(calls);
+
+            var sb = new System.Text.StringBuilder();
+            foreach (var kvp in results)
+            {
+                if (string.IsNullOrWhiteSpace(kvp.Value)) continue;
+                var snippet = kvp.Value.Length > 600 ? kvp.Value[..600] + "...[TRUNCATED]" : kvp.Value;
+                sb.AppendLine($"{kvp.Key}: {snippet}");
+            }
+            return sb.ToString().Trim();
+        }
+
+        private static string CreateCallId(string funcName)
+        {
+            return $"pre_{funcName}_{Guid.NewGuid():N}"[..32];
+        }
+
         [RelayCommand]
         private void Cancel()
         {
             _cts?.Cancel();
             _toolResultsTcs?.TrySetCanceled();
+            _pendingToolCalls = null;
             StatusMessage = "Cancelling...";
         }
 

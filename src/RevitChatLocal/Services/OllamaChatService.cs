@@ -29,7 +29,15 @@ namespace RevitChatLocal.Services
             "Core", "ViewControl", "MEP", "Modeler", "BIMCoordinator", "LinkedModels"
         };
 
-        #region CoreTools + KeywordToolMap (for Smart mode)
+        #region CoreTools + KeywordGroups (for Smart mode)
+
+        private class KeywordGroup
+        {
+            public string Name { get; init; }
+            public string[] Keywords { get; init; }
+            public string[] Tools { get; init; }
+            public int Weight { get; init; } = 1;
+        }
 
         private static readonly HashSet<string> CoreTools = new()
         {
@@ -42,107 +50,226 @@ namespace RevitChatLocal.Services
             "get_levels_detailed", "get_hidden_elements"
         };
 
-        private static readonly Dictionary<string, string[]> KeywordToolMap = new(StringComparer.OrdinalIgnoreCase)
+        private static readonly List<KeywordGroup> KeywordGroups = new()
         {
-            ["color|red|blue|green|yellow|orange|purple|pink|cyan|override color|tô màu|đổi màu"] = new[] {
-                "override_element_color", "override_category_color", "reset_element_overrides",
-                "set_element_transparency", "override_color_by_level", "override_color_by_filter"
+            new KeywordGroup
+            {
+                Name = "Color / Override",
+                Weight = 2,
+                Keywords = new[] { "color", "red", "blue", "green", "yellow", "orange", "purple", "pink", "cyan", "override color", "tô màu", "đổi màu" },
+                Tools = new[] { "override_element_color", "override_category_color", "reset_element_overrides", "set_element_transparency", "override_color_by_level", "override_color_by_filter" }
             },
-            ["level|floor|story|elevation|tầng|cao độ"] = new[] {
-                "get_levels_detailed", "create_level", "duplicate_levels_offset",
-                "rename_level", "delete_levels", "isolate_by_level", "hide_by_level",
-                "override_color_by_level", "check_level_consistency"
+            new KeywordGroup
+            {
+                Name = "Levels",
+                Keywords = new[] { "level", "floor", "story", "elevation", "tầng", "cao độ" },
+                Tools = new[] { "get_levels_detailed", "create_level", "duplicate_levels_offset", "rename_level", "delete_levels", "isolate_by_level", "hide_by_level", "override_color_by_level", "check_level_consistency" }
             },
-            ["hide|show|unhide|isolate|visible|visibility|ẩn|hiện|cô lập"] = new[] {
-                "hide_elements", "unhide_elements", "isolate_elements", "isolate_category",
-                "hide_category", "unhide_category", "reset_view_isolation", "get_hidden_elements",
-                "isolate_by_level", "hide_by_level", "isolate_by_filter"
+            new KeywordGroup
+            {
+                Name = "Visibility / Isolate",
+                Weight = 2,
+                Keywords = new[] { "hide", "show", "unhide", "isolate", "visible", "visibility", "ẩn", "hiện", "cô lập" },
+                Tools = new[] { "hide_elements", "unhide_elements", "isolate_elements", "isolate_category", "hide_category", "unhide_category", "reset_view_isolation", "get_hidden_elements", "isolate_by_level", "hide_by_level", "isolate_by_filter" }
             },
-            ["duct|pipe|mep|hvac|mechanical|electrical|plumbing|conduit|cable|ống|điện"] = new[] {
-                "get_mep_systems", "get_system_elements", "get_duct_summary", "get_pipe_summary",
-                "get_conduit_summary", "get_cable_tray_summary", "get_mechanical_equipment",
-                "get_plumbing_fixtures", "get_electrical_equipment", "get_fittings",
-                "check_disconnected_elements", "mep_quantity_takeoff"
+            new KeywordGroup
+            {
+                Name = "MEP",
+                Keywords = new[] { "duct", "pipe", "mep", "hvac", "mechanical", "electrical", "plumbing", "conduit", "cable", "ống", "điện" },
+                Tools = new[] { "get_mep_systems", "get_system_elements", "get_duct_summary", "get_pipe_summary", "get_conduit_summary", "get_cable_tray_summary", "get_mechanical_equipment", "get_plumbing_fixtures", "get_electrical_equipment", "get_fittings", "check_disconnected_elements", "mep_quantity_takeoff" }
             },
-            ["space|zone|airflow|không gian|lưu lượng"] = new[] {
-                "get_mep_spaces", "get_hvac_zones", "check_space_airflow", "get_unoccupied_spaces"
+            new KeywordGroup
+            {
+                Name = "Space / Zone",
+                Keywords = new[] { "space", "zone", "airflow", "không gian", "lưu lượng" },
+                Tools = new[] { "get_mep_spaces", "get_hvac_zones", "check_space_airflow", "get_unoccupied_spaces" }
             },
-            ["sheet|viewport|bản vẽ"] = new[] {
-                "get_sheets_summary", "create_sheet", "place_view_on_sheet",
-                "get_sheet_viewports", "remove_viewport"
+            new KeywordGroup
+            {
+                Name = "Sheet / Viewport",
+                Keywords = new[] { "sheet", "viewport", "bản vẽ" },
+                Tools = new[] { "get_sheets_summary", "create_sheet", "place_view_on_sheet", "get_sheet_viewports", "remove_viewport" }
             },
-            ["copy|move|mirror|duplicate|di chuyển|sao chép"] = new[] {
-                "copy_elements", "move_elements", "mirror_elements",
-                "duplicate_views", "duplicate_sheets"
+            new KeywordGroup
+            {
+                Name = "Copy / Move / Mirror",
+                Keywords = new[] { "copy", "move", "mirror", "duplicate", "di chuyển", "sao chép" },
+                Tools = new[] { "copy_elements", "move_elements", "mirror_elements", "duplicate_views", "duplicate_sheets" }
             },
-            ["export|csv|boq|xuất"] = new[] {
-                "export_to_csv", "mep_quantity_takeoff", "export_mep_boq"
+            new KeywordGroup
+            {
+                Name = "Export / BOQ",
+                Keywords = new[] { "export", "csv", "boq", "xuất" },
+                Tools = new[] { "export_to_csv", "mep_quantity_takeoff", "export_mep_boq" }
             },
-            ["tag|dimension|text|ghi chú|kích thước"] = new[] {
-                "tag_elements", "get_untagged_elements", "tag_all_in_view", "add_text_note"
+            new KeywordGroup
+            {
+                Name = "Tag / Dimension",
+                Keywords = new[] { "tag", "dimension", "text", "ghi chú", "kích thước" },
+                Tools = new[] { "tag_elements", "get_untagged_elements", "tag_all_in_view", "add_text_note" }
             },
-            ["family|type|swap|load|place|họ"] = new[] {
-                "get_family_types", "place_family_instance", "swap_family_type", "load_family"
+            new KeywordGroup
+            {
+                Name = "Family / Type",
+                Keywords = new[] { "family", "type", "swap", "load", "place", "họ" },
+                Tools = new[] { "get_family_types", "place_family_instance", "swap_family_type", "load_family" }
             },
-            ["group|nhóm"] = new[] {
-                "get_groups", "create_group", "ungroup", "get_group_members", "place_group_instance"
+            new KeywordGroup
+            {
+                Name = "Group",
+                Keywords = new[] { "group", "nhóm" },
+                Tools = new[] { "get_groups", "create_group", "ungroup", "get_group_members", "place_group_instance" }
             },
-            ["material|vật liệu"] = new[] {
-                "get_materials", "get_element_material", "set_element_material", "get_material_quantities"
+            new KeywordGroup
+            {
+                Name = "Material",
+                Keywords = new[] { "material", "vật liệu" },
+                Tools = new[] { "get_materials", "get_element_material", "set_element_material", "get_material_quantities" }
             },
-            ["filter|template|bộ lọc|mẫu"] = new[] {
-                "get_view_filters", "get_view_templates", "apply_view_template",
-                "create_parameter_filter", "get_filter_rules"
+            new KeywordGroup
+            {
+                Name = "Filter / Template",
+                Keywords = new[] { "filter", "template", "bộ lọc", "mẫu" },
+                Tools = new[] { "get_view_filters", "get_view_templates", "apply_view_template", "create_parameter_filter", "get_filter_rules" }
             },
-            ["workset|phase|giai đoạn"] = new[] {
-                "get_worksets", "move_to_workset", "get_phases", "get_elements_by_phase", "set_phase"
+            new KeywordGroup
+            {
+                Name = "Workset / Phase",
+                Keywords = new[] { "workset", "phase", "giai đoạn" },
+                Tools = new[] { "get_worksets", "move_to_workset", "get_phases", "get_elements_by_phase", "set_phase" }
             },
-            ["clash|clearance|overlap|va chạm"] = new[] {
-                "check_clashes", "check_clearance", "find_overlapping", "get_clash_summary"
+            new KeywordGroup
+            {
+                Name = "Clash / Clearance",
+                Keywords = new[] { "clash", "clearance", "overlap", "va chạm" },
+                Tools = new[] { "check_clashes", "check_clearance", "find_overlapping", "get_clash_summary" }
             },
-            ["warning|health|purge|unused|cảnh báo|không dùng"] = new[] {
-                "get_model_warnings", "get_warning_elements", "get_model_statistics",
-                "find_imported_cad", "find_inplace_families", "find_unused_families",
-                "get_purgeable_elements", "find_duplicate_types"
+            new KeywordGroup
+            {
+                Name = "Health / Purge",
+                Keywords = new[] { "warning", "health", "purge", "unused", "cảnh báo", "không dùng" },
+                Tools = new[] { "get_model_warnings", "get_warning_elements", "get_model_statistics", "find_imported_cad", "find_inplace_families", "find_unused_families", "get_purgeable_elements", "find_duplicate_types" }
             },
-            ["parameter|shared|tham số"] = new[] {
-                "get_shared_parameters", "get_project_parameters", "check_parameter_values",
-                "add_project_parameter", "get_parameter_bindings"
+            new KeywordGroup
+            {
+                Name = "Parameters",
+                Keywords = new[] { "parameter", "shared", "tham số" },
+                Tools = new[] { "get_shared_parameters", "get_project_parameters", "check_parameter_values", "add_project_parameter", "get_parameter_bindings" }
             },
-            ["grid|lưới"] = new[] {
-                "get_grids", "check_grid_alignment", "create_grid", "find_off_axis_elements"
+            new KeywordGroup
+            {
+                Name = "Grid",
+                Keywords = new[] { "grid", "lưới" },
+                Tools = new[] { "get_grids", "check_grid_alignment", "create_grid", "find_off_axis_elements" }
             },
-            ["room|area|boundary|finish|phòng|diện tích"] = new[] {
-                "get_rooms_detailed", "get_room_boundaries", "get_room_finishes",
-                "get_area_schemes", "get_unplaced_rooms", "get_redundant_rooms"
+            new KeywordGroup
+            {
+                Name = "Room / Area",
+                Keywords = new[] { "room", "area", "boundary", "finish", "phòng", "diện tích" },
+                Tools = new[] { "get_rooms_detailed", "get_room_boundaries", "get_room_finishes", "get_area_schemes", "get_unplaced_rooms", "get_redundant_rooms" }
             },
-            ["revision|markup|cloud|phát hành"] = new[] {
-                "get_revisions", "get_revision_clouds", "add_revision",
-                "get_sheets_by_revision", "get_revision_schedule"
+            new KeywordGroup
+            {
+                Name = "Revision",
+                Keywords = new[] { "revision", "markup", "cloud", "phát hành" },
+                Tools = new[] { "get_revisions", "get_revision_clouds", "add_revision", "get_sheets_by_revision", "get_revision_schedule" }
             },
-            ["link|linked|liên kết"] = new[] {
-                "get_linked_models", "get_linked_elements", "count_linked_elements",
-                "get_linked_element_parameters", "search_linked_elements", "get_link_types"
+            new KeywordGroup
+            {
+                Name = "Links",
+                Keywords = new[] { "link", "linked", "liên kết" },
+                Tools = new[] { "get_linked_models", "get_linked_elements", "count_linked_elements", "get_linked_element_parameters", "search_linked_elements", "get_link_types" }
             },
-            ["naming|audit|tên|kiểm tra tên"] = new[] {
-                "audit_view_names", "audit_sheet_numbers", "audit_level_names",
-                "audit_family_names", "audit_workset_names"
+            new KeywordGroup
+            {
+                Name = "Naming Audit",
+                Keywords = new[] { "naming", "audit", "tên", "kiểm tra tên" },
+                Tools = new[] { "audit_view_names", "audit_sheet_numbers", "audit_level_names", "audit_family_names", "audit_workset_names" }
             },
-            ["select by|filter by|chọn theo|lọc theo"] = new[] {
-                "select_by_parameter_value", "select_by_bounding_box",
-                "select_elements_in_view", "get_selection_summary"
+            new KeywordGroup
+            {
+                Name = "Select / Filter",
+                Keywords = new[] { "select by", "filter by", "chọn theo", "lọc theo" },
+                Tools = new[] { "select_by_parameter_value", "select_by_bounding_box", "select_elements_in_view", "get_selection_summary" }
             },
-            ["coordination|report|phối hợp|báo cáo"] = new[] {
-                "generate_clash_report", "compare_element_counts",
-                "get_link_coordination_status", "get_scope_box_summary"
+            new KeywordGroup
+            {
+                Name = "Coordination Report",
+                Keywords = new[] { "coordination", "report", "phối hợp", "báo cáo" },
+                Tools = new[] { "generate_clash_report", "compare_element_counts", "get_link_coordination_status", "get_scope_box_summary" }
             },
-            ["insulation|hanger|bảo ôn|giá đỡ"] = new[] {
-                "get_insulation_quantities", "get_hanger_quantities"
+            new KeywordGroup
+            {
+                Name = "Insulation / Hanger",
+                Keywords = new[] { "insulation", "hanger", "bảo ôn", "giá đỡ" },
+                Tools = new[] { "get_insulation_quantities", "get_hanger_quantities" }
             },
-            ["schedule|bảng"] = new[] { "get_schedule_data" },
-            ["transparency|trong suốt"] = new[] { "set_element_transparency" },
-            ["zoom|phóng to"] = new[] { "zoom_to_elements" },
-            ["selection|đang chọn"] = new[] { "get_current_selection" },
+            new KeywordGroup
+            {
+                Name = "Schedule",
+                Keywords = new[] { "schedule", "bảng" },
+                Tools = new[] { "get_schedule_data" }
+            },
+            new KeywordGroup
+            {
+                Name = "Transparency",
+                Keywords = new[] { "transparency", "trong suốt" },
+                Tools = new[] { "set_element_transparency" }
+            },
+            new KeywordGroup
+            {
+                Name = "Zoom",
+                Keywords = new[] { "zoom", "phóng to" },
+                Tools = new[] { "zoom_to_elements" }
+            },
+            new KeywordGroup
+            {
+                Name = "Selection",
+                Keywords = new[] { "selection", "đang chọn" },
+                Tools = new[] { "get_current_selection" }
+            },
+        };
+
+        private static readonly List<(string from, string to)> NormalizationMap = new()
+        {
+            ("cầu thang", "stairs"),
+            ("lan can", "railings"),
+            ("thiết bị vệ sinh", "plumbing fixtures"),
+            ("khay cáp", "cable trays"),
+            ("ống dẫn", "conduits"),
+            ("đèn", "lighting fixtures"),
+        };
+
+        private static readonly string[] ActionKeywords = new[]
+        {
+            "count", "how many", "list", "show", "get", "export", "rename", "delete", "move",
+            "copy", "mirror", "create", "update", "set", "override", "hide", "unhide", "isolate",
+            "select", "zoom", "place", "check", "audit", "report", "compare", "đếm", "liệt kê",
+            "hiển thị", "xem", "xuất", "đổi tên", "xóa", "di chuyển", "sao chép", "tạo",
+            "cập nhật", "đặt", "tô màu", "ẩn", "hiện", "cô lập", "chọn", "phóng to", "đặt",
+            "kiểm tra", "báo cáo", "so sánh"
+        };
+
+        private static readonly Dictionary<string, string> ToolSchemaHints = new()
+        {
+            ["get_elements"] = "category?, level?, view_name?, limit?",
+            ["count_elements"] = "category?, level?, view_name?",
+            ["search_elements"] = "category, param_name, param_value",
+            ["get_element_parameters"] = "element_id",
+            ["set_parameter_value"] = "element_id|element_ids, param_name, value",
+            ["delete_elements"] = "element_ids",
+            ["rename_elements"] = "category|element_ids, old_text, new_text",
+            ["hide_elements"] = "element_ids",
+            ["unhide_elements"] = "element_ids",
+            ["isolate_elements"] = "element_ids",
+            ["override_element_color"] = "element_ids, color",
+            ["override_category_color"] = "category, color",
+            ["get_current_selection"] = "no args",
+            ["get_current_view"] = "no args",
+            ["zoom_to_elements"] = "element_ids",
+            ["isolate_by_level"] = "level_name",
+            ["override_color_by_filter"] = "view_name?, filter_name, color",
+            ["export_to_csv"] = "category, file_path, view_name?",
         };
 
         #endregion
@@ -282,13 +409,15 @@ namespace RevitChatLocal.Services
                 "User: list all revisions\nAssistant:\n<tool_call>\n{\"name\": \"get_revisions\", \"arguments\": {}}\n</tool_call>"),
         };
 
-        private const int MaxFewShotExamples = 5;
+        private const int DefaultFewShotExamples = 5;
+        private const int ComplexFewShotExamples = 7;
 
         private string BuildDynamicExamples(string userMessage)
         {
             if (string.IsNullOrWhiteSpace(userMessage)) return "";
 
             var lower = userMessage.ToLowerInvariant();
+            var normalized = NormalizeForMatching(userMessage);
             var scored = new List<(int score, string example)>();
 
             foreach (var (keywords, example) in FewShotExamples)
@@ -296,7 +425,7 @@ namespace RevitChatLocal.Services
                 int score = 0;
                 foreach (var kw in keywords)
                 {
-                    if (lower.Contains(kw))
+                    if (lower.Contains(kw) || normalized.Contains(kw))
                         score++;
                 }
                 if (score > 0)
@@ -305,9 +434,10 @@ namespace RevitChatLocal.Services
 
             if (scored.Count == 0) return "";
 
+            var limit = GetFewShotLimit(userMessage);
             var selected = scored
                 .OrderByDescending(s => s.score)
-                .Take(MaxFewShotExamples)
+                .Take(limit)
                 .Select(s => s.example);
 
             var sb = new StringBuilder();
@@ -320,6 +450,107 @@ namespace RevitChatLocal.Services
         }
 
         #endregion
+
+        private static string NormalizeForMatching(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return "";
+            var text = input.ToLowerInvariant();
+            foreach (var (from, to) in NormalizationMap)
+                text = text.Replace(from, to);
+            return text;
+        }
+
+        private static bool ContainsActionVerb(string normalizedText)
+        {
+            foreach (var kw in ActionKeywords)
+            {
+                if (normalizedText.Contains(kw))
+                    return true;
+            }
+            return false;
+        }
+
+        private static int GetFewShotLimit(string userMessage)
+        {
+            if (string.IsNullOrWhiteSpace(userMessage)) return DefaultFewShotExamples;
+            if (ShouldUseTwoStageInternal(userMessage)) return ComplexFewShotExamples;
+            if (userMessage.Length > 140) return ComplexFewShotExamples;
+            var commaCount = userMessage.Count(c => c == ',' || c == ';');
+            return commaCount >= 2 ? ComplexFewShotExamples : DefaultFewShotExamples;
+        }
+
+        private static bool ShouldUseTwoStageInternal(string userMessage)
+        {
+            if (string.IsNullOrWhiteSpace(userMessage)) return false;
+            var text = NormalizeForMatching(userMessage);
+            int actionHits = 0;
+            foreach (var kw in ActionKeywords)
+            {
+                if (text.Contains(kw))
+                    actionHits++;
+            }
+
+            if (actionHits >= 2) return true;
+
+            var separators = new[] { " and ", " then ", " sau đó ", " rồi ", " và ", "&", "->" };
+            return separators.Any(s => text.Contains(s));
+        }
+
+        private static List<(KeywordGroup group, int score)> GetMatchedGroups(string normalizedText)
+        {
+            var matches = new List<(KeywordGroup group, int score)>();
+            foreach (var group in KeywordGroups)
+            {
+                int count = 0;
+                foreach (var kw in group.Keywords)
+                {
+                    if (normalizedText.Contains(kw))
+                        count++;
+                }
+                if (count > 0)
+                    matches.Add((group, count * group.Weight));
+            }
+            return matches;
+        }
+
+        private bool ShouldAskDisambiguation(string userMessage, out List<KeywordGroup> groups)
+        {
+            groups = new List<KeywordGroup>();
+            if (string.IsNullOrWhiteSpace(userMessage)) return false;
+
+            var normalized = NormalizeForMatching(userMessage);
+            var matches = GetMatchedGroups(normalized)
+                .OrderByDescending(m => m.score)
+                .ToList();
+
+            if (matches.Count < 2) return false;
+            if (ContainsActionVerb(normalized)) return false;
+
+            groups = matches.Take(3).Select(m => m.group).ToList();
+            return true;
+        }
+
+        private string BuildDisambiguationQuestion(string userMessage, List<KeywordGroup> groups)
+        {
+            var names = groups.Select(g => g.Name).ToList();
+            var hint = names.Count > 0 ? string.Join(", ", names) : "nhiều nhóm khác nhau";
+
+            if (IsVietnamese(userMessage))
+                return $"Mình chưa rõ bạn muốn làm gì. Yêu cầu có thể liên quan tới: {hint}. Bạn muốn thao tác nào (đếm, liệt kê, ẩn/hiện, đổi màu, xuất dữ liệu...)?";
+
+            return $"I’m not sure what action you want. Your request could relate to: {hint}. Please specify the action (count, list, hide/show, override color, export...).";
+        }
+
+        private static bool IsVietnamese(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return false;
+            return text.Any(ch => ch >= 0x00C0 && ch <= 0x1EF9);
+        }
+
+        private bool ShouldUseTwoStage(string userMessage)
+        {
+            return ShouldUseTwoStageInternal(userMessage);
+        }
 
         public OllamaChatService(SkillRegistry skillRegistry)
         {
@@ -378,6 +609,13 @@ namespace RevitChatLocal.Services
             _conversationHistory.Add(new UserChatMessage(userMessage));
             TrimHistory();
 
+            if (ShouldAskDisambiguation(userMessage, out var groups))
+            {
+                var question = BuildDisambiguationQuestion(userMessage, groups);
+                _conversationHistory.Add(new AssistantChatMessage(question));
+                return (question, new List<RevitChat.Models.ToolCallRequest>());
+            }
+
             return await GetCompletionAsync(ct);
         }
 
@@ -408,17 +646,51 @@ namespace RevitChatLocal.Services
         private async Task<(string assistantMessage, List<RevitChat.Models.ToolCallRequest> toolCalls)> GetCompletionAsync(
             CancellationToken ct)
         {
-            if (_toolMode == "twostage")
+            if (_toolMode == "twostage" || (_toolMode == "smart" && ShouldUseTwoStage(_lastUserMessage)))
                 return await GetCompletionTwoStageAsync(ct);
 
+            return await GetCompletionWithRetryAsync(ct);
+        }
+
+        private async Task<(string assistantMessage, List<RevitChat.Models.ToolCallRequest> toolCalls)> GetCompletionWithRetryAsync(
+            CancellationToken ct)
+        {
+            var result = await GetCompletionOnceAsync(ct);
+            if (!result.shouldRetry) return result.parsed;
+
+            var retry = await GetCompletionOnceAsync(ct, retryHint: true);
+            if (!retry.shouldRetry) return retry.parsed;
+
+            var fallback = BuildFallbackSuggestion(_lastUserMessage);
+            _conversationHistory.Add(new AssistantChatMessage(fallback));
+            return (fallback, new List<RevitChat.Models.ToolCallRequest>());
+        }
+
+        private async Task<(bool shouldRetry, (string assistantMessage, List<RevitChat.Models.ToolCallRequest> toolCalls) parsed)> GetCompletionOnceAsync(
+            CancellationToken ct, bool retryHint = false)
+        {
             var config = LocalConfigService.Load();
             var options = new ChatCompletionOptions { MaxOutputTokenCount = config.MaxTokens };
 
             var messages = BuildMessages();
+            if (retryHint)
+            {
+                messages.Add(new UserChatMessage(
+                    "Your last response was invalid. Output ONLY one <tool_call> or a direct answer. " +
+                    "Do NOT use code fences or extra text."));
+            }
+
             var response = await _client.CompleteChatAsync(messages, options, ct);
             var text = StripQwenTokens(response.Value.Content?.FirstOrDefault()?.Text ?? "");
 
-            return ProcessResponse(text);
+            var parsed = ParseResponse(text, out var cleanText, out var toolCalls);
+            var looksLikeToolCall = LooksLikeToolCall(text);
+
+            if (looksLikeToolCall && toolCalls.Count == 0)
+                return (true, (null, new List<RevitChat.Models.ToolCallRequest>()));
+
+            AddToHistory(parsed, cleanText, toolCalls);
+            return (false, parsed);
         }
 
         #region Two-Stage Mode
@@ -444,7 +716,16 @@ namespace RevitChatLocal.Services
             var stage2Response = await _client.CompleteChatAsync(stage2Messages, options, ct);
             var stage2Text = StripQwenTokens(stage2Response.Value.Content?.FirstOrDefault()?.Text ?? "");
 
-            return ProcessResponse(stage2Text);
+            var parsed = ParseResponse(stage2Text, out var cleanText, out var toolCalls);
+            if (LooksLikeToolCall(stage2Text) && toolCalls.Count == 0)
+            {
+                var fallback = BuildFallbackSuggestion(_lastUserMessage);
+                _conversationHistory.Add(new AssistantChatMessage(fallback));
+                return (fallback, new List<RevitChat.Models.ToolCallRequest>());
+            }
+
+            AddToHistory(parsed, cleanText, toolCalls);
+            return parsed;
         }
 
         private List<OaiMessage> BuildTwoStageSelectionMessages()
@@ -541,15 +822,15 @@ Example:
             {
                 // Smart mode: CoreTools + keyword match
                 selected = new HashSet<string>(CoreTools);
-                var combined = userMessage.ToLowerInvariant();
-                foreach (var kvp in KeywordToolMap)
+                var combined = string.IsNullOrWhiteSpace(_lastUserMessage) || _lastUserMessage == userMessage
+                    ? userMessage
+                    : $"{userMessage} {_lastUserMessage}";
+                var normalized = NormalizeForMatching(combined);
+                var matches = GetMatchedGroups(normalized);
+                foreach (var match in matches)
                 {
-                    var keywords = kvp.Key.Split('|');
-                    if (keywords.Any(k => combined.Contains(k)))
-                    {
-                        foreach (var toolName in kvp.Value)
-                            selected.Add(toolName);
-                    }
+                    foreach (var toolName in match.group.Tools)
+                        selected.Add(toolName);
                 }
             }
 
@@ -557,7 +838,12 @@ Example:
             foreach (var toolName in selected)
             {
                 if (toolIndex.TryGetValue(toolName, out var tool))
-                    sb.AppendLine($"- {tool.FunctionName}: {tool.FunctionDescription}");
+                {
+                    if (ToolSchemaHints.TryGetValue(tool.FunctionName, out var hint))
+                        sb.AppendLine($"- {tool.FunctionName}: {tool.FunctionDescription} | args: {hint}");
+                    else
+                        sb.AppendLine($"- {tool.FunctionName}: {tool.FunctionDescription}");
+                }
             }
 
             return sb.ToString();
@@ -565,20 +851,34 @@ Example:
 
         #endregion
 
-        private (string assistantMessage, List<RevitChat.Models.ToolCallRequest> toolCalls) ProcessResponse(string text)
+        private (string assistantMessage, List<RevitChat.Models.ToolCallRequest> toolCalls) ParseResponse(
+            string text, out string cleanText, out List<RevitChat.Models.ToolCallRequest> toolCalls)
         {
-            var toolCalls = ExtractToolCalls(text);
+            cleanText = "";
+            toolCalls = ExtractToolCalls(text);
             if (toolCalls.Count > 0)
             {
-                var cleanText = RemoveToolCallTags(text).Trim();
-                _conversationHistory.Add(new AssistantChatMessage(
-                    !string.IsNullOrEmpty(cleanText) ? cleanText : $"[Executing {toolCalls.Count} tool(s)...]"));
-
+                cleanText = RemoveToolCallTags(text).Trim();
                 return (null, toolCalls);
             }
 
-            _conversationHistory.Add(new AssistantChatMessage(text));
             return (text, new List<RevitChat.Models.ToolCallRequest>());
+        }
+
+        private void AddToHistory(
+            (string assistantMessage, List<RevitChat.Models.ToolCallRequest> toolCalls) parsed,
+            string cleanText,
+            List<RevitChat.Models.ToolCallRequest> toolCalls)
+        {
+            if (toolCalls.Count > 0)
+            {
+                _conversationHistory.Add(new AssistantChatMessage(
+                    !string.IsNullOrEmpty(cleanText) ? cleanText : $"[Executing {toolCalls.Count} tool(s)...]"));
+            }
+            else
+            {
+                _conversationHistory.Add(new AssistantChatMessage(parsed.assistantMessage ?? ""));
+            }
         }
 
         private string StripQwenTokens(string text)
@@ -621,7 +921,7 @@ Example:
             if (results.Count > 0) return results;
 
             var inlinePattern = new Regex(
-                @"\{\s*""name""\s*:\s*""([a-z_]+)""\s*,\s*""arguments""\s*:\s*(\{(?:[^{}]|\{[^{}]*\})*\})\s*\}",
+                @"\{\s*""name""\s*:\s*""([a-z_]+)""\s*,\s*""(?:arguments|args|parameters)""\s*:\s*(\{(?:[^{}]|\{[^{}]*\})*\})\s*\}",
                 RegexOptions.Singleline);
 
             foreach (Match match in inlinePattern.Matches(text))
@@ -660,11 +960,10 @@ Example:
 
                 var args = new Dictionary<string, object>();
 
-                if (root.TryGetProperty("arguments", out var argsProp) &&
-                    argsProp.ValueKind == JsonValueKind.Object)
+                if (TryReadArguments(root, out var parsedArgs))
                 {
-                    foreach (var prop in argsProp.EnumerateObject())
-                        args[prop.Name] = prop.Value.Clone();
+                    foreach (var kvp in parsedArgs)
+                        args[kvp.Key] = kvp.Value;
                 }
                 else
                 {
@@ -684,8 +983,129 @@ Example:
             }
             catch
             {
-                return null;
+                try
+                {
+                    var cleaned = SanitizeJsonLike(json);
+                    using var doc = JsonDocument.Parse(cleaned);
+                    var root = doc.RootElement;
+                    if (!root.TryGetProperty("name", out var nameProp)) return null;
+                    var name = nameProp.GetString();
+                    if (string.IsNullOrEmpty(name) || !_allToolNames.Contains(name)) return null;
+
+                    var args = new Dictionary<string, object>();
+                    if (TryReadArguments(root, out var parsedArgs))
+                    {
+                        foreach (var kvp in parsedArgs)
+                            args[kvp.Key] = kvp.Value;
+                    }
+                    else
+                    {
+                        foreach (var prop in root.EnumerateObject())
+                        {
+                            if (prop.Name != "name")
+                                args[prop.Name] = prop.Value.Clone();
+                        }
+                    }
+
+                    return new RevitChat.Models.ToolCallRequest
+                    {
+                        ToolCallId = GenerateCallId(name),
+                        FunctionName = name,
+                        Arguments = args
+                    };
+                }
+                catch
+                {
+                    return null;
+                }
             }
+        }
+
+        private static bool TryReadArguments(JsonElement root, out Dictionary<string, object> args)
+        {
+            args = null;
+
+            if (root.TryGetProperty("arguments", out var argsProp) ||
+                root.TryGetProperty("args", out argsProp) ||
+                root.TryGetProperty("parameters", out argsProp) ||
+                root.TryGetProperty("elements", out argsProp))
+            {
+                if (argsProp.ValueKind == JsonValueKind.Object)
+                {
+                    args = new Dictionary<string, object>();
+                    foreach (var prop in argsProp.EnumerateObject())
+                        args[prop.Name] = prop.Value.Clone();
+                    return true;
+                }
+
+                if (argsProp.ValueKind == JsonValueKind.String)
+                {
+                    var str = argsProp.GetString();
+                    if (!string.IsNullOrWhiteSpace(str))
+                    {
+                        try
+                        {
+                            using var doc = JsonDocument.Parse(str);
+                            if (doc.RootElement.ValueKind == JsonValueKind.Object)
+                            {
+                                args = new Dictionary<string, object>();
+                                foreach (var prop in doc.RootElement.EnumerateObject())
+                                    args[prop.Name] = prop.Value.Clone();
+                                return true;
+                            }
+                        }
+                        catch
+                        {
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static string SanitizeJsonLike(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return text;
+            var cleaned = text.Trim();
+            cleaned = Regex.Replace(cleaned, @"\s+,\s*}", "}", RegexOptions.Singleline);
+            cleaned = Regex.Replace(cleaned, @"\s+,\s*]", "]", RegexOptions.Singleline);
+            cleaned = Regex.Replace(cleaned, @"'(\w+)'\s*:", "\"$1\":");
+            cleaned = Regex.Replace(cleaned, @":\s*'([^']*)'", ": \"$1\"");
+            cleaned = Regex.Replace(cleaned, @"\bNone\b", "null");
+            return cleaned;
+        }
+
+        private static bool LooksLikeToolCall(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return false;
+            return text.Contains("<tool_call>", StringComparison.OrdinalIgnoreCase)
+                || Regex.IsMatch(text, @"""name""\s*:\s*""[a-z_]+""", RegexOptions.IgnoreCase);
+        }
+
+        private string BuildFallbackSuggestion(string userMessage)
+        {
+            var normalized = NormalizeForMatching(userMessage);
+            var matches = GetMatchedGroups(normalized)
+                .OrderByDescending(m => m.score)
+                .Take(2)
+                .SelectMany(m => m.group.Tools)
+                .Distinct()
+                .Take(6)
+                .ToList();
+
+            var suggestion = matches.Count > 0
+                ? string.Join(", ", matches)
+                : "get_elements, count_elements, search_elements, get_levels, get_current_view";
+
+            if (IsVietnamese(userMessage))
+            {
+                return "Mình chưa chọn được tool phù hợp từ yêu cầu này. " +
+                       $"Bạn có thể nói rõ hơn (category/level/view) hoặc thử một trong các tool: {suggestion}.";
+            }
+
+            return "I couldn't determine the right tool for this request. " +
+                   $"Please add more detail (category/level/view) or try one of these tools: {suggestion}.";
         }
 
         private string RemoveToolCallTags(string text)
