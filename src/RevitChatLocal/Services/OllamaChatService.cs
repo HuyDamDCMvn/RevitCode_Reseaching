@@ -541,7 +541,7 @@ Example:
             {
                 // Smart mode: CoreTools + keyword match
                 selected = new HashSet<string>(CoreTools);
-                var combined = $"{userMessage} {_lastUserMessage}".ToLowerInvariant();
+                var combined = userMessage.ToLowerInvariant();
                 foreach (var kvp in KeywordToolMap)
                 {
                     var keywords = kvp.Key.Split('|');
@@ -740,7 +740,7 @@ To call a tool, output EXACTLY this (no code fences, no extra text after it):
 6. For destructive operations (delete, modify), confirm with the user FIRST before calling the tool.
 7. NEVER invent data. Only use tool results.
 8. Reply in the same language the user uses.
-9. Vietnamese category mapping: tường=Walls, cửa=Doors, cửa sổ=Windows, ống=Ducts/Pipes, phòng=Rooms, sàn=Floors, cột=Columns, dầm=Structural Framing, trần=Ceilings, mái=Roofs.
+9. Vietnamese category mapping: tường=Walls, cửa=Doors, cửa sổ=Windows, ống=Ducts/Pipes, phòng=Rooms, sàn=Floors, cột=Columns, dầm=Structural Framing, trần=Ceilings, mái=Roofs, cầu thang=Stairs, lan can=Railings, thiết bị vệ sinh=Plumbing Fixtures, khay cáp=Cable Trays, ống dẫn=Conduits, đèn=Lighting Fixtures.
 
 ## WRONG (do NOT do this):
 ```json
