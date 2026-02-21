@@ -888,7 +888,7 @@ Example:
             if (toolCalls.Count > 0)
             {
                 _conversationHistory.Add(new AssistantChatMessage(
-                    !string.IsNullOrEmpty(cleanText) ? cleanText : $"[Executing {toolCalls.Count} tool(s)...]"));
+                    !string.IsNullOrEmpty(cleanText) ? cleanText : "(tool call)"));
             }
             else
             {

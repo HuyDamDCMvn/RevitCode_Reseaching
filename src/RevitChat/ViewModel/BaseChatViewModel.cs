@@ -230,7 +230,7 @@ namespace RevitChat.ViewModel
                     (response, toolCalls) = await ChatService.ContinueWithToolResultsAsync(truncated, _cts.Token);
                 }
 
-                if (!string.IsNullOrEmpty(response))
+                if (!string.IsNullOrEmpty(response) && !IsEchoResponse(response))
                     Messages.Add(ChatMessage.FromAssistant(response));
                 else if (_toolExecutedInSession)
                     Messages.Add(ChatMessage.FromAssistant("Done. The action was completed."));
@@ -335,6 +335,15 @@ namespace RevitChat.ViewModel
         {
             if (string.IsNullOrWhiteSpace(message)) return;
             InvokeOnDispatcher(() => StatusMessage = message);
+        }
+
+        private static bool IsEchoResponse(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return true;
+            var t = text.Trim();
+            if (t.StartsWith("[Executing") || t == "(tool call)" || t == "...")
+                return true;
+            return false;
         }
 
         private static bool IsConfirmMessage(string text)
