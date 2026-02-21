@@ -221,7 +221,10 @@ namespace RevitChat.Skills
             {
                 var bic = ResolveCategoryFilter(doc, catName);
                 if (bic.HasValue)
-                    catIds.Add(new ElementId(bic.Value));
+                {
+                    var cat = Category.GetCategory(doc, bic.Value);
+                    if (cat != null) catIds.Add(cat.Id);
+                }
             }
 
             if (catIds.Count == 0)

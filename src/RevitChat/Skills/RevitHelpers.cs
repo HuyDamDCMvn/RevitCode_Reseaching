@@ -129,6 +129,29 @@ namespace RevitChat.Skills
         internal static string JsonError(string message) =>
             JsonSerializer.Serialize(new { error = message });
 
+        internal static string EscapeCsv(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return "";
+            if (value.Contains(',') || value.Contains('"') || value.Contains('\n'))
+                return $"\"{value.Replace("\"", "\"\"")}\"";
+            return value;
+        }
+
+        internal static XYZ GetElementCenter(Element elem)
+        {
+            if (elem.Location is LocationPoint lp) return lp.Point;
+            if (elem.Location is LocationCurve lc) return lc.Curve.Evaluate(0.5, true);
+
+            try
+            {
+                var bb = elem.get_BoundingBox(null);
+                if (bb != null) return (bb.Min + bb.Max) / 2;
+            }
+            catch { }
+
+            return null;
+        }
+
         #region Argument parsing
 
         internal static T GetArg<T>(Dictionary<string, object> args, string key, T defaultValue = default)

@@ -38,7 +38,10 @@ namespace RevitChat.Skills
 
         public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
-            return ExportToCsv(app.ActiveUIDocument.Document, args);
+            var uidoc = app.ActiveUIDocument;
+            if (uidoc == null) return JsonError("No active document.");
+            var doc = uidoc.Document;
+            return ExportToCsv(doc, args);
         }
 
         private string ExportToCsv(Document doc, Dictionary<string, object> args)
@@ -100,12 +103,5 @@ namespace RevitChat.Skills
             }, JsonOpts);
         }
 
-        private static string EscapeCsv(string value)
-        {
-            if (string.IsNullOrEmpty(value)) return "";
-            if (value.Contains(',') || value.Contains('"') || value.Contains('\n'))
-                return $"\"{value.Replace("\"", "\"\"")}\"";
-            return value;
-        }
     }
 }

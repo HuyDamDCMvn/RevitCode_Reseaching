@@ -287,9 +287,11 @@ namespace RevitChat.Skills
             {
                 "Identity Data" => GroupTypeId.IdentityData,
                 "Constraints" => GroupTypeId.Constraints,
+                "Dimensions" => GroupTypeId.Geometry,
                 "Structural" => GroupTypeId.Structural,
                 "Mechanical" => GroupTypeId.Mechanical,
                 "Electrical" => GroupTypeId.Electrical,
+                "Other" => GroupTypeId.General,
                 _ => GroupTypeId.General
             };
 

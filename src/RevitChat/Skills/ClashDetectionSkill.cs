@@ -174,7 +174,8 @@ namespace RevitChat.Skills
                 var locA = GetElementCenter(a);
                 if (locA == null) continue;
 
-                var bbA = a.get_BoundingBox(null);
+                BoundingBoxXYZ bbA;
+                try { bbA = a.get_BoundingBox(null); } catch { continue; }
                 if (bbA == null) continue;
 
                 var expandedMin = new XYZ(bbA.Min.X - minDist, bbA.Min.Y - minDist, bbA.Min.Z - minDist);
@@ -291,12 +292,14 @@ namespace RevitChat.Skills
 
                 if (countA == 0 || countB == 0) continue;
 
-                int clashCount = 0;
+                var clashingBIds = new HashSet<long>();
                 var elemsA = new FilteredElementCollector(doc).OfCategory(bicA).WhereElementIsNotElementType().ToList();
+                int elementsWithClash = 0;
 
                 foreach (var a in elemsA.Take(200))
                 {
-                    var bb = a.get_BoundingBox(null);
+                    BoundingBoxXYZ bb;
+                    try { bb = a.get_BoundingBox(null); } catch { continue; }
                     if (bb == null) continue;
 
                     var outline = new Outline(bb.Min, bb.Max);
@@ -304,8 +307,14 @@ namespace RevitChat.Skills
                         .OfCategory(bicB)
                         .WhereElementIsNotElementType()
                         .WherePasses(new BoundingBoxIntersectsFilter(outline))
-                        .GetElementCount();
-                    clashCount += intersecting;
+                        .ToElementIds();
+
+                    if (intersecting.Count > 0)
+                    {
+                        elementsWithClash++;
+                        foreach (var bid in intersecting)
+                            clashingBIds.Add(bid.Value);
+                    }
                 }
 
                 results.Add(new
@@ -314,22 +323,13 @@ namespace RevitChat.Skills
                     count_a = countA,
                     category_b = nameB,
                     count_b = countB,
-                    potential_clashes = clashCount
+                    elements_a_with_clash = elementsWithClash,
+                    unique_elements_b_clashing = clashingBIds.Count
                 });
             }
 
             return JsonSerializer.Serialize(new { combinations_checked = results.Count, summary = results }, JsonOpts);
         }
 
-        private static XYZ GetElementCenter(Element elem)
-        {
-            if (elem.Location is LocationPoint lp) return lp.Point;
-            if (elem.Location is LocationCurve lc) return lc.Curve.Evaluate(0.5, true);
-
-            var bb = elem.get_BoundingBox(null);
-            if (bb != null) return (bb.Min + bb.Max) / 2;
-
-            return null;
-        }
     }
 }

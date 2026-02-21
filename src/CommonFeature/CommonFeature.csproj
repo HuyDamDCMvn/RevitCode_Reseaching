@@ -52,6 +52,10 @@
       SourceFiles="$(OutputPath)CommunityToolkit.Mvvm.dll" 
       DestinationFolder="$(ExtLibNet8)" 
       Condition="Exists('$(OutputPath)CommunityToolkit.Mvvm.dll')" />
+    <Copy 
+      SourceFiles="$(OutputPath)HD.Core.dll" 
+      DestinationFolder="$(ExtLibNet8)" 
+      Condition="Exists('$(OutputPath)HD.Core.dll')" />
     
     <Message Text="Copied DLLs to $(ExtLibNet8)" Importance="high" />
   </Target>

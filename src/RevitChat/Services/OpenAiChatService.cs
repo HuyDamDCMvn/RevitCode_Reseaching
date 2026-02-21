@@ -17,7 +17,7 @@ namespace RevitChat.Services
     /// Tools are sourced from the SkillRegistry, making capabilities modular.
     /// Runs entirely on background threads -- never touches Revit API.
     /// </summary>
-    public class OpenAiChatService
+    public class OpenAiChatService : Models.IChatService
     {
         private ChatClient _client;
         private readonly List<OaiMessage> _conversationHistory = new();

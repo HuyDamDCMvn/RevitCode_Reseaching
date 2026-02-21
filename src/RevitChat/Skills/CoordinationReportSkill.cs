@@ -126,17 +126,18 @@ namespace RevitChat.Skills
                 var bicB = ResolveCategoryFilter(doc, catB);
                 if (!bicA.HasValue || !bicB.HasValue) continue;
 
-                int countA = new FilteredElementCollector(doc).OfCategory(bicA.Value).WhereElementIsNotElementType().GetElementCount();
+                var elemsA = new FilteredElementCollector(doc).OfCategory(bicA.Value).WhereElementIsNotElementType().ToList();
+                int countA = elemsA.Count;
                 int countB = new FilteredElementCollector(doc).OfCategory(bicB.Value).WhereElementIsNotElementType().GetElementCount();
                 if (countA == 0 || countB == 0) continue;
 
-                var elemsA = new FilteredElementCollector(doc).OfCategory(bicA.Value).WhereElementIsNotElementType().ToList();
                 var clashes = new List<object>();
 
                 foreach (var a in elemsA)
                 {
                     if (clashes.Count >= maxPerPair) break;
-                    var bb = a.get_BoundingBox(null);
+                    BoundingBoxXYZ bb;
+                    try { bb = a.get_BoundingBox(null); } catch { continue; }
                     if (bb == null) continue;
 
                     var intersecting = new FilteredElementCollector(doc)

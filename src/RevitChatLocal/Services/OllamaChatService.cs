@@ -20,7 +20,7 @@ namespace RevitChatLocal.Services
     /// Tools are described in the system prompt; the model outputs
     /// &lt;tool_call&gt; tags which are parsed and executed.
     /// </summary>
-    public class OllamaChatService
+    public class OllamaChatService : RevitChat.Models.IChatService
     {
         private ChatClient _client;
         private readonly List<OaiMessage> _conversationHistory = new();
@@ -147,7 +147,7 @@ namespace RevitChatLocal.Services
             if (results.Count > 0) return results;
 
             var inlinePattern = new Regex(
-                @"\{\s*""name""\s*:\s*""([a-z_]+)""\s*,\s*""arguments""\s*:\s*(\{[^{}]*\})\s*\}",
+                @"\{\s*""name""\s*:\s*""([a-z_]+)""\s*,\s*""arguments""\s*:\s*(\{(?:[^{}]|\{[^{}]*\})*\})\s*\}",
                 RegexOptions.Singleline);
 
             foreach (Match match in inlinePattern.Matches(text))
@@ -164,7 +164,7 @@ namespace RevitChatLocal.Services
                 });
             }
 
-            if (results.Count > 3)
+            if (results.Count > 5)
                 results = results.Take(1).ToList();
 
             return results;
@@ -224,14 +224,11 @@ namespace RevitChatLocal.Services
                 ? allTools.Take(maxTools).ToList()
                 : allTools.ToList();
 
-            foreach (var tool in tools)
-            {
-                _allToolNames.Add(tool.FunctionName);
-                sb.AppendLine($"- {tool.FunctionName}: {tool.FunctionDescription}");
-            }
-
             foreach (var tool in allTools)
                 _allToolNames.Add(tool.FunctionName);
+
+            foreach (var tool in tools)
+                sb.AppendLine($"- {tool.FunctionName}: {tool.FunctionDescription}");
 
             _toolCatalog = sb.ToString();
         }

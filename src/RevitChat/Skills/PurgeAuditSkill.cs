@@ -115,18 +115,21 @@ namespace RevitChat.Skills
             }
 
             var symbols = collector.Cast<FamilySymbol>().ToList();
+
+            var usedSymbolIds = new HashSet<long>(
+                new FilteredElementCollector(doc)
+                    .OfClass(typeof(FamilyInstance))
+                    .Cast<FamilyInstance>()
+                    .Where(fi => fi.Symbol != null)
+                    .Select(fi => fi.Symbol.Id.Value));
+
             var purgeable = new List<object>();
 
             foreach (var sym in symbols)
             {
                 if (purgeable.Count >= limit) break;
 
-                var instanceCount = new FilteredElementCollector(doc)
-                    .OfClass(typeof(FamilyInstance))
-                    .WherePasses(new FamilyInstanceFilter(doc, sym.Id))
-                    .GetElementCount();
-
-                if (instanceCount == 0)
+                if (!usedSymbolIds.Contains(sym.Id.Value))
                 {
                     purgeable.Add(new
                     {

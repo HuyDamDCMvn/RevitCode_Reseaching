@@ -103,7 +103,9 @@ namespace RevitChat.Skills
 
         public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
-            var doc = app.ActiveUIDocument.Document;
+            var uidoc = app.ActiveUIDocument;
+            if (uidoc == null) return JsonError("No active document.");
+            var doc = uidoc.Document;
             return functionName switch
             {
                 "get_mep_systems" => GetMepSystems(doc, args),

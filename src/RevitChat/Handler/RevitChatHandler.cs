@@ -50,12 +50,14 @@ namespace RevitChat.Handler
                             JsonSerializer.Serialize(new { error = ex.Message });
                     }
                 }
-
-                OnToolCallsCompleted?.Invoke(results);
             }
             catch (Exception ex)
             {
                 OnError?.Invoke($"RevitChatHandler error: {ex.Message}");
+            }
+            finally
+            {
+                OnToolCallsCompleted?.Invoke(results);
             }
         }
 

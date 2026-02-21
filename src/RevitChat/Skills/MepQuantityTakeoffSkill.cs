@@ -85,7 +85,9 @@ namespace RevitChat.Skills
 
         public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
-            var doc = app.ActiveUIDocument.Document;
+            var uidoc = app.ActiveUIDocument;
+            if (uidoc == null) return JsonError("No active document.");
+            var doc = uidoc.Document;
             return functionName switch
             {
                 "mep_quantity_takeoff" => MepQuantityTakeoff(doc, args),
@@ -315,13 +317,7 @@ namespace RevitChat.Skills
             }, JsonOpts);
         }
 
-        private static string Esc(string v)
-        {
-            if (string.IsNullOrEmpty(v)) return "";
-            if (v.Contains(',') || v.Contains('"') || v.Contains('\n'))
-                return $"\"{v.Replace("\"", "\"\"")}\"";
-            return v;
-        }
+        private static string Esc(string v) => EscapeCsv(v);
 
         private class MepLineItem
         {

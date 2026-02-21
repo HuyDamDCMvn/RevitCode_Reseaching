@@ -146,6 +146,25 @@ namespace RevitChat.Skills
             return JsonSerializer.Serialize(new { success, errors = errors.Take(10) }, JsonOpts);
         }
 
+        private static HashSet<long> CollectTaggedElementIds(Document doc, View view)
+        {
+            var taggedIds = new HashSet<long>();
+            var tags = new FilteredElementCollector(doc, view.Id)
+                .OfClass(typeof(IndependentTag))
+                .Cast<IndependentTag>();
+
+            foreach (var tag in tags)
+            {
+                try
+                {
+                    foreach (var e in tag.GetTaggedLocalElements())
+                        taggedIds.Add(e.Id.Value);
+                }
+                catch { }
+            }
+            return taggedIds;
+        }
+
         private string GetUntaggedElements(Document doc, View view, Dictionary<string, object> args)
         {
             var catName = GetArg<string>(args, "category");
@@ -159,22 +178,7 @@ namespace RevitChat.Skills
                 .WhereElementIsNotElementType()
                 .ToList();
 
-            var tags = new FilteredElementCollector(doc, view.Id)
-                .OfClass(typeof(IndependentTag))
-                .Cast<IndependentTag>()
-                .ToList();
-
-            var taggedIds = new HashSet<long>();
-            foreach (var tag in tags)
-            {
-                try
-                {
-                    var elems2 = tag.GetTaggedLocalElements();
-                    foreach (var e in elems2)
-                        taggedIds.Add(e.Id.Value);
-                }
-                catch { }
-            }
+            var taggedIds = CollectTaggedElementIds(doc, view);
 
             var untagged = elements
                 .Where(e => !taggedIds.Contains(e.Id.Value))
@@ -208,23 +212,7 @@ namespace RevitChat.Skills
                 .WhereElementIsNotElementType()
                 .ToList();
 
-            var tags = new FilteredElementCollector(doc, view.Id)
-                .OfClass(typeof(IndependentTag))
-                .Cast<IndependentTag>()
-                .ToList();
-
-            var taggedIds = new HashSet<long>();
-            foreach (var tag in tags)
-            {
-                try
-                {
-                    var elems2 = tag.GetTaggedLocalElements();
-                    foreach (var e in elems2)
-                        taggedIds.Add(e.Id.Value);
-                }
-                catch { }
-            }
-
+            var taggedIds = CollectTaggedElementIds(doc, view);
             var untaggedElements = elements.Where(e => !taggedIds.Contains(e.Id.Value)).ToList();
             int success = 0;
 

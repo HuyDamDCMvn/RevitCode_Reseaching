@@ -142,7 +142,26 @@ namespace RevitChat.Skills
                 clouds = clouds.Where(c => c.RevisionId.Value == revId).ToList();
 
             if (sheetId > 0)
-                clouds = clouds.Where(c => c.OwnerViewId.Value == sheetId).ToList();
+            {
+                var sheet = doc.GetElement(new ElementId(sheetId)) as ViewSheet;
+                if (sheet != null)
+                {
+                    var viewportIds = sheet.GetAllViewports();
+                    var viewIdsOnSheet = new HashSet<long>();
+                    viewIdsOnSheet.Add(sheetId);
+                    foreach (var vpId in viewportIds)
+                    {
+                        var vp = doc.GetElement(vpId) as Viewport;
+                        if (vp != null)
+                            viewIdsOnSheet.Add(vp.ViewId.Value);
+                    }
+                    clouds = clouds.Where(c => viewIdsOnSheet.Contains(c.OwnerViewId.Value)).ToList();
+                }
+                else
+                {
+                    clouds = clouds.Where(c => c.OwnerViewId.Value == sheetId).ToList();
+                }
+            }
 
             var items = clouds.Take(limit).Select(c =>
             {

@@ -179,26 +179,45 @@ namespace RevitChat.Skills
 
         private string GetModelStatistics(Document doc)
         {
-            var allElements = new FilteredElementCollector(doc)
+            int totalElements = new FilteredElementCollector(doc)
                 .WhereElementIsNotElementType()
-                .ToList();
+                .GetElementCount();
 
-            var byCat = allElements
-                .Where(e => e.Category != null)
-                .GroupBy(e => e.Category.Name)
-                .OrderByDescending(g => g.Count())
-                .Take(30)
-                .Select(g => new { category = g.Key, count = g.Count() })
+            var topCategories = new[]
+            {
+                BuiltInCategory.OST_Walls, BuiltInCategory.OST_Floors, BuiltInCategory.OST_Roofs,
+                BuiltInCategory.OST_Doors, BuiltInCategory.OST_Windows,
+                BuiltInCategory.OST_StructuralColumns, BuiltInCategory.OST_StructuralFraming,
+                BuiltInCategory.OST_DuctCurves, BuiltInCategory.OST_PipeCurves,
+                BuiltInCategory.OST_CableTray, BuiltInCategory.OST_Conduit,
+                BuiltInCategory.OST_MechanicalEquipment, BuiltInCategory.OST_ElectricalEquipment,
+                BuiltInCategory.OST_PlumbingFixtures, BuiltInCategory.OST_Rooms,
+                BuiltInCategory.OST_Furniture, BuiltInCategory.OST_GenericModel
+            };
+
+            var byCat = topCategories
+                .Select(bic =>
+                {
+                    var cat = Category.GetCategory(doc, bic);
+                    if (cat == null) return null;
+                    int cnt = new FilteredElementCollector(doc)
+                        .OfCategory(bic).WhereElementIsNotElementType().GetElementCount();
+                    return cnt > 0 ? new { category = cat.Name, count = cnt } : null;
+                })
+                .Where(x => x != null)
+                .OrderByDescending(x => x.count)
                 .ToList();
 
             int familyCount = new FilteredElementCollector(doc)
                 .OfClass(typeof(Family)).GetElementCount();
             int familySymbolCount = new FilteredElementCollector(doc)
                 .OfClass(typeof(FamilySymbol)).GetElementCount();
-            int viewCount = new FilteredElementCollector(doc)
-                .OfClass(typeof(View)).Cast<View>().Count(v => !v.IsTemplate);
-            int templateCount = new FilteredElementCollector(doc)
-                .OfClass(typeof(View)).Cast<View>().Count(v => v.IsTemplate);
+
+            var allViews = new FilteredElementCollector(doc)
+                .OfClass(typeof(View)).Cast<View>().ToList();
+            int viewCount = allViews.Count(v => !v.IsTemplate);
+            int templateCount = allViews.Count(v => v.IsTemplate);
+
             int sheetCount = new FilteredElementCollector(doc)
                 .OfClass(typeof(ViewSheet)).GetElementCount();
             int linkCount = new FilteredElementCollector(doc)
@@ -209,7 +228,7 @@ namespace RevitChat.Skills
 
             return JsonSerializer.Serialize(new
             {
-                total_elements = allElements.Count,
+                total_elements = totalElements,
                 families_loaded = familyCount,
                 family_types = familySymbolCount,
                 views = viewCount,
@@ -270,20 +289,21 @@ namespace RevitChat.Skills
                 .Where(f => f.IsInPlace)
                 .ToList();
 
-            var items = families.Select(f =>
-            {
-                var instances = new FilteredElementCollector(doc)
-                    .OfClass(typeof(FamilyInstance))
-                    .Cast<FamilyInstance>()
-                    .Count(fi => fi.Symbol?.Family?.Id == f.Id);
+            var inPlaceFamilyIds = new HashSet<long>(families.Select(f => f.Id.Value));
 
-                return new
-                {
-                    family_id = f.Id.Value,
-                    name = f.Name,
-                    category = f.FamilyCategory?.Name ?? "-",
-                    instance_count = instances
-                };
+            var instanceCountByFamily = new FilteredElementCollector(doc)
+                .OfClass(typeof(FamilyInstance))
+                .Cast<FamilyInstance>()
+                .Where(fi => fi.Symbol?.Family != null && inPlaceFamilyIds.Contains(fi.Symbol.Family.Id.Value))
+                .GroupBy(fi => fi.Symbol.Family.Id.Value)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var items = families.Select(f => new
+            {
+                family_id = f.Id.Value,
+                name = f.Name,
+                category = f.FamilyCategory?.Name ?? "-",
+                instance_count = instanceCountByFamily.TryGetValue(f.Id.Value, out var c) ? c : 0
             }).ToList();
 
             return JsonSerializer.Serialize(new
@@ -300,6 +320,13 @@ namespace RevitChat.Skills
         {
             int limit = GetArg(args, "limit", 100);
 
+            var usedSymbolIds = new HashSet<long>(
+                new FilteredElementCollector(doc)
+                    .OfClass(typeof(FamilyInstance))
+                    .Cast<FamilyInstance>()
+                    .Where(fi => fi.Symbol != null)
+                    .Select(fi => fi.Symbol.Id.Value));
+
             var families = new FilteredElementCollector(doc)
                 .OfClass(typeof(Family))
                 .Cast<Family>()
@@ -313,17 +340,7 @@ namespace RevitChat.Skills
                 if (unused.Count >= limit) break;
 
                 var symbolIds = fam.GetFamilySymbolIds();
-                bool hasInstance = false;
-
-                foreach (var symId in symbolIds)
-                {
-                    var instances = new FilteredElementCollector(doc)
-                        .OfClass(typeof(FamilyInstance))
-                        .WherePasses(new FamilyInstanceFilter(doc, symId))
-                        .GetElementCount();
-
-                    if (instances > 0) { hasInstance = true; break; }
-                }
+                bool hasInstance = symbolIds.Any(sid => usedSymbolIds.Contains(sid.Value));
 
                 if (!hasInstance)
                 {

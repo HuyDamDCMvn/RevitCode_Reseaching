@@ -189,21 +189,26 @@ namespace RevitChat.Skills
             int loopIdx = 0;
             foreach (var loop in segments)
             {
-                var segs = loop.Select(seg =>
+                var segs = new List<object>();
+                foreach (var seg in loop)
                 {
-                    var curve = seg.GetCurve();
-                    var boundaryElem = doc.GetElement(seg.ElementId);
-                    return new
+                    try
                     {
-                        start_x = Math.Round(curve.GetEndPoint(0).X, 4),
-                        start_y = Math.Round(curve.GetEndPoint(0).Y, 4),
-                        end_x = Math.Round(curve.GetEndPoint(1).X, 4),
-                        end_y = Math.Round(curve.GetEndPoint(1).Y, 4),
-                        length_ft = Math.Round(curve.Length, 4),
-                        boundary_element = boundaryElem?.Name ?? "-",
-                        boundary_category = boundaryElem?.Category?.Name ?? "-"
-                    };
-                }).ToList();
+                        var curve = seg.GetCurve();
+                        var boundaryElem = doc.GetElement(seg.ElementId);
+                        segs.Add(new
+                        {
+                            start_x = Math.Round(curve.GetEndPoint(0).X, 4),
+                            start_y = Math.Round(curve.GetEndPoint(0).Y, 4),
+                            end_x = Math.Round(curve.GetEndPoint(1).X, 4),
+                            end_y = Math.Round(curve.GetEndPoint(1).Y, 4),
+                            length_ft = Math.Round(curve.Length, 4),
+                            boundary_element = boundaryElem?.Name ?? "-",
+                            boundary_category = boundaryElem?.Category?.Name ?? "-"
+                        });
+                    }
+                    catch { }
+                }
 
                 loops.Add(new { loop_index = loopIdx++, segment_count = segs.Count, segments = segs });
             }
