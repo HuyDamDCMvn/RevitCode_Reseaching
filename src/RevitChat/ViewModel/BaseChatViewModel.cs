@@ -27,6 +27,7 @@ namespace RevitChat.ViewModel
         private TaskCompletionSource<Dictionary<string, string>> _toolResultsTcs;
         private List<ToolCallRequest> _pendingToolCalls;
         private IChatService _diagnosticService;
+        private bool _toolExecutedInSession;
 
         private const int AnalyzeThresholdChars = 1200;
 
@@ -189,6 +190,7 @@ namespace RevitChat.ViewModel
             Messages.Add(ChatMessage.FromUser(text));
             InputText = "";
             IsBusy = true;
+            _toolExecutedInSession = false;
             StatusMessage = "Thinking...";
 
             _cts = new CancellationTokenSource(SendTimeout);
@@ -218,6 +220,7 @@ namespace RevitChat.ViewModel
                     StatusMessage = $"Executing {toolCalls.Count} tool(s)...";
 
                     var toolResults = await ExecuteToolCallsAsync(toolCalls);
+                    _toolExecutedInSession = true;
                     RemoveToolProgressMessages();
 
                     var truncated = TruncateToolResults(toolResults);
@@ -229,6 +232,8 @@ namespace RevitChat.ViewModel
 
                 if (!string.IsNullOrEmpty(response))
                     Messages.Add(ChatMessage.FromAssistant(response));
+                else if (_toolExecutedInSession)
+                    Messages.Add(ChatMessage.FromAssistant("Done. The action was completed."));
 
                 StatusMessage = "Ready";
             }
@@ -404,14 +409,18 @@ namespace RevitChat.ViewModel
                 || lower.Contains("view hiện tại") || lower.Contains("view đang mở");
             var needsSelection = lower.Contains("selected") || lower.Contains("selection")
                 || lower.Contains("đang chọn") || lower.Contains("được chọn");
+            var needsLevels = lower.Contains("level") || lower.Contains("tầng")
+                || lower.Contains("cao độ") || lower.Contains("floor");
 
-            if (!needsView && !needsSelection) return "";
+            if (!needsView && !needsSelection && !needsLevels) return "";
 
             var calls = new List<ToolCallRequest>();
             if (needsView)
                 calls.Add(new ToolCallRequest { ToolCallId = CreateCallId("get_current_view"), FunctionName = "get_current_view", Arguments = new Dictionary<string, object>() });
             if (needsSelection)
                 calls.Add(new ToolCallRequest { ToolCallId = CreateCallId("get_current_selection"), FunctionName = "get_current_selection", Arguments = new Dictionary<string, object>() });
+            if (needsLevels)
+                calls.Add(new ToolCallRequest { ToolCallId = CreateCallId("get_levels_detailed"), FunctionName = "get_levels_detailed", Arguments = new Dictionary<string, object>() });
 
             if (calls.Count == 0) return "";
 
@@ -425,6 +434,10 @@ namespace RevitChat.ViewModel
                 var snippet = kvp.Value.Length > 600 ? kvp.Value[..600] + "...[TRUNCATED]" : kvp.Value;
                 sb.AppendLine($"{kvp.Key}: {snippet}");
             }
+
+            if (needsLevels && results.ContainsKey("get_levels_detailed"))
+                sb.AppendLine("IMPORTANT: Use the EXACT level names from the list above when calling tools. Do NOT use the user's approximate name.");
+
             return sb.ToString().Trim();
         }
 

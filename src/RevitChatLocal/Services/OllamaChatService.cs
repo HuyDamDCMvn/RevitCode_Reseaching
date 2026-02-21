@@ -22,6 +22,7 @@ namespace RevitChatLocal.Services
         private readonly SkillRegistry _skillRegistry;
         private HashSet<string> _allToolNames;
         private string _lastUserMessage = "";
+        private bool _isContinuation;
 
         public event Action<string> DebugMessage;
 
@@ -245,11 +246,12 @@ namespace RevitChatLocal.Services
         private static readonly string[] ActionKeywords = new[]
         {
             "count", "how many", "list", "show", "get", "export", "rename", "delete", "move",
-            "copy", "mirror", "create", "update", "set", "override", "hide", "unhide", "isolate",
-            "select", "zoom", "place", "check", "audit", "report", "compare", "đếm", "liệt kê",
+            "copy", "mirror", "create", "update", "set", "override", "change", "modify", "hide",
+            "unhide", "isolate", "select", "zoom", "place", "check", "audit", "report", "compare",
+            "đếm", "liệt kê",
             "hiển thị", "xem", "xuất", "đổi tên", "xóa", "di chuyển", "sao chép", "tạo",
-            "cập nhật", "đặt", "tô màu", "ẩn", "hiện", "cô lập", "chọn", "phóng to", "đặt",
-            "kiểm tra", "báo cáo", "so sánh"
+            "cập nhật", "đặt", "tô màu", "thay đổi", "ẩn", "hiện", "cô lập", "chọn",
+            "phóng to", "đặt", "kiểm tra", "báo cáo", "so sánh"
         };
 
         private static readonly Dictionary<string, string> ToolSchemaHints = new()
@@ -608,6 +610,7 @@ namespace RevitChatLocal.Services
                 throw new InvalidOperationException("Ollama client not initialized.");
 
             _lastUserMessage = userMessage;
+            _isContinuation = false;
             _conversationHistory.Add(new UserChatMessage(userMessage));
             TrimHistory();
 
@@ -642,19 +645,23 @@ namespace RevitChatLocal.Services
 
             _conversationHistory.Add(new UserChatMessage(sb.ToString()));
 
+            _isContinuation = true;
             return await GetCompletionAsync(ct);
         }
 
         private async Task<(string assistantMessage, List<RevitChat.Models.ToolCallRequest> toolCalls)> GetCompletionAsync(
             CancellationToken ct)
         {
-            if (_toolMode == "twostage")
-                return await GetCompletionTwoStageAsync(ct);
-
-            if (_toolMode == "smart" && ShouldUseTwoStage(_lastUserMessage))
+            if (!_isContinuation)
             {
-                DebugMessage?.Invoke("Auto Two-Stage enabled for complex prompt.");
-                return await GetCompletionTwoStageAsync(ct);
+                if (_toolMode == "twostage")
+                    return await GetCompletionTwoStageAsync(ct);
+
+                if (_toolMode == "smart" && ShouldUseTwoStage(_lastUserMessage))
+                {
+                    DebugMessage?.Invoke("Auto Two-Stage enabled for complex prompt.");
+                    return await GetCompletionTwoStageAsync(ct);
+                }
             }
 
             return await GetCompletionWithRetryAsync(ct);
