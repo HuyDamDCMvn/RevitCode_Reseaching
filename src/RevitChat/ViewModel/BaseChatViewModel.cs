@@ -28,6 +28,7 @@ namespace RevitChat.ViewModel
         private List<ToolCallRequest> _pendingToolCalls;
         private IChatService _diagnosticService;
         private bool _toolExecutedInSession;
+        private readonly WorkingMemory _workingMemory = new();
 
         private const int AnalyzeThresholdChars = 1200;
 
@@ -178,6 +179,7 @@ namespace RevitChat.ViewModel
                 {
                     Messages.Add(ChatMessage.FromUser(text));
                     _pendingToolCalls = null;
+                    ChatService.RepairHistoryAfterCancel();
                     Messages.Add(ChatMessage.FromAssistant("Okay, cancelled."));
                     InputText = "";
                     StatusMessage = "Cancelled";
@@ -185,6 +187,7 @@ namespace RevitChat.ViewModel
                 }
 
                 _pendingToolCalls = null;
+                ChatService.RepairHistoryAfterCancel();
             }
 
             Messages.Add(ChatMessage.FromUser(text));
@@ -223,11 +226,12 @@ namespace RevitChat.ViewModel
                     _toolExecutedInSession = true;
                     RemoveToolProgressMessages();
 
-                    var truncated = TruncateToolResults(toolResults);
+                    UpdateWorkingMemory(toolCalls, toolResults);
+                    var compressed = CompressAndTruncate(toolCalls, toolResults);
 
-                    var totalChars = GetTotalChars(truncated);
+                    var totalChars = GetTotalChars(compressed);
                     StatusMessage = totalChars > AnalyzeThresholdChars ? "Analyzing results..." : "Finalizing...";
-                    (response, toolCalls) = await ChatService.ContinueWithToolResultsAsync(truncated, _cts.Token);
+                    (response, toolCalls) = await ChatService.ContinueWithToolResultsAsync(compressed, _cts.Token);
                 }
 
                 if (!string.IsNullOrEmpty(response) && !IsEchoResponse(response))
@@ -411,6 +415,34 @@ namespace RevitChat.ViewModel
             return total;
         }
 
+        private void UpdateWorkingMemory(List<ToolCallRequest> toolCalls, Dictionary<string, string> results)
+        {
+            foreach (var tc in toolCalls)
+            {
+                if (results.TryGetValue(tc.ToolCallId, out var result))
+                    _workingMemory.UpdateFromToolResult(tc.FunctionName, result);
+            }
+        }
+
+        private Dictionary<string, string> CompressAndTruncate(List<ToolCallRequest> toolCalls, Dictionary<string, string> results)
+        {
+            var compressed = new Dictionary<string, string>(results.Count);
+            var maxPerResult = MaxToolResultChars;
+
+            foreach (var kvp in results)
+            {
+                var toolName = toolCalls.FirstOrDefault(t => t.ToolCallId == kvp.Key)?.FunctionName ?? "unknown";
+                var val = WorkingMemory.CompressToolResult(toolName, kvp.Value);
+
+                if (val != null && val.Length > maxPerResult)
+                    val = val[..maxPerResult] + $"\n...[TRUNCATED — {kvp.Value?.Length ?? 0} chars total]";
+
+                compressed[kvp.Key] = val;
+            }
+
+            return compressed;
+        }
+
         private async Task<string> CollectContextAsync(string userText)
         {
             var lower = userText?.ToLowerInvariant() ?? "";
@@ -469,6 +501,8 @@ namespace RevitChat.ViewModel
         {
             Messages.Clear();
             ChatService.ClearHistory();
+            _pendingToolCalls = null;
+            _workingMemory.Clear();
             AddWelcomeMessage();
             StatusMessage = "Chat cleared";
         }

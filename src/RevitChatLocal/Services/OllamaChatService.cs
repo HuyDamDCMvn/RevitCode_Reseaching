@@ -235,12 +235,29 @@ namespace RevitChatLocal.Services
 
         private static readonly List<(string from, string to)> NormalizationMap = new()
         {
-            ("cầu thang", "stairs"),
-            ("lan can", "railings"),
             ("thiết bị vệ sinh", "plumbing fixtures"),
+            ("máy điều hòa", "air conditioning"),
+            ("bình nóng lạnh", "water heaters"),
+            ("cầu thang", "stairs"),
+            ("cửa sổ", "windows"),
+            ("lan can", "railings"),
             ("khay cáp", "cable trays"),
             ("ống dẫn", "conduits"),
+            ("thang máy", "elevators"),
+            ("tường", "walls"),
+            ("cửa", "doors"),
+            ("sàn", "floors"),
+            ("trần", "ceilings"),
+            ("phòng", "rooms"),
+            ("cột", "columns"),
+            ("dầm", "beams"),
+            ("mái", "roofs"),
+            ("ống", "pipes"),
             ("đèn", "lighting fixtures"),
+            ("quạt", "fans"),
+            ("bơm", "pumps"),
+            ("van", "valves"),
+            ("bồn", "sinks"),
         };
 
         private static readonly string[] ActionKeywords = new[]
@@ -259,21 +276,34 @@ namespace RevitChatLocal.Services
             ["get_elements"] = "category?, level?, view_name?, limit?",
             ["count_elements"] = "category?, level?, view_name?",
             ["search_elements"] = "category, param_name, param_value",
-            ["get_element_parameters"] = "element_id",
-            ["set_parameter_value"] = "element_id|element_ids, param_name, value",
-            ["delete_elements"] = "element_ids",
+            ["get_element_parameters"] = "element_id (integer)",
+            ["set_parameter_value"] = "element_ids (array), param_name, value",
+            ["delete_elements"] = "element_ids (array)",
             ["rename_elements"] = "category|element_ids, old_text, new_text",
-            ["hide_elements"] = "element_ids",
-            ["unhide_elements"] = "element_ids",
-            ["isolate_elements"] = "element_ids",
-            ["override_element_color"] = "element_ids, color",
+            ["select_elements"] = "element_ids (array) — use get_elements first to get IDs",
+            ["hide_elements"] = "element_ids (array)",
+            ["unhide_elements"] = "element_ids (array)",
+            ["isolate_elements"] = "element_ids (array)",
+            ["override_element_color"] = "element_ids (array), color",
             ["override_category_color"] = "category, color",
+            ["set_element_transparency"] = "element_ids (array), transparency (0-100)",
             ["get_current_selection"] = "no args",
             ["get_current_view"] = "no args",
-            ["zoom_to_elements"] = "element_ids",
-            ["isolate_by_level"] = "level_name",
+            ["zoom_to_elements"] = "element_ids (array)",
+            ["isolate_by_level"] = "level_name (exact name from model)",
             ["override_color_by_filter"] = "view_name?, filter_name, color",
             ["export_to_csv"] = "category, file_path, view_name?",
+            ["copy_elements"] = "element_ids (array), offset_x, offset_y, offset_z (in feet)",
+            ["move_elements"] = "element_ids (array), offset_x, offset_y, offset_z (in feet)",
+            ["mirror_elements"] = "element_ids (array), axis",
+            ["place_family_instance"] = "family_type_id (integer), x, y, z? (feet), level_name?",
+            ["mep_quantity_takeoff"] = "categories (array of strings)",
+            ["check_clashes"] = "category_a, category_b, limit?",
+            ["check_clearance"] = "category_a, category_b, min_distance_feet, limit?",
+            ["create_sheet"] = "sheet_number, sheet_name, titleblock_type_id?",
+            ["create_level"] = "name, elevation, unit? (mm|ft, default mm)",
+            ["select_by_parameter_value"] = "category, parameter_name, value, match_type?",
+            ["get_rooms_detailed"] = "level_name?, department?, limit?",
         };
 
         #endregion
@@ -300,7 +330,7 @@ namespace RevitChatLocal.Services
             (new[] { "color", "màu", "element", "phần tử" },
                 "User: change color of element 54321 to blue\nAssistant:\n<tool_call>\n{\"name\": \"override_element_color\", \"arguments\": {\"element_ids\": [54321], \"color\": \"Blue\"}}\n</tool_call>"),
             (new[] { "transparency", "trong suốt" },
-                "User: set transparency of walls to 50%\nAssistant:\n<tool_call>\n{\"name\": \"set_element_transparency\", \"arguments\": {\"category\": \"Walls\", \"transparency\": 50}}\n</tool_call>"),
+                "User: set transparency of elements 100, 200 to 50%\nAssistant:\n<tool_call>\n{\"name\": \"set_element_transparency\", \"arguments\": {\"element_ids\": [100, 200], \"transparency\": 50}}\n</tool_call>"),
 
             // Hide / Show / Isolate
             (new[] { "hide", "ẩn" },
@@ -330,11 +360,11 @@ namespace RevitChatLocal.Services
             (new[] { "delete", "xóa" },
                 "User: delete elements 111, 222, 333\nAssistant:\n<tool_call>\n{\"name\": \"delete_elements\", \"arguments\": {\"element_ids\": [111, 222, 333]}}\n</tool_call>"),
             (new[] { "set", "đặt", "parameter", "tham số", "value", "giá trị" },
-                "User: set Mark parameter of element 999 to \"ABC\"\nAssistant:\n<tool_call>\n{\"name\": \"set_parameter_value\", \"arguments\": {\"element_id\": 999, \"param_name\": \"Mark\", \"value\": \"ABC\"}}\n</tool_call>"),
+                "User: set Mark parameter of element 999 to \"ABC\"\nAssistant:\n<tool_call>\n{\"name\": \"set_parameter_value\", \"arguments\": {\"element_ids\": [999], \"param_name\": \"Mark\", \"value\": \"ABC\"}}\n</tool_call>"),
             (new[] { "copy", "sao chép" },
-                "User: copy elements 100, 200 by offset (1000, 0, 0) mm\nAssistant:\n<tool_call>\n{\"name\": \"copy_elements\", \"arguments\": {\"element_ids\": [100, 200], \"offset_x_mm\": 1000, \"offset_y_mm\": 0, \"offset_z_mm\": 0}}\n</tool_call>"),
+                "User: copy elements 100, 200 by offset (3, 0, 0) feet\nAssistant:\n<tool_call>\n{\"name\": \"copy_elements\", \"arguments\": {\"element_ids\": [100, 200], \"offset_x\": 3.0, \"offset_y\": 0, \"offset_z\": 0}}\n</tool_call>"),
             (new[] { "move", "di chuyển" },
-                "User: di chuyển element 300 theo hướng (500, 0, 0)\nAssistant:\n<tool_call>\n{\"name\": \"move_elements\", \"arguments\": {\"element_ids\": [300], \"offset_x_mm\": 500, \"offset_y_mm\": 0, \"offset_z_mm\": 0}}\n</tool_call>"),
+                "User: move element 300 by offset (2, 0, 0) feet\nAssistant:\n<tool_call>\n{\"name\": \"move_elements\", \"arguments\": {\"element_ids\": [300], \"offset_x\": 2.0, \"offset_y\": 0, \"offset_z\": 0}}\n</tool_call>"),
 
             // MEP
             (new[] { "duct", "pipe", "mep", "system", "hệ thống", "ống" },
@@ -352,7 +382,7 @@ namespace RevitChatLocal.Services
             (new[] { "family", "type", "họ", "loại" },
                 "User: liệt kê tất cả family type của Door\nAssistant:\n<tool_call>\n{\"name\": \"get_family_types\", \"arguments\": {\"category\": \"Doors\"}}\n</tool_call>"),
             (new[] { "place", "đặt", "family" },
-                "User: place a door at point (0,0,0)\nAssistant:\n<tool_call>\n{\"name\": \"place_family_instance\", \"arguments\": {\"family_name\": \"Door\", \"x_mm\": 0, \"y_mm\": 0, \"z_mm\": 0}}\n</tool_call>"),
+                "User: place a door\nAssistant:\nI'll first get the available door family types.\n<tool_call>\n{\"name\": \"get_family_types\", \"arguments\": {\"category\": \"Doors\"}}\n</tool_call>"),
 
             // Health / Warning / Audit
             (new[] { "warning", "cảnh báo" },
@@ -381,8 +411,10 @@ namespace RevitChatLocal.Services
                 "User: show all linked models\nAssistant:\n<tool_call>\n{\"name\": \"get_linked_models\", \"arguments\": {}}\n</tool_call>"),
 
             // Select
-            (new[] { "select", "chọn" },
-                "User: chọn tất cả wall trên Level 1\nAssistant:\n<tool_call>\n{\"name\": \"select_elements\", \"arguments\": {\"category\": \"Walls\", \"level\": \"Level 1\"}}\n</tool_call>"),
+            (new[] { "select", "chọn", "element" },
+                "User: select elements 100, 200, 300\nAssistant:\n<tool_call>\n{\"name\": \"select_elements\", \"arguments\": {\"element_ids\": [100, 200, 300]}}\n</tool_call>"),
+            (new[] { "select", "chọn", "all", "tất cả" },
+                "User: select all walls on Level 1\nAssistant:\nI'll first get the wall elements on Level 1.\n<tool_call>\n{\"name\": \"get_elements\", \"arguments\": {\"category\": \"Walls\", \"level\": \"Level 1\"}}\n</tool_call>"),
             (new[] { "zoom", "phóng to", "focus" },
                 "User: zoom to elements 100, 200\nAssistant:\n<tool_call>\n{\"name\": \"zoom_to_elements\", \"arguments\": {\"element_ids\": [100, 200]}}\n</tool_call>"),
 
@@ -411,6 +443,64 @@ namespace RevitChatLocal.Services
             // Revision
             (new[] { "revision", "phát hành" },
                 "User: list all revisions\nAssistant:\n<tool_call>\n{\"name\": \"get_revisions\", \"arguments\": {}}\n</tool_call>"),
+
+            // MEP detailed
+            (new[] { "duct", "summary", "tóm tắt" },
+                "User: summarize all ducts\nAssistant:\n<tool_call>\n{\"name\": \"get_duct_summary\", \"arguments\": {}}\n</tool_call>"),
+            (new[] { "pipe", "summary", "tóm tắt" },
+                "User: summarize all pipes\nAssistant:\n<tool_call>\n{\"name\": \"get_pipe_summary\", \"arguments\": {}}\n</tool_call>"),
+            (new[] { "mechanical", "equipment", "thiết bị cơ", "FCU", "AHU" },
+                "User: list all mechanical equipment\nAssistant:\n<tool_call>\n{\"name\": \"get_mechanical_equipment\", \"arguments\": {}}\n</tool_call>"),
+            (new[] { "plumbing", "fixture", "vệ sinh" },
+                "User: list all plumbing fixtures\nAssistant:\n<tool_call>\n{\"name\": \"get_plumbing_fixtures\", \"arguments\": {}}\n</tool_call>"),
+            (new[] { "electrical", "equipment", "điện" },
+                "User: list all electrical equipment\nAssistant:\n<tool_call>\n{\"name\": \"get_electrical_equipment\", \"arguments\": {}}\n</tool_call>"),
+            (new[] { "space", "airflow", "lưu lượng" },
+                "User: check airflow balance for all spaces\nAssistant:\n<tool_call>\n{\"name\": \"check_space_airflow\", \"arguments\": {}}\n</tool_call>"),
+
+            // Sheet management
+            (new[] { "create", "sheet", "tạo", "bản vẽ" },
+                "User: create sheet A101 named Floor Plan\nAssistant:\n<tool_call>\n{\"name\": \"create_sheet\", \"arguments\": {\"sheet_number\": \"A101\", \"sheet_name\": \"Floor Plan\"}}\n</tool_call>"),
+
+            // Selection filter
+            (new[] { "select by", "chọn theo", "parameter" },
+                "User: select all walls where Mark contains ABC\nAssistant:\n<tool_call>\n{\"name\": \"select_by_parameter_value\", \"arguments\": {\"category\": \"Walls\", \"parameter_name\": \"Mark\", \"value\": \"ABC\", \"match_type\": \"contains\"}}\n</tool_call>"),
+            (new[] { "select", "in view", "trong view" },
+                "User: select all ducts in current view\nAssistant:\n<tool_call>\n{\"name\": \"select_elements_in_view\", \"arguments\": {\"category\": \"Ducts\"}}\n</tool_call>"),
+
+            // Room / Area detailed
+            (new[] { "room", "boundary", "ranh giới" },
+                "User: show boundaries of room 12345\nAssistant:\n<tool_call>\n{\"name\": \"get_room_boundaries\", \"arguments\": {\"room_id\": 12345}}\n</tool_call>"),
+            (new[] { "room", "unplaced", "chưa đặt" },
+                "User: find unplaced rooms\nAssistant:\n<tool_call>\n{\"name\": \"get_unplaced_rooms\", \"arguments\": {}}\n</tool_call>"),
+            (new[] { "area", "scheme", "diện tích" },
+                "User: list area schemes\nAssistant:\n<tool_call>\n{\"name\": \"get_area_schemes\", \"arguments\": {}}\n</tool_call>"),
+
+            // Clash / Clearance
+            (new[] { "clearance", "khoảng cách" },
+                "User: check clearance between ducts and pipes (min 0.5 feet)\nAssistant:\n<tool_call>\n{\"name\": \"check_clearance\", \"arguments\": {\"category_a\": \"Ducts\", \"category_b\": \"Pipes\", \"min_distance_feet\": 0.5}}\n</tool_call>"),
+            (new[] { "overlap", "chồng chéo" },
+                "User: find overlapping ducts\nAssistant:\n<tool_call>\n{\"name\": \"find_overlapping\", \"arguments\": {\"category\": \"Ducts\"}}\n</tool_call>"),
+
+            // Grid / Level creation
+            (new[] { "create", "level", "tạo", "tầng" },
+                "User: create a new level at elevation 4000mm named Level 5\nAssistant:\n<tool_call>\n{\"name\": \"create_level\", \"arguments\": {\"name\": \"Level 5\", \"elevation\": 4000, \"unit\": \"mm\"}}\n</tool_call>"),
+            (new[] { "rename", "level" },
+                "User: rename level 12345 to Ground Floor\nAssistant:\n<tool_call>\n{\"name\": \"rename_level\", \"arguments\": {\"level_id\": 12345, \"new_name\": \"Ground Floor\"}}\n</tool_call>"),
+
+            // Naming audit
+            (new[] { "audit", "naming", "tên" },
+                "User: audit view names\nAssistant:\n<tool_call>\n{\"name\": \"audit_view_names\", \"arguments\": {}}\n</tool_call>"),
+
+            // Linked models detailed
+            (new[] { "linked", "elements", "liên kết" },
+                "User: count elements in linked models\nAssistant:\n<tool_call>\n{\"name\": \"count_linked_elements\", \"arguments\": {}}\n</tool_call>"),
+
+            // Conduit / Cable tray
+            (new[] { "conduit", "ống dẫn" },
+                "User: summarize all conduits\nAssistant:\n<tool_call>\n{\"name\": \"get_conduit_summary\", \"arguments\": {}}\n</tool_call>"),
+            (new[] { "cable tray", "khay cáp" },
+                "User: summarize all cable trays\nAssistant:\n<tool_call>\n{\"name\": \"get_cable_tray_summary\", \"arguments\": {}}\n</tool_call>"),
         };
 
         private const int DefaultFewShotExamples = 5;
@@ -429,7 +519,7 @@ namespace RevitChatLocal.Services
                 int score = 0;
                 foreach (var kw in keywords)
                 {
-                    if (lower.Contains(kw) || normalized.Contains(kw))
+                    if (MatchesKeyword(lower, kw) || MatchesKeyword(normalized, kw))
                         score++;
                 }
                 if (score > 0)
@@ -468,7 +558,7 @@ namespace RevitChatLocal.Services
         {
             foreach (var kw in ActionKeywords)
             {
-                if (normalizedText.Contains(kw))
+                if (MatchesKeyword(normalizedText, kw))
                     return true;
             }
             return false;
@@ -490,7 +580,7 @@ namespace RevitChatLocal.Services
             int actionHits = 0;
             foreach (var kw in ActionKeywords)
             {
-                if (text.Contains(kw))
+                if (MatchesKeyword(text, kw))
                     actionHits++;
             }
 
@@ -498,6 +588,13 @@ namespace RevitChatLocal.Services
 
             var separators = new[] { " and ", " then ", " sau đó ", " rồi ", " và ", "&", "->" };
             return separators.Any(s => text.Contains(s));
+        }
+
+        private static bool MatchesKeyword(string text, string kw)
+        {
+            if (kw.Contains(' '))
+                return text.Contains(kw);
+            return Regex.IsMatch(text, $@"\b{Regex.Escape(kw)}\b");
         }
 
         private static List<(KeywordGroup group, int score)> GetMatchedGroups(string normalizedText)
@@ -508,7 +605,7 @@ namespace RevitChatLocal.Services
                 int count = 0;
                 foreach (var kw in group.Keywords)
                 {
-                    if (normalizedText.Contains(kw))
+                    if (MatchesKeyword(normalizedText, kw))
                         count++;
                 }
                 if (count > 0)
@@ -549,6 +646,47 @@ namespace RevitChatLocal.Services
         {
             if (string.IsNullOrWhiteSpace(text)) return false;
             return text.Any(ch => ch >= 0x00C0 && ch <= 0x1EF9);
+        }
+
+        private static readonly HashSet<string> ChitchatPatterns = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "hello", "hi", "hey", "xin chào", "chào", "thanks", "thank you", "cảm ơn",
+            "bye", "goodbye", "tạm biệt", "good morning", "good afternoon", "good evening",
+            "what can you do", "help", "bạn là ai", "who are you", "giúp gì",
+            "bạn có thể làm gì", "what are your capabilities"
+        };
+
+        private static bool IsChitchat(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return false;
+            var clean = text.Trim().TrimEnd('?', '!', '.').Trim().ToLowerInvariant();
+            if (clean.Length > 80) return false;
+            if (ChitchatPatterns.Contains(clean)) return true;
+            if (clean.Length <= 3 && !Regex.IsMatch(clean, @"\d")) return true;
+            return false;
+        }
+
+        private async Task<(string, List<RevitChat.Models.ToolCallRequest>)> GetChitchatResponseAsync(
+            CancellationToken ct)
+        {
+            var config = LocalConfigService.Load();
+            var options = new ChatCompletionOptions { MaxOutputTokenCount = config.MaxTokens };
+
+            var messages = new List<OaiMessage>
+            {
+                new SystemChatMessage(
+                    "You are a friendly Revit BIM assistant. Answer the user's greeting or question briefly. " +
+                    "If they ask what you can do, list: query elements, count, color override, isolate, export CSV, " +
+                    "check MEP systems, BOQ, clash detection, modify parameters, and more. " +
+                    "Reply in the same language the user uses. Do NOT output any <tool_call> tags.")
+            };
+            messages.AddRange(_conversationHistory);
+
+            var response = await _client.CompleteChatAsync(messages, options, ct);
+            var text = StripQwenTokens(response.Value.Content?.FirstOrDefault()?.Text ?? "");
+            text = RemoveToolCallTags(text).Trim();
+            _conversationHistory.Add(new AssistantChatMessage(text));
+            return (text, new List<RevitChat.Models.ToolCallRequest>());
         }
 
         private bool ShouldUseTwoStage(string userMessage)
@@ -603,6 +741,20 @@ namespace RevitChatLocal.Services
             _lastUserMessage = "";
         }
 
+        public void RepairHistoryAfterCancel()
+        {
+            if (_conversationHistory.Count > 0 &&
+                _conversationHistory.Last() is AssistantChatMessage am)
+            {
+                var text = am.Content?.FirstOrDefault()?.Text ?? "";
+                if (text.Contains("(tool call)") || text.Contains("<tool_call>"))
+                {
+                    _conversationHistory.RemoveAt(_conversationHistory.Count - 1);
+                    _conversationHistory.Add(new AssistantChatMessage("(cancelled by user)"));
+                }
+            }
+        }
+
         public async Task<(string assistantMessage, List<RevitChat.Models.ToolCallRequest> toolCalls)> SendMessageAsync(
             string userMessage, CancellationToken ct = default)
         {
@@ -613,6 +765,11 @@ namespace RevitChatLocal.Services
             _isContinuation = false;
             _conversationHistory.Add(new UserChatMessage(userMessage));
             TrimHistory();
+
+            if (IsChitchat(userMessage))
+            {
+                return await GetChitchatResponseAsync(ct);
+            }
 
             if (ShouldAskDisambiguation(userMessage, out var groups))
             {
@@ -628,6 +785,8 @@ namespace RevitChatLocal.Services
             Dictionary<string, string> toolResults, CancellationToken ct = default)
         {
             var sb = new StringBuilder();
+            sb.AppendLine($"The user asked: \"{_lastUserMessage}\"");
+            sb.AppendLine();
             sb.AppendLine("Tool results:");
             int totalChars = 0;
             foreach (var kvp in toolResults)
@@ -641,7 +800,7 @@ namespace RevitChatLocal.Services
             if (totalChars > 6000)
                 sb.AppendLine("NOTE: The data above is large. Provide a concise summary to the user. Do NOT repeat the raw data.");
 
-            sb.AppendLine("Analyze the results and answer the user. If you need more data, output ONE <tool_call>. Otherwise respond directly with NO <tool_call> tags.");
+            sb.AppendLine("Analyze the results and answer the user's original question. If you need more data, output ONE <tool_call>. Otherwise respond directly with NO <tool_call> tags.");
 
             _conversationHistory.Add(new UserChatMessage(sb.ToString()));
 
@@ -1206,6 +1365,32 @@ To call a tool, output EXACTLY this (no code fences, no extra text after it):
         {
             var config = LocalConfigService.Load();
             int max = config.MaxConversationMessages;
+
+            if (_conversationHistory.Count > max)
+            {
+                int toSummarize = _conversationHistory.Count - (max / 2);
+                if (toSummarize > 2)
+                {
+                    var sb = new StringBuilder();
+                    sb.AppendLine("[Conversation summary of earlier messages]");
+                    for (int i = 0; i < toSummarize; i++)
+                    {
+                        var msg = _conversationHistory[i];
+                        if (msg is UserChatMessage)
+                            sb.AppendLine($"- User asked about model data");
+                        else if (msg is AssistantChatMessage am)
+                        {
+                            var text = am.Content?.FirstOrDefault()?.Text ?? "";
+                            if (text.Length > 80) text = text[..80] + "...";
+                            sb.AppendLine($"- Assistant: {text}");
+                        }
+                    }
+
+                    _conversationHistory.RemoveRange(0, toSummarize);
+                    _conversationHistory.Insert(0, new SystemChatMessage(sb.ToString()));
+                }
+            }
+
             while (_conversationHistory.Count > max)
                 _conversationHistory.RemoveAt(0);
         }

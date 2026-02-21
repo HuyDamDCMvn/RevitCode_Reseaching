@@ -25,6 +25,9 @@ namespace RevitChatLocal.Services
 
         public static readonly List<string> RecommendedModels = new()
         {
+            "qwen3:8b",
+            "qwen3:14b",
+            "qwen3:32b",
             "qwen2.5:7b",
             "qwen2.5:14b",
             "qwen2.5:32b",

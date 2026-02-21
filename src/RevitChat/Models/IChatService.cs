@@ -8,6 +8,7 @@ namespace RevitChat.Models
     {
         bool IsInitialized { get; }
         void ClearHistory();
+        void RepairHistoryAfterCancel();
 
         event System.Action<string> DebugMessage;
 

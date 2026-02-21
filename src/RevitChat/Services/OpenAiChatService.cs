@@ -57,6 +57,16 @@ Rules:
             _conversationHistory.Clear();
         }
 
+        public void RepairHistoryAfterCancel()
+        {
+            if (_conversationHistory.Count > 0 &&
+                _conversationHistory.Last() is AssistantChatMessage)
+            {
+                _conversationHistory.RemoveAt(_conversationHistory.Count - 1);
+                _conversationHistory.Add(new AssistantChatMessage("(cancelled by user)"));
+            }
+        }
+
         public async Task<(string assistantMessage, List<Models.ToolCallRequest> toolCalls)> SendMessageAsync(
             string userMessage, CancellationToken ct = default)
         {
