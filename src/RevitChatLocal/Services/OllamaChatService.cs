@@ -69,14 +69,11 @@ namespace RevitChatLocal.Services
             Dictionary<string, string> toolResults, CancellationToken ct = default)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("Tool execution results:");
+            sb.AppendLine("Tool results:");
             foreach (var kvp in toolResults)
-            {
-                sb.AppendLine($"[{kvp.Key}] Result: {kvp.Value}");
-            }
+                sb.AppendLine($"[{kvp.Key}]: {kvp.Value}");
             sb.AppendLine();
-            sb.AppendLine("Now analyze the results above and provide a clear, helpful answer to the user. " +
-                          "If you need more data, make another <tool_call>. Otherwise, respond directly.");
+            sb.AppendLine("Analyze the results and answer the user. If you need more data, output ONE <tool_call>. Otherwise respond directly with NO <tool_call> tags.");
 
             _conversationHistory.Add(new UserChatMessage(sb.ToString()));
 
@@ -122,11 +119,16 @@ namespace RevitChatLocal.Services
             var results = new List<RevitChat.Models.ToolCallRequest>();
             if (string.IsNullOrWhiteSpace(text)) return results;
 
+            // Strip code block fences so <tool_call> inside ```json...``` still matches
+            var stripped = Regex.Replace(text, @"```(?:json)?\s*", "", RegexOptions.IgnoreCase);
+            stripped = stripped.Replace("```", "");
+
+            // Pattern 1: <tool_call>{...}</tool_call>
             var tagPattern = new Regex(
-                @"<tool_call>\s*(\{.*?\})\s*</tool_call>",
+                @"<tool_call>\s*(\{.+?\})\s*</tool_call>",
                 RegexOptions.Singleline);
 
-            foreach (Match match in tagPattern.Matches(text))
+            foreach (Match match in tagPattern.Matches(stripped))
             {
                 var call = TryParseOneToolCall(match.Groups[1].Value);
                 if (call != null) results.Add(call);
@@ -134,6 +136,7 @@ namespace RevitChatLocal.Services
 
             if (results.Count > 0) return results;
 
+            // Pattern 2: JSON block with "name" key (from original text with code fences)
             var jsonBlockPattern = new Regex(
                 @"```(?:json)?\s*(\{[^`]*?""name""\s*:\s*""[a-z_]+""\s*[^`]*?\})\s*```",
                 RegexOptions.Singleline | RegexOptions.IgnoreCase);
@@ -146,6 +149,7 @@ namespace RevitChatLocal.Services
 
             if (results.Count > 0) return results;
 
+            // Pattern 3: inline {"name": "xxx", "arguments": {...}}
             var inlinePattern = new Regex(
                 @"\{\s*""name""\s*:\s*""([a-z_]+)""\s*,\s*""arguments""\s*:\s*(\{(?:[^{}]|\{[^{}]*\})*\})\s*\}",
                 RegexOptions.Singleline);
@@ -185,11 +189,22 @@ namespace RevitChatLocal.Services
                     return null;
 
                 var args = new Dictionary<string, object>();
+
+                // Try "arguments" wrapper first
                 if (root.TryGetProperty("arguments", out var argsProp) &&
                     argsProp.ValueKind == JsonValueKind.Object)
                 {
                     foreach (var prop in argsProp.EnumerateObject())
                         args[prop.Name] = prop.Value.Clone();
+                }
+                else
+                {
+                    // Fallback: treat all non-"name" top-level keys as arguments
+                    foreach (var prop in root.EnumerateObject())
+                    {
+                        if (prop.Name != "name")
+                            args[prop.Name] = prop.Value.Clone();
+                    }
                 }
 
                 return new RevitChat.Models.ToolCallRequest
@@ -209,6 +224,8 @@ namespace RevitChatLocal.Services
         {
             text = Regex.Replace(text, @"<tool_call>.*?</tool_call>", "", RegexOptions.Singleline);
             text = Regex.Replace(text, @"```json?\s*\{[^`]*?""name""[^`]*?\}\s*```", "", RegexOptions.Singleline);
+            // Also remove <tool_call> inside code blocks
+            text = Regex.Replace(text, @"```json?\s*<tool_call>.*?</tool_call>\s*```", "", RegexOptions.Singleline);
             return text.Trim();
         }
 
@@ -235,44 +252,56 @@ namespace RevitChatLocal.Services
 
         private string BuildSystemPrompt()
         {
-            return $@"You are a Revit BIM assistant embedded inside Autodesk Revit.
-You help users query, analyze, modify, and export building model data.
+            return $@"You are a Revit BIM assistant. You execute tools to get data from the Revit model.
 
 ## AVAILABLE TOOLS
 {_toolCatalog}
 
-## HOW TO CALL TOOLS
-When you need data from the Revit model, you MUST output a tool call using this EXACT format:
+## FORMAT
+To call a tool, output EXACTLY this (no code fences, no extra text after it):
 
 <tool_call>
-{{""name"": ""tool_name"", ""arguments"": {{""param1"": ""value1"", ""param2"": 123}}}}
+{{""name"": ""tool_name"", ""arguments"": {{""param1"": ""value1""}}}}
 </tool_call>
 
-## CRITICAL RULES
-1. ALWAYS call a tool when the user asks about model data. NEVER make up data.
-2. Output the <tool_call> tag - do NOT just describe which tool to use.
-3. Only ONE tool call per response. Wait for the result before calling another.
-4. For destructive operations (delete, modify), ask the user to confirm FIRST.
-5. After receiving tool results, present them clearly. Use tables for lists.
-6. Reply in the same language the user uses (Vietnamese or English).
-7. Keep answers concise but complete.
+## RULES
+1. When the user asks about model data, output a <tool_call> immediately. Do NOT describe what you will do.
+2. Output ONLY ONE <tool_call> per response. Stop writing after </tool_call>.
+3. Do NOT wrap <tool_call> in ```json``` code blocks.
+4. The ""arguments"" field MUST be a JSON object with the tool's parameters inside it.
+5. After receiving tool results, answer the user directly. Do NOT output another <tool_call> unless you need more data.
+6. For destructive operations (delete, modify), confirm with the user FIRST before calling the tool.
+7. NEVER invent data. Only use tool results.
+8. Reply in the same language the user uses.
+
+## WRONG (do NOT do this):
+```json
+<tool_call>
+{{""name"": ""get_walls"", ""category"": ""Walls""}}
+</tool_call>
+```
+
+## CORRECT:
+<tool_call>
+{{""name"": ""get_element_count"", ""arguments"": {{""category"": ""Walls""}}}}
+</tool_call>
 
 ## EXAMPLES
 
 User: How many walls are in the model?
-Assistant: Let me check the wall count.
+Assistant:
 <tool_call>
 {{""name"": ""get_element_count"", ""arguments"": {{""category"": ""Walls""}}}}
 </tool_call>
 
 User: Show me all levels
-Assistant: I'll get the level information for you.
+Assistant:
 <tool_call>
 {{""name"": ""get_levels"", ""arguments"": {{}}}}
 </tool_call>
 
 User: What categories are available?
-Assistant: Let me retrieve the categories.
+Assistant:
 <tool_call>
 {{""name"": ""get_categories"", ""arguments"": {{}}}}
 </tool_call>";

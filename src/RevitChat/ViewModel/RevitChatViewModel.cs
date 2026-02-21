@@ -19,7 +19,7 @@ namespace RevitChat.ViewModel
         protected override TimeSpan SendTimeout => TimeSpan.FromMinutes(3);
         protected override string NotInitializedMessage => "Please set your API key first (click Settings)";
         protected override string WelcomeText =>
-            "Hello! I'm your Revit AI Assistant.\n\n" +
+            "Hello, I'm HD's Assistant.\n\n" +
             "I can help you:\n" +
             "- Query & search elements, parameters\n" +
             "- MEP: systems, equipment, spaces, airflow\n" +

@@ -12,12 +12,14 @@ namespace RevitChat.Skills
     public class GridLevelSkill : IRevitSkill
     {
         public string Name => "GridLevel";
-        public string Description => "Manage grids and levels: list, check alignment, consistency, find off-axis elements";
+        public string Description => "Manage grids and levels: list, create, rename, delete, duplicate with offset, check alignment/consistency";
 
         private static readonly HashSet<string> HandledTools = new()
         {
             "get_grids", "check_grid_alignment", "get_levels_detailed",
-            "check_level_consistency", "find_off_axis_elements"
+            "check_level_consistency", "find_off_axis_elements",
+            "create_level", "duplicate_levels_offset", "rename_level", "delete_levels",
+            "create_grid"
         };
 
         public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
@@ -47,7 +49,7 @@ namespace RevitChat.Skills
                 """)),
 
             ChatTool.CreateFunctionTool("get_levels_detailed",
-                "Get detailed level info: elevation, story height, associated views count.",
+                "Get detailed level info: elevation (in feet and mm), story height, associated views count.",
                 BinaryData.FromString("""
                 {
                     "type": "object",
@@ -80,6 +82,75 @@ namespace RevitChat.Skills
                     },
                     "required": ["category"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("create_level",
+                "Create a new level at a specific elevation. Elevation can be in feet or millimeters.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "name": { "type": "string", "description": "Name for the new level" },
+                        "elevation": { "type": "number", "description": "Elevation value" },
+                        "unit": { "type": "string", "enum": ["ft", "mm"], "description": "Elevation unit: 'ft' (feet) or 'mm' (millimeters). Default: mm" }
+                    },
+                    "required": ["name", "elevation"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("duplicate_levels_offset",
+                "Duplicate ALL existing levels with an elevation offset and a name suffix/prefix. Perfect for creating a parallel set of levels (e.g. structural vs architectural offsets).",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "offset_mm": { "type": "number", "description": "Elevation offset in millimeters (positive = up, negative = down). e.g. 500 means +500mm above each existing level." },
+                        "suffix": { "type": "string", "description": "Suffix to append to each new level name (e.g. '_add', '_structural')" },
+                        "prefix": { "type": "string", "description": "Optional prefix to prepend to each new level name" }
+                    },
+                    "required": ["offset_mm"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("rename_level",
+                "Rename an existing level.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "level_id": { "type": "integer", "description": "Level element ID" },
+                        "new_name": { "type": "string", "description": "New name for the level" }
+                    },
+                    "required": ["level_id", "new_name"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("delete_levels",
+                "Delete levels from the model. DANGEROUS: elements hosted on these levels may lose their host. Confirm with the user first.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "level_ids": { "type": "array", "items": { "type": "integer" }, "description": "Level IDs to delete" }
+                    },
+                    "required": ["level_ids"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("create_grid",
+                "Create a new linear grid line. Coordinates in feet.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "name": { "type": "string", "description": "Grid name (e.g. 'A', '1', 'G1')" },
+                        "start_x": { "type": "number", "description": "Start X coordinate in feet" },
+                        "start_y": { "type": "number", "description": "Start Y coordinate in feet" },
+                        "end_x": { "type": "number", "description": "End X coordinate in feet" },
+                        "end_y": { "type": "number", "description": "End Y coordinate in feet" }
+                    },
+                    "required": ["name", "start_x", "start_y", "end_x", "end_y"]
+                }
                 """))
         };
 
@@ -96,9 +167,18 @@ namespace RevitChat.Skills
                 "get_levels_detailed" => GetLevelsDetailed(doc),
                 "check_level_consistency" => CheckLevelConsistency(doc, args),
                 "find_off_axis_elements" => FindOffAxisElements(doc, args),
+                "create_level" => CreateLevel(doc, args),
+                "duplicate_levels_offset" => DuplicateLevelsOffset(doc, args),
+                "rename_level" => RenameLevel(doc, args),
+                "delete_levels" => DeleteLevels(doc, args),
+                "create_grid" => CreateGrid(doc, args),
                 _ => JsonError($"GridLevelSkill: unknown tool '{functionName}'")
             };
         }
+
+        private const double MmToFeet = 1.0 / 304.8;
+
+        #region Query
 
         private string GetGrids(Document doc)
         {
@@ -216,7 +296,9 @@ namespace RevitChat.Skills
                     id = lvl.Id.Value,
                     name = lvl.Name,
                     elevation_ft = Math.Round(lvl.Elevation, 4),
+                    elevation_mm = Math.Round(lvl.Elevation / MmToFeet, 1),
                     story_height_ft = storyHeight,
+                    story_height_mm = Math.Round(storyHeight / MmToFeet, 1),
                     associated_views = viewCount
                 });
             }
@@ -360,5 +442,228 @@ namespace RevitChat.Skills
                 off_axis_elements = offAxis
             }, JsonOpts);
         }
+
+        #endregion
+
+        #region Create / Modify
+
+        private string CreateLevel(Document doc, Dictionary<string, object> args)
+        {
+            var name = GetArg<string>(args, "name");
+            double elevation = GetArg(args, "elevation", 0.0);
+            var unit = GetArg(args, "unit", "mm");
+
+            if (string.IsNullOrWhiteSpace(name)) return JsonError("name required.");
+
+            double elevFt = unit.Equals("mm", StringComparison.OrdinalIgnoreCase)
+                ? elevation * MmToFeet
+                : elevation;
+
+            Level newLevel;
+            using (var trans = new Transaction(doc, "AI: Create Level"))
+            {
+                trans.Start();
+                newLevel = Level.Create(doc, elevFt);
+                try { newLevel.Name = name; }
+                catch (Exception ex) { return JsonError($"Level created but rename failed: {ex.Message}"); }
+                trans.Commit();
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                id = newLevel.Id.Value,
+                name = newLevel.Name,
+                elevation_ft = Math.Round(elevFt, 4),
+                elevation_mm = Math.Round(elevation, 1),
+                message = $"Created level '{newLevel.Name}' at elevation {Math.Round(elevation, 1)} {unit}."
+            }, JsonOpts);
+        }
+
+        private string DuplicateLevelsOffset(Document doc, Dictionary<string, object> args)
+        {
+            double offsetMm = GetArg(args, "offset_mm", 0.0);
+            var suffix = GetArg(args, "suffix", "");
+            var prefix = GetArg(args, "prefix", "");
+
+            if (offsetMm == 0 && string.IsNullOrEmpty(suffix) && string.IsNullOrEmpty(prefix))
+                return JsonError("At least offset_mm or suffix/prefix must be provided.");
+
+            double offsetFt = offsetMm * MmToFeet;
+
+            var existingLevels = new FilteredElementCollector(doc)
+                .OfClass(typeof(Level))
+                .Cast<Level>()
+                .OrderBy(l => l.Elevation)
+                .ToList();
+
+            if (existingLevels.Count == 0) return JsonError("No existing levels found in the model.");
+
+            var created = new List<object>();
+            var errors = new List<string>();
+
+            using (var trans = new Transaction(doc, "AI: Duplicate Levels with Offset"))
+            {
+                trans.Start();
+
+                foreach (var lvl in existingLevels)
+                {
+                    double newElev = lvl.Elevation + offsetFt;
+                    string newName = $"{prefix}{lvl.Name}{suffix}";
+
+                    try
+                    {
+                        var newLevel = Level.Create(doc, newElev);
+                        try { newLevel.Name = newName; }
+                        catch
+                        {
+                            newName = $"{newName}_{newLevel.Id.Value}";
+                            try { newLevel.Name = newName; } catch { }
+                        }
+
+                        created.Add(new
+                        {
+                            id = newLevel.Id.Value,
+                            name = newLevel.Name,
+                            elevation_ft = Math.Round(newElev, 4),
+                            elevation_mm = Math.Round(newElev / MmToFeet, 1),
+                            based_on = lvl.Name
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        errors.Add($"Failed to create level from '{lvl.Name}': {ex.Message}");
+                    }
+                }
+
+                if (created.Count > 0)
+                    trans.Commit();
+                else
+                    trans.RollBack();
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                created_count = created.Count,
+                offset_mm = offsetMm,
+                suffix,
+                prefix,
+                levels = created,
+                errors = errors.Count > 0 ? errors : null,
+                message = $"Created {created.Count} new level(s) with {offsetMm:+0;-0}mm offset{(string.IsNullOrEmpty(suffix) ? "" : $" and suffix '{suffix}'")}."
+            }, JsonOpts);
+        }
+
+        private string RenameLevel(Document doc, Dictionary<string, object> args)
+        {
+            long levelId = GetArg(args, "level_id", 0L);
+            var newName = GetArg<string>(args, "new_name");
+
+            if (levelId == 0) return JsonError("level_id required.");
+            if (string.IsNullOrWhiteSpace(newName)) return JsonError("new_name required.");
+
+            var level = doc.GetElement(new ElementId(levelId)) as Level;
+            if (level == null) return JsonError($"Element {levelId} is not a level or doesn't exist.");
+
+            string oldName = level.Name;
+
+            using (var trans = new Transaction(doc, "AI: Rename Level"))
+            {
+                trans.Start();
+                try
+                {
+                    level.Name = newName;
+                    trans.Commit();
+                }
+                catch (Exception ex)
+                {
+                    trans.RollBack();
+                    return JsonError($"Failed to rename level: {ex.Message}");
+                }
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                id = levelId,
+                old_name = oldName,
+                new_name = level.Name,
+                message = $"Renamed level '{oldName}' → '{level.Name}'."
+            }, JsonOpts);
+        }
+
+        private string DeleteLevels(Document doc, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "level_ids");
+            if (ids == null || ids.Count == 0) return JsonError("level_ids required.");
+
+            int deleted = 0;
+            var errors = new List<string>();
+
+            using (var trans = new Transaction(doc, "AI: Delete Levels"))
+            {
+                trans.Start();
+                foreach (var id in ids)
+                {
+                    var elemId = new ElementId(id);
+                    var level = doc.GetElement(elemId) as Level;
+                    if (level == null) { errors.Add($"Element {id} is not a level"); continue; }
+
+                    try
+                    {
+                        doc.Delete(elemId);
+                        deleted++;
+                    }
+                    catch (Exception ex) { errors.Add($"Cannot delete '{level.Name}': {ex.Message}"); }
+                }
+                if (deleted > 0) trans.Commit();
+                else trans.RollBack();
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                deleted,
+                errors = errors.Count > 0 ? errors : null,
+                message = $"Deleted {deleted} level(s)."
+            }, JsonOpts);
+        }
+
+        private string CreateGrid(Document doc, Dictionary<string, object> args)
+        {
+            var name = GetArg<string>(args, "name");
+            double x1 = GetArg(args, "start_x", 0.0);
+            double y1 = GetArg(args, "start_y", 0.0);
+            double x2 = GetArg(args, "end_x", 0.0);
+            double y2 = GetArg(args, "end_y", 0.0);
+
+            if (string.IsNullOrWhiteSpace(name)) return JsonError("name required.");
+
+            var start = new XYZ(x1, y1, 0);
+            var end = new XYZ(x2, y2, 0);
+
+            if (start.DistanceTo(end) < 0.01)
+                return JsonError("Start and end points are too close. Grid line must have a minimum length.");
+
+            var line = Line.CreateBound(start, end);
+
+            Grid grid;
+            using (var trans = new Transaction(doc, "AI: Create Grid"))
+            {
+                trans.Start();
+                grid = Grid.Create(doc, line);
+                try { grid.Name = name; } catch { }
+                trans.Commit();
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                id = grid.Id.Value,
+                name = grid.Name,
+                start = new { x = x1, y = y1 },
+                end_point = new { x = x2, y = y2 },
+                length_ft = Math.Round(line.Length, 4),
+                message = $"Created grid '{grid.Name}'."
+            }, JsonOpts);
+        }
+
+        #endregion
     }
 }

@@ -20,7 +20,7 @@ namespace RevitChatLocal.ViewModel
         protected override TimeSpan SendTimeout => TimeSpan.FromMinutes(5);
         protected override string NotInitializedMessage => "Please configure Ollama endpoint (click Settings)";
         protected override string WelcomeText =>
-            "Hello! I'm your Revit AI Assistant (Local).\n\n" +
+            "Hello, I'm HD's Assistant.\n\n" +
             "Powered by Ollama - runs locally, free, no API key needed.\n\n" +
             "I can help you:\n" +
             "- Query & search elements, parameters\n" +
