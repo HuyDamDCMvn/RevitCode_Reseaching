@@ -40,6 +40,7 @@ namespace RevitChat.ViewModel
             : base(externalEvent, handler, queue, skillRegistry)
         {
             _chatService = new OpenAiChatService(skillRegistry);
+            AttachChatServiceDiagnostics(_chatService);
             LoadConfig();
             AddWelcomeMessage();
         }

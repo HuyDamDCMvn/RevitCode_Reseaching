@@ -9,6 +9,8 @@ namespace RevitChat.Models
         bool IsInitialized { get; }
         void ClearHistory();
 
+        event System.Action<string> DebugMessage;
+
         Task<(string assistantMessage, List<ToolCallRequest> toolCalls)> SendMessageAsync(
             string userMessage, CancellationToken ct = default);
 

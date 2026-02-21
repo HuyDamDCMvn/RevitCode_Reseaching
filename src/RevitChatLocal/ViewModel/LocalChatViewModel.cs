@@ -76,6 +76,7 @@ namespace RevitChatLocal.ViewModel
             : base(externalEvent, handler, queue, skillRegistry)
         {
             _chatService = new OllamaChatService(skillRegistry);
+            AttachChatServiceDiagnostics(_chatService);
 
             foreach (var m in OllamaModelService.RecommendedModels)
                 AvailableModels.Add(m);

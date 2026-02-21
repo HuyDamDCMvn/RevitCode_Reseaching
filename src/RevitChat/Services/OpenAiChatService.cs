@@ -23,6 +23,8 @@ namespace RevitChat.Services
         private readonly List<OaiMessage> _conversationHistory = new();
         private readonly SkillRegistry _skillRegistry;
 
+        public event Action<string> DebugMessage;
+
         private const string SystemPrompt = @"You are a Revit BIM assistant embedded inside Autodesk Revit.
 You help users query, analyze, modify, and export building model data using the tools provided.
 

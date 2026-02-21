@@ -23,6 +23,8 @@ namespace RevitChatLocal.Services
         private HashSet<string> _allToolNames;
         private string _lastUserMessage = "";
 
+        public event Action<string> DebugMessage;
+
         private string _toolMode = "smart";
         private List<string> _enabledPacks = new()
         {
@@ -646,8 +648,14 @@ namespace RevitChatLocal.Services
         private async Task<(string assistantMessage, List<RevitChat.Models.ToolCallRequest> toolCalls)> GetCompletionAsync(
             CancellationToken ct)
         {
-            if (_toolMode == "twostage" || (_toolMode == "smart" && ShouldUseTwoStage(_lastUserMessage)))
+            if (_toolMode == "twostage")
                 return await GetCompletionTwoStageAsync(ct);
+
+            if (_toolMode == "smart" && ShouldUseTwoStage(_lastUserMessage))
+            {
+                DebugMessage?.Invoke("Auto Two-Stage enabled for complex prompt.");
+                return await GetCompletionTwoStageAsync(ct);
+            }
 
             return await GetCompletionWithRetryAsync(ct);
         }

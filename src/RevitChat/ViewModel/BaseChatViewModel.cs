@@ -26,6 +26,7 @@ namespace RevitChat.ViewModel
         private CancellationTokenSource _cts;
         private TaskCompletionSource<Dictionary<string, string>> _toolResultsTcs;
         private List<ToolCallRequest> _pendingToolCalls;
+        private IChatService _diagnosticService;
 
         private const int AnalyzeThresholdChars = 1200;
 
@@ -62,6 +63,17 @@ namespace RevitChat.ViewModel
 
             _handler.OnToolCallsCompleted += HandleToolCallsCompleted;
             _handler.OnError += HandleHandlerError;
+        }
+
+        protected void AttachChatServiceDiagnostics(IChatService service)
+        {
+            if (_diagnosticService != null)
+                _diagnosticService.DebugMessage -= HandleChatDebug;
+
+            _diagnosticService = service;
+
+            if (_diagnosticService != null)
+                _diagnosticService.DebugMessage += HandleChatDebug;
         }
 
         protected void AddWelcomeMessage()
@@ -314,6 +326,12 @@ namespace RevitChat.ViewModel
             }
         }
 
+        private void HandleChatDebug(string message)
+        {
+            if (string.IsNullOrWhiteSpace(message)) return;
+            InvokeOnDispatcher(() => StatusMessage = message);
+        }
+
         private static bool IsConfirmMessage(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return false;
@@ -443,6 +461,8 @@ namespace RevitChat.ViewModel
         {
             _handler.OnToolCallsCompleted -= HandleToolCallsCompleted;
             _handler.OnError -= HandleHandlerError;
+            if (_diagnosticService != null)
+                _diagnosticService.DebugMessage -= HandleChatDebug;
             _toolResultsTcs?.TrySetCanceled();
             _cts?.Cancel();
             _cts?.Dispose();
