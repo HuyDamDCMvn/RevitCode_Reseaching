@@ -1,0 +1,64 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>RevitChat</RootNamespace>
+    <AssemblyName>RevitChat</AssemblyName>
+    <Description>AI Chatbot for Revit - Query, Modify, Export via natural language</Description>
+  </PropertyGroup>
+
+  <!-- Project Reference -->
+  <ItemGroup>
+    <ProjectReference Include="..\HD.Core\HD.Core.csproj" />
+  </ItemGroup>
+
+  <!-- Revit API References -->
+  <ItemGroup>
+    <Reference Include="RevitAPI">
+      <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="RevitAPIUI">
+      <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPIUI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="OpenAI" Version="2.*" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <!-- Post-build: Copy DLLs to pyRevit lib folder -->
+  <Target Name="CopyToExtension" AfterTargets="Build">
+    <PropertyGroup>
+      <ExtLibNet8>$(ProjectDir)..\..\HD.extension\lib\net8\</ExtLibNet8>
+    </PropertyGroup>
+    
+    <MakeDir Directories="$(ExtLibNet8)" />
+    
+    <!-- Copy main DLL -->
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ExtLibNet8)" />
+    
+    <!-- Copy OpenAI SDK and dependencies -->
+    <Copy 
+      SourceFiles="$(OutputPath)OpenAI.dll" 
+      DestinationFolder="$(ExtLibNet8)" 
+      Condition="Exists('$(OutputPath)OpenAI.dll')" />
+    <Copy 
+      SourceFiles="$(OutputPath)System.ClientModel.dll" 
+      DestinationFolder="$(ExtLibNet8)" 
+      Condition="Exists('$(OutputPath)System.ClientModel.dll')" />
+
+    <Message Text="Copied RevitChat DLLs to $(ExtLibNet8)" Importance="high" />
+  </Target>
+
+</Project>
