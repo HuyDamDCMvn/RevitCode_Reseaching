@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 using System.Text.Json;
 
 namespace RevitChat.Services
@@ -14,8 +15,9 @@ namespace RevitChat.Services
 
     public static class ConfigService
     {
-        private static readonly string ConfigDir = Path.Combine(
-            AppDomain.CurrentDomain.BaseDirectory, "Data", "Config");
+        private static readonly string DllDir =
+            Path.GetDirectoryName(typeof(ConfigService).Assembly.Location);
+        private static readonly string ConfigDir = Path.Combine(DllDir, "Data", "Config");
         private static readonly string ConfigPath = Path.Combine(ConfigDir, "openai_config.json");
         private static ChatConfig _cached;
 

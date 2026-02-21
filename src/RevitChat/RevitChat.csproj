@@ -48,17 +48,13 @@
     <!-- Copy main DLL -->
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ExtLibNet8)" />
     
-    <!-- Copy OpenAI SDK and dependencies -->
-    <Copy 
-      SourceFiles="$(OutputPath)OpenAI.dll" 
-      DestinationFolder="$(ExtLibNet8)" 
-      Condition="Exists('$(OutputPath)OpenAI.dll')" />
-    <Copy 
-      SourceFiles="$(OutputPath)System.ClientModel.dll" 
-      DestinationFolder="$(ExtLibNet8)" 
-      Condition="Exists('$(OutputPath)System.ClientModel.dll')" />
+    <!-- Copy all dependency DLLs (except Revit API which is Private=false) -->
+    <ItemGroup>
+      <DependencyDlls Include="$(OutputPath)*.dll" Exclude="$(OutputPath)RevitChat.dll;$(OutputPath)RevitAPI*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DependencyDlls)" DestinationFolder="$(ExtLibNet8)" />
 
-    <Message Text="Copied RevitChat DLLs to $(ExtLibNet8)" Importance="high" />
+    <Message Text="Copied RevitChat + dependencies to $(ExtLibNet8)" Importance="high" />
   </Target>
 
 </Project>
