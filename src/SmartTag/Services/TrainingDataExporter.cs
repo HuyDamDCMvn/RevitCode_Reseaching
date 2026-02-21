@@ -47,6 +47,7 @@ namespace SmartTag.Services
 
                 // 2. Collect all elements for context analysis
                 var allElements = CollectAllTaggableElements();
+                _contextAnalyzer.PrepareIndex(allElements);
 
                 // 3. Collect all tag locations (for alignment-between-tags detection)
                 var allTagLocations = new List<Point2D>();
@@ -67,8 +68,7 @@ namespace SmartTag.Services
                     var (element, tag) = taggedPairs[i];
                     try
                     {
-                        var otherTagLocations = allTagLocations.Where((_, idx) => idx != i).ToList();
-                        var sample = BuildTrainingSample(element, tag, allElements, otherTagLocations);
+                        var sample = BuildTrainingSample(element, tag, allElements, allTagLocations, i);
                         if (sample != null)
                             samples.Add(sample);
                     }
@@ -246,42 +246,35 @@ namespace SmartTag.Services
         /// <summary>
         /// Build a training sample from an element and its tag.
         /// </summary>
-        /// <param name="otherTagLocations">Other tags' head positions in view coords (for alignment-between-tags).</param>
+        /// <param name="allTagLocations">All tags' head positions in view coords.</param>
+        /// <param name="skipIndex">Index in allTagLocations to exclude (the current tag itself). Use -1 to include all.</param>
         private TrainingSample BuildTrainingSample(
             Element element,
             IndependentTag tag,
             List<TaggableElement> allElements,
-            List<Point2D> otherTagLocations = null)
+            List<Point2D> allTagLocations = null,
+            int skipIndex = -1)
         {
-            // Get element info
             var taggable = ConvertToTaggableElement(element);
             if (taggable == null) return null;
 
-            // Get tag position in view coordinates
             var tagHead = tag.TagHeadPosition;
             var tagLocation = ConvertToViewCoordinates(tagHead);
 
-            // Get element center
             var elementCenter = taggable.Center;
 
-            // Calculate offsets
             var offsetX = tagLocation.X - elementCenter.X;
             var offsetY = tagLocation.Y - elementCenter.Y;
 
-            // Determine position enum
             var position = DetermineTagPosition(offsetX, offsetY);
 
-            // Get context
             var context = _contextAnalyzer.Analyze(taggable, allElements);
 
-            // Get tag text
             var tagText = GetTagText(tag);
 
-            // Get tag bounds (approximate)
             var (tagWidth, tagHeight) = EstimateTagSize(tag, tagText);
 
-            // Alignment between tags: same Y = row, same X = column
-            var (alignedRow, alignedCol) = CheckAlignmentWithOtherTags(tagLocation, otherTagLocations ?? new List<Point2D>());
+            var (alignedRow, alignedCol) = CheckAlignmentWithOtherTags(tagLocation, allTagLocations ?? new List<Point2D>(), skipIndex);
 
             // Calculate leader length
             var leaderLength = tag.HasLeader ? CalculateLeaderLength(tag, element) : 0;
@@ -588,17 +581,22 @@ namespace SmartTag.Services
         /// <summary>
         /// Check if this tag aligns with other tags (same Y = row, same X = column).
         /// </summary>
-        private (bool alignedRow, bool alignedCol) CheckAlignmentWithOtherTags(Point2D tagLocation, List<Point2D> otherTagLocations)
+        private (bool alignedRow, bool alignedCol) CheckAlignmentWithOtherTags(
+            Point2D tagLocation, List<Point2D> allTagLocations, int skipIndex = -1)
         {
             const double tolerance = 1.0; // feet
+            bool alignedRow = false, alignedCol = false;
 
-            var alignedRow = otherTagLocations.Any(p =>
-                Math.Abs(p.Y - tagLocation.Y) <= tolerance &&
-                Math.Abs(p.X - tagLocation.X) > tolerance);
-
-            var alignedCol = otherTagLocations.Any(p =>
-                Math.Abs(p.X - tagLocation.X) <= tolerance &&
-                Math.Abs(p.Y - tagLocation.Y) > tolerance);
+            for (int i = 0; i < allTagLocations.Count; i++)
+            {
+                if (i == skipIndex) continue;
+                var p = allTagLocations[i];
+                if (!alignedRow && Math.Abs(p.Y - tagLocation.Y) <= tolerance && Math.Abs(p.X - tagLocation.X) > tolerance)
+                    alignedRow = true;
+                if (!alignedCol && Math.Abs(p.X - tagLocation.X) <= tolerance && Math.Abs(p.Y - tagLocation.Y) > tolerance)
+                    alignedCol = true;
+                if (alignedRow && alignedCol) break;
+            }
 
             return (alignedRow, alignedCol);
         }

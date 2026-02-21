@@ -59,6 +59,9 @@ namespace SmartTag.Services
         private double _leaderLength;
         private double _minSpacing;
 
+        // Monotonic counter for unique synthetic tag IDs in the spatial index
+        private long _nextTagSyntheticId = -1_000_000_000;
+
         // Context + template placement
         private ContextAnalyzer _contextAnalyzer;
         private Dictionary<long, ElementContext> _contextByElementId;
@@ -70,6 +73,9 @@ namespace SmartTag.Services
         private readonly TagPlacementRadiusService _radiusService = TagPlacementRadiusService.Instance;
         private readonly AutoTuneWeightsService _autoWeightsService = AutoTuneWeightsService.Instance;
         private AutoTunedWeights _autoWeights;
+
+        // Cache for GetPreferredPositionsFromRule — keyed by (category, family, system)
+        private readonly Dictionary<(string, string, string), List<string>> _preferredPositionCache = new();
 
         public TagPlacementService(Document doc, View view)
         {
@@ -287,7 +293,7 @@ namespace SmartTag.Services
                     foreach (var placement in segmentPlacements)
                     {
                         placements.Add(placement);
-                        _tagIndex.Add(element.ElementId + 1000000 + placement.SegmentIndex, placement.EstimatedTagBounds);
+                        _tagIndex.Add(_nextTagSyntheticId--, placement.EstimatedTagBounds);
                     }
                 }
                 else
@@ -296,8 +302,7 @@ namespace SmartTag.Services
                     if (placement != null)
                     {
                         placements.Add(placement);
-                        // Add to tag index to prevent future collisions
-                        _tagIndex.Add(element.ElementId + 1000000, placement.EstimatedTagBounds);
+                        _tagIndex.Add(_nextTagSyntheticId--, placement.EstimatedTagBounds);
                     }
                 }
             }
@@ -829,19 +834,29 @@ namespace SmartTag.Services
             if (element == null || _ruleEngine == null)
                 return new List<string>();
 
+            var cacheKey = (
+                element.BuiltInCategoryName ?? element.CategoryName ?? "",
+                element.FamilyName ?? "",
+                element.SystemName ?? "");
+
+            if (_preferredPositionCache.TryGetValue(cacheKey, out var cached))
+                return cached;
+
+            List<string> result = null;
+
             // 1. Rule nội bộ (Data/Rules/Tagging)
             try
             {
                 var rule = _ruleEngine.GetBestTaggingRule(
-                    element.BuiltInCategoryName ?? element.CategoryName ?? "",
-                    element.FamilyName ?? "",
+                    cacheKey.Item1,
+                    cacheKey.Item2,
                     null,
                     element.SystemClassification ?? "",
-                    element.SystemName ?? "");
+                    cacheKey.Item3);
 
                 if (rule?.Actions?.PreferredPositions != null && rule.Actions.PreferredPositions.Count > 0)
                 {
-                    return new List<string>(rule.Actions.PreferredPositions);
+                    result = new List<string>(rule.Actions.PreferredPositions);
                 }
             }
             catch (Exception ex)
@@ -850,47 +865,50 @@ namespace SmartTag.Services
             }
 
             // 2. Pattern nội bộ (Data/Patterns/TagPositions)
-            try
+            if (result == null)
             {
-                var patternLoader = TagPositionPatternLoader.Instance;
-                patternLoader.Initialize();
-                var viewScale = (int)(_viewScale > 0 ? _viewScale : 100);
-                var hint = patternLoader.GetHint(
-                    element.BuiltInCategoryName ?? element.CategoryName ?? "",
-                    element.SystemName ?? "",
-                    viewScale);
-                if (hint?.Positions != null && hint.Positions.Count > 0)
+                try
                 {
-                    return hint.Positions
-                        .Where(p => p != TagPosition.Auto)
-                        .Select(p => p.ToString())
-                        .ToList();
+                    var patternLoader = TagPositionPatternLoader.Instance;
+                    patternLoader.Initialize();
+                    var viewScale = (int)(_viewScale > 0 ? _viewScale : 100);
+                    var hint = patternLoader.GetHint(cacheKey.Item1, cacheKey.Item3, viewScale);
+                    if (hint?.Positions != null && hint.Positions.Count > 0)
+                    {
+                        result = hint.Positions
+                            .Where(p => p != TagPosition.Auto)
+                            .Select(p => p.ToString())
+                            .ToList();
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Pattern lookup failed: {ex.Message}");
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Pattern lookup failed: {ex.Message}");
+                }
             }
 
             // 3. Learned (JSON export của người dùng - nếu đã export và cập nhật)
-            try
+            if (result == null)
             {
-                var learned = LearnedOverridesService.Instance;
-                learned.EnsureLoaded();
-                var category = element.BuiltInCategoryName ?? element.CategoryName ?? "";
-                var systemName = element.SystemName ?? "";
-                var positions = learned.GetPreferredPositions(category, systemName);
-                if (positions != null && positions.Count > 0)
+                try
                 {
-                    return positions;
+                    var learned = LearnedOverridesService.Instance;
+                    learned.EnsureLoaded();
+                    var positions = learned.GetPreferredPositions(cacheKey.Item1, cacheKey.Item3);
+                    if (positions != null && positions.Count > 0)
+                    {
+                        result = positions;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Learned overrides lookup failed: {ex.Message}");
                 }
             }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Learned overrides lookup failed: {ex.Message}");
-            }
 
-            return new List<string>();
+            result ??= new List<string>();
+            _preferredPositionCache[cacheKey] = result;
+            return result;
         }
 
         private List<string> MergePreferredPositions(List<string> primary, List<string> secondary)
@@ -1041,41 +1059,29 @@ namespace SmartTag.Services
                 bool rlPreferAlignRow = false;
                 bool rlPreferAlignCol = false;
 
-                // Learned (user export): chỉ bù khi rule không chỉ định (ưu tiên rule/pattern nội bộ)
-                if (!ruleMatched)
+                // Learned overrides: single lookup for all learned data
+                try
                 {
-                    try
+                    var learned = LearnedOverridesService.Instance;
+                    learned.EnsureLoaded();
+                    var category = element.BuiltInCategoryName ?? element.CategoryName ?? "";
+                    var systemName = element.SystemName ?? "";
+
+                    if (!ruleMatched)
                     {
-                        var learned = LearnedOverridesService.Instance;
-                        learned.EnsureLoaded();
-                        var category = element.BuiltInCategoryName ?? element.CategoryName ?? "";
-                        var systemName = element.SystemName ?? "";
                         var learnedOffset = learned.GetOffsetDistance(category, systemName);
                         var learnedLeader = learned.GetAddLeader(category, systemName);
-                        var (preferAlignRow, preferAlignCol) = learned.GetPreferAlignment(category, systemName);
                         if (learnedOffset.HasValue && learnedOffset.Value > 0)
                             settings.OffsetDistance = learnedOffset.Value;
                         if (learnedLeader.HasValue)
                             settings.AddLeader = learnedLeader.Value;
-                        learnedPreferAlignRow = preferAlignRow == true;
-                        learnedPreferAlignCol = preferAlignCol == true;
                     }
-                    catch { /* ignore */ }
+
+                    var (preferAlignRow, preferAlignCol) = learned.GetPreferAlignment(category, systemName);
+                    learnedPreferAlignRow = preferAlignRow == true;
+                    learnedPreferAlignCol = preferAlignCol == true;
                 }
-                else
-                {
-                    try
-                    {
-                        var learned = LearnedOverridesService.Instance;
-                        learned.EnsureLoaded();
-                        var category = element.BuiltInCategoryName ?? element.CategoryName ?? "";
-                        var systemName = element.SystemName ?? "";
-                        var (preferAlignRow, preferAlignCol) = learned.GetPreferAlignment(category, systemName);
-                        learnedPreferAlignRow = preferAlignRow == true;
-                        learnedPreferAlignCol = preferAlignCol == true;
-                    }
-                    catch { /* ignore */ }
-                }
+                catch { /* ignore */ }
                 
                 if (rule?.Scoring != null)
                 {

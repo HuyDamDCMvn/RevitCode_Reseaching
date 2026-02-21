@@ -11,6 +11,40 @@ namespace SmartTag.Services
     /// </summary>
     public class TagCreationService
     {
+        private static readonly Dictionary<BuiltInCategory, BuiltInCategory> TagCategoryMappings = new()
+        {
+            { BuiltInCategory.OST_Walls, BuiltInCategory.OST_WallTags },
+            { BuiltInCategory.OST_Doors, BuiltInCategory.OST_DoorTags },
+            { BuiltInCategory.OST_Windows, BuiltInCategory.OST_WindowTags },
+            { BuiltInCategory.OST_Rooms, BuiltInCategory.OST_RoomTags },
+            { BuiltInCategory.OST_Areas, BuiltInCategory.OST_AreaTags },
+            { BuiltInCategory.OST_Floors, BuiltInCategory.OST_FloorTags },
+            { BuiltInCategory.OST_Ceilings, BuiltInCategory.OST_CeilingTags },
+            { BuiltInCategory.OST_Roofs, BuiltInCategory.OST_RoofTags },
+            { BuiltInCategory.OST_Columns, BuiltInCategory.OST_ColumnTags },
+            { BuiltInCategory.OST_StructuralColumns, BuiltInCategory.OST_StructuralColumnTags },
+            { BuiltInCategory.OST_StructuralFraming, BuiltInCategory.OST_StructuralFramingTags },
+            { BuiltInCategory.OST_StructuralFoundation, BuiltInCategory.OST_StructuralFoundationTags },
+            { BuiltInCategory.OST_Furniture, BuiltInCategory.OST_FurnitureTags },
+            { BuiltInCategory.OST_GenericModel, BuiltInCategory.OST_GenericModelTags },
+            { BuiltInCategory.OST_MechanicalEquipment, BuiltInCategory.OST_MechanicalEquipmentTags },
+            { BuiltInCategory.OST_ElectricalEquipment, BuiltInCategory.OST_ElectricalEquipmentTags },
+            { BuiltInCategory.OST_ElectricalFixtures, BuiltInCategory.OST_ElectricalFixtureTags },
+            { BuiltInCategory.OST_LightingFixtures, BuiltInCategory.OST_LightingFixtureTags },
+            { BuiltInCategory.OST_PlumbingFixtures, BuiltInCategory.OST_PlumbingFixtureTags },
+            { BuiltInCategory.OST_DuctCurves, BuiltInCategory.OST_DuctTags },
+            { BuiltInCategory.OST_PipeCurves, BuiltInCategory.OST_PipeTags },
+            { BuiltInCategory.OST_DuctAccessory, BuiltInCategory.OST_DuctAccessoryTags },
+            { BuiltInCategory.OST_DuctFitting, BuiltInCategory.OST_DuctFittingTags },
+            { BuiltInCategory.OST_DuctTerminal, BuiltInCategory.OST_DuctTerminalTags },
+            { BuiltInCategory.OST_PipeAccessory, BuiltInCategory.OST_PipeAccessoryTags },
+            { BuiltInCategory.OST_PipeFitting, BuiltInCategory.OST_PipeFittingTags },
+            { BuiltInCategory.OST_Sprinklers, BuiltInCategory.OST_SprinklerTags },
+            { BuiltInCategory.OST_CableTray, BuiltInCategory.OST_CableTrayTags },
+            { BuiltInCategory.OST_Conduit, BuiltInCategory.OST_ConduitTags },
+            { BuiltInCategory.OST_SpecialityEquipment, BuiltInCategory.OST_SpecialityEquipmentTags }
+        };
+
         private readonly Document _doc;
         private readonly View _view;
 
@@ -235,45 +269,10 @@ namespace SmartTag.Services
         /// </summary>
         private BuiltInCategory GetTagCategoryForElementCategory(Category category)
         {
-            // Common mappings
-            var mappings = new Dictionary<BuiltInCategory, BuiltInCategory>
-            {
-                { BuiltInCategory.OST_Walls, BuiltInCategory.OST_WallTags },
-                { BuiltInCategory.OST_Doors, BuiltInCategory.OST_DoorTags },
-                { BuiltInCategory.OST_Windows, BuiltInCategory.OST_WindowTags },
-                { BuiltInCategory.OST_Rooms, BuiltInCategory.OST_RoomTags },
-                { BuiltInCategory.OST_Areas, BuiltInCategory.OST_AreaTags },
-                { BuiltInCategory.OST_Floors, BuiltInCategory.OST_FloorTags },
-                { BuiltInCategory.OST_Ceilings, BuiltInCategory.OST_CeilingTags },
-                { BuiltInCategory.OST_Roofs, BuiltInCategory.OST_RoofTags },
-                { BuiltInCategory.OST_Columns, BuiltInCategory.OST_ColumnTags },
-                { BuiltInCategory.OST_StructuralColumns, BuiltInCategory.OST_StructuralColumnTags },
-                { BuiltInCategory.OST_StructuralFraming, BuiltInCategory.OST_StructuralFramingTags },
-                { BuiltInCategory.OST_StructuralFoundation, BuiltInCategory.OST_StructuralFoundationTags },
-                { BuiltInCategory.OST_Furniture, BuiltInCategory.OST_FurnitureTags },
-                { BuiltInCategory.OST_GenericModel, BuiltInCategory.OST_GenericModelTags },
-                { BuiltInCategory.OST_MechanicalEquipment, BuiltInCategory.OST_MechanicalEquipmentTags },
-                { BuiltInCategory.OST_ElectricalEquipment, BuiltInCategory.OST_ElectricalEquipmentTags },
-                { BuiltInCategory.OST_ElectricalFixtures, BuiltInCategory.OST_ElectricalFixtureTags },
-                { BuiltInCategory.OST_LightingFixtures, BuiltInCategory.OST_LightingFixtureTags },
-                { BuiltInCategory.OST_PlumbingFixtures, BuiltInCategory.OST_PlumbingFixtureTags },
-                { BuiltInCategory.OST_DuctCurves, BuiltInCategory.OST_DuctTags },
-                { BuiltInCategory.OST_PipeCurves, BuiltInCategory.OST_PipeTags },
-                { BuiltInCategory.OST_DuctAccessory, BuiltInCategory.OST_DuctAccessoryTags },
-                { BuiltInCategory.OST_DuctFitting, BuiltInCategory.OST_DuctFittingTags },
-                { BuiltInCategory.OST_DuctTerminal, BuiltInCategory.OST_DuctTerminalTags },
-                { BuiltInCategory.OST_PipeAccessory, BuiltInCategory.OST_PipeAccessoryTags },
-                { BuiltInCategory.OST_PipeFitting, BuiltInCategory.OST_PipeFittingTags },
-                { BuiltInCategory.OST_Sprinklers, BuiltInCategory.OST_SprinklerTags },
-                { BuiltInCategory.OST_CableTray, BuiltInCategory.OST_CableTrayTags },
-                { BuiltInCategory.OST_Conduit, BuiltInCategory.OST_ConduitTags },
-                { BuiltInCategory.OST_SpecialityEquipment, BuiltInCategory.OST_SpecialityEquipmentTags }
-            };
-
             try
             {
                 var catId = (BuiltInCategory)category.Id.Value;
-                if (mappings.TryGetValue(catId, out var tagCat))
+                if (TagCategoryMappings.TryGetValue(catId, out var tagCat))
                 {
                     return tagCat;
                 }
@@ -283,7 +282,6 @@ namespace SmartTag.Services
                 // Not a built-in category
             }
 
-            // Try generic annotation
             return BuiltInCategory.OST_GenericAnnotation;
         }
 

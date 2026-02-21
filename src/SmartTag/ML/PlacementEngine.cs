@@ -131,26 +131,26 @@ namespace SmartTag.ML
             var placements = new List<TagPlacement>();
             existingPlacements ??= new List<TagPlacement>();
 
-            // Sort elements (top-left to bottom-right)
             var sortedElements = elements
                 .Where(e => !e.HasExistingTag || !settings.SkipTaggedElements)
                 .OrderByDescending(e => e.Center.Y)
                 .ThenBy(e => e.Center.X)
                 .ToList();
 
-            // Collect element bounds with IDs for CSP (enables host-element exclusion)
             var elementBounds = elements.Select(e => (e.ElementId, e.ViewBounds)).ToList();
-
-            // Get view crop box
             BoundingBox2D? viewCrop = GetViewCropBox();
+
+            _contextAnalyzer.PrepareIndex(elements);
+
+            var allExisting = new List<TagPlacement>(existingPlacements.Count + sortedElements.Count);
+            allExisting.AddRange(existingPlacements);
 
             foreach (var element in sortedElements)
             {
                 var placement = CalculateSinglePlacement(
                     element,
                     elements,
-                    placements,
-                    existingPlacements,
+                    allExisting,
                     elementBounds,
                     viewCrop,
                     settings);
@@ -158,10 +158,10 @@ namespace SmartTag.ML
                 if (placement != null)
                 {
                     placements.Add(placement);
+                    allExisting.Add(placement);
                 }
             }
 
-            // Global alignment optimization
             if (settings.AlignTags && _useCSP)
             {
                 _cspSolver.OptimizeGlobalAlignment(placements, _minSpacing);
@@ -176,19 +176,14 @@ namespace SmartTag.ML
         private TagPlacement CalculateSinglePlacement(
             TaggableElement element,
             List<TaggableElement> allElements,
-            List<TagPlacement> newPlacements,
-            List<TagPlacement> existingPlacements,
+            List<TagPlacement> allExistingPlacements,
             List<(long ElementId, BoundingBox2D Bounds)> elementBounds,
             BoundingBox2D? viewCrop,
             TagSettings settings)
         {
-            // Step 1: Analyze context
             var context = _contextAnalyzer.Analyze(element, allElements);
-
-            // Step 2: Generate candidate positions
             var candidates = GenerateCandidates(element, context, settings);
 
-            // Step 3: KNN voting (if enabled and have training data)
             TagPositionVote knnVote = null;
             if (_useKNN && _knnMatcher.SampleCount > 0)
             {
@@ -198,25 +193,18 @@ namespace SmartTag.ML
                     element.BuiltInCategoryName ?? "Other",
                     _knnK);
                 knnVote = _knnMatcher.Vote(neighbors);
-
-                // Reorder candidates based on KNN vote
                 candidates = ReorderByKNNVote(candidates, knnVote);
             }
 
-            // Step 4: CSP solve (if enabled)
             TagPlacement finalPlacement;
             if (_useCSP)
             {
-                var allExisting = existingPlacements.Concat(newPlacements).ToList();
-                finalPlacement = _cspSolver.Solve(candidates, allExisting, elementBounds, viewCrop);
+                finalPlacement = _cspSolver.Solve(candidates, allExistingPlacements, elementBounds, viewCrop);
             }
             else
             {
-                // Simple: pick first non-colliding candidate
                 finalPlacement = candidates.FirstOrDefault(c =>
-                    !HasCollision(c, newPlacements.Concat(existingPlacements).ToList()));
-
-                // Fallback to first candidate if all collide
+                    !HasCollision(c, allExistingPlacements));
                 finalPlacement ??= candidates.FirstOrDefault();
             }
 

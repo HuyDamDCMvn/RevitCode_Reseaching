@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SmartTag.Models;
+using SmartTag.Services;
 
 namespace SmartTag.ML
 {
@@ -13,6 +14,9 @@ namespace SmartTag.ML
         private readonly double _neighborRadius;
         private readonly double _wallDetectionRadius;
 
+        private SpatialIndex _elementIndex;
+        private (double minX, double maxX, double minY, double maxY)? _allElementsBounds;
+
         public ContextAnalyzer(double neighborRadius = 10.0, double wallDetectionRadius = 5.0)
         {
             _neighborRadius = neighborRadius;
@@ -20,7 +24,36 @@ namespace SmartTag.ML
         }
 
         /// <summary>
+        /// Pre-build a spatial index from allElements for O(1) neighbor queries.
+        /// Call once before a batch of Analyze() calls with the same element set.
+        /// </summary>
+        public void PrepareIndex(List<TaggableElement> allElements)
+        {
+            _elementIndex = new SpatialIndex(Math.Max(_neighborRadius / 2, 5.0));
+            if (allElements == null || allElements.Count == 0)
+            {
+                _allElementsBounds = null;
+                return;
+            }
+
+            double minX = double.MaxValue, maxX = double.MinValue;
+            double minY = double.MaxValue, maxY = double.MinValue;
+
+            foreach (var e in allElements)
+            {
+                _elementIndex.Add(e.ElementId, e.ViewBounds, e);
+                if (e.ViewBounds.MinX < minX) minX = e.ViewBounds.MinX;
+                if (e.ViewBounds.MaxX > maxX) maxX = e.ViewBounds.MaxX;
+                if (e.ViewBounds.MinY < minY) minY = e.ViewBounds.MinY;
+                if (e.ViewBounds.MaxY > maxY) maxY = e.ViewBounds.MaxY;
+            }
+
+            _allElementsBounds = (minX, maxX, minY, maxY);
+        }
+
+        /// <summary>
         /// Analyze the context around an element.
+        /// If PrepareIndex was called, uses O(1) spatial lookup; otherwise falls back to linear scan.
         /// </summary>
         public ElementContext Analyze(TaggableElement element, List<TaggableElement> allElements)
         {
@@ -29,17 +62,25 @@ namespace SmartTag.ML
 
             var context = new ElementContext();
             var center = element.Center;
-            var bounds = element.ViewBounds;
 
-            // Find neighbors
-            var neighbors = allElements
-                .Where(e => e.ElementId != element.ElementId)
-                .Where(e => e.Center.DistanceTo(center) < _neighborRadius)
-                .ToList();
+            List<TaggableElement> neighbors;
+            if (_elementIndex != null)
+            {
+                neighbors = _elementIndex.QueryRadius(center, _neighborRadius)
+                    .Where(item => item.Id != element.ElementId && item.Data is TaggableElement)
+                    .Select(item => (TaggableElement)item.Data)
+                    .ToList();
+            }
+            else
+            {
+                neighbors = allElements
+                    .Where(e => e.ElementId != element.ElementId)
+                    .Where(e => e.Center.DistanceTo(center) < _neighborRadius)
+                    .ToList();
+            }
 
             context.NeighborCount = neighbors.Count;
 
-            // Determine density
             context.Density = neighbors.Count switch
             {
                 <= 2 => DensityLevel.Low,
@@ -47,19 +88,14 @@ namespace SmartTag.ML
                 _ => DensityLevel.High
             };
 
-            // Check directional neighbors
             AnalyzeDirectionalNeighbors(element, neighbors, context);
 
-            // Count parallel elements (same orientation for linear elements)
             if (element.IsLinearElement)
             {
                 context.ParallelElementsCount = CountParallelElements(element, neighbors);
             }
 
-            // Check if in group
             context.IsInGroup = element.IsInGroup;
-
-            // Distance to wall (placeholder - would need wall elements)
             context.DistanceToWall = EstimateDistanceToWall(element, allElements);
 
             return context;
@@ -157,13 +193,22 @@ namespace SmartTag.ML
         /// </summary>
         private double EstimateDistanceToWall(TaggableElement element, List<TaggableElement> allElements)
         {
-            if (allElements == null || allElements.Count == 0)
-                return _neighborRadius;
+            double minX, maxX, minY, maxY;
 
-            var minX = allElements.Min(e => e.ViewBounds.MinX);
-            var maxX = allElements.Max(e => e.ViewBounds.MaxX);
-            var minY = allElements.Min(e => e.ViewBounds.MinY);
-            var maxY = allElements.Max(e => e.ViewBounds.MaxY);
+            if (_allElementsBounds.HasValue)
+            {
+                (minX, maxX, minY, maxY) = _allElementsBounds.Value;
+            }
+            else
+            {
+                if (allElements == null || allElements.Count == 0)
+                    return _neighborRadius;
+
+                minX = allElements.Min(e => e.ViewBounds.MinX);
+                maxX = allElements.Max(e => e.ViewBounds.MaxX);
+                minY = allElements.Min(e => e.ViewBounds.MinY);
+                maxY = allElements.Max(e => e.ViewBounds.MaxY);
+            }
 
             var distToLeft = element.Center.X - minX;
             var distToRight = maxX - element.Center.X;
