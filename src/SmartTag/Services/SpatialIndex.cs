@@ -14,12 +14,14 @@ namespace SmartTag.Services
         private readonly double _cellSize;
         private readonly Dictionary<(int, int), List<IndexedItem>> _grid;
         private readonly List<IndexedItem> _allItems;
+        private readonly Dictionary<long, IndexedItem> _itemById;
 
-        public SpatialIndex(double cellSize = 5.0) // 5 feet cells
+        public SpatialIndex(double cellSize = 5.0)
         {
             _cellSize = cellSize;
             _grid = new Dictionary<(int, int), List<IndexedItem>>();
             _allItems = new List<IndexedItem>();
+            _itemById = new Dictionary<long, IndexedItem>();
         }
 
         /// <summary>
@@ -29,6 +31,7 @@ namespace SmartTag.Services
         {
             var item = new IndexedItem { Id = id, Bounds = bounds, Data = data };
             _allItems.Add(item);
+            _itemById[id] = item;
 
             // Add to all cells that the bounds overlap
             var minCell = GetCell(bounds.MinX, bounds.MinY);
@@ -127,10 +130,11 @@ namespace SmartTag.Services
         /// </summary>
         public void Remove(long id)
         {
-            var item = _allItems.FirstOrDefault(i => i.Id == id);
-            if (item == null) return;
+            if (!_itemById.TryGetValue(id, out var item))
+                return;
 
             _allItems.Remove(item);
+            _itemById.Remove(id);
 
             var minCell = GetCell(item.Bounds.MinX, item.Bounds.MinY);
             var maxCell = GetCell(item.Bounds.MaxX, item.Bounds.MaxY);
@@ -154,6 +158,7 @@ namespace SmartTag.Services
         {
             _grid.Clear();
             _allItems.Clear();
+            _itemById.Clear();
         }
 
         /// <summary>

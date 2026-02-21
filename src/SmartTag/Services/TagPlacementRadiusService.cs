@@ -141,41 +141,13 @@ namespace SmartTag.Services
             if (!string.IsNullOrEmpty(_radiusPath))
                 return _radiusPath;
 
-            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            var assemblyDir = Path.GetDirectoryName(assembly.Location);
-            var candidates = new[]
-            {
-                Path.Combine(assemblyDir, "Data", "Training", "auto_radius.json"),
-                Path.Combine(assemblyDir, "..", "Data", "Training", "auto_radius.json"),
-                Path.Combine(assemblyDir, "..", "..", "src", "SmartTag", "Data", "Training", "auto_radius.json"),
-                Path.Combine(Environment.CurrentDirectory, "Data", "Training", "auto_radius.json"),
-                @"D:\03_DCMvn\RevitCode\src\SmartTag\Data\Training\auto_radius.json"
-            };
-
-            foreach (var path in candidates)
-            {
-                try
-                {
-                    var full = Path.GetFullPath(path);
-                    var dir = Path.GetDirectoryName(full);
-                    if (Directory.Exists(dir) || dir != null)
-                    {
-                        _radiusPath = full;
-                        return full;
-                    }
-                }
-                catch { }
-            }
-
-            _radiusPath = Path.Combine(Path.GetTempPath(), "SmartTag_auto_radius.json");
+            _radiusPath = DataPathResolver.Resolve("Training/auto_radius.json");
             return _radiusPath;
         }
 
         private string GetAnnotatedFolderPath()
         {
-            var radiusPath = GetRadiusPath();
-            var trainingDir = Path.GetDirectoryName(radiusPath);
-            return string.IsNullOrEmpty(trainingDir) ? null : Path.Combine(trainingDir, "annotated");
+            return DataPathResolver.GetAnnotatedFolder(GetRadiusPath());
         }
 
         private TagPlacementRadiusFile BuildFromAnnotatedFolder(string annotatedFolderPath)

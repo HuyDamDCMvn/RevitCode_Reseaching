@@ -65,10 +65,17 @@ namespace HD.Core.Services
             if (doc == null || viewId == null || viewId == ElementId.InvalidElementId)
                 return new List<Element>();
 
-            return new FilteredElementCollector(doc, viewId)
-                .WhereElementIsNotElementType()
-                .Where(e => e.Category != null && e.Category.CategoryType == CategoryType.Model)
-                .ToList();
+            // Use ElementIsElementTypeFilter to push type-exclusion into Revit's native filter
+            var collector = new FilteredElementCollector(doc, viewId)
+                .WhereElementIsNotElementType();
+
+            var result = new List<Element>();
+            foreach (var e in collector)
+            {
+                if (e.Category != null && e.Category.CategoryType == CategoryType.Model)
+                    result.Add(e);
+            }
+            return result;
         }
 
         #endregion

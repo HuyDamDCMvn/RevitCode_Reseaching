@@ -76,41 +76,13 @@ namespace SmartTag.Services
             if (!string.IsNullOrEmpty(_weightsPath))
                 return _weightsPath;
 
-            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            var assemblyDir = Path.GetDirectoryName(assembly.Location);
-            var candidates = new[]
-            {
-                Path.Combine(assemblyDir, "Data", "Training", "auto_weights.json"),
-                Path.Combine(assemblyDir, "..", "Data", "Training", "auto_weights.json"),
-                Path.Combine(assemblyDir, "..", "..", "src", "SmartTag", "Data", "Training", "auto_weights.json"),
-                Path.Combine(Environment.CurrentDirectory, "Data", "Training", "auto_weights.json"),
-                @"D:\03_DCMvn\RevitCode\src\SmartTag\Data\Training\auto_weights.json"
-            };
-
-            foreach (var path in candidates)
-            {
-                try
-                {
-                    var full = Path.GetFullPath(path);
-                    var dir = Path.GetDirectoryName(full);
-                    if (Directory.Exists(dir) || dir != null)
-                    {
-                        _weightsPath = full;
-                        return full;
-                    }
-                }
-                catch { }
-            }
-
-            _weightsPath = Path.Combine(Path.GetTempPath(), "SmartTag_auto_weights.json");
+            _weightsPath = DataPathResolver.Resolve("Training/auto_weights.json");
             return _weightsPath;
         }
 
         private string GetAnnotatedFolderPath()
         {
-            var weightsPath = GetWeightsPath();
-            var trainingDir = Path.GetDirectoryName(weightsPath);
-            return string.IsNullOrEmpty(trainingDir) ? null : Path.Combine(trainingDir, "annotated");
+            return DataPathResolver.GetAnnotatedFolder(GetWeightsPath());
         }
 
         private AutoTunedWeightsFile BuildFromAnnotatedFolder(string annotatedFolderPath)

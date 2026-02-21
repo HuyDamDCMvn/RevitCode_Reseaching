@@ -157,8 +157,8 @@ namespace SmartTag.ML
         /// </summary>
         private double EstimateDistanceToWall(TaggableElement element, List<TaggableElement> allElements)
         {
-            // For now, estimate based on boundary of all elements
-            // In production, would query actual walls from Revit
+            if (allElements == null || allElements.Count == 0)
+                return _neighborRadius;
 
             var minX = allElements.Min(e => e.ViewBounds.MinX);
             var maxX = allElements.Max(e => e.ViewBounds.MaxX);

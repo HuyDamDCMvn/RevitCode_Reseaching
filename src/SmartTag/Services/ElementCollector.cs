@@ -506,7 +506,6 @@ namespace SmartTag.Services
                 BuiltInCategory.OST_CommunicationDevices,
                 BuiltInCategory.OST_SecurityDevices,
                 BuiltInCategory.OST_DuctTerminal,
-                BuiltInCategory.OST_DuctTerminal, // Air terminals are under DuctTerminal
                 BuiltInCategory.OST_GenericModel
             };
             

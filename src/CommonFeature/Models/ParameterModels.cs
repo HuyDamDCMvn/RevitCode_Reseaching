@@ -451,8 +451,20 @@ namespace CommonFeature.Models
 
         public string Summary => $"Elements: {TotalElements}, Issues: {Issues.Count} (Errors: {ErrorCount}, Warnings: {WarningCount})";
 
-        public List<ValidationIssue> Errors => Issues.Where(i => i.Severity == ValidationSeverity.Error).ToList();
-        public List<ValidationIssue> Warnings => Issues.Where(i => i.Severity == ValidationSeverity.Warning).ToList();
+        private List<ValidationIssue> _cachedErrors;
+        private List<ValidationIssue> _cachedWarnings;
+
+        public List<ValidationIssue> Errors => _cachedErrors ??= Issues.Where(i => i.Severity == ValidationSeverity.Error).ToList();
+        public List<ValidationIssue> Warnings => _cachedWarnings ??= Issues.Where(i => i.Severity == ValidationSeverity.Warning).ToList();
+
+        /// <summary>
+        /// Call after modifying Issues to invalidate cached Errors/Warnings.
+        /// </summary>
+        public void InvalidateCache()
+        {
+            _cachedErrors = null;
+            _cachedWarnings = null;
+        }
     }
 
     #endregion

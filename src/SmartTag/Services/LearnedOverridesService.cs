@@ -43,33 +43,7 @@ namespace SmartTag.Services
             if (!string.IsNullOrEmpty(_filePath))
                 return _filePath;
 
-            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            var assemblyDir = Path.GetDirectoryName(assembly.Location);
-            var candidates = new[]
-            {
-                Path.Combine(assemblyDir, "Data", "Training", "learned_overrides.json"),
-                Path.Combine(assemblyDir, "..", "Data", "Training", "learned_overrides.json"),
-                Path.Combine(assemblyDir, "..", "..", "src", "SmartTag", "Data", "Training", "learned_overrides.json"),
-                Path.Combine(Environment.CurrentDirectory, "Data", "Training", "learned_overrides.json"),
-                @"D:\03_DCMvn\RevitCode\src\SmartTag\Data\Training\learned_overrides.json"
-            };
-
-            foreach (var path in candidates)
-            {
-                try
-                {
-                    var full = Path.GetFullPath(path);
-                    var dir = Path.GetDirectoryName(full);
-                    if (Directory.Exists(dir) || dir != null)
-                    {
-                        _filePath = full;
-                        return full;
-                    }
-                }
-                catch { }
-            }
-
-            _filePath = Path.Combine(Path.GetTempPath(), "SmartTag_learned_overrides.json");
+            _filePath = DataPathResolver.Resolve("Training/learned_overrides.json");
             return _filePath;
         }
 

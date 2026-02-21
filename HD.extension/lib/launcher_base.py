@@ -92,16 +92,16 @@ def launch_dll(dll_name, namespace, method, dependencies=None, uiapp=None):
             if os.path.exists(dep_path):
                 try:
                     clr.AddReferenceToFileAndPath(dep_path)
-                except Exception:
-                    pass
+                except Exception as ex:
+                    print("WARNING: Failed to load dependency {}: {}".format(dep_dll, ex))
     
     # 6. Load HD.Core first (if exists)
     core_path = os.path.join(lib_folder, "HD.Core.dll")
     if os.path.exists(core_path):
         try:
             clr.AddReferenceToFileAndPath(core_path)
-        except Exception:
-            pass
+        except Exception as ex:
+            print("WARNING: Failed to load HD.Core.dll: {}".format(ex))
     
     # 7. Load main assembly
     try:

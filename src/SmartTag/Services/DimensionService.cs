@@ -153,9 +153,10 @@ namespace SmartTag.Services
                     if (settings.DimensionTypeId.HasValue)
                     {
                         var typeId = new ElementId(settings.DimensionTypeId.Value);
-                        if (_doc.GetElement(typeId) is DimensionType)
+                        var dimType = _doc.GetElement(typeId) as DimensionType;
+                        if (dimType != null)
                         {
-                            dim.DimensionType = _doc.GetElement(typeId) as DimensionType;
+                            dim.DimensionType = dimType;
                         }
                     }
                 }

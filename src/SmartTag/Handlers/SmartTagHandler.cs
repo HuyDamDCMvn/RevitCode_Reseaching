@@ -645,14 +645,19 @@ namespace SmartTag
                 return;
             }
 
-            // Tags are already created, just clear the preview state
             var count = _previewTagIds.Count;
             _previewTagIds.Clear();
             _hasPreviewTags = false;
 
             OnStatusUpdate?.Invoke($"Confirmed {count} tags");
-            
-            // Refresh categories to update counts
+
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                OnPreviewTagsCreated?.Invoke(
+                    new TagResult { TagsCreated = count },
+                    false);
+            }));
+
             var uidoc = app.ActiveUIDocument;
             if (uidoc != null)
             {
@@ -715,6 +720,13 @@ namespace SmartTag
 
             _previewTagIds.Clear();
             _hasPreviewTags = false;
+
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                OnPreviewTagsCreated?.Invoke(
+                    new TagResult { TagsCreated = 0 },
+                    false);
+            }));
         }
 
         /// <summary>

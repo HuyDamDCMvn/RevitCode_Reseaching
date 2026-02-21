@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Windows;
+using System.Windows.Threading;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -19,6 +21,7 @@ namespace SmartTag
     {
         private readonly ExternalEvent _externalEvent;
         private readonly SmartTagHandler _handler;
+        private DispatcherTimer _previewDebounceTimer;
 
         [ObservableProperty]
         private bool _isBusy;
@@ -208,10 +211,7 @@ namespace SmartTag
 
             _handler.SetRequest(SmartTagRequest.ConfirmPreviewTags());
             _externalEvent.Raise();
-            
-            IsPreviewMode = false;
-            HasPreviewTags = false;
-            IsBusy = false;
+            // IsBusy cleared by HandlePreviewTagsCreated callback
         }
 
         private bool CanConfirmPreview()
@@ -232,11 +232,7 @@ namespace SmartTag
 
             _handler.SetRequest(SmartTagRequest.UndoPreviewTags());
             _externalEvent.Raise();
-            
-            IsPreviewMode = false;
-            HasPreviewTags = false;
-            PreviewCreatedCount = 0;
-            IsBusy = false;
+            // IsBusy cleared by HandlePreviewTagsCreated callback
         }
 
         private bool CanUndoPreview()
@@ -545,15 +541,18 @@ namespace SmartTag
             SelectedCategoryCount = Categories.Count(c => c.IsSelected);
             TotalElementCount = Categories.Where(c => c.IsSelected).Sum(c => c.ElementCount);
 
-            // Update preview
-            if (SelectedCategoryCount > 0)
+            // Debounce preview to avoid expensive recalculation on every checkbox toggle
+            _previewDebounceTimer?.Stop();
+            _previewDebounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+            _previewDebounceTimer.Tick += (s, e) =>
             {
-                PreviewPlacements();
-            }
-            else
-            {
-                PreviewTagCount = 0;
-            }
+                _previewDebounceTimer.Stop();
+                if (SelectedCategoryCount > 0)
+                    PreviewPlacements();
+                else
+                    PreviewTagCount = 0;
+            };
+            _previewDebounceTimer.Start();
 
             ExecuteAutoTagCommand.NotifyCanExecuteChanged();
         }

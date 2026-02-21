@@ -14,11 +14,13 @@ namespace SmartTag.ML
     public class KNNMatcher
     {
         private List<TrainingSample> _samples;
+        private Dictionary<string, List<TrainingSample>> _samplesByCategory;
         private readonly FeatureExtractor _featureExtractor;
 
         public KNNMatcher()
         {
             _samples = new List<TrainingSample>();
+            _samplesByCategory = new Dictionary<string, List<TrainingSample>>(StringComparer.OrdinalIgnoreCase);
             _featureExtractor = new FeatureExtractor();
         }
 
@@ -65,6 +67,7 @@ namespace SmartTag.ML
                 }
             }
 
+            RebuildCategoryIndex();
             System.Diagnostics.Debug.WriteLine($"KNNMatcher: Loaded {_samples.Count} training samples");
         }
 
@@ -73,9 +76,29 @@ namespace SmartTag.ML
         /// </summary>
         public void AddSample(TrainingSample sample)
         {
-            if (sample != null)
+            if (sample == null) return;
+            _samples.Add(sample);
+            var cat = sample.Element?.Category ?? "Other";
+            if (!_samplesByCategory.TryGetValue(cat, out var list))
             {
-                _samples.Add(sample);
+                list = new List<TrainingSample>();
+                _samplesByCategory[cat] = list;
+            }
+            list.Add(sample);
+        }
+
+        private void RebuildCategoryIndex()
+        {
+            _samplesByCategory.Clear();
+            foreach (var sample in _samples)
+            {
+                var cat = sample.Element?.Category ?? "Other";
+                if (!_samplesByCategory.TryGetValue(cat, out var list))
+                {
+                    list = new List<TrainingSample>();
+                    _samplesByCategory[cat] = list;
+                }
+                list.Add(sample);
             }
         }
 
@@ -118,17 +141,14 @@ namespace SmartTag.ML
             if (_samples.Count == 0 || features == null)
                 return new List<(TrainingSample, double)>();
 
-            var filteredSamples = _samples
-                .Where(s => s.Element?.Category == category)
-                .ToList();
-
-            if (filteredSamples.Count == 0)
+            // O(m) where m = samples in category, instead of O(n) filtering all samples
+            if (!_samplesByCategory.TryGetValue(category ?? "Other", out var filteredSamples)
+                || filteredSamples.Count == 0)
             {
-                // Fallback to all samples if no category match
                 return FindKNearest(features, k);
             }
 
-            var distances = new List<(TrainingSample sample, double distance)>();
+            var distances = new List<(TrainingSample sample, double distance)>(filteredSamples.Count);
 
             foreach (var sample in filteredSamples)
             {

@@ -44,16 +44,21 @@ namespace SmartTag.ML
 
         /// <summary>
         /// Check that tag doesn't overlap with any elements (except its own element).
+        /// Uses element IDs to skip the host element's bounds.
         /// </summary>
-        public bool CheckNoElementOverlap(TagPlacement tag, List<BoundingBox2D> elementBounds, long excludeElementId = -1)
+        public bool CheckNoElementOverlap(TagPlacement tag, List<(long ElementId, BoundingBox2D Bounds)> elementBounds, long excludeElementId = -1)
         {
             if (tag == null || elementBounds == null)
                 return true;
 
-            foreach (var bound in elementBounds)
+            // Shrink tag bounds slightly so touching edges are permitted
+            var shrunk = tag.EstimatedTagBounds.Expand(-_tolerance);
+
+            foreach (var (elemId, bound) in elementBounds)
             {
-                // Shrink bounds slightly to allow touching
-                var shrunk = tag.EstimatedTagBounds.Expand(-_tolerance);
+                if (elemId == excludeElementId)
+                    continue;
+
                 if (shrunk.Intersects(bound))
                     return false;
             }
@@ -62,9 +67,9 @@ namespace SmartTag.ML
         }
 
         /// <summary>
-        /// Check that leader line doesn't cross any elements.
+        /// Check that leader line doesn't cross any elements (except its own element).
         /// </summary>
-        public bool CheckLeaderNoCollision(TagPlacement tag, List<BoundingBox2D> elementBounds, long excludeElementId = -1)
+        public bool CheckLeaderNoCollision(TagPlacement tag, List<(long ElementId, BoundingBox2D Bounds)> elementBounds, long excludeElementId = -1)
         {
             if (tag == null || !tag.HasLeader || elementBounds == null)
                 return true;
@@ -72,8 +77,11 @@ namespace SmartTag.ML
             var leaderStart = tag.TagLocation;
             var leaderEnd = tag.LeaderEnd;
 
-            foreach (var bound in elementBounds)
+            foreach (var (elemId, bound) in elementBounds)
             {
+                if (elemId == excludeElementId)
+                    continue;
+
                 if (LineIntersectsBox(leaderStart, leaderEnd, bound))
                     return false;
             }
@@ -179,7 +187,7 @@ namespace SmartTag.ML
         public TagPlacement Solve(
             List<TagPlacement> candidates,
             List<TagPlacement> existingTags,
-            List<BoundingBox2D> elementBounds,
+            List<(long ElementId, BoundingBox2D Bounds)> elementBounds,
             BoundingBox2D? viewCrop)
         {
             if (candidates == null || candidates.Count == 0)
@@ -221,7 +229,7 @@ namespace SmartTag.ML
         private TagPlacement TryAdjustBestCandidate(
             List<TagPlacement> candidates,
             List<TagPlacement> existingTags,
-            List<BoundingBox2D> elementBounds,
+            List<(long ElementId, BoundingBox2D Bounds)> elementBounds,
             BoundingBox2D? viewCrop)
         {
             if (candidates.Count == 0)

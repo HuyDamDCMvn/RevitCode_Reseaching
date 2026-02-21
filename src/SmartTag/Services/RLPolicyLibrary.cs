@@ -110,33 +110,7 @@ namespace SmartTag.Services
             if (!string.IsNullOrEmpty(_policyPath))
                 return _policyPath;
 
-            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            var assemblyDir = Path.GetDirectoryName(assembly.Location);
-            var candidates = new[]
-            {
-                Path.Combine(assemblyDir, "Data", "Training", "rl_policy.json"),
-                Path.Combine(assemblyDir, "..", "Data", "Training", "rl_policy.json"),
-                Path.Combine(assemblyDir, "..", "..", "src", "SmartTag", "Data", "Training", "rl_policy.json"),
-                Path.Combine(Environment.CurrentDirectory, "Data", "Training", "rl_policy.json"),
-                @"D:\03_DCMvn\RevitCode\src\SmartTag\Data\Training\rl_policy.json"
-            };
-
-            foreach (var path in candidates)
-            {
-                try
-                {
-                    var full = Path.GetFullPath(path);
-                    var dir = Path.GetDirectoryName(full);
-                    if (Directory.Exists(dir) || dir != null)
-                    {
-                        _policyPath = full;
-                        return full;
-                    }
-                }
-                catch { }
-            }
-
-            _policyPath = Path.Combine(Path.GetTempPath(), "SmartTag_rl_policy.json");
+            _policyPath = DataPathResolver.Resolve("Training/rl_policy.json");
             return _policyPath;
         }
 

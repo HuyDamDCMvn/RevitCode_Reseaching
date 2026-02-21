@@ -44,6 +44,9 @@ namespace SmartTag.ML
         private double _leaderLength;
         private double _viewScale;
 
+        // Per-element rule cache to avoid repeated lookups (B8)
+        private readonly Dictionary<long, List<string>> _preferredPositionCache = new();
+
         public PlacementEngine(Document doc, View view, PlacementEngineOptions options = null)
         {
             _doc = doc ?? throw new ArgumentNullException(nameof(doc));
@@ -80,9 +83,9 @@ namespace SmartTag.ML
                 _leaderLength = _calibration.LeaderLength;
                 _viewScale = _calibration.ViewScale;
             }
-            catch
+            catch (Exception ex)
             {
-                // Fallback values
+                System.Diagnostics.Debug.WriteLine($"PlacementEngine: TagSizeCalibration failed: {ex.Message}");
                 _viewScale = view.Scale > 0 ? view.Scale : 100;
                 var inverseScale = 100.0 / _viewScale;
                 _tagWidth = 3.0 * inverseScale;
@@ -135,8 +138,8 @@ namespace SmartTag.ML
                 .ThenBy(e => e.Center.X)
                 .ToList();
 
-            // Collect element bounds for CSP
-            var elementBounds = elements.Select(e => e.ViewBounds).ToList();
+            // Collect element bounds with IDs for CSP (enables host-element exclusion)
+            var elementBounds = elements.Select(e => (e.ElementId, e.ViewBounds)).ToList();
 
             // Get view crop box
             BoundingBox2D? viewCrop = GetViewCropBox();
@@ -175,7 +178,7 @@ namespace SmartTag.ML
             List<TaggableElement> allElements,
             List<TagPlacement> newPlacements,
             List<TagPlacement> existingPlacements,
-            List<BoundingBox2D> elementBounds,
+            List<(long ElementId, BoundingBox2D Bounds)> elementBounds,
             BoundingBox2D? viewCrop,
             TagSettings settings)
         {
@@ -581,6 +584,12 @@ namespace SmartTag.ML
         {
             if (element == null || _ruleEngine == null)
                 return new List<string>();
+
+            // Return cached result if available
+            if (_preferredPositionCache.TryGetValue(element.ElementId, out var cached))
+                return cached;
+
+            var result = new List<string>();
             try
             {
                 var rule = _ruleEngine.GetBestTaggingRule(
@@ -590,13 +599,15 @@ namespace SmartTag.ML
                     element.SystemClassification ?? "",
                     element.SystemName ?? "");
                 if (rule?.Actions?.PreferredPositions != null && rule.Actions.PreferredPositions.Count > 0)
-                    return new List<string>(rule.Actions.PreferredPositions);
+                    result = new List<string>(rule.Actions.PreferredPositions);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"PlacementEngine rule lookup failed: {ex.Message}");
             }
-            return new List<string>();
+
+            _preferredPositionCache[element.ElementId] = result;
+            return result;
         }
 
         /// <summary>
