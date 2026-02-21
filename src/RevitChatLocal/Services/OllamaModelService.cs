@@ -20,7 +20,8 @@ namespace RevitChatLocal.Services
 
     public static class OllamaModelService
     {
-        private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromMinutes(30) };
+        private static readonly HttpClient _httpQuick = new() { Timeout = TimeSpan.FromSeconds(10) };
+        private static readonly HttpClient _httpPull = new() { Timeout = TimeSpan.FromMinutes(60) };
 
         public static readonly List<string> RecommendedModels = new()
         {
@@ -44,7 +45,7 @@ namespace RevitChatLocal.Services
             try
             {
                 var baseUrl = endpointUrl.TrimEnd('/');
-                var response = await _http.GetAsync($"{baseUrl}/api/tags", ct);
+                var response = await _httpQuick.GetAsync($"{baseUrl}/api/tags", ct);
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
@@ -108,22 +109,38 @@ namespace RevitChatLocal.Services
                 Content = content
             };
 
-            using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
-            response.EnsureSuccessStatusCode();
+            using var response = await _httpPull.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                string errorBody;
+                try { errorBody = await response.Content.ReadAsStringAsync(); }
+                catch { errorBody = response.ReasonPhrase; }
+                throw new HttpRequestException(
+                    $"Ollama pull failed ({(int)response.StatusCode}): {errorBody}");
+            }
 
             using var stream = await response.Content.ReadAsStreamAsync();
             using var reader = new StreamReader(stream);
 
-            string line;
-            while ((line = await reader.ReadLineAsync()) != null)
+            while (true)
             {
                 ct.ThrowIfCancellationRequested();
+
+                var line = await reader.ReadLineAsync();
+                if (line == null) break;
                 if (string.IsNullOrWhiteSpace(line)) continue;
 
                 try
                 {
                     using var doc = JsonDocument.Parse(line);
                     var root = doc.RootElement;
+
+                    if (root.TryGetProperty("error", out var errProp))
+                    {
+                        var errMsg = errProp.GetString();
+                        throw new InvalidOperationException($"Ollama error: {errMsg}");
+                    }
 
                     var status = root.TryGetProperty("status", out var sp) ? sp.GetString() : "";
 
@@ -147,7 +164,7 @@ namespace RevitChatLocal.Services
                         onProgress?.Invoke(status);
                     }
                 }
-                catch
+                catch (JsonException)
                 {
                     onProgress?.Invoke(line);
                 }

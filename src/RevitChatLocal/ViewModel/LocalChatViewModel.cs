@@ -191,27 +191,33 @@ namespace RevitChatLocal.ViewModel
                 var models = await OllamaModelService.GetModelListWithStatusAsync(endpoint);
 
                 var currentSelection = SelectedModel;
-
-                AvailableModels.Clear();
-                InstalledModels.Clear();
+                var newNames = new List<string>();
+                var newInstalled = new List<string>();
+                var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 foreach (var m in models)
                 {
-                    if (!AvailableModels.Contains(m.Name))
-                        AvailableModels.Add(m.Name);
+                    if (seen.Add(m.Name))
+                        newNames.Add(m.Name);
                     if (m.IsInstalled)
-                        InstalledModels.Add($"{m.Name}  [{m.Size}]");
+                        newInstalled.Add($"{m.Name}  [{m.Size}]");
                 }
 
-                // Ensure custom-typed model stays in list
-                if (!string.IsNullOrEmpty(currentSelection) && !AvailableModels.Contains(currentSelection))
-                    AvailableModels.Add(currentSelection);
+                if (!string.IsNullOrEmpty(currentSelection) && !seen.Contains(currentSelection))
+                    newNames.Add(currentSelection);
+
+                AvailableModels.Clear();
+                foreach (var n in newNames)
+                    AvailableModels.Add(n);
+
+                InstalledModels.Clear();
+                foreach (var n in newInstalled)
+                    InstalledModels.Add(n);
 
                 SelectedModel = currentSelection;
             }
             catch
             {
-                // Keep default list if Ollama unreachable
             }
         }
 
