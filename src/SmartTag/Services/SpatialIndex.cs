@@ -143,9 +143,12 @@ namespace SmartTag.Services
             {
                 for (int y = minCell.y; y <= maxCell.y; y++)
                 {
-                    if (_grid.TryGetValue((x, y), out var cell))
+                    var key = (x, y);
+                    if (_grid.TryGetValue(key, out var cell))
                     {
                         cell.RemoveAll(i => i.Id == id);
+                        if (cell.Count == 0)
+                            _grid.Remove(key);
                     }
                 }
             }

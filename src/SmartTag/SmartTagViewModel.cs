@@ -341,10 +341,15 @@ namespace SmartTag
         {
             Application.Current?.Dispatcher.Invoke(() =>
             {
+                var previousSelection = new HashSet<BuiltInCategory>(
+                    Categories.Where(c => c.IsSelected).Select(c => c.Category));
+
                 Categories.Clear();
                 foreach (var stat in stats)
                 {
                     var vm = new CategoryTagConfigViewModel(stat);
+                    if (previousSelection.Contains(stat.Category))
+                        vm.IsSelected = true;
                     vm.PropertyChanged += (s, e) =>
                     {
                         if (e.PropertyName == nameof(CategoryTagConfigViewModel.IsSelected))
@@ -417,7 +422,10 @@ namespace SmartTag
                 }
                 else
                 {
-                    StatusMessage = $"Preview failed: {string.Join(", ", result.Warnings.Take(2))}";
+                    var warnings = result.Warnings ?? new List<string>();
+                    StatusMessage = warnings.Count > 0
+                        ? $"Preview ended: {string.Join(", ", warnings.Take(2))}"
+                        : "Preview ended.";
                     IsPreviewMode = false;
                 }
                 
@@ -542,16 +550,19 @@ namespace SmartTag
             TotalElementCount = Categories.Where(c => c.IsSelected).Sum(c => c.ElementCount);
 
             // Debounce preview to avoid expensive recalculation on every checkbox toggle
-            _previewDebounceTimer?.Stop();
-            _previewDebounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
-            _previewDebounceTimer.Tick += (s, e) =>
+            if (_previewDebounceTimer == null)
             {
-                _previewDebounceTimer.Stop();
-                if (SelectedCategoryCount > 0)
-                    PreviewPlacements();
-                else
-                    PreviewTagCount = 0;
-            };
+                _previewDebounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+                _previewDebounceTimer.Tick += (s, e) =>
+                {
+                    _previewDebounceTimer.Stop();
+                    if (SelectedCategoryCount > 0)
+                        PreviewPlacements();
+                    else
+                        PreviewTagCount = 0;
+                };
+            }
+            _previewDebounceTimer.Stop();
             _previewDebounceTimer.Start();
 
             ExecuteAutoTagCommand.NotifyCanExecuteChanged();
@@ -571,6 +582,9 @@ namespace SmartTag
 
         public void Cleanup()
         {
+            _previewDebounceTimer?.Stop();
+            _previewDebounceTimer = null;
+
             _handler.OnCategoryStatsLoaded -= HandleCategoryStatsLoaded;
             _handler.OnAutoTagCompleted -= HandleAutoTagCompleted;
             _handler.OnPlacementsCalculated -= HandlePlacementsCalculated;

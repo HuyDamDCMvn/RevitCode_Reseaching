@@ -177,9 +177,9 @@ namespace SmartTag.Services
         {
             var dimIds = new List<long>();
             var allPoints = new List<(XYZ Point, Reference Ref)>();
+            bool betweenOnly = settings?.Mode == DimensionMode.BetweenOpenings;
 
-            // Collect all points and references
-            if (group.StartReference?.Reference != null)
+            if (!betweenOnly && group.StartReference?.Reference != null)
             {
                 var startPoint = GetReferencePoint(group.StartReference, group.Openings.First().CenterPoint);
                 if (startPoint != null)
@@ -196,7 +196,7 @@ namespace SmartTag.Services
                 }
             }
 
-            if (group.EndReference?.Reference != null)
+            if (!betweenOnly && group.EndReference?.Reference != null)
             {
                 var endPoint = GetReferencePoint(group.EndReference, group.Openings.Last().CenterPoint);
                 if (endPoint != null)

@@ -281,9 +281,93 @@ namespace CommonFeature.Handlers
 
         private void ExecuteGetParameterValues(Document doc, List<long> elementIds, List<string> paramNames)
         {
-            // Similar to GetAllParameters but only for specific parameters
-            // This is used for refreshing values after updates
-            ExecuteGetAllParameters(doc, elementIds);
+            if (paramNames == null || paramNames.Count == 0)
+            {
+                ExecuteGetAllParameters(doc, elementIds);
+                return;
+            }
+
+            RaiseStatus("Loading parameter values...");
+
+            var paramFilter = new HashSet<string>(paramNames, StringComparer.Ordinal);
+            var paramDefs = new Dictionary<string, ParameterDefinition>();
+            var elementDataList = new List<ElementParameterData>();
+
+            foreach (var id in elementIds)
+            {
+                var elemId = new ElementId(id);
+                var element = doc.GetElement(elemId);
+                if (element == null) continue;
+
+                var elemData = new ElementParameterData
+                {
+                    ElementId = id,
+                    Category = element.Category?.Name ?? "-"
+                };
+
+                if (element is FamilyInstance fi && fi.Symbol != null)
+                {
+                    elemData.FamilyName = fi.Symbol.Family?.Name ?? "-";
+                    elemData.TypeName = fi.Symbol.Name ?? "-";
+                }
+                else
+                {
+                    var typeId = element.GetTypeId();
+                    if (typeId != ElementId.InvalidElementId)
+                    {
+                        var elemType = doc.GetElement(typeId);
+                        var familyParam = elemType?.get_Parameter(BuiltInParameter.SYMBOL_FAMILY_NAME_PARAM);
+                        elemData.FamilyName = familyParam?.AsString() ?? elemType?.Name ?? "-";
+                        elemData.TypeName = elemType?.Name ?? "-";
+                    }
+                    else
+                    {
+                        elemData.FamilyName = element.GetType().Name;
+                        elemData.TypeName = "-";
+                    }
+                }
+
+                foreach (Parameter param in element.Parameters)
+                {
+                    if (!param.HasValue || IsInternalParameter(param)) continue;
+                    var name = param.Definition?.Name;
+                    if (name == null || !paramFilter.Contains(name)) continue;
+
+                    var key = $"{name}|I";
+                    if (!paramDefs.ContainsKey(key))
+                        paramDefs[key] = CreateParameterDefinition(param, true);
+                    elemData.Values[key] = CreateParameterValue(doc, param, true);
+                }
+
+                var typeId2 = element.GetTypeId();
+                if (typeId2 != ElementId.InvalidElementId)
+                {
+                    var elementType = doc.GetElement(typeId2);
+                    if (elementType != null)
+                    {
+                        foreach (Parameter param in elementType.Parameters)
+                        {
+                            if (!param.HasValue || IsInternalParameter(param)) continue;
+                            var name = param.Definition?.Name;
+                            if (name == null || !paramFilter.Contains(name)) continue;
+
+                            var key = $"{name}|T";
+                            if (!paramDefs.ContainsKey(key))
+                                paramDefs[key] = CreateParameterDefinition(param, false);
+                            elemData.Values[key] = CreateParameterValue(doc, param, false);
+                        }
+                    }
+                }
+
+                elementDataList.Add(elemData);
+            }
+
+            var groupedParams = GroupParameters(paramDefs.Values.ToList());
+
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                OnParametersLoaded?.Invoke(groupedParams, elementDataList);
+            });
         }
 
         #endregion

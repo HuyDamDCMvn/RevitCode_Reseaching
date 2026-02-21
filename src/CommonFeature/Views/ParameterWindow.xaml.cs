@@ -410,9 +410,8 @@ namespace CommonFeature.Views
                     var binding = (column as DataGridBoundColumn)?.Binding as Binding;
                     if (binding != null)
                     {
-                        // Extract value from binding path
                         var path = binding.Path.Path;
-                        if (path.StartsWith("Values[") && path.Contains("]."))
+                        if (path.StartsWith("Values[") && path.IndexOf(']') > 7)
                         {
                             var key = path.Substring(7, path.IndexOf(']') - 7);
                             if (data.Values.TryGetValue(key, out var pv))

@@ -1493,7 +1493,11 @@ namespace CommonFeature
                 };
                 
                 // Subscribe to window closed event to reset active state
-                infoWindow.Closed += (s, e) => OnFeatureWindowClosed?.Invoke("Info");
+                infoWindow.Closed += (s, e) =>
+                {
+                    _currentInfoWindow = null;
+                    OnFeatureWindowClosed?.Invoke("Info");
+                };
                 
                 infoWindow.SetData(elementInfos);
                 infoWindow.Show();

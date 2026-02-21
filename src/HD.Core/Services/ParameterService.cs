@@ -50,14 +50,14 @@ namespace HD.Core.Services
                 case StorageType.String:
                     return param.AsString();
                 case StorageType.Integer:
-                    if (param.Definition.GetDataType() == SpecTypeId.Boolean.YesNo)
+                    if (param.Definition?.GetDataType() == SpecTypeId.Boolean.YesNo)
                         return param.AsInteger() == 1 ? "Yes" : "No";
                     return param.AsInteger().ToString();
                 case StorageType.Double:
                     return param.AsValueString() ?? param.AsDouble().ToString("F4");
                 case StorageType.ElementId:
                     var id = param.AsElementId();
-                    if (id == null || id == ElementId.InvalidElementId) return null;
+                    if (id == ElementId.InvalidElementId) return null;
                     var doc = param.Element?.Document;
                     if (doc != null)
                     {
@@ -104,7 +104,7 @@ namespace HD.Core.Services
                         return param.Set(value ?? "");
 
                     case StorageType.Integer:
-                        if (param.Definition.GetDataType() == SpecTypeId.Boolean.YesNo)
+                        if (param.Definition?.GetDataType() == SpecTypeId.Boolean.YesNo)
                         {
                             var lower = value?.ToLower();
                             var intVal = (lower == "yes" || lower == "true" || lower == "1") ? 1 : 0;
@@ -152,7 +152,7 @@ namespace HD.Core.Services
             switch (param.StorageType)
             {
                 case StorageType.Integer:
-                    if (param.Definition.GetDataType() == SpecTypeId.Boolean.YesNo)
+                    if (param.Definition?.GetDataType() == SpecTypeId.Boolean.YesNo)
                         return ParameterDataType.YesNo;
                     return ParameterDataType.Integer;
                 case StorageType.Double:

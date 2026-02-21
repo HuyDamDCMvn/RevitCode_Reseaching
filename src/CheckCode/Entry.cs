@@ -57,14 +57,21 @@ namespace CheckCode
 
         private static void ShowResults(CheckResult result)
         {
+            if (result == null)
+            {
+                TaskDialog.Show("CheckCode", "Check returned no result.");
+                return;
+            }
+
+            var issues = result.Issues ?? new List<CheckIssue>();
             var sb = new StringBuilder();
             sb.AppendLine("=== CHECK CODE RESULTS ===");
             sb.AppendLine();
             sb.AppendLine($"Total elements checked: {result.TotalElementsChecked}");
-            sb.AppendLine($"Issues found: {result.Issues.Count}");
+            sb.AppendLine($"Issues found: {issues.Count}");
             sb.AppendLine();
 
-            if (result.Issues.Count == 0)
+            if (issues.Count == 0)
             {
                 sb.AppendLine("✓ No issues found!");
             }
@@ -73,7 +80,7 @@ namespace CheckCode
                 sb.AppendLine("Issues:");
                 sb.AppendLine(new string('-', 40));
                 
-                foreach (var issue in result.Issues.Take(20)) // Limit to 20 issues
+                foreach (var issue in issues.Take(20))
                 {
                     sb.AppendLine($"• [{issue.Category}] {issue.Description}");
                     if (issue.ElementId != ElementId.InvalidElementId)
@@ -86,9 +93,9 @@ namespace CheckCode
                     }
                 }
 
-                if (result.Issues.Count > 20)
+                if (issues.Count > 20)
                 {
-                    sb.AppendLine($"\n... and {result.Issues.Count - 20} more issues.");
+                    sb.AppendLine($"\n... and {issues.Count - 20} more issues.");
                 }
             }
 
@@ -256,49 +263,40 @@ namespace CheckCode
 
         private void CheckDuplicateMarks()
         {
-            // Check for duplicate marks across all elements
-            var allElements = new FilteredElementCollector(_doc)
-                .WhereElementIsNotElementType()
-                .Where(e => e.Category != null)
-                .ToList();
+            var markByCategoryMap = new Dictionary<(long catId, string mark), List<ElementId>>();
 
-            var markGroups = allElements
-                .Select(e => new
-                {
-                    Element = e,
-                    Mark = e.get_Parameter(BuiltInParameter.ALL_MODEL_MARK)?.AsString()
-                })
-                .Where(x => !string.IsNullOrWhiteSpace(x.Mark))
-                .GroupBy(x => x.Mark)
-                .Where(g => g.Count() > 1)
-                .ToList();
+            var collector = new FilteredElementCollector(_doc)
+                .WhereElementIsNotElementType();
 
-            foreach (var group in markGroups)
+            foreach (var elem in collector)
             {
-                var elements = group.ToList();
-                var categories = elements
-                    .Select(x => x.Element.Category?.Name ?? "Unknown")
-                    .Distinct()
-                    .ToList();
+                if (elem.Category == null) continue;
+                var mark = elem.get_Parameter(BuiltInParameter.ALL_MODEL_MARK)?.AsString();
+                if (string.IsNullOrWhiteSpace(mark)) continue;
 
-                // Only report if same mark used in same category
-                var sameCategoryDuplicates = elements
-                    .GroupBy(x => x.Element.Category?.Id ?? ElementId.InvalidElementId)
-                    .Where(g => g.Count() > 1)
-                    .ToList();
-
-                foreach (var catGroup in sameCategoryDuplicates)
+                var key = (elem.Category.Id.Value, mark);
+                if (!markByCategoryMap.TryGetValue(key, out var ids))
                 {
-                    foreach (var item in catGroup.Skip(1)) // Skip first, report rest as duplicates
+                    ids = new List<ElementId>();
+                    markByCategoryMap[key] = ids;
+                }
+                ids.Add(elem.Id);
+            }
+
+            foreach (var kvp in markByCategoryMap)
+            {
+                if (kvp.Value.Count <= 1) continue;
+                var mark = kvp.Key.mark;
+                foreach (var elemId in kvp.Value.Skip(1))
+                {
+                    var catName = _doc.GetElement(kvp.Value[0])?.Category?.Name ?? "Unknown";
+                    _result.Issues.Add(new CheckIssue
                     {
-                        _result.Issues.Add(new CheckIssue
-                        {
-                            Category = "Duplicate Mark",
-                            Description = $"Duplicate mark '{group.Key}' in {item.Element.Category?.Name}",
-                            ElementId = item.Element.Id,
-                            Severity = IssueSeverity.Error
-                        });
-                    }
+                        Category = "Duplicate Mark",
+                        Description = $"Duplicate mark '{mark}' in {catName}",
+                        ElementId = elemId,
+                        Severity = IssueSeverity.Error
+                    });
                 }
             }
         }

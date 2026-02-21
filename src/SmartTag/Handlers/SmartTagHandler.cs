@@ -381,6 +381,8 @@ namespace SmartTag
 
         private void ExecutePreviewPlacements(UIApplication app, TagSettings settings)
         {
+            if (settings == null) return;
+
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null)
             {
@@ -523,10 +525,10 @@ namespace SmartTag
                 return;
             }
 
-            // Clear any existing preview first
+            // Clear any existing preview first (suppress callback to avoid resetting IsPreviewMode)
             if (_hasPreviewTags && _previewTagIds.Count > 0)
             {
-                ExecuteUndoPreviewTags(app);
+                ExecuteUndoPreviewTags(app, suppressCallback: true);
             }
 
             OnStatusUpdate?.Invoke("Collecting elements for preview...");
@@ -668,7 +670,7 @@ namespace SmartTag
         /// <summary>
         /// Undo preview tags - delete all preview tags.
         /// </summary>
-        private void ExecuteUndoPreviewTags(UIApplication app)
+        private void ExecuteUndoPreviewTags(UIApplication app, bool suppressCallback = false)
         {
             if (!_hasPreviewTags || _previewTagIds.Count == 0)
             {
@@ -721,12 +723,15 @@ namespace SmartTag
             _previewTagIds.Clear();
             _hasPreviewTags = false;
 
-            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+            if (!suppressCallback)
             {
-                OnPreviewTagsCreated?.Invoke(
-                    new TagResult { TagsCreated = 0 },
-                    false);
-            }));
+                Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    OnPreviewTagsCreated?.Invoke(
+                        new TagResult { TagsCreated = 0 },
+                        false);
+                }));
+            }
         }
 
         /// <summary>
@@ -808,32 +813,23 @@ namespace SmartTag
             catch (Exception ex)
             {
                 OnError?.Invoke($"Export failed: {ex.Message}");
+                Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    OnExportTrainingDataCompleted?.Invoke("", 0, false);
+                }));
             }
         }
 
         private static string GetTrainingExportDirectory()
         {
-            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            var assemblyDir = System.IO.Path.GetDirectoryName(assembly.Location);
-            var candidates = new[]
-            {
-                System.IO.Path.Combine(assemblyDir, "Data", "Training", "annotated"),
-                System.IO.Path.Combine(assemblyDir, "..", "Data", "Training", "annotated"),
-                System.IO.Path.Combine(assemblyDir, "..", "..", "src", "SmartTag", "Data", "Training", "annotated"),
-                @"D:\03_DCMvn\RevitCode\src\SmartTag\Data\Training\annotated"
-            };
-            foreach (var dir in candidates)
-            {
-                try
-                {
-                    var full = System.IO.Path.GetFullPath(dir);
-                    if (!System.IO.Directory.Exists(full))
-                        System.IO.Directory.CreateDirectory(full);
-                    return full;
-                }
-                catch { }
-            }
-            return System.IO.Path.GetTempPath();
+            var folder = DataPathResolver.ResolveFolder("Training/annotated");
+            if (folder != null) return folder;
+
+            var fallback = DataPathResolver.Resolve("Training/annotated/.placeholder", "SmartTag_annotated");
+            var dir = System.IO.Path.GetDirectoryName(fallback);
+            if (dir != null && !System.IO.Directory.Exists(dir))
+                System.IO.Directory.CreateDirectory(dir);
+            return dir ?? System.IO.Path.GetTempPath();
         }
 
         #endregion
@@ -842,6 +838,12 @@ namespace SmartTag
 
         private void ExecuteAutoDimension(UIApplication app, DimensionSettings settings)
         {
+            if (settings == null)
+            {
+                OnError?.Invoke("Dimension settings are null");
+                return;
+            }
+
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null)
             {
@@ -901,6 +903,12 @@ namespace SmartTag
 
         private void ExecuteDimensionSelection(UIApplication app, DimensionSettings settings, List<long> elementIds)
         {
+            if (settings == null)
+            {
+                OnError?.Invoke("Dimension settings are null");
+                return;
+            }
+
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null)
             {

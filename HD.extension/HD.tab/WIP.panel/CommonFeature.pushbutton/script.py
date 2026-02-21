@@ -15,5 +15,5 @@ launch_dll(
     dll_name="CommonFeature.dll",
     namespace="CommonFeature",
     method="ShowTool",
-    dependencies=["CommunityToolkit.Mvvm.dll"]
+    dependencies=["HD.Core.dll", "CommunityToolkit.Mvvm.dll"]
 )

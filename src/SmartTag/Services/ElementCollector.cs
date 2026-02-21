@@ -802,49 +802,5 @@ namespace SmartTag.Services
             return (false, null);
         }
 
-        private bool IsTaggableCategory(BuiltInCategory cat)
-        {
-            // Common taggable categories
-            var taggable = new HashSet<BuiltInCategory>
-            {
-                BuiltInCategory.OST_Walls,
-                BuiltInCategory.OST_Floors,
-                BuiltInCategory.OST_Ceilings,
-                BuiltInCategory.OST_Roofs,
-                BuiltInCategory.OST_Doors,
-                BuiltInCategory.OST_Windows,
-                BuiltInCategory.OST_Furniture,
-                BuiltInCategory.OST_FurnitureSystems,
-                BuiltInCategory.OST_Columns,
-                BuiltInCategory.OST_StructuralColumns,
-                BuiltInCategory.OST_StructuralFraming,
-                BuiltInCategory.OST_StructuralFoundation,
-                BuiltInCategory.OST_Rooms,
-                BuiltInCategory.OST_Areas,
-                BuiltInCategory.OST_DuctCurves,
-                BuiltInCategory.OST_PipeCurves,
-                BuiltInCategory.OST_CableTray,
-                BuiltInCategory.OST_Conduit,
-                BuiltInCategory.OST_MechanicalEquipment,
-                BuiltInCategory.OST_ElectricalEquipment,
-                BuiltInCategory.OST_ElectricalFixtures,
-                BuiltInCategory.OST_LightingFixtures,
-                BuiltInCategory.OST_PlumbingFixtures,
-                BuiltInCategory.OST_Sprinklers,
-                BuiltInCategory.OST_GenericModel,
-                BuiltInCategory.OST_SpecialityEquipment,
-                BuiltInCategory.OST_DuctAccessory,
-                BuiltInCategory.OST_DuctFitting,
-                BuiltInCategory.OST_DuctTerminal,
-                BuiltInCategory.OST_PipeAccessory,
-                BuiltInCategory.OST_PipeFitting,
-                BuiltInCategory.OST_FlexDuctCurves,
-                BuiltInCategory.OST_FlexPipeCurves,
-                BuiltInCategory.OST_CableTrayFitting,
-                BuiltInCategory.OST_ConduitFitting
-            };
-
-            return taggable.Contains(cat);
-        }
     }
 }
