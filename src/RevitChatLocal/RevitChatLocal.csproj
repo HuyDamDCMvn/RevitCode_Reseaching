@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>RevitChatLocal</RootNamespace>
+    <AssemblyName>RevitChatLocal</AssemblyName>
+    <Description>Local AI Chatbot for Revit using Ollama - free, no API key needed</Description>
+  </PropertyGroup>
+
+  <!-- Project Reference -->
+  <ItemGroup>
+    <ProjectReference Include="..\HD.Core\HD.Core.csproj" />
+  </ItemGroup>
+
+  <!-- Revit API References -->
+  <ItemGroup>
+    <Reference Include="RevitAPI">
+      <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="RevitAPIUI">
+      <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPIUI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="OpenAI" Version="2.*" />
+  </ItemGroup>
+
+  <!-- Linked files from RevitChat (shared Skills, Handler, Models) -->
+  <ItemGroup>
+    <Compile Include="..\RevitChat\Skills\*.cs" Link="Skills\%(Filename)%(Extension)" />
+    <Compile Include="..\RevitChat\Handler\*.cs" Link="Handler\%(Filename)%(Extension)" />
+    <Compile Include="..\RevitChat\Models\*.cs" Link="Models\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <!-- Post-build: Copy DLLs to pyRevit lib folder -->
+  <Target Name="CopyToExtension" AfterTargets="Build">
+    <PropertyGroup>
+      <ExtLibNet8>$(ProjectDir)..\..\HD.extension\lib\net8\</ExtLibNet8>
+    </PropertyGroup>
+    
+    <MakeDir Directories="$(ExtLibNet8)" />
+    
+    <!-- Copy main DLL -->
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ExtLibNet8)" />
+    
+    <!-- Copy all dependency DLLs (except Revit API and other project DLLs already deployed) -->
+    <ItemGroup>
+      <LocalDependencyDlls Include="$(OutputPath)*.dll"
+        Exclude="$(OutputPath)RevitChatLocal.dll;$(OutputPath)RevitAPI*.dll;$(OutputPath)HD.Core.dll;$(OutputPath)RevitChat.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(LocalDependencyDlls)" DestinationFolder="$(ExtLibNet8)" />
+
+    <Message Text="Copied RevitChatLocal + dependencies to $(ExtLibNet8)" Importance="high" />
+  </Target>
+
+</Project>

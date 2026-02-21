@@ -60,6 +60,17 @@ namespace RevitChat.Skills
             registry.Register(new MepSpaceSkill());
             registry.Register(new MepQuantityTakeoffSkill());
             registry.Register(new MepValidationSkill());
+            registry.Register(new ViewControlSkill());
+            registry.Register(new RevitLinkSkill());
+            registry.Register(new FamilyPlacementSkill());
+            registry.Register(new SheetManagementSkill());
+            registry.Register(new FilterTemplateSkill());
+            registry.Register(new DimensionTagSkill());
+            registry.Register(new WorksetPhaseSkill());
+            registry.Register(new GroupSkill());
+            registry.Register(new ClashDetectionSkill());
+            registry.Register(new MaterialSkill());
+            registry.Register(new RoomAreaSkill());
             return registry;
         }
     }

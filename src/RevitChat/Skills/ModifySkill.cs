@@ -13,11 +13,13 @@ namespace RevitChat.Skills
     public class ModifySkill : IRevitSkill
     {
         public string Name => "Modify";
-        public string Description => "Modify parameters, delete elements, select elements in Revit";
+        public string Description => "Modify, copy, move, mirror, rename, duplicate elements and views in Revit";
 
         private static readonly HashSet<string> HandledTools = new()
         {
-            "set_parameter_value", "delete_elements", "select_elements"
+            "set_parameter_value", "delete_elements", "select_elements",
+            "rename_elements", "copy_elements", "move_elements",
+            "mirror_elements", "duplicate_views", "duplicate_sheets"
         };
 
         public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
@@ -60,6 +62,92 @@ namespace RevitChat.Skills
                     },
                     "required": ["element_ids"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("rename_elements",
+                "Rename elements by setting their Mark or Name parameter. Confirm with user first.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to rename" },
+                        "new_name": { "type": "string", "description": "New name/mark value" },
+                        "param_name": { "type": "string", "description": "Parameter to set: 'Mark', 'Name', or any writable string param. Default: Mark" }
+                    },
+                    "required": ["element_ids", "new_name"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("copy_elements",
+                "Copy elements to a new position by offset (X,Y,Z in feet). Confirm with user first.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to copy" },
+                        "offset_x": { "type": "number", "description": "X offset in feet (default 0)" },
+                        "offset_y": { "type": "number", "description": "Y offset in feet (default 0)" },
+                        "offset_z": { "type": "number", "description": "Z offset in feet (default 0)" }
+                    },
+                    "required": ["element_ids"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("move_elements",
+                "Move elements by offset (X,Y,Z in feet). Confirm with user first.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to move" },
+                        "offset_x": { "type": "number", "description": "X offset in feet (default 0)" },
+                        "offset_y": { "type": "number", "description": "Y offset in feet (default 0)" },
+                        "offset_z": { "type": "number", "description": "Z offset in feet (default 0)" }
+                    },
+                    "required": ["element_ids"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("mirror_elements",
+                "Mirror (flip) elements across an axis defined by a point and direction. Confirm with user first.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to mirror" },
+                        "axis": { "type": "string", "enum": ["x", "y"], "description": "Mirror axis: 'x' (mirror across YZ plane) or 'y' (mirror across XZ plane)" },
+                        "origin_x": { "type": "number", "description": "X coordinate of axis origin in feet (default 0)" },
+                        "origin_y": { "type": "number", "description": "Y coordinate of axis origin in feet (default 0)" }
+                    },
+                    "required": ["element_ids", "axis"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("duplicate_views",
+                "Duplicate views (floor plans, sections, 3D views, etc). Creates independent copies.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "view_ids": { "type": "array", "items": { "type": "integer" }, "description": "View IDs to duplicate" },
+                        "suffix": { "type": "string", "description": "Suffix to append to duplicated view names (default: ' - Copy')" },
+                        "duplicate_option": { "type": "string", "enum": ["independent", "with_detailing", "as_dependent"], "description": "Duplication type (default: independent)" }
+                    },
+                    "required": ["view_ids"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("duplicate_sheets",
+                "Duplicate sheets. Creates new sheets with the same titleblock but empty viewports.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "sheet_ids": { "type": "array", "items": { "type": "integer" }, "description": "Sheet IDs to duplicate" },
+                        "new_numbers": { "type": "array", "items": { "type": "string" }, "description": "New sheet numbers (must match sheet_ids count)" }
+                    },
+                    "required": ["sheet_ids"]
+                }
                 """))
         };
 
@@ -72,6 +160,12 @@ namespace RevitChat.Skills
                 "set_parameter_value" => SetParameterValue(doc, args),
                 "delete_elements" => DeleteElements(doc, args),
                 "select_elements" => SelectElements(uidoc, args),
+                "rename_elements" => RenameElements(doc, args),
+                "copy_elements" => CopyElements(doc, args),
+                "move_elements" => MoveElements(doc, args),
+                "mirror_elements" => MirrorElements(doc, args),
+                "duplicate_views" => DuplicateViews(doc, args),
+                "duplicate_sheets" => DuplicateSheets(doc, args),
                 _ => JsonError($"ModifySkill: unknown tool '{functionName}'")
             };
         }
@@ -155,6 +249,237 @@ namespace RevitChat.Skills
                 selected = elemIds.Count,
                 message = $"Selected {elemIds.Count} element(s) in the active view."
             }, JsonOpts);
+        }
+
+        private string RenameElements(Document doc, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "element_ids");
+            var newName = GetArg<string>(args, "new_name");
+            var paramName = GetArg(args, "param_name", "Mark");
+
+            if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+            if (string.IsNullOrEmpty(newName)) return JsonError("new_name required.");
+
+            int success = 0, failed = 0;
+            var errors = new List<string>();
+
+            using (var trans = new Transaction(doc, "AI: Rename Elements"))
+            {
+                trans.Start();
+                foreach (var id in ids)
+                {
+                    var elem = doc.GetElement(new ElementId(id));
+                    if (elem == null) { failed++; errors.Add($"Element {id} not found"); continue; }
+
+                    var param = elem.LookupParameter(paramName);
+                    if (param == null || param.IsReadOnly)
+                    {
+                        param = elem.get_Parameter(BuiltInParameter.ALL_MODEL_MARK);
+                    }
+                    if (param == null || param.IsReadOnly)
+                    {
+                        failed++; errors.Add($"No writable '{paramName}' on {id}"); continue;
+                    }
+
+                    if (SetParamValue(param, newName)) success++;
+                    else { failed++; errors.Add($"Failed to rename {id}"); }
+                }
+                if (success > 0) trans.Commit();
+                else trans.RollBack();
+            }
+
+            return JsonSerializer.Serialize(new { success, failed, param_name = paramName, new_name = newName, errors = errors.Take(10) }, JsonOpts);
+        }
+
+        private string CopyElements(Document doc, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "element_ids");
+            if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+
+            double ox = GetArg(args, "offset_x", 0.0);
+            double oy = GetArg(args, "offset_y", 0.0);
+            double oz = GetArg(args, "offset_z", 0.0);
+            var translation = new XYZ(ox, oy, oz);
+
+            var elemIds = ids.Select(id => new ElementId(id)).Where(id => doc.GetElement(id) != null).ToList();
+            if (elemIds.Count == 0) return JsonError("No valid elements found.");
+
+            ICollection<ElementId> copied;
+            using (var trans = new Transaction(doc, "AI: Copy Elements"))
+            {
+                trans.Start();
+                copied = ElementTransformUtils.CopyElements(doc, elemIds, translation);
+                trans.Commit();
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                copied = copied.Count,
+                new_ids = copied.Select(id => id.Value).ToList(),
+                offset = new { x = ox, y = oy, z = oz },
+                message = $"Copied {copied.Count} element(s)."
+            }, JsonOpts);
+        }
+
+        private string MoveElements(Document doc, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "element_ids");
+            if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+
+            double ox = GetArg(args, "offset_x", 0.0);
+            double oy = GetArg(args, "offset_y", 0.0);
+            double oz = GetArg(args, "offset_z", 0.0);
+            var translation = new XYZ(ox, oy, oz);
+
+            if (translation.IsZeroLength()) return JsonError("Offset is zero — nothing to move.");
+
+            var elemIds = ids.Select(id => new ElementId(id)).Where(id => doc.GetElement(id) != null).ToList();
+            if (elemIds.Count == 0) return JsonError("No valid elements found.");
+
+            using (var trans = new Transaction(doc, "AI: Move Elements"))
+            {
+                trans.Start();
+                ElementTransformUtils.MoveElements(doc, elemIds, translation);
+                trans.Commit();
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                moved = elemIds.Count,
+                offset = new { x = ox, y = oy, z = oz },
+                message = $"Moved {elemIds.Count} element(s)."
+            }, JsonOpts);
+        }
+
+        private string MirrorElements(Document doc, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "element_ids");
+            if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+
+            var axis = GetArg(args, "axis", "x");
+            double originX = GetArg(args, "origin_x", 0.0);
+            double originY = GetArg(args, "origin_y", 0.0);
+
+            var origin = new XYZ(originX, originY, 0);
+            XYZ direction = axis == "y" ? XYZ.BasisX : XYZ.BasisY;
+            var plane = Plane.CreateByNormalAndOrigin(direction, origin);
+
+            var elemIds = ids.Select(id => new ElementId(id)).Where(id => doc.GetElement(id) != null).ToList();
+            if (elemIds.Count == 0) return JsonError("No valid elements found.");
+
+            using (var trans = new Transaction(doc, "AI: Mirror Elements"))
+            {
+                trans.Start();
+                ElementTransformUtils.MirrorElements(doc, elemIds, plane, true);
+                trans.Commit();
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                mirrored = elemIds.Count,
+                axis,
+                origin = new { x = originX, y = originY },
+                message = $"Mirrored {elemIds.Count} element(s) across {axis}-axis."
+            }, JsonOpts);
+        }
+
+        private string DuplicateViews(Document doc, Dictionary<string, object> args)
+        {
+            var viewIds = GetArgLongArray(args, "view_ids");
+            if (viewIds == null || viewIds.Count == 0) return JsonError("view_ids required.");
+
+            var suffix = GetArg(args, "suffix", " - Copy");
+            var optStr = GetArg(args, "duplicate_option", "independent");
+
+            var dupOpt = optStr switch
+            {
+                "with_detailing" => ViewDuplicateOption.WithDetailing,
+                "as_dependent" => ViewDuplicateOption.AsDependent,
+                _ => ViewDuplicateOption.Duplicate
+            };
+
+            int success = 0;
+            var results = new List<object>();
+            var errors = new List<string>();
+
+            using (var trans = new Transaction(doc, "AI: Duplicate Views"))
+            {
+                trans.Start();
+                foreach (var id in viewIds)
+                {
+                    var view = doc.GetElement(new ElementId(id)) as View;
+                    if (view == null) { errors.Add($"Element {id} is not a view"); continue; }
+                    if (!view.CanViewBeDuplicated(dupOpt)) { errors.Add($"View '{view.Name}' cannot be duplicated with option '{optStr}'"); continue; }
+
+                    try
+                    {
+                        var newId = view.Duplicate(dupOpt);
+                        var newView = doc.GetElement(newId) as View;
+                        if (newView != null)
+                        {
+                            try { newView.Name = view.Name + suffix; } catch { }
+                            results.Add(new { original = view.Name, new_id = newId.Value, new_name = newView.Name });
+                        }
+                        success++;
+                    }
+                    catch (Exception ex) { errors.Add($"Failed to duplicate '{view.Name}': {ex.Message}"); }
+                }
+                if (success > 0) trans.Commit();
+                else trans.RollBack();
+            }
+
+            return JsonSerializer.Serialize(new { duplicated = success, views = results, errors = errors.Take(10) }, JsonOpts);
+        }
+
+        private string DuplicateSheets(Document doc, Dictionary<string, object> args)
+        {
+            var sheetIds = GetArgLongArray(args, "sheet_ids");
+            if (sheetIds == null || sheetIds.Count == 0) return JsonError("sheet_ids required.");
+
+            var newNumbers = GetArgStringArray(args, "new_numbers");
+
+            int success = 0;
+            var results = new List<object>();
+            var errors = new List<string>();
+
+            using (var trans = new Transaction(doc, "AI: Duplicate Sheets"))
+            {
+                trans.Start();
+                for (int i = 0; i < sheetIds.Count; i++)
+                {
+                    var sheet = doc.GetElement(new ElementId(sheetIds[i])) as ViewSheet;
+                    if (sheet == null) { errors.Add($"Element {sheetIds[i]} is not a sheet"); continue; }
+
+                    try
+                    {
+                        var titleBlockId = ElementId.InvalidElementId;
+                        var tbCollector = new FilteredElementCollector(doc, sheet.Id)
+                            .OfCategory(BuiltInCategory.OST_TitleBlocks)
+                            .WhereElementIsNotElementType();
+                        var tb = tbCollector.FirstOrDefault() as FamilyInstance;
+                        if (tb != null) titleBlockId = tb.GetTypeId();
+
+                        var newSheet = ViewSheet.Create(doc, titleBlockId);
+                        var number = (newNumbers != null && i < newNumbers.Count) ? newNumbers[i] : sheet.SheetNumber + "-COPY";
+                        try { newSheet.SheetNumber = number; } catch { }
+                        try { newSheet.Name = sheet.Name; } catch { }
+
+                        results.Add(new
+                        {
+                            original_number = sheet.SheetNumber,
+                            new_id = newSheet.Id.Value,
+                            new_number = newSheet.SheetNumber,
+                            new_name = newSheet.Name
+                        });
+                        success++;
+                    }
+                    catch (Exception ex) { errors.Add($"Failed to duplicate sheet '{sheet.SheetNumber}': {ex.Message}"); }
+                }
+                if (success > 0) trans.Commit();
+                else trans.RollBack();
+            }
+
+            return JsonSerializer.Serialize(new { duplicated = success, sheets = results, errors = errors.Take(10) }, JsonOpts);
         }
 
         private static bool SetParamValue(Parameter param, string value)
