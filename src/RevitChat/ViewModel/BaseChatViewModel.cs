@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -65,6 +66,8 @@ namespace RevitChat.ViewModel
             Messages.Add(ChatMessage.FromAssistant(WelcomeText));
         }
 
+        protected virtual int MaxToolResultChars => 8000;
+
         [RelayCommand(CanExecute = nameof(CanSend))]
         private async Task SendAsync()
         {
@@ -99,8 +102,10 @@ namespace RevitChat.ViewModel
                     var toolResults = await ExecuteToolCallsAsync(toolCalls);
                     RemoveToolProgressMessages();
 
+                    var truncated = TruncateToolResults(toolResults);
+
                     StatusMessage = "Analyzing results...";
-                    (response, toolCalls) = await ChatService.ContinueWithToolResultsAsync(toolResults, _cts.Token);
+                    (response, toolCalls) = await ChatService.ContinueWithToolResultsAsync(truncated, _cts.Token);
                 }
 
                 if (!string.IsNullOrEmpty(response))
@@ -120,6 +125,7 @@ namespace RevitChat.ViewModel
             }
             finally
             {
+                RemoveToolProgressMessages();
                 IsBusy = false;
                 _cts?.Dispose();
                 _cts = null;
@@ -149,6 +155,25 @@ namespace RevitChat.ViewModel
             }
 
             return await _toolResultsTcs.Task;
+        }
+
+        private Dictionary<string, string> TruncateToolResults(Dictionary<string, string> results)
+        {
+            var maxPerResult = MaxToolResultChars;
+            var truncated = new Dictionary<string, string>(results.Count);
+            foreach (var kvp in results)
+            {
+                if (kvp.Value != null && kvp.Value.Length > maxPerResult)
+                {
+                    truncated[kvp.Key] = kvp.Value[..maxPerResult]
+                        + $"\n...[TRUNCATED — original {kvp.Value.Length} chars, showing first {maxPerResult}. Summarize what you have.]";
+                }
+                else
+                {
+                    truncated[kvp.Key] = kvp.Value;
+                }
+            }
+            return truncated;
         }
 
         private void HandleToolCallsCompleted(Dictionary<string, string> results)

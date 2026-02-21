@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
 using Autodesk.Revit.UI;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -15,12 +19,14 @@ namespace RevitChatLocal.ViewModel
     public partial class LocalChatViewModel : BaseChatViewModel
     {
         private readonly OllamaChatService _chatService;
+        private CancellationTokenSource _pullCts;
 
         protected override IChatService ChatService => _chatService;
         protected override int ToolTimeoutMs => 120_000;
         protected override TimeSpan SendTimeout => TimeSpan.FromMinutes(5);
         protected override string NotInitializedMessage => "Please configure Ollama endpoint (click Settings)";
         protected override string WelcomeText => "Hello, I'm HD's Assistant.";
+        protected override int MaxToolResultChars => 4000;
 
         [ObservableProperty]
         private string _endpointUrl = "http://localhost:11434";
@@ -54,22 +60,29 @@ namespace RevitChatLocal.ViewModel
         [ObservableProperty]
         private bool _isPackLinked = true;
 
-        public List<string> AvailableModels { get; } = new()
-        {
-            "qwen2.5:7b",
-            "qwen2.5:14b",
-            "qwen2.5-coder:7b",
-            "llama3.1:8b",
-            "mistral:7b",
-        };
+        // Model management
+        [ObservableProperty]
+        private bool _isPulling;
+
+        [ObservableProperty]
+        private string _pullProgress = "";
+
+        public ObservableCollection<string> AvailableModels { get; } = new();
+
+        public ObservableCollection<string> InstalledModels { get; } = new();
 
         public LocalChatViewModel(ExternalEvent externalEvent, RevitChatHandler handler,
             ChatRequestQueue queue, SkillRegistry skillRegistry)
             : base(externalEvent, handler, queue, skillRegistry)
         {
             _chatService = new OllamaChatService(skillRegistry);
+
+            foreach (var m in OllamaModelService.RecommendedModels)
+                AvailableModels.Add(m);
+
             LoadConfig();
             AddWelcomeMessage();
+            _ = RefreshModelsAsync();
         }
 
         private void LoadConfig()
@@ -167,6 +180,89 @@ namespace RevitChatLocal.ViewModel
             {
                 StatusMessage = $"Failed to save: {ex.Message}";
             }
+        }
+
+        [RelayCommand]
+        private async Task RefreshModelsAsync()
+        {
+            try
+            {
+                var endpoint = EndpointUrl?.Trim() ?? "http://localhost:11434";
+                var models = await OllamaModelService.GetModelListWithStatusAsync(endpoint);
+
+                var currentSelection = SelectedModel;
+
+                AvailableModels.Clear();
+                InstalledModels.Clear();
+
+                foreach (var m in models)
+                {
+                    if (!AvailableModels.Contains(m.Name))
+                        AvailableModels.Add(m.Name);
+                    if (m.IsInstalled)
+                        InstalledModels.Add($"{m.Name}  [{m.Size}]");
+                }
+
+                // Ensure custom-typed model stays in list
+                if (!string.IsNullOrEmpty(currentSelection) && !AvailableModels.Contains(currentSelection))
+                    AvailableModels.Add(currentSelection);
+
+                SelectedModel = currentSelection;
+            }
+            catch
+            {
+                // Keep default list if Ollama unreachable
+            }
+        }
+
+        [RelayCommand]
+        private async Task PullModelAsync()
+        {
+            var modelName = SelectedModel?.Trim();
+            if (string.IsNullOrEmpty(modelName)) return;
+            if (IsPulling) return;
+
+            IsPulling = true;
+            PullProgress = $"Starting pull: {modelName}...";
+            _pullCts = new CancellationTokenSource();
+
+            try
+            {
+                var endpoint = EndpointUrl?.Trim() ?? "http://localhost:11434";
+
+                await OllamaModelService.PullModelAsync(
+                    endpoint,
+                    modelName,
+                    progress =>
+                    {
+                        Application.Current?.Dispatcher?.BeginInvoke(
+                            new Action(() => PullProgress = progress));
+                    },
+                    _pullCts.Token);
+
+                PullProgress = $"{modelName} pulled successfully!";
+                await RefreshModelsAsync();
+            }
+            catch (OperationCanceledException)
+            {
+                PullProgress = "Pull cancelled";
+            }
+            catch (Exception ex)
+            {
+                PullProgress = $"Pull failed: {ex.Message}";
+            }
+            finally
+            {
+                IsPulling = false;
+                _pullCts?.Dispose();
+                _pullCts = null;
+            }
+        }
+
+        [RelayCommand]
+        private void CancelPull()
+        {
+            _pullCts?.Cancel();
         }
     }
 }

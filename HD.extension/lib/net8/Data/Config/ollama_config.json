@@ -1,0 +1,15 @@
+{
+  "EndpointUrl": "http://localhost:11434",
+  "Model": "qwen2.5:7b",
+  "MaxTokens": 4096,
+  "MaxConversationMessages": 40,
+  "ToolSelectionMode": "smart",
+  "EnabledSkillPacks": [
+    "Core",
+    "ViewControl",
+    "MEP",
+    "Modeler",
+    "BIMCoordinator",
+    "LinkedModels"
+  ]
+}

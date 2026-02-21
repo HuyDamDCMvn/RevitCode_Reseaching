@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:models="clr-namespace:RevitChat.Models"
+        xmlns:local="clr-namespace:RevitChatLocal.UI"
         Title="Revit AI Chat (Local)" 
         Height="640" Width="420"
         MinHeight="480" MinWidth="340"
@@ -15,6 +16,9 @@
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <local:InverseBoolConverter x:Key="InverseBoolConverter"/>
+        <local:StringToVisibilityConverter x:Key="StringToVis"/>
+        <local:CountToVisibilityConverter x:Key="CountToVis"/>
 
         <!-- Chat bubble - User -->
         <DataTemplate x:Key="UserMessageTemplate" DataType="{x:Type models:ChatMessage}">
@@ -165,12 +169,53 @@
                              FontSize="12" Padding="8,5" Margin="0,0,0,8"/>
 
                     <TextBlock Text="Model" FontSize="11" Foreground="#616161" Margin="0,0,0,3"/>
-                    <ComboBox ItemsSource="{Binding AvailableModels}" 
-                              SelectedItem="{Binding SelectedModel}"
-                              IsEditable="True"
-                              FontSize="12" Padding="6,3" Margin="0,0,0,4"/>
-                    <TextBlock Text="Type any Ollama model name or pick from list" 
-                               FontSize="10" Foreground="#9E9E9E" Margin="0,0,0,12"/>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox Grid.Column="0" ItemsSource="{Binding AvailableModels}" 
+                                  SelectedItem="{Binding SelectedModel}"
+                                  IsEditable="True"
+                                  FontSize="12" Padding="6,3"/>
+                        <Button Grid.Column="1" Content="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                Style="{StaticResource IconButtonStyle}" Margin="4,0,0,0"
+                                Command="{Binding RefreshModelsCommand}" ToolTip="Refresh model list from Ollama"/>
+                    </Grid>
+                    <TextBlock Text="Type any model name or pick from list. Click refresh to detect installed models." 
+                               FontSize="10" Foreground="#9E9E9E" Margin="0,0,0,6" TextWrapping="Wrap"/>
+
+                    <!-- Pull Model -->
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="Pull Model" FontSize="11" Padding="10,4"
+                                Style="{StaticResource SendButtonStyle}" Background="#1565C0"
+                                Command="{Binding PullModelCommand}"
+                                IsEnabled="{Binding IsPulling, Converter={StaticResource InverseBoolConverter}}"
+                                ToolTip="Download the selected model from Ollama registry"/>
+                        <Button Grid.Column="1" Content="Cancel" FontSize="11" Padding="10,4" Margin="6,0,0,0"
+                                Style="{StaticResource SendButtonStyle}" Background="#E53935"
+                                Command="{Binding CancelPullCommand}"
+                                Visibility="{Binding IsPulling, Converter={StaticResource BoolToVis}}"/>
+                    </Grid>
+                    <TextBlock Text="{Binding PullProgress}" FontSize="10" Foreground="#1565C0" 
+                               TextWrapping="Wrap" Margin="0,0,0,4"
+                               Visibility="{Binding PullProgress, Converter={StaticResource StringToVis}}"/>
+
+                    <!-- Installed Models -->
+                    <TextBlock Text="Installed Models:" FontSize="10" Foreground="#616161" Margin="0,2,0,2"
+                               Visibility="{Binding InstalledModels.Count, Converter={StaticResource CountToVis}}"/>
+                    <ItemsControl ItemsSource="{Binding InstalledModels}" Margin="0,0,0,10"
+                                  Visibility="{Binding InstalledModels.Count, Converter={StaticResource CountToVis}}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" FontSize="10" Foreground="#2E7D32" Margin="8,1"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
 
                     <!-- Tool Selection Mode -->
                     <Border BorderBrush="#E0E0E0" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,0,0,10">
