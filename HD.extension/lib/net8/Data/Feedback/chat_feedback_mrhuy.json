@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "approved": [
+    {
+      "prompt": "isolate element on level L3",
+      "tools": [
+        {
+          "name": "isolate_category",
+          "args": {}
+        }
+      ],
+      "timestamp": "2026-02-22T11:33:24.1758670Z",
+      "useCount": 1
+    },
+    {
+      "prompt": "an entire level",
+      "tools": [
+        {
+          "name": "isolate_by_level",
+          "args": {}
+        }
+      ],
+      "timestamp": "2026-02-22T11:33:25.2283708Z",
+      "useCount": 1
+    }
+  ],
+  "corrections": []
+}
