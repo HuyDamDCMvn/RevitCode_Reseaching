@@ -152,6 +152,7 @@ namespace RevitChat.Skills
 
             foreach (var w in warnings)
             {
+                if (items.Count >= limit) break;
                 foreach (var eid in w.GetFailingElements())
                 {
                     if (!elementIds.Add(eid.Value)) continue;
@@ -253,9 +254,11 @@ namespace RevitChat.Skills
                 .Cast<CADLinkType>()
                 .ToList();
 
+            int linkedCount = 0;
             var importItems = imports.Select(i =>
             {
                 var isLinked = i.IsLinked;
+                if (isLinked) linkedCount++;
                 var typeId = i.GetTypeId();
                 var typeName = doc.GetElement(typeId)?.Name ?? "-";
                 var ownerView = i.OwnerViewId != ElementId.InvalidElementId
@@ -274,8 +277,8 @@ namespace RevitChat.Skills
             return JsonSerializer.Serialize(new
             {
                 total_cad = importItems.Count,
-                imported_count = importItems.Count(i => !(bool)((dynamic)i).is_linked),
-                linked_count = importItems.Count(i => (bool)((dynamic)i).is_linked),
+                imported_count = importItems.Count - linkedCount,
+                linked_count = linkedCount,
                 cad_link_types = cadLinks.Count,
                 items = importItems
             }, JsonOpts);

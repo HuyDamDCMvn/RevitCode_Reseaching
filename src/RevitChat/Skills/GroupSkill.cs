@@ -121,8 +121,11 @@ namespace RevitChat.Skills
             else if (typeFilter == "detail")
                 groups = groups.Where(g => g.GroupType?.Category?.Id == new ElementId(BuiltInCategory.OST_IOSDetailGroups)).ToList();
 
-            var grouped = groups
+            var allGrouped = groups
                 .GroupBy(g => g.GroupType?.Id.Value ?? 0)
+                .ToList();
+
+            var grouped = allGrouped
                 .Take(limit)
                 .Select(grp =>
                 {
@@ -141,7 +144,7 @@ namespace RevitChat.Skills
 
             return JsonSerializer.Serialize(new
             {
-                total_types = grouped.Count,
+                total_types = allGrouped.Count,
                 total_instances = groups.Count,
                 groups = grouped
             }, JsonOpts);

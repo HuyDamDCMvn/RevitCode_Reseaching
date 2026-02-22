@@ -817,7 +817,14 @@ namespace RevitChatLocal.Services
             _conversationHistory.Add(new UserChatMessage(sb.ToString()));
 
             _isContinuation = true;
-            return await GetCompletionAsync(ct);
+            try
+            {
+                return await GetCompletionAsync(ct);
+            }
+            finally
+            {
+                _isContinuation = false;
+            }
         }
 
         private async Task<(string assistantMessage, List<RevitChat.Models.ToolCallRequest> toolCalls)> GetCompletionAsync(

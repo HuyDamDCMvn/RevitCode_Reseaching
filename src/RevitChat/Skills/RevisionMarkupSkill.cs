@@ -263,13 +263,13 @@ namespace RevitChat.Skills
                 .Where(r => r != null)
                 .ToList();
 
-            var sheets = new FilteredElementCollector(doc)
+            var allSheets = new FilteredElementCollector(doc)
                 .OfClass(typeof(ViewSheet))
                 .Cast<ViewSheet>()
                 .Where(s => !s.IsPlaceholder)
                 .OrderBy(s => s.SheetNumber)
-                .Take(limit)
                 .ToList();
+            var sheets = allSheets.Take(limit).ToList();
 
             var matrix = sheets.Select(s =>
             {
@@ -301,7 +301,7 @@ namespace RevitChat.Skills
             return JsonSerializer.Serialize(new
             {
                 total_revisions = revisions.Count,
-                total_sheets = sheets.Count,
+                total_sheets = allSheets.Count,
                 schedule = matrix
             }, JsonOpts);
         }

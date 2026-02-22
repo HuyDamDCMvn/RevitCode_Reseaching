@@ -177,7 +177,9 @@ namespace RevitChat.Skills
                     .OfCategory(BuiltInCategory.OST_TitleBlocks)
                     .OfClass(typeof(FamilySymbol))
                     .FirstOrDefault();
-                titleBlockId = tb?.Id ?? ElementId.InvalidElementId;
+                if (tb == null)
+                    return JsonError("No titleblock family found in the project. Load a titleblock family first, or provide a titleblock_type_id.");
+                titleBlockId = tb.Id;
             }
 
             using (var trans = new Transaction(doc, "AI: Create Sheet"))

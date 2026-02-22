@@ -53,6 +53,8 @@ namespace RevitChat.Skills
 
             if (string.IsNullOrEmpty(category)) return JsonError("category required.");
             if (paramNames == null || paramNames.Count == 0) return JsonError("param_names required.");
+            paramNames = paramNames.Where(p => !string.IsNullOrWhiteSpace(p)).ToList();
+            if (paramNames.Count == 0) return JsonError("param_names must contain valid parameter names.");
 
             if (string.IsNullOrEmpty(filePath))
                 filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),

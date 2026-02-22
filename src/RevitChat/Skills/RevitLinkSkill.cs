@@ -131,7 +131,7 @@ namespace RevitChat.Skills
                 .Cast<RevitLinkInstance>()
                 .ToList();
 
-            return links.FirstOrDefault(l => l.Name.IndexOf(linkName, StringComparison.OrdinalIgnoreCase) >= 0);
+            return links.FirstOrDefault(l => l.Name != null && l.Name.IndexOf(linkName, StringComparison.OrdinalIgnoreCase) >= 0);
         }
 
         private string GetLinkedModels(Document doc)

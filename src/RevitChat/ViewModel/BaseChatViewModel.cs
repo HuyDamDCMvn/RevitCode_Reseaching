@@ -482,7 +482,7 @@ namespace RevitChat.ViewModel
                 sb.AppendLine($"{kvp.Key}: {snippet}");
             }
 
-            if (needsLevels && results.ContainsKey("get_levels_detailed"))
+            if (needsLevels && results.Keys.Any(k => k.Contains("get_levels_detailed")))
                 sb.AppendLine("IMPORTANT: Use the EXACT level names from the list above when calling tools. Do NOT use the user's approximate name.");
 
             return sb.ToString().Trim();

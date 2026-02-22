@@ -130,6 +130,7 @@ namespace RevitChat.Skills
 
                 foreach (var b in intersecting)
                 {
+                    if (b.Id == a.Id) continue;
                     if (clashes.Count >= limit) break;
                     clashes.Add(new
                     {
@@ -191,6 +192,7 @@ namespace RevitChat.Skills
 
                 foreach (var b in nearby)
                 {
+                    if (b.Id == a.Id) continue;
                     if (violations.Count >= limit) break;
                     var locB = GetElementCenter(b);
                     if (locB == null) continue;
@@ -296,7 +298,8 @@ namespace RevitChat.Skills
                 var elemsA = new FilteredElementCollector(doc).OfCategory(bicA).WhereElementIsNotElementType().ToList();
                 int elementsWithClash = 0;
 
-                foreach (var a in elemsA.Take(200))
+                bool sameCat = bicA == bicB;
+                foreach (var a in elemsA)
                 {
                     BoundingBoxXYZ bb;
                     try { bb = a.get_BoundingBox(null); } catch { continue; }
@@ -309,12 +312,14 @@ namespace RevitChat.Skills
                         .WherePasses(new BoundingBoxIntersectsFilter(outline))
                         .ToElementIds();
 
-                    if (intersecting.Count > 0)
+                    bool hasClash = false;
+                    foreach (var bid in intersecting)
                     {
-                        elementsWithClash++;
-                        foreach (var bid in intersecting)
-                            clashingBIds.Add(bid.Value);
+                        if (sameCat && bid == a.Id) continue;
+                        clashingBIds.Add(bid.Value);
+                        hasClash = true;
                     }
+                    if (hasClash) elementsWithClash++;
                 }
 
                 results.Add(new

@@ -86,6 +86,7 @@ namespace RevitChat.Skills
             if (uidoc == null) return JsonError("No active document.");
             var doc = uidoc.Document;
             var view = doc.ActiveView;
+            if (view == null) return JsonError("No active view.");
 
             return functionName switch
             {
