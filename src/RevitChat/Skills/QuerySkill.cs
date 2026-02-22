@@ -103,6 +103,7 @@ namespace RevitChat.Skills
             var typeName = GetArg<string>(args, "type_name");
             var level = GetArg<string>(args, "level");
             var limit = GetArg<int>(args, "limit", 100);
+            if (limit <= 0) limit = 100;
 
             var collector = BuildCollector(doc, category);
             bool needsCategoryFallback = !string.IsNullOrEmpty(category) && ResolveCategoryFilter(doc, category) == null;

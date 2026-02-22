@@ -162,6 +162,10 @@ namespace RevitChat.Skills
             double maxZ = GetArg(args, "max_z", 0.0);
             var catFilter = GetArg<string>(args, "category");
 
+            if (minX > maxX) (minX, maxX) = (maxX, minX);
+            if (minY > maxY) (minY, maxY) = (maxY, minY);
+            if (minZ > maxZ) (minZ, maxZ) = (maxZ, minZ);
+
             var outline = new Outline(new XYZ(minX, minY, minZ), new XYZ(maxX, maxY, maxZ));
             var bbFilter = new BoundingBoxIntersectsFilter(outline);
 

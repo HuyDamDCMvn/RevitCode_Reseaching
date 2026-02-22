@@ -208,6 +208,9 @@ namespace RevitChat.Skills
 
             var tableData = schedule.GetTableData();
             var body = tableData.GetSectionData(SectionType.Body);
+            if (body == null)
+                return JsonSerializer.Serialize(new { error = "Schedule has no body section.", schedule_name = scheduleName }, JsonOpts);
+
             int rows = body.NumberOfRows;
             int cols = body.NumberOfColumns;
 

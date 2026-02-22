@@ -78,8 +78,8 @@ namespace RevitChatLocal.Services
             new KeywordGroup
             {
                 Name = "MEP",
-                Keywords = new[] { "duct", "pipe", "mep", "hvac", "mechanical", "electrical", "plumbing", "conduit", "cable", "ống", "điện" },
-                Tools = new[] { "get_mep_systems", "get_system_elements", "get_duct_summary", "get_pipe_summary", "get_conduit_summary", "get_cable_tray_summary", "get_mechanical_equipment", "get_plumbing_fixtures", "get_electrical_equipment", "get_fittings", "check_disconnected_elements", "mep_quantity_takeoff" }
+                Keywords = new[] { "duct", "pipe", "mep", "hvac", "mechanical", "electrical", "plumbing", "conduit", "cable", "ống", "điện", "fire", "sprinkler", "cháy" },
+                Tools = new[] { "get_mep_systems", "get_system_elements", "get_duct_summary", "get_pipe_summary", "get_conduit_summary", "get_cable_tray_summary", "get_mechanical_equipment", "get_plumbing_fixtures", "get_electrical_equipment", "get_fire_protection_equipment", "get_fittings", "check_disconnected_elements", "mep_quantity_takeoff" }
             },
             new KeywordGroup
             {
@@ -143,6 +143,12 @@ namespace RevitChatLocal.Services
             },
             new KeywordGroup
             {
+                Name = "MEP Validation",
+                Keywords = new[] { "missing", "oversized", "elevation", "validate", "thiếu", "quá cỡ" },
+                Tools = new[] { "check_missing_parameters", "check_elevation_conflicts", "check_oversized_elements", "get_warnings_mep" }
+            },
+            new KeywordGroup
+            {
                 Name = "Clash / Clearance",
                 Keywords = new[] { "clash", "clearance", "overlap", "va chạm" },
                 Tools = new[] { "check_clashes", "check_clearance", "find_overlapping", "get_clash_summary" }
@@ -150,8 +156,8 @@ namespace RevitChatLocal.Services
             new KeywordGroup
             {
                 Name = "Health / Purge",
-                Keywords = new[] { "warning", "health", "purge", "unused", "cảnh báo", "không dùng" },
-                Tools = new[] { "get_model_warnings", "get_warning_elements", "get_model_statistics", "find_imported_cad", "find_inplace_families", "find_unused_families", "get_purgeable_elements", "find_duplicate_types" }
+                Keywords = new[] { "warning", "health", "purge", "unused", "cảnh báo", "không dùng", "detail level", "design option", "unresolved" },
+                Tools = new[] { "get_model_warnings", "get_warning_elements", "get_model_statistics", "find_imported_cad", "find_inplace_families", "find_unused_families", "get_purgeable_elements", "find_duplicate_types", "find_unresolved_references", "get_design_options", "audit_detail_levels" }
             },
             new KeywordGroup
             {
@@ -292,7 +298,14 @@ namespace RevitChatLocal.Services
             ["zoom_to_elements"] = "element_ids (array)",
             ["isolate_by_level"] = "level_name (exact name from model)",
             ["override_color_by_filter"] = "view_name?, filter_name, color",
-            ["export_to_csv"] = "category, file_path, view_name?",
+            ["export_to_csv"] = "category, param_names (array of parameter names for columns), file_path?, level?",
+            ["export_mep_boq"] = "categories (array), file_path? — export BOQ to CSV file",
+            ["rename_elements"] = "element_ids (array), new_name, param_name? (default Mark)",
+            ["get_model_warnings"] = "no args — all warnings in model",
+            ["get_warning_elements"] = "text (filter), limit? — elements involved in specific warnings",
+            ["get_warnings_mep"] = "no args — MEP-specific warnings only",
+            ["get_rooms"] = "level? — basic room list",
+            ["get_rooms_detailed"] = "level_name?, department?, limit? — detailed room data with areas",
             ["copy_elements"] = "element_ids (array), offset_x, offset_y, offset_z (in feet)",
             ["move_elements"] = "element_ids (array), offset_x, offset_y, offset_z (in feet)",
             ["mirror_elements"] = "element_ids (array), axis",
@@ -352,11 +365,11 @@ namespace RevitChatLocal.Services
             (new[] { "boq", "quantity", "takeoff", "bóc tách", "khối lượng" },
                 "User: tạo BOQ cho duct\nAssistant:\n<tool_call>\n{\"name\": \"mep_quantity_takeoff\", \"arguments\": {\"categories\": [\"Ducts\"]}}\n</tool_call>"),
             (new[] { "export", "csv", "xuất" },
-                "User: export all walls to CSV\nAssistant:\n<tool_call>\n{\"name\": \"export_to_csv\", \"arguments\": {\"category\": \"Walls\", \"file_path\": \"C:\\\\temp\\\\walls.csv\"}}\n</tool_call>"),
+                "User: export all walls to CSV\nAssistant:\n<tool_call>\n{\"name\": \"export_to_csv\", \"arguments\": {\"category\": \"Walls\", \"param_names\": [\"Mark\", \"Type Name\", \"Length\"], \"file_path\": \"C:\\\\temp\\\\walls.csv\"}}\n</tool_call>"),
 
             // Modify
             (new[] { "rename", "đổi tên" },
-                "User: đổi tên tất cả view có chứa 'Draft' thành 'Final'\nAssistant:\n<tool_call>\n{\"name\": \"rename_elements\", \"arguments\": {\"category\": \"Views\", \"old_text\": \"Draft\", \"new_text\": \"Final\"}}\n</tool_call>"),
+                "User: rename element 999 to 'Final'\nAssistant:\n<tool_call>\n{\"name\": \"rename_elements\", \"arguments\": {\"element_ids\": [999], \"new_name\": \"Final\"}}\n</tool_call>"),
             (new[] { "delete", "xóa" },
                 "User: delete elements 111, 222, 333\nAssistant:\n<tool_call>\n{\"name\": \"delete_elements\", \"arguments\": {\"element_ids\": [111, 222, 333]}}\n</tool_call>"),
             (new[] { "set", "đặt", "parameter", "tham số", "value", "giá trị" },

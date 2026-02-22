@@ -117,6 +117,9 @@ namespace RevitChat.Skills
                 ? cats.Where(c => CatMap.ContainsKey(c.ToLower())).Select(c => CatMap[c.ToLower()]).ToList()
                 : CatMap.Values.ToList();
 
+            if (selectedCats.Count == 0)
+                return new List<MepLineItem>();
+
             var items = new List<MepLineItem>();
 
             foreach (var cat in selectedCats)
@@ -151,6 +154,14 @@ namespace RevitChat.Skills
         private string MepQuantityTakeoff(Document doc, Dictionary<string, object> args)
         {
             var items = CollectMepLines(doc, args);
+            if (items.Count == 0)
+            {
+                var cats = GetArgStringArray(args, "categories");
+                var hint = (cats != null && cats.Count > 0)
+                    ? $"No MEP elements found for categories: {string.Join(", ", cats)}. Valid: duct, pipe, conduit, cable_tray, flex_duct, flex_pipe."
+                    : "No MEP elements found in this model.";
+                return JsonError(hint);
+            }
 
             var groups = items
                 .GroupBy(i => new { i.Category, i.Size, i.Level })
@@ -301,9 +312,16 @@ namespace RevitChat.Skills
                     Math.Round(item.LengthFt * 0.3048, 3), item.Id));
             }
 
-            var dir = Path.GetDirectoryName(filePath);
-            if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-            File.WriteAllText(filePath, sb.ToString(), Encoding.UTF8);
+            try
+            {
+                var dir = Path.GetDirectoryName(filePath);
+                if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+                File.WriteAllText(filePath, sb.ToString(), Encoding.UTF8);
+            }
+            catch (Exception ex)
+            {
+                return JsonError($"Failed to write BOQ file: {ex.Message}. Path: {filePath}");
+            }
 
             var catSummary = items.GroupBy(i => i.Category)
                 .Select(g => new { category = g.Key, count = g.Count(), length_m = Math.Round(g.Sum(i => i.LengthFt) * 0.3048, 2) })

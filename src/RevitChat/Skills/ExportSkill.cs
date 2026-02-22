@@ -93,9 +93,16 @@ namespace RevitChat.Skills
                 rowCount++;
             }
 
-            var dir = Path.GetDirectoryName(filePath);
-            if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-            File.WriteAllText(filePath, sb.ToString(), Encoding.UTF8);
+            try
+            {
+                var dir = Path.GetDirectoryName(filePath);
+                if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+                File.WriteAllText(filePath, sb.ToString(), Encoding.UTF8);
+            }
+            catch (Exception ex)
+            {
+                return JsonError($"Failed to write CSV: {ex.Message}. Path: {filePath}");
+            }
 
             return JsonSerializer.Serialize(new
             {
