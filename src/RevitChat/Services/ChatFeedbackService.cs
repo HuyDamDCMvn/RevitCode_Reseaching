@@ -51,12 +51,26 @@ namespace RevitChat.Services
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
         };
 
+        private static string _userName;
+
         public static void Initialize(string dllDirectory)
         {
             var dir = Path.Combine(dllDirectory, "Data", "Feedback");
             Directory.CreateDirectory(dir);
-            _filePath = Path.Combine(dir, "chat_feedback.json");
+
+            _userName = SanitizeFileName(Environment.UserName);
+            _filePath = Path.Combine(dir, $"chat_feedback_{_userName}.json");
             Load();
+        }
+
+        public static string CurrentUser => _userName ?? "unknown";
+
+        private static string SanitizeFileName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return "default";
+            foreach (var c in Path.GetInvalidFileNameChars())
+                name = name.Replace(c, '_');
+            return name.ToLowerInvariant();
         }
 
         private static void Load()

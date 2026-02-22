@@ -83,7 +83,16 @@ namespace RevitChat.ViewModel
 
         protected void AddWelcomeMessage()
         {
-            Messages.Add(ChatMessage.FromAssistant(WelcomeText));
+            var msg = WelcomeText;
+            try
+            {
+                var approved = ChatFeedbackService.ApprovedCount;
+                var corrections = ChatFeedbackService.CorrectionCount;
+                if (approved + corrections > 0)
+                    msg += $"\n({approved} learned patterns, {corrections} corrections)";
+            }
+            catch { }
+            Messages.Add(ChatMessage.FromAssistant(msg));
         }
 
         protected virtual int MaxToolResultChars => 8000;
