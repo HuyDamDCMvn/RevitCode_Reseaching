@@ -128,8 +128,56 @@ if exist "%PYREVIT_EXT%\HD.extension.backup\" (
     echo   (You can delete the backup after verifying the new version works)
     echo.
 )
-echo   Next steps:
+
+:: ---------------------------------------------------------------------------
+:: 6. AI Chatbot (Ollama) setup
+:: ---------------------------------------------------------------------------
+echo ============================================
+echo   AI Chatbot Setup (RevitChatLocal)
+echo ============================================
+echo.
+
+where ollama >nul 2>&1
+if !errorlevel! equ 0 (
+    echo   Ollama: INSTALLED
+    echo.
+    set /p PULL_MODEL="   Download AI model qwen2.5:7b now? (~4GB) [Y/N]: "
+    if /i "!PULL_MODEL!"=="Y" (
+        echo.
+        echo   Downloading model... (this may take 5-15 minutes)
+        echo.
+        ollama pull qwen2.5:7b
+        if !errorlevel! equ 0 (
+            echo.
+            echo   Model downloaded successfully!
+        ) else (
+            echo.
+            echo   [WARNING] Model download failed. You can retry later:
+            echo             ollama pull qwen2.5:7b
+        )
+    ) else (
+        echo.
+        echo   Skipped. To download later, open a terminal and run:
+        echo     ollama pull qwen2.5:7b
+    )
+) else (
+    echo   Ollama: NOT FOUND
+    echo.
+    echo   To use the AI chatbot (RevitChatLocal), you need:
+    echo     1. Install Ollama from https://ollama.com
+    echo     2. Open a terminal and run: ollama pull qwen2.5:7b
+    echo     3. Restart Revit
+    echo.
+    echo   (Other tools like SmartTag, CommonFeature work without Ollama)
+)
+
+echo.
+echo ============================================
+echo   Next Steps
+echo ============================================
+echo.
 echo     - Open Revit and reload pyRevit (pyRevit tab ^> Reload)
 echo     - Or restart Revit
+echo     - HD tab ^> AI ^> RevitChatLocal to open chatbot
 echo.
 pause
