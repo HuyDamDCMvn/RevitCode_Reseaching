@@ -22,6 +22,33 @@
       ],
       "timestamp": "2026-02-22T11:33:25.2283708Z",
       "useCount": 1
+    },
+    {
+      "prompt": "Isolate category Ducts",
+      "tools": [
+        {
+          "name": "isolate_category",
+          "args": {
+            "category": "Ducts"
+          }
+        }
+      ],
+      "timestamp": "2026-02-22T17:32:24.2248876Z",
+      "useCount": 1
+    },
+    {
+      "prompt": "Create a 3D view showing elements from system Supply Air, name it 3DView_System_SupplyAir",
+      "tools": [
+        {
+          "name": "create_3d_view_by_system",
+          "args": {
+            "system_name": "Supply Air",
+            "view_name": "3DView_System_SupplyAir"
+          }
+        }
+      ],
+      "timestamp": "2026-02-22T17:33:19.9810952Z",
+      "useCount": 1
     }
   ],
   "corrections": []

@@ -40,7 +40,7 @@ if (-not $ghPath) {
     exit 1
 }
 
-$authStatus = gh auth status 2>&1
+$null = gh auth status 2>&1
 if ($LASTEXITCODE -ne 0) {
     Write-Host "   ERROR: gh CLI not authenticated." -ForegroundColor Red
     Write-Host "   Run: gh auth login" -ForegroundColor Red

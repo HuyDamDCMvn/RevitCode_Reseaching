@@ -252,7 +252,7 @@ namespace RevitChatLocal.Services
             new KeywordGroup
             {
                 Name = "Selection",
-                Keywords = new[] { "selection", "đang chọn" },
+                Keywords = new[] { "selection", "selected", "đang chọn", "đã chọn", "currently selected" },
                 Tools = new[] { "get_current_selection" }
             },
         };
@@ -280,6 +280,7 @@ namespace RevitChatLocal.Services
             ("đèn", "lighting fixtures"),
             ("quạt", "fans"),
             ("bơm", "pumps"),
+            ("van chống cháy", "fire damper"),
             ("van", "valves"),
             ("bồn", "sinks"),
         };
@@ -289,11 +290,13 @@ namespace RevitChatLocal.Services
             "count", "how many", "list", "show", "get", "export", "rename", "delete", "move",
             "copy", "mirror", "create", "update", "set", "override", "change", "modify", "hide",
             "unhide", "isolate", "select", "zoom", "place", "check", "audit", "report", "compare",
-            "trace", "connect", "connector", "slope", "resize", "schedule", "fields", "columns", "preview", "dry run",
-            "đếm", "liệt kê",
+            "trace", "connect", "slope", "resize", "schedule", "fields", "columns", "preview", "dry run",
+            "summarize", "summary", "find", "search", "filter", "highlight", "remove", "apply",
+            "load", "swap", "duplicate",
+            "tìm", "lọc", "liệt", "đếm", "liệt kê",
             "hiển thị", "xem", "xuất", "đổi tên", "xóa", "di chuyển", "sao chép", "tạo",
             "cập nhật", "đặt", "tô màu", "thay đổi", "ẩn", "hiện", "cô lập", "chọn", "xem trước",
-            "phóng to", "đặt", "kiểm tra", "báo cáo", "so sánh", "độ dốc", "kích thước", "schedule"
+            "phóng to", "kiểm tra", "báo cáo", "so sánh", "độ dốc", "kích thước"
         };
 
         private static readonly Dictionary<string, string> ToolSchemaHints = new()
@@ -631,6 +634,8 @@ namespace RevitChatLocal.Services
                 "User: mirror elements 100,200 along X axis\nAssistant:\n<tool_call>\n{\"name\": \"mirror_elements\", \"arguments\": {\"element_ids\": [100, 200], \"axis\": \"X\"}}\n</tool_call>"),
             (new[] { "duplicate", "view" },
                 "User: duplicate views 12345 and 67890\nAssistant:\n<tool_call>\n{\"name\": \"duplicate_views\", \"arguments\": {\"view_ids\": [12345, 67890]}}\n</tool_call>"),
+            (new[] { "duplicate", "sheet", "bản vẽ", "nhân bản" },
+                "User: duplicate sheets 100, 200\nAssistant:\n<tool_call>\n{\"name\": \"duplicate_sheets\", \"arguments\": {\"sheet_ids\": [100, 200]}}\n</tool_call>"),
 
             // ── export_to_csv ──
             (new[] { "export", "csv", "xuất" },
@@ -690,7 +695,7 @@ namespace RevitChatLocal.Services
                 "User: hiện lại tất cả element đã ẩn\nAssistant:\n<tool_call>\n{\"name\": \"reset_view_isolation\", \"arguments\": {}}\n</tool_call>"),
             (new[] { "hidden", "ẩn", "which" },
                 "User: which elements are hidden?\nAssistant:\n<tool_call>\n{\"name\": \"get_hidden_elements\", \"arguments\": {}}\n</tool_call>"),
-            (new[] { "get_current_selection", "đang chọn" },
+            (new[] { "selected", "selection", "current", "đang chọn", "đã chọn" },
                 "User: what is currently selected?\nAssistant:\n<tool_call>\n{\"name\": \"get_current_selection\", \"arguments\": {}}\n</tool_call>"),
             (new[] { "zoom", "phóng to", "focus" },
                 "User: zoom to elements 100, 200\nAssistant:\n<tool_call>\n{\"name\": \"zoom_to_elements\", \"arguments\": {\"element_ids\": [100, 200]}}\n</tool_call>"),
@@ -808,6 +813,8 @@ namespace RevitChatLocal.Services
                 "User: ungroup groups 12345 and 67890\nAssistant:\n<tool_call>\n{\"name\": \"ungroup\", \"arguments\": {\"group_ids\": [12345, 67890]}}\n</tool_call>"),
             (new[] { "group", "members" },
                 "User: show members of group 12345\nAssistant:\n<tool_call>\n{\"name\": \"get_group_members\", \"arguments\": {\"group_id\": 12345}}\n</tool_call>"),
+            (new[] { "place", "group", "instance", "đặt nhóm" },
+                "User: place group type 12345 at coordinates 10,20\nAssistant:\n<tool_call>\n{\"name\": \"place_group_instance\", \"arguments\": {\"group_type_id\": 12345, \"x\": 10, \"y\": 20, \"z\": 0}}\n</tool_call>"),
 
             // ── Room / Area ──
             (new[] { "room", "phòng", "detailed" },
@@ -1183,8 +1190,11 @@ namespace RevitChatLocal.Services
         private static bool MatchesKeyword(string text, string kw)
         {
             if (kw.Contains(' '))
-                return text.Contains(kw);
-            return Regex.IsMatch(text, $@"\b{Regex.Escape(kw)}\b");
+            {
+                var parts = kw.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                return parts.All(p => Regex.IsMatch(text, $@"\b{Regex.Escape(p)}\w*\b"));
+            }
+            return Regex.IsMatch(text, $@"\b{Regex.Escape(kw)}\w*\b");
         }
 
         private static List<(KeywordGroup group, int score)> GetMatchedGroups(string normalizedText)
