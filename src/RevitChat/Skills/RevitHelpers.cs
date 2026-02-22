@@ -60,7 +60,7 @@ namespace RevitChat.Skills
                 if (lvl != null) return lvl.Name;
             }
 
-            if (elem.LevelId != null && elem.LevelId != ElementId.InvalidElementId)
+            if (elem.LevelId != ElementId.InvalidElementId)
             {
                 var lvl = doc.GetElement(elem.LevelId) as Level;
                 if (lvl != null) return lvl.Name;

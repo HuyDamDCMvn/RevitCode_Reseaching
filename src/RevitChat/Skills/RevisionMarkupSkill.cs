@@ -215,21 +215,29 @@ namespace RevitChat.Skills
             using (var trans = new Transaction(doc, "AI: Add Revision"))
             {
                 trans.Start();
-                var rev = Revision.Create(doc);
-                rev.Description = description;
-                if (!string.IsNullOrEmpty(date)) rev.RevisionDate = date;
-                if (!string.IsNullOrEmpty(issuedTo)) rev.IssuedTo = issuedTo;
-                if (!string.IsNullOrEmpty(issuedBy)) rev.IssuedBy = issuedBy;
-                trans.Commit();
-
-                return JsonSerializer.Serialize(new
+                try
                 {
-                    created = true,
-                    id = rev.Id.Value,
-                    description = rev.Description,
-                    date = rev.RevisionDate,
-                    revision_number = rev.RevisionNumber
-                }, JsonOpts);
+                    var rev = Revision.Create(doc);
+                    rev.Description = description;
+                    if (!string.IsNullOrEmpty(date)) rev.RevisionDate = date;
+                    if (!string.IsNullOrEmpty(issuedTo)) rev.IssuedTo = issuedTo;
+                    if (!string.IsNullOrEmpty(issuedBy)) rev.IssuedBy = issuedBy;
+                    trans.Commit();
+
+                    return JsonSerializer.Serialize(new
+                    {
+                        created = true,
+                        id = rev.Id.Value,
+                        description = rev.Description,
+                        date = rev.RevisionDate,
+                        revision_number = rev.RevisionNumber
+                    }, JsonOpts);
+                }
+                catch (Exception ex)
+                {
+                    if (trans.GetStatus() == TransactionStatus.Started) trans.RollBack();
+                    return JsonError($"AddRevision failed: {ex.Message}");
+                }
             }
         }
 

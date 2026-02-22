@@ -271,7 +271,7 @@ namespace RevitChat.Skills
                 .Select(g =>
                 {
                     var totalFt = g.Sum(i => i.LengthFt);
-                    var hangerCount = (int)Math.Ceiling(totalFt / spacingFt) + g.Count();
+                    var hangerCount = totalFt > 0 ? (int)Math.Ceiling(totalFt / spacingFt) + 1 : 0;
                     return new
                     {
                         category = g.Key.Category,

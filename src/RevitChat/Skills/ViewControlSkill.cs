@@ -24,7 +24,8 @@ namespace RevitChat.Skills
             "reset_element_overrides", "set_element_transparency",
             "zoom_to_elements", "get_current_selection",
             "isolate_by_level", "hide_by_level", "override_color_by_level",
-            "isolate_by_filter", "override_color_by_filter"
+            "isolate_by_filter", "override_color_by_filter",
+            "create_3d_view", "create_3d_view_by_system"
         };
 
         public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
@@ -306,6 +307,36 @@ namespace RevitChat.Skills
                     },
                     "required": ["color"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("create_3d_view",
+                "Create a new 3D isometric view with a given name. Optionally isolate by category or level.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "view_name": { "type": "string", "description": "Name for the new 3D view" },
+                        "category": { "type": "string", "description": "Optional: isolate this category in the new view" },
+                        "level_name": { "type": "string", "description": "Optional: isolate elements on this level" },
+                        "dry_run": { "type": "boolean", "description": "Preview only. Default false." }
+                    },
+                    "required": ["view_name"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("create_3d_view_by_system",
+                "Create a new 3D view showing only elements belonging to a specific MEP system. The view is named and activated automatically.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "system_name": { "type": "string", "description": "System name or partial name to filter (e.g. 'Supply Air 1')" },
+                        "view_name": { "type": "string", "description": "Name for the new 3D view" },
+                        "match_type": { "type": "string", "enum": ["contains", "equals"], "description": "How to match system name. Default: contains" },
+                        "dry_run": { "type": "boolean", "description": "Preview only. Default false." }
+                    },
+                    "required": ["system_name", "view_name"]
+                }
                 """))
         };
 
@@ -339,6 +370,8 @@ namespace RevitChat.Skills
                 "override_color_by_level" => OverrideColorByLevel(doc, view, args),
                 "isolate_by_filter" => IsolateByFilter(doc, view, args),
                 "override_color_by_filter" => OverrideColorByFilter(doc, view, args),
+                "create_3d_view" => Create3DView(uidoc, doc, args),
+                "create_3d_view_by_system" => Create3DViewBySystem(uidoc, doc, args),
                 _ => JsonError($"ViewControlSkill: unknown tool '{functionName}'")
             };
         }
@@ -1264,7 +1297,7 @@ namespace RevitChat.Skills
                 if (id != ElementId.InvalidElementId) return id;
             }
 
-            if (elem.LevelId != null && elem.LevelId != ElementId.InvalidElementId)
+            if (elem.LevelId != ElementId.InvalidElementId)
                 return elem.LevelId;
 
             return ElementId.InvalidElementId;
@@ -1338,6 +1371,205 @@ namespace RevitChat.Skills
                 return ElementId.InvalidElementId;
             }
         }
+
+        #region Create 3D View
+
+        private static ViewFamilyType Find3DViewFamilyType(Document doc)
+        {
+            return new FilteredElementCollector(doc)
+                .OfClass(typeof(ViewFamilyType))
+                .Cast<ViewFamilyType>()
+                .FirstOrDefault(vft => vft.ViewFamily == ViewFamily.ThreeDimensional);
+        }
+
+        private static string EnsureUniqueViewName(Document doc, string desired)
+        {
+            var existing = new HashSet<string>(
+                new FilteredElementCollector(doc).OfClass(typeof(View))
+                    .Cast<View>().Select(v => v.Name),
+                StringComparer.OrdinalIgnoreCase);
+
+            if (!existing.Contains(desired)) return desired;
+
+            for (int i = 2; i <= 100; i++)
+            {
+                var candidate = $"{desired}_{i}";
+                if (!existing.Contains(candidate)) return candidate;
+            }
+            return $"{desired}_{Guid.NewGuid():N}".Substring(0, 64);
+        }
+
+        private string Create3DView(UIDocument uidoc, Document doc, Dictionary<string, object> args)
+        {
+            var viewName = GetArg<string>(args, "view_name");
+            var category = GetArg<string>(args, "category");
+            var levelName = GetArg<string>(args, "level_name");
+            bool dryRun = GetArg(args, "dry_run", false);
+
+            if (string.IsNullOrEmpty(viewName)) return JsonError("view_name required.");
+
+            var vft = Find3DViewFamilyType(doc);
+            if (vft == null) return JsonError("No 3D ViewFamilyType found in document.");
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_create = viewName,
+                    isolate_category = category ?? "(none)",
+                    isolate_level = levelName ?? "(none)"
+                }, JsonOpts);
+            }
+
+            using var trans = new Transaction(doc, "AI: Create 3D View");
+            trans.Start();
+            try
+            {
+                var newView = View3D.CreateIsometric(doc, vft.Id);
+                newView.Name = EnsureUniqueViewName(doc, viewName);
+
+                var toIsolate = new List<ElementId>();
+
+                if (!string.IsNullOrEmpty(category) || !string.IsNullOrEmpty(levelName))
+                {
+                    var collector = new FilteredElementCollector(doc)
+                        .WhereElementIsNotElementType();
+
+                    if (!string.IsNullOrEmpty(category))
+                    {
+                        var bic = ResolveCategoryFilter(doc, category);
+                        if (bic.HasValue) collector = collector.OfCategory(bic.Value);
+                    }
+
+                    foreach (var elem in collector)
+                    {
+                        if (elem.Category == null) continue;
+                        if (!string.IsNullOrEmpty(levelName))
+                        {
+                            var lvl = GetElementLevel(doc, elem);
+                            if (!lvl.Equals(levelName, StringComparison.OrdinalIgnoreCase)) continue;
+                        }
+                        toIsolate.Add(elem.Id);
+                    }
+
+                    if (toIsolate.Count > 0)
+                        newView.IsolateElementsTemporary(toIsolate);
+                }
+
+                trans.Commit();
+                uidoc.ActiveView = newView;
+
+                return JsonSerializer.Serialize(new
+                {
+                    created = true,
+                    view_name = newView.Name,
+                    view_id = newView.Id.Value,
+                    isolated_count = toIsolate.Count,
+                    message = $"Created 3D view '{newView.Name}'" + (toIsolate.Count > 0 ? $" with {toIsolate.Count} isolated elements." : ".")
+                }, JsonOpts);
+            }
+            catch (Exception ex)
+            {
+                if (trans.GetStatus() == TransactionStatus.Started) trans.RollBack();
+                return JsonError($"Failed to create 3D view: {ex.Message}");
+            }
+        }
+
+        private string Create3DViewBySystem(UIDocument uidoc, Document doc, Dictionary<string, object> args)
+        {
+            var systemName = GetArg<string>(args, "system_name");
+            var viewName = GetArg<string>(args, "view_name");
+            var matchType = GetArg(args, "match_type", "contains");
+            bool dryRun = GetArg(args, "dry_run", false);
+
+            if (string.IsNullOrEmpty(systemName)) return JsonError("system_name required.");
+            if (string.IsNullOrEmpty(viewName)) return JsonError("view_name required.");
+
+            var mepCategories = new[]
+            {
+                BuiltInCategory.OST_DuctCurves, BuiltInCategory.OST_PipeCurves,
+                BuiltInCategory.OST_FlexDuctCurves, BuiltInCategory.OST_FlexPipeCurves,
+                BuiltInCategory.OST_DuctFitting, BuiltInCategory.OST_PipeFitting,
+                BuiltInCategory.OST_DuctAccessory, BuiltInCategory.OST_PipeAccessory,
+                BuiltInCategory.OST_DuctTerminal, BuiltInCategory.OST_PlumbingFixtures,
+                BuiltInCategory.OST_Conduit, BuiltInCategory.OST_CableTray,
+                BuiltInCategory.OST_MechanicalEquipment, BuiltInCategory.OST_PipeInsulations,
+                BuiltInCategory.OST_DuctInsulations, BuiltInCategory.OST_Sprinklers
+            };
+
+            var systemElemIds = new List<ElementId>();
+            var matchedSystems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var cat in mepCategories)
+            {
+                foreach (var elem in new FilteredElementCollector(doc)
+                    .OfCategory(cat).WhereElementIsNotElementType())
+                {
+                    var sn = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString();
+                    if (string.IsNullOrEmpty(sn)) continue;
+
+                    bool match = matchType == "equals"
+                        ? sn.Equals(systemName, StringComparison.OrdinalIgnoreCase)
+                        : sn.IndexOf(systemName, StringComparison.OrdinalIgnoreCase) >= 0;
+
+                    if (!match) continue;
+
+                    systemElemIds.Add(elem.Id);
+                    matchedSystems.Add(sn);
+                }
+            }
+
+            if (systemElemIds.Count == 0)
+                return JsonError($"No elements found with system name {(matchType == "equals" ? "equal to" : "containing")} '{systemName}'.");
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_create_view = viewName,
+                    system_filter = systemName,
+                    match_type = matchType,
+                    matched_systems = matchedSystems.OrderBy(s => s).ToList(),
+                    element_count = systemElemIds.Count
+                }, JsonOpts);
+            }
+
+            var vft = Find3DViewFamilyType(doc);
+            if (vft == null) return JsonError("No 3D ViewFamilyType found in document.");
+
+            using var trans = new Transaction(doc, "AI: Create 3D View by System");
+            trans.Start();
+            try
+            {
+                var newView = View3D.CreateIsometric(doc, vft.Id);
+                newView.Name = EnsureUniqueViewName(doc, viewName);
+                newView.IsolateElementsTemporary(systemElemIds);
+                trans.Commit();
+
+                uidoc.ActiveView = newView;
+
+                return JsonSerializer.Serialize(new
+                {
+                    created = true,
+                    view_name = newView.Name,
+                    view_id = newView.Id.Value,
+                    system_filter = systemName,
+                    match_type = matchType,
+                    matched_systems = matchedSystems.OrderBy(s => s).ToList(),
+                    isolated_count = systemElemIds.Count,
+                    message = $"Created 3D view '{viewName}' with {systemElemIds.Count} elements from system(s) matching '{systemName}'."
+                }, JsonOpts);
+            }
+            catch (Exception ex)
+            {
+                if (trans.GetStatus() == TransactionStatus.Started) trans.RollBack();
+                return JsonError($"Failed to create 3D view: {ex.Message}");
+            }
+        }
+
+        #endregion
 
         private static List<ElementId> ResolveValidIds(Document doc, View view, List<long> ids, out List<long> notFound)
         {

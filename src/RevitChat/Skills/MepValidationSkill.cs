@@ -18,7 +18,8 @@ namespace RevitChat.Skills
         {
             "check_disconnected_elements", "check_missing_parameters",
             "check_elevation_conflicts", "check_oversized_elements", "get_warnings_mep",
-            "check_pipe_slope"
+            "check_pipe_slope", "check_slope_continuity", "get_penetration_schedule",
+            "check_fire_dampers"
         };
 
         public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
@@ -113,6 +114,46 @@ namespace RevitChat.Skills
                     },
                     "required": []
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("check_slope_continuity",
+                "Trace connected pipes and check if slope direction is consistent (no reversals/sags). Start from a pipe or check all runs in a system.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_id": { "type": "integer", "description": "Starting pipe element ID. If not provided, checks all systems." },
+                        "system_name": { "type": "string", "description": "Optional system name filter" },
+                        "level": { "type": "string", "description": "Optional level filter" }
+                    },
+                    "required": []
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("get_penetration_schedule",
+                "Find MEP elements (ducts, pipes) that cross level boundaries (span between floors). Useful for coordination and fire rating.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "category": { "type": "string", "description": "'duct','pipe','conduit', or 'all'. Default 'all'." },
+                        "limit": { "type": "integer", "description": "Max results. Default 200.", "default": 200 }
+                    },
+                    "required": []
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("check_fire_dampers",
+                "List fire dampers in the model and check their connection status. Reports dampers with/without connected ducts.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "level": { "type": "string", "description": "Optional level filter" },
+                        "limit": { "type": "integer", "description": "Max results. Default 200.", "default": 200 }
+                    },
+                    "required": []
+                }
                 """))
         };
 
@@ -129,6 +170,9 @@ namespace RevitChat.Skills
                 "check_oversized_elements" => CheckOversized(doc, args),
                 "get_warnings_mep" => GetMepWarnings(doc, args),
                 "check_pipe_slope" => CheckPipeSlope(doc, args),
+                "check_slope_continuity" => CheckSlopeContinuity(doc, args),
+                "get_penetration_schedule" => GetPenetrationSchedule(doc, args),
+                "check_fire_dampers" => CheckFireDampers(doc, args),
                 _ => JsonError($"MepValidationSkill: unknown tool '{functionName}'")
             };
         }
@@ -396,10 +440,10 @@ namespace RevitChat.Skills
                         oversized = true;
                         reason = $"Height {Math.Round(height * 304.8, 0)}mm > {maxWidthMm}mm";
                     }
-                    else if (diam > maxWidthFt)
+                    else if (diam > maxDiamFt)
                     {
                         oversized = true;
-                        reason = $"Diameter {Math.Round(diam * 304.8, 0)}mm > {maxWidthMm}mm";
+                        reason = $"Diameter {Math.Round(diam * 304.8, 0)}mm > {maxDiamMm}mm";
                     }
                 }
 
@@ -423,7 +467,7 @@ namespace RevitChat.Skills
             {
                 threshold = catFilter == "pipe"
                     ? $"max_diameter={maxDiamMm}mm"
-                    : $"max_width={maxWidthMm}mm",
+                    : $"max_width={maxWidthMm}mm, max_round_diameter={maxDiamMm}mm",
                 oversized_count = results.Count,
                 elements = results
             }, JsonOpts);
@@ -484,7 +528,7 @@ namespace RevitChat.Skills
             bool hasMin = args != null && args.ContainsKey("min_slope_pct");
             bool hasMax = args != null && args.ContainsKey("max_slope_pct");
             double minSlope = hasMin ? GetArg(args, "min_slope_pct", 0.1) : 0.1;
-            double maxSlope = hasMax ? GetArg(args, "max_slope_pct", 0.0) : double.NaN;
+            double maxSlope = hasMax ? GetArg(args, "max_slope_pct", double.NaN) : double.NaN;
 
             var collector = new FilteredElementCollector(doc)
                 .OfCategory(BuiltInCategory.OST_PipeCurves)
@@ -547,6 +591,239 @@ namespace RevitChat.Skills
                 max_slope_pct = double.IsNaN(maxSlope) ? (double?)null : maxSlope,
                 issues_found = issues.Count,
                 issues
+            }, JsonOpts);
+        }
+
+        private string CheckSlopeContinuity(Document doc, Dictionary<string, object> args)
+        {
+            var startId = GetArg<long>(args, "element_id");
+            var systemFilter = GetArg<string>(args, "system_name");
+            var levelFilter = GetArg<string>(args, "level");
+
+            var pipes = new FilteredElementCollector(doc)
+                .OfCategory(BuiltInCategory.OST_PipeCurves)
+                .WhereElementIsNotElementType().ToList();
+
+            if (!string.IsNullOrEmpty(levelFilter))
+                pipes = pipes.Where(p => GetElementLevel(doc, p).Equals(levelFilter, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (!string.IsNullOrEmpty(systemFilter))
+                pipes = pipes.Where(p => (p.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "")
+                    .IndexOf(systemFilter, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+
+            if (startId > 0)
+            {
+                var startElem = doc.GetElement(new ElementId(startId));
+                if (startElem == null) return JsonError($"Element {startId} not found.");
+                pipes = pipes.Where(p => p.Id.Value == startId ||
+                    IsInSameRun(doc, startElem, p, pipes)).ToList();
+            }
+
+            var issues = new List<object>();
+            int totalChecked = 0;
+
+            foreach (var pipe in pipes)
+            {
+                totalChecked++;
+                if (!(pipe.Location is LocationCurve lc)) continue;
+                var start = lc.Curve.GetEndPoint(0);
+                var end = lc.Curve.GetEndPoint(1);
+                var dz = end.Z - start.Z;
+                var dx = end.X - start.X;
+                var dy = end.Y - start.Y;
+                var horizontal = Math.Sqrt(dx * dx + dy * dy);
+                if (horizontal < 1e-6) continue;
+
+                if (pipe is not MEPCurve mepCurve) continue;
+                var cm = mepCurve.ConnectorManager;
+                if (cm == null) continue;
+
+                foreach (Connector conn in cm.Connectors)
+                {
+                    if (!conn.IsConnected) continue;
+                    foreach (Connector refConn in conn.AllRefs)
+                    {
+                        var neighbor = refConn?.Owner as Element;
+                        if (neighbor == null || neighbor.Id == pipe.Id) continue;
+                        if (neighbor.Document != doc) continue;
+                        if (!(neighbor.Location is LocationCurve nlc)) continue;
+
+                        var nStart = nlc.Curve.GetEndPoint(0);
+                        var nEnd = nlc.Curve.GetEndPoint(1);
+                        var nDz = nEnd.Z - nStart.Z;
+                        var nHoriz = Math.Sqrt(Math.Pow(nEnd.X - nStart.X, 2) + Math.Pow(nEnd.Y - nStart.Y, 2));
+                        if (nHoriz < 1e-6) continue;
+
+                        bool currentDown = dz < -1e-6;
+                        bool neighborDown = nDz < -1e-6;
+                        bool currentFlat = Math.Abs(dz) < 1e-6;
+                        bool neighborFlat = Math.Abs(nDz) < 1e-6;
+
+                        if (!currentFlat && !neighborFlat && currentDown != neighborDown)
+                        {
+                            issues.Add(new
+                            {
+                                pipe_id = pipe.Id.Value,
+                                neighbor_id = neighbor.Id.Value,
+                                pipe_slope_pct = Math.Round((dz / horizontal) * 100, 3),
+                                neighbor_slope_pct = Math.Round((nDz / nHoriz) * 100, 3),
+                                issue = "slope_reversal",
+                                system = pipe.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "-",
+                                level = GetElementLevel(doc, pipe)
+                            });
+                            break;
+                        }
+                    }
+                }
+                if (issues.Count >= 200) break;
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                pipes_checked = totalChecked,
+                reversals_found = issues.Count,
+                issues
+            }, JsonOpts);
+        }
+
+        private static bool IsInSameRun(Document doc, Element start, Element candidate, List<Element> allPipes)
+        {
+            var sys1 = start.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "";
+            var sys2 = candidate.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "";
+            return !string.IsNullOrEmpty(sys1) && sys1.Equals(sys2, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private string GetPenetrationSchedule(Document doc, Dictionary<string, object> args)
+        {
+            var catFilter = GetArg<string>(args, "category")?.ToLower() ?? "all";
+            var limit = GetArg<int>(args, "limit", 200);
+
+            var levels = new FilteredElementCollector(doc)
+                .OfClass(typeof(Level)).Cast<Level>()
+                .OrderBy(l => l.Elevation).ToList();
+
+            if (levels.Count < 2)
+                return JsonSerializer.Serialize(new { note = "Need at least 2 levels for penetration check.", penetrations = new List<object>() }, JsonOpts);
+
+            var cats = new List<BuiltInCategory>();
+            if (catFilter is "all" or "duct") cats.Add(BuiltInCategory.OST_DuctCurves);
+            if (catFilter is "all" or "pipe") cats.Add(BuiltInCategory.OST_PipeCurves);
+            if (catFilter is "all" or "conduit") cats.Add(BuiltInCategory.OST_Conduit);
+
+            var results = new List<object>();
+
+            foreach (var cat in cats)
+            {
+                var elems = new FilteredElementCollector(doc)
+                    .OfCategory(cat).WhereElementIsNotElementType().ToList();
+
+                foreach (var elem in elems)
+                {
+                    if (results.Count >= limit) break;
+                    if (!(elem.Location is LocationCurve lc)) continue;
+
+                    var p0 = lc.Curve.GetEndPoint(0);
+                    var p1 = lc.Curve.GetEndPoint(1);
+                    double minZ = Math.Min(p0.Z, p1.Z);
+                    double maxZ = Math.Max(p0.Z, p1.Z);
+
+                    var crossedLevels = levels
+                        .Where(l => l.Elevation > minZ + 0.01 && l.Elevation < maxZ - 0.01)
+                        .Select(l => l.Name).ToList();
+
+                    if (crossedLevels.Count > 0)
+                    {
+                        results.Add(new
+                        {
+                            id = elem.Id.Value,
+                            category = elem.Category?.Name ?? "-",
+                            type = GetElementTypeName(doc, elem),
+                            size = elem.get_Parameter(BuiltInParameter.RBS_CALCULATED_SIZE)?.AsString() ?? "-",
+                            system = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "-",
+                            level = GetElementLevel(doc, elem),
+                            bottom_elevation_m = Math.Round(minZ * 0.3048, 3),
+                            top_elevation_m = Math.Round(maxZ * 0.3048, 3),
+                            levels_crossed = crossedLevels
+                        });
+                    }
+                }
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                penetration_count = results.Count,
+                elements = results
+            }, JsonOpts);
+        }
+
+        private string CheckFireDampers(Document doc, Dictionary<string, object> args)
+        {
+            var levelFilter = GetArg<string>(args, "level");
+            var limit = GetArg<int>(args, "limit", 200);
+
+            var accessories = new FilteredElementCollector(doc)
+                .OfCategory(BuiltInCategory.OST_DuctAccessory)
+                .WhereElementIsNotElementType().ToList();
+
+            var dampers = new List<object>();
+            int connectedCount = 0, disconnectedCount = 0;
+
+            foreach (var elem in accessories)
+            {
+                if (dampers.Count >= limit) break;
+
+                var familyName = GetFamilyName(doc, elem).ToLower();
+                var typeName = GetElementTypeName(doc, elem).ToLower();
+                bool isDamper = familyName.Contains("fire") || familyName.Contains("damper") ||
+                                typeName.Contains("fire") || typeName.Contains("damper") ||
+                                familyName.Contains("brandschutz");
+                if (!isDamper) continue;
+
+                if (!string.IsNullOrEmpty(levelFilter) &&
+                    !GetElementLevel(doc, elem).Equals(levelFilter, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var connectedDucts = new List<object>();
+                if (elem is FamilyInstance fi && fi.MEPModel?.ConnectorManager != null)
+                {
+                    foreach (Connector conn in fi.MEPModel.ConnectorManager.Connectors)
+                    {
+                        if (!conn.IsConnected) continue;
+                        foreach (Connector refConn in conn.AllRefs)
+                        {
+                            var owner = refConn?.Owner as Element;
+                            if (owner == null || owner.Id == elem.Id) continue;
+                            if (owner.Document != doc) continue;
+                            connectedDucts.Add(new
+                            {
+                                id = owner.Id.Value,
+                                category = owner.Category?.Name ?? "-",
+                                size = owner.get_Parameter(BuiltInParameter.RBS_CALCULATED_SIZE)?.AsString() ?? "-"
+                            });
+                        }
+                    }
+                }
+
+                bool isConnected = connectedDucts.Count > 0;
+                if (isConnected) connectedCount++; else disconnectedCount++;
+
+                dampers.Add(new
+                {
+                    id = elem.Id.Value,
+                    family = GetFamilyName(doc, elem),
+                    type = GetElementTypeName(doc, elem),
+                    level = GetElementLevel(doc, elem),
+                    system = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "-",
+                    is_connected = isConnected,
+                    connected_ducts = connectedDucts
+                });
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                total_fire_dampers = dampers.Count,
+                connected = connectedCount,
+                disconnected = disconnectedCount,
+                dampers
             }, JsonOpts);
         }
 

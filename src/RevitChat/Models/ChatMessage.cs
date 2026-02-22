@@ -30,6 +30,7 @@ namespace RevitChat.Models
 
         public string AssociatedPrompt { get; set; }
         public List<string> AssociatedToolNames { get; set; }
+        public List<ToolCallRequest> AssociatedToolCalls { get; set; }
 
         private FeedbackType _feedback = FeedbackType.None;
         public FeedbackType Feedback

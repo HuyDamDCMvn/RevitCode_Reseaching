@@ -434,8 +434,16 @@ namespace RevitChat.Skills
             using (var trans = new Transaction(doc, "AI: Copy Elements"))
             {
                 trans.Start();
-                copied = ElementTransformUtils.CopyElements(doc, elemIds, translation);
-                trans.Commit();
+                try
+                {
+                    copied = ElementTransformUtils.CopyElements(doc, elemIds, translation);
+                    trans.Commit();
+                }
+                catch (Exception ex)
+                {
+                    if (trans.GetStatus() == TransactionStatus.Started) trans.RollBack();
+                    return JsonError($"CopyElements failed: {ex.Message}");
+                }
             }
 
             return JsonSerializer.Serialize(new
@@ -476,8 +484,16 @@ namespace RevitChat.Skills
             using (var trans = new Transaction(doc, "AI: Move Elements"))
             {
                 trans.Start();
-                ElementTransformUtils.MoveElements(doc, elemIds, translation);
-                trans.Commit();
+                try
+                {
+                    ElementTransformUtils.MoveElements(doc, elemIds, translation);
+                    trans.Commit();
+                }
+                catch (Exception ex)
+                {
+                    if (trans.GetStatus() == TransactionStatus.Started) trans.RollBack();
+                    return JsonError($"MoveElements failed: {ex.Message}");
+                }
             }
 
             return JsonSerializer.Serialize(new
@@ -519,8 +535,16 @@ namespace RevitChat.Skills
             using (var trans = new Transaction(doc, "AI: Mirror Elements"))
             {
                 trans.Start();
-                ElementTransformUtils.MirrorElements(doc, elemIds, plane, true);
-                trans.Commit();
+                try
+                {
+                    ElementTransformUtils.MirrorElements(doc, elemIds, plane, true);
+                    trans.Commit();
+                }
+                catch (Exception ex)
+                {
+                    if (trans.GetStatus() == TransactionStatus.Started) trans.RollBack();
+                    return JsonError($"MirrorElements failed: {ex.Message}");
+                }
             }
 
             return JsonSerializer.Serialize(new

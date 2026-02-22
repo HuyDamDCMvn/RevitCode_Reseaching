@@ -229,7 +229,7 @@ namespace RevitChat.Skills
                 var counts = new Dictionary<string, int>();
                 foreach (var cn in catNames)
                 {
-                    var bic = ResolveCategoryFilter(doc, cn);
+                    var bic = ResolveCategoryFilter(linkDoc, cn);
                     if (!bic.HasValue) continue;
                     int count = new FilteredElementCollector(linkDoc).OfCategory(bic.Value).WhereElementIsNotElementType().GetElementCount();
                     if (count > 0) counts[cn] = count;

@@ -16,7 +16,8 @@ namespace RevitChat.Skills
 
         private static readonly HashSet<string> HandledTools = new()
         {
-            "get_connector_info", "get_system_connectivity"
+            "get_connector_info", "get_system_connectivity",
+            "get_mep_routing_path", "connect_mep_elements"
         };
 
         public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
@@ -48,6 +49,33 @@ namespace RevitChat.Skills
                     },
                     "required": ["element_id"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("get_mep_routing_path",
+                "Trace an ordered routing path from a start element to the end of the run. Returns elements in order with cumulative distance and elevation.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_id": { "type": "integer", "description": "Starting element ID" },
+                        "max_elements": { "type": "integer", "description": "Max elements in path. Default 100.", "default": 100 }
+                    },
+                    "required": ["element_id"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("connect_mep_elements",
+                "Connect two nearby MEP elements that have unconnected connectors at the same location (within 10mm tolerance).",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_id_1": { "type": "integer", "description": "First element ID" },
+                        "element_id_2": { "type": "integer", "description": "Second element ID" },
+                        "dry_run": { "type": "boolean", "description": "Preview only. Default false." }
+                    },
+                    "required": ["element_id_1", "element_id_2"]
+                }
                 """))
         };
 
@@ -61,6 +89,8 @@ namespace RevitChat.Skills
             {
                 "get_connector_info" => GetConnectorInfo(doc, args),
                 "get_system_connectivity" => GetSystemConnectivity(doc, args),
+                "get_mep_routing_path" => GetMepRoutingPath(doc, args),
+                "connect_mep_elements" => ConnectMepElements(doc, args),
                 _ => JsonError($"MepConnectivitySkill: unknown tool '{functionName}'")
             };
         }
@@ -215,6 +245,169 @@ namespace RevitChat.Skills
                 connections = edges,
                 open_ends = openEnds
             }, JsonOpts);
+        }
+
+        private string GetMepRoutingPath(Document doc, Dictionary<string, object> args)
+        {
+            var elementId = GetArg<long>(args, "element_id");
+            int maxElements = GetArg(args, "max_elements", 100);
+            if (maxElements < 2) maxElements = 2;
+
+            var start = doc.GetElement(new ElementId(elementId));
+            if (start == null) return JsonError($"Element {elementId} not found.");
+
+            var path = new List<object>();
+            var visited = new HashSet<long> { start.Id.Value };
+            double cumulativeDistM = 0;
+
+            var current = start;
+            path.Add(BuildPathNode(doc, current, cumulativeDistM));
+
+            while (path.Count < maxElements)
+            {
+                if (!TryGetConnectorManager(current, out var cm)) break;
+
+                var currentLen = current.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH)?.AsDouble() ?? 0;
+                Element next = null;
+
+                foreach (Connector conn in cm.Connectors)
+                {
+                    if (!conn.IsConnected) continue;
+                    foreach (Connector refConn in conn.AllRefs)
+                    {
+                        var owner = refConn?.Owner as Element;
+                        if (owner == null || owner.Document != doc) continue;
+                        if (!visited.Add(owner.Id.Value)) continue;
+                        next = owner;
+                        break;
+                    }
+                    if (next != null) break;
+                }
+
+                if (next == null) break;
+
+                cumulativeDistM += currentLen * 0.3048;
+                current = next;
+                path.Add(BuildPathNode(doc, current, Math.Round(cumulativeDistM, 3)));
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                start_element_id = elementId,
+                path_length = path.Count,
+                total_distance_m = Math.Round(cumulativeDistM, 3),
+                path
+            }, JsonOpts);
+        }
+
+        private static object BuildPathNode(Document doc, Element elem, double cumulativeDistM)
+        {
+            double elevM = 0;
+            if (elem.Location is LocationPoint lp) elevM = lp.Point.Z * 0.3048;
+            else if (elem.Location is LocationCurve lc)
+            {
+                var mid = lc.Curve.Evaluate(0.5, true);
+                elevM = mid.Z * 0.3048;
+            }
+
+            return new
+            {
+                id = elem.Id.Value,
+                category = elem.Category?.Name ?? "-",
+                type = GetElementTypeName(doc, elem),
+                size = elem.get_Parameter(BuiltInParameter.RBS_CALCULATED_SIZE)?.AsString() ?? "-",
+                level = GetElementLevel(doc, elem),
+                elevation_m = Math.Round(elevM, 3),
+                cumulative_distance_m = cumulativeDistM
+            };
+        }
+
+        private string ConnectMepElements(Document doc, Dictionary<string, object> args)
+        {
+            var id1 = GetArg<long>(args, "element_id_1");
+            var id2 = GetArg<long>(args, "element_id_2");
+            bool dryRun = GetArg(args, "dry_run", false);
+
+            var elem1 = doc.GetElement(new ElementId(id1));
+            var elem2 = doc.GetElement(new ElementId(id2));
+            if (elem1 == null) return JsonError($"Element {id1} not found.");
+            if (elem2 == null) return JsonError($"Element {id2} not found.");
+
+            if (!TryGetConnectorManager(elem1, out var cm1))
+                return JsonError($"Element {id1} has no connectors.");
+            if (!TryGetConnectorManager(elem2, out var cm2))
+                return JsonError($"Element {id2} has no connectors.");
+
+            const double toleranceFt = 10.0 / 304.8;
+            Connector bestC1 = null, bestC2 = null;
+            double bestDist = double.MaxValue;
+
+            foreach (Connector c1 in cm1.Connectors)
+            {
+                if (c1.IsConnected) continue;
+                foreach (Connector c2 in cm2.Connectors)
+                {
+                    if (c2.IsConnected) continue;
+                    if (c1.Domain != c2.Domain) continue;
+
+                    double dist = c1.Origin.DistanceTo(c2.Origin);
+                    if (dist < bestDist)
+                    {
+                        bestDist = dist;
+                        bestC1 = c1;
+                        bestC2 = c2;
+                    }
+                }
+            }
+
+            if (bestC1 == null || bestC2 == null)
+                return JsonError("No compatible unconnected connector pair found.");
+
+            double distMm = Math.Round(bestDist * 304.8, 1);
+
+            if (bestDist > toleranceFt)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    status = "too_far",
+                    distance_mm = distMm,
+                    message = $"Closest connectors are {distMm}mm apart (tolerance: 10mm). Move elements closer first.",
+                    connector_1 = new { element_id = id1, domain = bestC1.Domain.ToString(), shape = bestC1.Shape.ToString() },
+                    connector_2 = new { element_id = id2, domain = bestC2.Domain.ToString(), shape = bestC2.Shape.ToString() }
+                }, JsonOpts);
+            }
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    status = "can_connect",
+                    distance_mm = distMm,
+                    connector_1 = new { element_id = id1, domain = bestC1.Domain.ToString(), shape = bestC1.Shape.ToString() },
+                    connector_2 = new { element_id = id2, domain = bestC2.Domain.ToString(), shape = bestC2.Shape.ToString() }
+                }, JsonOpts);
+            }
+
+            using var trans = new Transaction(doc, "AI: Connect MEP Elements");
+            trans.Start();
+            try
+            {
+                bestC1.ConnectTo(bestC2);
+                trans.Commit();
+                return JsonSerializer.Serialize(new
+                {
+                    status = "connected",
+                    element_id_1 = id1,
+                    element_id_2 = id2,
+                    distance_mm = distMm
+                }, JsonOpts);
+            }
+            catch (Exception ex)
+            {
+                if (trans.GetStatus() == TransactionStatus.Started) trans.RollBack();
+                return JsonError($"Connect failed: {ex.Message}");
+            }
         }
 
         private static bool TryGetConnectorManager(Element elem, out ConnectorManager cm)

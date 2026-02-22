@@ -17,7 +17,8 @@ namespace RevitChat.Skills
 
         private static readonly HashSet<string> HandledTools = new()
         {
-            "get_mep_spaces", "get_hvac_zones", "check_space_airflow", "get_unoccupied_spaces"
+            "get_mep_spaces", "get_hvac_zones", "check_space_airflow",
+            "get_unoccupied_spaces", "get_elements_in_space"
         };
 
         public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
@@ -25,12 +26,17 @@ namespace RevitChat.Skills
         public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("get_mep_spaces",
-                "List all MEP Spaces with area, volume, heating/cooling loads, supply/return airflow. Optionally filter by level.",
+                "List MEP Spaces with area, volume, loads, airflow. Filter by level, area range (sqm), volume range (m³/CBM).",
                 BinaryData.FromString("""
                 {
                     "type": "object",
                     "properties": {
-                        "level": { "type": "string", "description": "Optional level filter" }
+                        "level": { "type": "string", "description": "Optional level filter" },
+                        "min_area_sqm": { "type": "number", "description": "Min area in m² to include" },
+                        "max_area_sqm": { "type": "number", "description": "Max area in m² to include" },
+                        "min_volume_m3": { "type": "number", "description": "Min volume in m³ (CBM) to include" },
+                        "max_volume_m3": { "type": "number", "description": "Max volume in m³ (CBM) to include" },
+                        "limit": { "type": "integer", "description": "Max results. Default 200.", "default": 200 }
                     },
                     "required": []
                 }
@@ -69,6 +75,21 @@ namespace RevitChat.Skills
                     },
                     "required": []
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("get_elements_in_space",
+                "List and count all elements (equipment, sensors, devices, fixtures) physically inside a specific MEP Space. Filter by space number/name and optionally by category.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "space_number": { "type": "string", "description": "Space number to search in" },
+                        "space_id": { "type": "integer", "description": "Space ElementId (alternative to space_number)" },
+                        "category": { "type": "string", "description": "Optional category filter (e.g. 'Mechanical Equipment', 'Fire Alarm Devices', 'Sprinklers', 'Lighting Fixtures')" },
+                        "limit": { "type": "integer", "description": "Max elements to return. Default 200.", "default": 200 }
+                    },
+                    "required": []
+                }
                 """))
         };
 
@@ -83,6 +104,7 @@ namespace RevitChat.Skills
                 "get_hvac_zones" => GetHvacZones(doc, args),
                 "check_space_airflow" => CheckSpaceAirflow(doc, args),
                 "get_unoccupied_spaces" => GetUnoccupiedSpaces(doc, args),
+                "get_elements_in_space" => GetElementsInSpace(doc, args),
                 _ => JsonError($"MepSpaceSkill: unknown tool '{functionName}'")
             };
         }
@@ -104,29 +126,66 @@ namespace RevitChat.Skills
         private string GetMepSpaces(Document doc, Dictionary<string, object> args)
         {
             var levelFilter = GetArg<string>(args, "level");
+            double minAreaSqm = GetArg<double>(args, "min_area_sqm", double.NaN);
+            double maxAreaSqm = GetArg<double>(args, "max_area_sqm", double.NaN);
+            double minVolM3 = GetArg<double>(args, "min_volume_m3", double.NaN);
+            double maxVolM3 = GetArg<double>(args, "max_volume_m3", double.NaN);
+            int limit = GetArg(args, "limit", 200);
+
             var spaces = CollectSpaces(doc, levelFilter);
 
-            var results = spaces.Select(s => new
+            var projected = spaces.Select(s => new
             {
-                id = s.Id.Value,
-                name = s.get_Parameter(BuiltInParameter.ROOM_NAME)?.AsString() ?? "-",
-                number = s.Number ?? "-",
-                level = s.Level?.Name ?? "-",
+                space = s,
                 area_sqm = Math.Round(s.Area * 0.092903, 2),
-                volume_m3 = Math.Round(s.Volume * 0.0283168, 2),
-                condition_type = s.LookupParameter("Condition Type")?.AsValueString() ?? "-",
-                design_heating_load = s.LookupParameter("Design Heating Load")?.AsValueString() ?? "-",
-                design_cooling_load = s.LookupParameter("Design Cooling Load")?.AsValueString() ?? "-",
-                design_supply_airflow = s.LookupParameter("Specified Supply Airflow")?.AsValueString()
-                    ?? s.LookupParameter("Design Supply Airflow")?.AsValueString() ?? "-",
-                actual_supply_airflow = s.LookupParameter("Actual Supply Airflow")?.AsValueString() ?? "-",
-                design_return_airflow = s.LookupParameter("Specified Return Airflow")?.AsValueString()
-                    ?? s.LookupParameter("Design Return Airflow")?.AsValueString() ?? "-",
-                actual_return_airflow = s.LookupParameter("Actual Return Airflow")?.AsValueString() ?? "-"
+                volume_m3 = Math.Round(s.Volume * 0.0283168, 2)
+            });
+
+            if (!double.IsNaN(minAreaSqm))
+                projected = projected.Where(x => x.area_sqm >= minAreaSqm);
+            if (!double.IsNaN(maxAreaSqm))
+                projected = projected.Where(x => x.area_sqm <= maxAreaSqm);
+            if (!double.IsNaN(minVolM3))
+                projected = projected.Where(x => x.volume_m3 >= minVolM3);
+            if (!double.IsNaN(maxVolM3))
+                projected = projected.Where(x => x.volume_m3 <= maxVolM3);
+
+            var filtered = projected.ToList();
+
+            var results = filtered.Take(limit).Select(x =>
+            {
+                var s = x.space;
+                return new
+                {
+                    id = s.Id.Value,
+                    name = s.get_Parameter(BuiltInParameter.ROOM_NAME)?.AsString() ?? "-",
+                    number = s.Number ?? "-",
+                    level = s.Level?.Name ?? "-",
+                    area_sqm = x.area_sqm,
+                    volume_m3 = x.volume_m3,
+                    condition_type = s.LookupParameter("Condition Type")?.AsValueString() ?? "-",
+                    design_heating_load = s.LookupParameter("Design Heating Load")?.AsValueString() ?? "-",
+                    design_cooling_load = s.LookupParameter("Design Cooling Load")?.AsValueString() ?? "-",
+                    design_supply_airflow = s.LookupParameter("Specified Supply Airflow")?.AsValueString()
+                        ?? s.LookupParameter("Design Supply Airflow")?.AsValueString() ?? "-",
+                    actual_supply_airflow = s.LookupParameter("Actual Supply Airflow")?.AsValueString() ?? "-",
+                    design_return_airflow = s.LookupParameter("Specified Return Airflow")?.AsValueString()
+                        ?? s.LookupParameter("Design Return Airflow")?.AsValueString() ?? "-",
+                    actual_return_airflow = s.LookupParameter("Actual Return Airflow")?.AsValueString() ?? "-"
+                };
             })
             .OrderBy(s => s.level).ThenBy(s => s.number).ToList();
 
-            return JsonSerializer.Serialize(new { count = results.Count, spaces = results }, JsonOpts);
+            bool hasFilter = !double.IsNaN(minAreaSqm) || !double.IsNaN(maxAreaSqm)
+                          || !double.IsNaN(minVolM3) || !double.IsNaN(maxVolM3);
+
+            return JsonSerializer.Serialize(new
+            {
+                total_matching = filtered.Count,
+                returned = results.Count,
+                filter_applied = hasFilter,
+                spaces = results
+            }, JsonOpts);
         }
 
         private string GetHvacZones(Document doc, Dictionary<string, object> args)
@@ -265,6 +324,97 @@ namespace RevitChat.Skills
                 total_spaces = spaces.Count,
                 unoccupied_count = results.Count,
                 unoccupied_spaces = results
+            }, JsonOpts);
+        }
+
+        private string GetElementsInSpace(Document doc, Dictionary<string, object> args)
+        {
+            var spaceNumber = GetArg<string>(args, "space_number");
+            var spaceId = GetArg<long>(args, "space_id");
+            var categoryFilter = GetArg<string>(args, "category");
+            int limit = GetArg(args, "limit", 200);
+
+            Space targetSpace = null;
+
+            if (spaceId > 0)
+            {
+                targetSpace = doc.GetElement(new ElementId(spaceId)) as Space;
+            }
+
+            if (targetSpace == null && !string.IsNullOrEmpty(spaceNumber))
+            {
+                targetSpace = new FilteredElementCollector(doc)
+                    .OfClass(typeof(SpatialElement))
+                    .OfType<Space>()
+                    .FirstOrDefault(s => string.Equals(s.Number, spaceNumber, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (targetSpace == null)
+                return JsonError($"Space not found. number='{spaceNumber}', id={spaceId}");
+
+            var spaceIdVal = targetSpace.Id.Value;
+            var spaceName = targetSpace.get_Parameter(BuiltInParameter.ROOM_NAME)?.AsString() ?? "-";
+
+            BuiltInCategory? bicFilter = null;
+            if (!string.IsNullOrEmpty(categoryFilter))
+                bicFilter = ResolveCategoryFilter(doc, categoryFilter);
+
+            var collector = new FilteredElementCollector(doc)
+                .WhereElementIsNotElementType();
+
+            if (bicFilter.HasValue)
+                collector = collector.OfCategory(bicFilter.Value);
+
+            var results = new List<object>();
+            var categoryCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var elem in collector)
+            {
+                if (!(elem is FamilyInstance fi)) continue;
+
+                Space elemSpace = null;
+                try { elemSpace = fi.Space; } catch { }
+
+                if (elemSpace == null || elemSpace.Id.Value != spaceIdVal) continue;
+
+                if (!string.IsNullOrEmpty(categoryFilter) && !bicFilter.HasValue)
+                {
+                    var catName = elem.Category?.Name ?? "";
+                    if (!catName.Contains(categoryFilter, StringComparison.OrdinalIgnoreCase))
+                        continue;
+                }
+
+                var cat = elem.Category?.Name ?? "-";
+                categoryCounts.TryGetValue(cat, out int c);
+                categoryCounts[cat] = c + 1;
+
+                if (results.Count < limit)
+                {
+                    results.Add(new
+                    {
+                        id = elem.Id.Value,
+                        category = cat,
+                        family = GetFamilyName(doc, elem),
+                        type = GetElementTypeName(doc, elem),
+                        level = GetElementLevel(doc, elem)
+                    });
+                }
+            }
+
+            var summary = categoryCounts
+                .OrderByDescending(kv => kv.Value)
+                .Select(kv => new { category = kv.Key, count = kv.Value })
+                .ToList();
+
+            return JsonSerializer.Serialize(new
+            {
+                space_id = spaceIdVal,
+                space_number = targetSpace.Number ?? "-",
+                space_name = spaceName,
+                space_level = targetSpace.Level?.Name ?? "-",
+                total_elements = categoryCounts.Values.Sum(),
+                by_category = summary,
+                elements = results
             }, JsonOpts);
         }
 

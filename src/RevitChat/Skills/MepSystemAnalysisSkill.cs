@@ -18,7 +18,8 @@ namespace RevitChat.Skills
         {
             "get_mep_systems", "get_system_elements",
             "get_duct_summary", "get_pipe_summary",
-            "get_conduit_summary", "get_cable_tray_summary"
+            "get_conduit_summary", "get_cable_tray_summary",
+            "calculate_system_totals"
         };
 
         public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
@@ -98,6 +99,19 @@ namespace RevitChat.Skills
                     },
                     "required": []
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("calculate_system_totals",
+                "Calculate per-system totals: total length, element count broken down by type (curves, fittings, accessories, equipment, terminals).",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "system_name": { "type": "string", "description": "System name (exact or partial match). If not provided, shows all systems." },
+                        "level": { "type": "string", "description": "Optional level filter" }
+                    },
+                    "required": []
+                }
                 """))
         };
 
@@ -114,6 +128,7 @@ namespace RevitChat.Skills
                 "get_pipe_summary" => GetMepCurveSummary(doc, args, BuiltInCategory.OST_PipeCurves, "Pipes"),
                 "get_conduit_summary" => GetMepCurveSummary(doc, args, BuiltInCategory.OST_Conduit, "Conduits"),
                 "get_cable_tray_summary" => GetMepCurveSummary(doc, args, BuiltInCategory.OST_CableTray, "Cable Trays"),
+                "calculate_system_totals" => CalculateSystemTotals(doc, args),
                 _ => JsonError($"MepSystemAnalysisSkill: unknown tool '{functionName}'")
             };
         }
@@ -298,6 +313,98 @@ namespace RevitChat.Skills
                 by_size = sizeResults,
                 by_level = levelResults
             }, JsonOpts);
+        }
+
+        private string CalculateSystemTotals(Document doc, Dictionary<string, object> args)
+        {
+            var systemFilter = GetArg<string>(args, "system_name");
+            var levelFilter = GetArg<string>(args, "level");
+
+            var mepCategories = new Dictionary<BuiltInCategory, string>
+            {
+                [BuiltInCategory.OST_DuctCurves] = "curves",
+                [BuiltInCategory.OST_PipeCurves] = "curves",
+                [BuiltInCategory.OST_FlexDuctCurves] = "flex_curves",
+                [BuiltInCategory.OST_FlexPipeCurves] = "flex_curves",
+                [BuiltInCategory.OST_DuctFitting] = "fittings",
+                [BuiltInCategory.OST_PipeFitting] = "fittings",
+                [BuiltInCategory.OST_DuctAccessory] = "accessories",
+                [BuiltInCategory.OST_PipeAccessory] = "accessories",
+                [BuiltInCategory.OST_MechanicalEquipment] = "equipment",
+                [BuiltInCategory.OST_PlumbingFixtures] = "fixtures",
+                [BuiltInCategory.OST_DuctTerminal] = "terminals",
+                [BuiltInCategory.OST_Sprinklers] = "sprinklers",
+                [BuiltInCategory.OST_Conduit] = "curves",
+                [BuiltInCategory.OST_CableTray] = "curves"
+            };
+
+            var systemTotals = new Dictionary<string, SystemTotals>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var kvp in mepCategories)
+            {
+                var elems = new FilteredElementCollector(doc)
+                    .OfCategory(kvp.Key).WhereElementIsNotElementType().ToList();
+
+                foreach (var elem in elems)
+                {
+                    if (!string.IsNullOrEmpty(levelFilter) &&
+                        !GetElementLevel(doc, elem).Equals(levelFilter, StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    var sysName = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "(Unassigned)";
+
+                    if (!string.IsNullOrEmpty(systemFilter) &&
+                        sysName.IndexOf(systemFilter, StringComparison.OrdinalIgnoreCase) < 0)
+                        continue;
+
+                    if (!systemTotals.TryGetValue(sysName, out var totals))
+                    {
+                        totals = new SystemTotals { Name = sysName };
+                        systemTotals[sysName] = totals;
+                    }
+
+                    totals.TotalElements++;
+                    var length = elem.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH)?.AsDouble() ?? 0;
+                    totals.TotalLengthFt += length;
+
+                    switch (kvp.Value)
+                    {
+                        case "curves": case "flex_curves": totals.Curves++; break;
+                        case "fittings": totals.Fittings++; break;
+                        case "accessories": totals.Accessories++; break;
+                        case "equipment": totals.Equipment++; break;
+                        case "fixtures": totals.Fixtures++; break;
+                        case "terminals": totals.Terminals++; break;
+                        case "sprinklers": totals.Sprinklers++; break;
+                    }
+                }
+            }
+
+            var results = systemTotals.Values
+                .OrderByDescending(s => s.TotalElements)
+                .Select(s => new
+                {
+                    system = s.Name,
+                    total_elements = s.TotalElements,
+                    total_length_m = Math.Round(s.TotalLengthFt * 0.3048, 2),
+                    curves = s.Curves,
+                    fittings = s.Fittings,
+                    accessories = s.Accessories,
+                    equipment = s.Equipment,
+                    fixtures = s.Fixtures,
+                    terminals = s.Terminals,
+                    sprinklers = s.Sprinklers
+                }).ToList();
+
+            return JsonSerializer.Serialize(new { system_count = results.Count, systems = results }, JsonOpts);
+        }
+
+        private class SystemTotals
+        {
+            public string Name;
+            public int TotalElements;
+            public double TotalLengthFt;
+            public int Curves, Fittings, Accessories, Equipment, Fixtures, Terminals, Sprinklers;
         }
 
         private class SystemInfo

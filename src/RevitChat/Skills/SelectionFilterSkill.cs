@@ -140,6 +140,15 @@ namespace RevitChat.Skills
                 uidoc.Selection.SetElementIds(ids);
             }
 
+            var sample = matched.Take(30).Select(e => new
+            {
+                id = e.Id.Value,
+                family = GetFamilyName(doc, e),
+                type = GetElementTypeName(doc, e),
+                level = GetElementLevel(doc, e),
+                value = GetParameterValueAsString(doc, e.LookupParameter(paramName))
+            }).ToList();
+
             return JsonSerializer.Serialize(new
             {
                 category = catName,
@@ -148,7 +157,7 @@ namespace RevitChat.Skills
                 match_type = matchType,
                 total_checked = elements.Count,
                 selected_count = matched.Count,
-                sample_ids = matched.Take(10).Select(e => e.Id.Value).ToList()
+                sample = sample
             }, JsonOpts);
         }
 

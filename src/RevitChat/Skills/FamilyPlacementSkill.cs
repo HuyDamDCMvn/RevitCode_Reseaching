@@ -186,19 +186,27 @@ namespace RevitChat.Skills
             using (var trans = new Transaction(doc, "AI: Place Family Instance"))
             {
                 trans.Start();
-                if (!symbol.IsActive) symbol.Activate();
-                var instance = doc.Create.NewFamilyInstance(point, symbol, level, structType);
-                trans.Commit();
-
-                return JsonSerializer.Serialize(new
+                try
                 {
-                    placed = true,
-                    element_id = instance.Id.Value,
-                    family = symbol.Family?.Name,
-                    type = symbol.Name,
-                    location = new { x, y, z },
-                    level = level.Name
-                }, JsonOpts);
+                    if (!symbol.IsActive) symbol.Activate();
+                    var instance = doc.Create.NewFamilyInstance(point, symbol, level, structType);
+                    trans.Commit();
+
+                    return JsonSerializer.Serialize(new
+                    {
+                        placed = true,
+                        element_id = instance.Id.Value,
+                        family = symbol.Family?.Name,
+                        type = symbol.Name,
+                        location = new { x, y, z },
+                        level = level.Name
+                    }, JsonOpts);
+                }
+                catch (Exception ex)
+                {
+                    if (trans.GetStatus() == TransactionStatus.Started) trans.RollBack();
+                    return JsonError($"PlaceFamilyInstance failed: {ex.Message}");
+                }
             }
         }
 

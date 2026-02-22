@@ -216,8 +216,8 @@ namespace RevitChat.Skills
 
             var allViews = new FilteredElementCollector(doc)
                 .OfClass(typeof(View)).Cast<View>().ToList();
-            int viewCount = allViews.Count(v => !v.IsTemplate);
             int templateCount = allViews.Count(v => v.IsTemplate);
+            int viewCount = allViews.Count - templateCount;
 
             int sheetCount = new FilteredElementCollector(doc)
                 .OfClass(typeof(ViewSheet)).GetElementCount();

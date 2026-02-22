@@ -119,6 +119,7 @@ namespace RevitChat.Services
                 if (existing != null)
                 {
                     existing.UseCount++;
+                    existing.Tools = tools;
                     existing.Timestamp = DateTime.UtcNow.ToString("o");
                 }
                 else
@@ -134,8 +135,8 @@ namespace RevitChat.Services
                     if (_data.Approved.Count > MaxApproved)
                         _data.Approved.RemoveAt(0);
                 }
+                Save();
             }
-            Save();
         }
 
         public static void SaveCorrection(string prompt, string wrongTool, string correctTool)
@@ -167,8 +168,8 @@ namespace RevitChat.Services
                     if (_data.Corrections.Count > MaxCorrections)
                         _data.Corrections.RemoveAt(0);
                 }
+                Save();
             }
-            Save();
         }
 
         /// <summary>

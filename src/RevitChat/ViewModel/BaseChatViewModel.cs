@@ -32,6 +32,7 @@ namespace RevitChat.ViewModel
         private readonly WorkingMemory _workingMemory = new();
         private string _lastUserPrompt;
         private List<string> _lastToolNames = new();
+        private List<ToolCallRequest> _lastToolCalls = new();
 
         private const int AnalyzeThresholdChars = 1200;
 
@@ -131,13 +132,17 @@ namespace RevitChat.ViewModel
 
                         StatusMessage = $"Executing {confirmedCalls.Count} tool(s)...";
                         var toolResults = await ExecuteToolCallsAsync(confirmedCalls);
+                        _toolExecutedInSession = true;
+                        _lastToolNames.AddRange(confirmedCalls.Select(t => t.FunctionName));
+                        _lastToolCalls.AddRange(confirmedCalls);
                         RemoveToolProgressMessages();
 
-                        var truncated = TruncateToolResults(toolResults);
-                        var totalChars = GetTotalChars(truncated);
+                        UpdateWorkingMemory(confirmedCalls, toolResults);
+                        var compressed = CompressAndTruncate(confirmedCalls, toolResults);
+                        var totalChars = GetTotalChars(compressed);
                         StatusMessage = totalChars > AnalyzeThresholdChars ? "Analyzing results..." : "Finalizing...";
 
-                        var (response, toolCalls) = await ChatService.ContinueWithToolResultsAsync(truncated, _cts.Token);
+                        var (response, toolCalls) = await ChatService.ContinueWithToolResultsAsync(compressed, _cts.Token);
 
                         while (toolCalls != null && toolCalls.Count > 0)
                         {
@@ -154,17 +159,22 @@ namespace RevitChat.ViewModel
 
                             StatusMessage = $"Executing {toolCalls.Count} tool(s)...";
                             toolResults = await ExecuteToolCallsAsync(toolCalls);
+                            _lastToolNames.AddRange(toolCalls.Select(t => t.FunctionName));
+                            _lastToolCalls.AddRange(toolCalls);
                             RemoveToolProgressMessages();
 
-                            truncated = TruncateToolResults(toolResults);
-                            totalChars = GetTotalChars(truncated);
+                            UpdateWorkingMemory(toolCalls, toolResults);
+                            compressed = CompressAndTruncate(toolCalls, toolResults);
+                            totalChars = GetTotalChars(compressed);
                             StatusMessage = totalChars > AnalyzeThresholdChars ? "Analyzing results..." : "Finalizing...";
 
-                            (response, toolCalls) = await ChatService.ContinueWithToolResultsAsync(truncated, _cts.Token);
+                            (response, toolCalls) = await ChatService.ContinueWithToolResultsAsync(compressed, _cts.Token);
                         }
 
                         if (!string.IsNullOrEmpty(response))
-                            Messages.Add(ChatMessage.FromAssistant(response));
+                            AddAssistantMessage(response);
+                        else if (_toolExecutedInSession)
+                            AddAssistantMessage("Done. The action was completed.");
                         StatusMessage = "Ready";
                     }
                     catch (OperationCanceledException)
@@ -208,6 +218,7 @@ namespace RevitChat.ViewModel
             _toolExecutedInSession = false;
             _lastUserPrompt = text;
             _lastToolNames = new List<string>();
+            _lastToolCalls = new List<ToolCallRequest>();
             StatusMessage = "Thinking...";
 
             _cts = new CancellationTokenSource(SendTimeout);
@@ -239,6 +250,7 @@ namespace RevitChat.ViewModel
                     var toolResults = await ExecuteToolCallsAsync(toolCalls);
                     _toolExecutedInSession = true;
                     _lastToolNames.AddRange(toolCalls.Select(t => t.FunctionName));
+                    _lastToolCalls.AddRange(toolCalls);
                     RemoveToolProgressMessages();
 
                     UpdateWorkingMemory(toolCalls, toolResults);
@@ -548,10 +560,23 @@ namespace RevitChat.ViewModel
             message.Feedback = FeedbackType.ThumbsUp;
 
             var prompt = message.AssociatedPrompt;
+            var toolCalls = message.AssociatedToolCalls;
             var toolNames = message.AssociatedToolNames;
-            if (!string.IsNullOrWhiteSpace(prompt) && toolNames?.Count > 0)
+            if (!string.IsNullOrWhiteSpace(prompt) && (toolCalls?.Count > 0 || toolNames?.Count > 0))
             {
-                var tools = toolNames.Select(n => new ToolUsage { Name = n }).ToList();
+                List<ToolUsage> tools;
+                if (toolCalls?.Count > 0)
+                {
+                    tools = toolCalls.Select(tc => new ToolUsage
+                    {
+                        Name = tc.FunctionName,
+                        Args = tc.Arguments ?? new Dictionary<string, object>()
+                    }).ToList();
+                }
+                else
+                {
+                    tools = toolNames.Select(n => new ToolUsage { Name = n }).ToList();
+                }
                 ChatFeedbackService.SaveApproved(prompt, tools);
                 StatusMessage = "Feedback saved";
             }
@@ -578,6 +603,7 @@ namespace RevitChat.ViewModel
             var msg = ChatMessage.FromAssistant(content);
             msg.AssociatedPrompt = _lastUserPrompt;
             msg.AssociatedToolNames = _lastToolNames.Count > 0 ? new List<string>(_lastToolNames) : null;
+            msg.AssociatedToolCalls = _lastToolCalls.Count > 0 ? new List<ToolCallRequest>(_lastToolCalls) : null;
             Messages.Add(msg);
             return msg;
         }

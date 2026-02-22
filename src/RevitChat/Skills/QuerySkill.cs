@@ -68,14 +68,17 @@ namespace RevitChat.Skills
 
             ChatTool.CreateFunctionTool(
                 functionName: "search_elements",
-                functionDescription: "Search for elements where a specific parameter matches a given value.",
+                functionDescription: "Search elements by parameter value with comparison operators. Supports numeric (greater/less) and string matching. Can group results by level and/or family.",
                 functionParameters: BinaryData.FromString("""
                 {
                     "type": "object",
                     "properties": {
                         "param_name": { "type": "string", "description": "Parameter name to search" },
-                        "param_value": { "type": "string", "description": "Value to match (case-insensitive partial match)" },
-                        "category": { "type": "string", "description": "Optional category filter" }
+                        "param_value": { "type": "string", "description": "Value to compare against" },
+                        "category": { "type": "string", "description": "Optional category filter" },
+                        "match_type": { "type": "string", "enum": ["contains", "equals", "greater", "less", "greater_equal", "less_equal"], "description": "Comparison operator. Default: contains" },
+                        "group_by": { "type": "array", "items": { "type": "string", "enum": ["level", "family", "type"] }, "description": "Group results by these fields" },
+                        "limit": { "type": "integer", "description": "Max elements to return. Default 200.", "default": 200 }
                     },
                     "required": ["param_name", "param_value"]
                 }
@@ -231,13 +234,20 @@ namespace RevitChat.Skills
             var paramName = GetArg<string>(args, "param_name");
             var paramValue = GetArg<string>(args, "param_value");
             var category = GetArg<string>(args, "category");
+            var matchType = GetArg(args, "match_type", "contains");
+            int limit = GetArg(args, "limit", 200);
+            if (limit <= 0) limit = 200;
+
+            var groupByRaw = args.ContainsKey("group_by") ? args["group_by"] : null;
+            var groupBySet = ParseGroupBy(groupByRaw);
 
             if (string.IsNullOrEmpty(paramName) || string.IsNullOrEmpty(paramValue))
                 return JsonError("param_name and param_value are required.");
 
             var collector = BuildCollector(doc, category);
             bool needsCategoryFallback = !string.IsNullOrEmpty(category) && ResolveCategoryFilter(doc, category) == null;
-            var results = new List<object>();
+
+            var matched = new List<(long id, string cat, string family, string type, string level, string val)>();
 
             foreach (var elem in collector)
             {
@@ -251,22 +261,127 @@ namespace RevitChat.Skills
                 if (param == null) continue;
 
                 var val = GetParameterValueAsString(doc, param);
-                if (val.Contains(paramValue, StringComparison.OrdinalIgnoreCase))
-                {
-                    results.Add(new
-                    {
-                        id = elem.Id.Value,
-                        category = elem.Category.Name,
-                        family = GetFamilyName(doc, elem),
-                        type = GetElementTypeName(doc, elem),
-                        matched_value = val
-                    });
-                }
+                if (val == "-") continue;
 
-                if (results.Count >= 200) break;
+                if (!MatchValue(val, paramValue, matchType)) continue;
+
+                matched.Add((
+                    elem.Id.Value,
+                    elem.Category.Name,
+                    GetFamilyName(doc, elem),
+                    GetElementTypeName(doc, elem),
+                    GetElementLevel(doc, elem),
+                    val
+                ));
+
+                if (matched.Count >= limit) break;
             }
 
-            return JsonSerializer.Serialize(new { count = results.Count, elements = results }, JsonOpts);
+            if (groupBySet.Count > 0)
+                return SerializeGrouped(matched, groupBySet, paramName, matchType, paramValue);
+
+            var elements = matched.Select(m => new
+            {
+                id = m.id, category = m.cat, family = m.family,
+                type = m.type, level = m.level, matched_value = m.val
+            }).ToList();
+
+            return JsonSerializer.Serialize(new { count = elements.Count, elements }, JsonOpts);
+        }
+
+        private static readonly string[] ValidGroupFields = { "level", "family", "type" };
+
+        private static bool MatchValue(string paramVal, string target, string matchType)
+        {
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            return matchType switch
+            {
+                "equals" => paramVal.Equals(target, StringComparison.OrdinalIgnoreCase),
+                "greater" => double.TryParse(paramVal, System.Globalization.NumberStyles.Any, inv, out double pv1)
+                          && double.TryParse(target, System.Globalization.NumberStyles.Any, inv, out double t1) && pv1 > t1,
+                "less" => double.TryParse(paramVal, System.Globalization.NumberStyles.Any, inv, out double pv2)
+                       && double.TryParse(target, System.Globalization.NumberStyles.Any, inv, out double t2) && pv2 < t2,
+                "greater_equal" => double.TryParse(paramVal, System.Globalization.NumberStyles.Any, inv, out double pv3)
+                                && double.TryParse(target, System.Globalization.NumberStyles.Any, inv, out double t3) && pv3 >= t3,
+                "less_equal" => double.TryParse(paramVal, System.Globalization.NumberStyles.Any, inv, out double pv4)
+                             && double.TryParse(target, System.Globalization.NumberStyles.Any, inv, out double t4) && pv4 <= t4,
+                _ => paramVal.IndexOf(target, StringComparison.OrdinalIgnoreCase) >= 0
+            };
+        }
+
+        private static HashSet<string> ParseGroupBy(object raw)
+        {
+            var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (raw == null) return set;
+            if (raw is System.Text.Json.JsonElement je)
+            {
+                if (je.ValueKind == System.Text.Json.JsonValueKind.Array)
+                {
+                    foreach (var item in je.EnumerateArray())
+                    {
+                        if (item.ValueKind != System.Text.Json.JsonValueKind.String) continue;
+                        var s = item.GetString();
+                        if (!string.IsNullOrEmpty(s) && ValidGroupFields.Contains(s, StringComparer.OrdinalIgnoreCase))
+                            set.Add(s);
+                    }
+                }
+                else if (je.ValueKind == System.Text.Json.JsonValueKind.String)
+                {
+                    var s = je.GetString();
+                    if (!string.IsNullOrEmpty(s) && ValidGroupFields.Contains(s, StringComparer.OrdinalIgnoreCase))
+                        set.Add(s);
+                }
+            }
+            else if (raw is IEnumerable<object> list)
+                foreach (var o in list)
+                {
+                    var s = o?.ToString();
+                    if (!string.IsNullOrEmpty(s) && ValidGroupFields.Contains(s, StringComparer.OrdinalIgnoreCase))
+                        set.Add(s);
+                }
+            else if (raw is string str && ValidGroupFields.Contains(str, StringComparer.OrdinalIgnoreCase))
+                set.Add(str);
+            return set;
+        }
+
+        private string SerializeGrouped(
+            List<(long id, string cat, string family, string type, string level, string val)> items,
+            HashSet<string> groupBy, string paramName, string matchType, string targetValue)
+        {
+            Func<(long id, string cat, string family, string type, string level, string val), string> keyFn =
+                item =>
+                {
+                    var parts = new List<string>();
+                    if (groupBy.Contains("level")) parts.Add(item.level);
+                    if (groupBy.Contains("family")) parts.Add(item.family);
+                    if (groupBy.Contains("type")) parts.Add(item.type);
+                    return string.Join(" | ", parts);
+                };
+
+            var groups = items
+                .GroupBy(keyFn)
+                .OrderByDescending(g => g.Count())
+                .Select(g =>
+                {
+                    var first = g.First();
+                    var obj = new Dictionary<string, object>();
+                    if (groupBy.Contains("level")) obj["level"] = first.level;
+                    if (groupBy.Contains("family")) obj["family"] = first.family;
+                    if (groupBy.Contains("type")) obj["type"] = first.type;
+                    obj["count"] = g.Count();
+                    obj["sample_ids"] = g.Take(5).Select(x => x.id).ToList();
+                    return obj;
+                }).ToList();
+
+            return JsonSerializer.Serialize(new
+            {
+                total_matched = items.Count,
+                parameter = paramName,
+                match_type = matchType,
+                value = targetValue,
+                group_count = groups.Count,
+                groups
+            }, JsonOpts);
         }
     }
 }
