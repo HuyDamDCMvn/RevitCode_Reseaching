@@ -549,9 +549,26 @@ namespace RevitChatLocal.Services
                     scored.Add((score, example));
             }
 
+            var limit = GetFewShotLimit(userMessage);
+
+            try
+            {
+                var approved = RevitChat.Services.ChatFeedbackService.GetSimilarApproved(userMessage, 2);
+                foreach (var a in approved)
+                {
+                    if (a.Tools == null || a.Tools.Count == 0) continue;
+                    var tool = a.Tools[0];
+                    var argsJson = a.Tools.Count == 1 && tool.Args?.Count > 0
+                        ? System.Text.Json.JsonSerializer.Serialize(tool.Args)
+                        : "{}";
+                    var example = $"User: {a.Prompt}\nAssistant:\n<tool_call>\n{{\"name\": \"{tool.Name}\", \"arguments\": {argsJson}}}\n</tool_call>";
+                    scored.Add((100 + a.UseCount, example));
+                }
+            }
+            catch { }
+
             if (scored.Count == 0) return "";
 
-            var limit = GetFewShotLimit(userMessage);
             var selected = scored
                 .OrderByDescending(s => s.score)
                 .Take(limit)
@@ -1257,6 +1274,15 @@ Example:
         private string FuzzyMatchToolName(string candidate)
         {
             if (string.IsNullOrEmpty(candidate)) return null;
+
+            try
+            {
+                var corrected = RevitChat.Services.ChatFeedbackService.FindToolCorrection(candidate);
+                if (corrected != null && _allToolNames.Contains(corrected))
+                    return corrected;
+            }
+            catch { }
+
             var lower = candidate.ToLowerInvariant().Replace("-", "_");
 
             foreach (var tool in _allToolNames)

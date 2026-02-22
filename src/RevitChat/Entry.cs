@@ -2,6 +2,7 @@ using System;
 using System.Windows.Interop;
 using Autodesk.Revit.UI;
 using RevitChat.Handler;
+using RevitChat.Services;
 using RevitChat.Skills;
 using RevitChat.UI;
 using RevitChat.ViewModel;
@@ -38,6 +39,10 @@ namespace RevitChat
                     TaskDialog.Show("RevitChat", "Please open a Revit project first.");
                     return;
                 }
+
+                var dllDir = System.IO.Path.GetDirectoryName(typeof(Entry).Assembly.Location)
+                            ?? AppContext.BaseDirectory;
+                ChatFeedbackService.Initialize(dllDir);
 
                 if (_skillRegistry == null)
                     _skillRegistry = SkillRegistry.CreateDefault();

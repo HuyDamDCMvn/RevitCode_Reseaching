@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RevitChat.Handler;
 using RevitChat.Models;
+using RevitChat.Services;
 using RevitChat.Skills;
 
 namespace RevitChat.ViewModel
@@ -29,6 +30,8 @@ namespace RevitChat.ViewModel
         private IChatService _diagnosticService;
         private bool _toolExecutedInSession;
         private readonly WorkingMemory _workingMemory = new();
+        private string _lastUserPrompt;
+        private List<string> _lastToolNames = new();
 
         private const int AnalyzeThresholdChars = 1200;
 
@@ -194,6 +197,8 @@ namespace RevitChat.ViewModel
             InputText = "";
             IsBusy = true;
             _toolExecutedInSession = false;
+            _lastUserPrompt = text;
+            _lastToolNames = new List<string>();
             StatusMessage = "Thinking...";
 
             _cts = new CancellationTokenSource(SendTimeout);
@@ -224,6 +229,7 @@ namespace RevitChat.ViewModel
 
                     var toolResults = await ExecuteToolCallsAsync(toolCalls);
                     _toolExecutedInSession = true;
+                    _lastToolNames.AddRange(toolCalls.Select(t => t.FunctionName));
                     RemoveToolProgressMessages();
 
                     UpdateWorkingMemory(toolCalls, toolResults);
@@ -235,9 +241,9 @@ namespace RevitChat.ViewModel
                 }
 
                 if (!string.IsNullOrEmpty(response) && !IsEchoResponse(response))
-                    Messages.Add(ChatMessage.FromAssistant(response));
+                    AddAssistantMessage(response);
                 else if (_toolExecutedInSession)
-                    Messages.Add(ChatMessage.FromAssistant("Done. The action was completed."));
+                    AddAssistantMessage("Done. The action was completed.");
 
                 StatusMessage = "Ready";
             }
@@ -517,6 +523,47 @@ namespace RevitChat.ViewModel
         private void ToggleSettings()
         {
             IsSettingsVisible = !IsSettingsVisible;
+        }
+
+        [RelayCommand]
+        private void ThumbsUp(ChatMessage message)
+        {
+            if (message == null || message.Feedback != FeedbackType.None) return;
+            message.Feedback = FeedbackType.ThumbsUp;
+
+            var prompt = message.AssociatedPrompt;
+            var toolNames = message.AssociatedToolNames;
+            if (!string.IsNullOrWhiteSpace(prompt) && toolNames?.Count > 0)
+            {
+                var tools = toolNames.Select(n => new ToolUsage { Name = n }).ToList();
+                ChatFeedbackService.SaveApproved(prompt, tools);
+                StatusMessage = "Feedback saved";
+            }
+        }
+
+        [RelayCommand]
+        private void ThumbsDown(ChatMessage message)
+        {
+            if (message == null || message.Feedback != FeedbackType.None) return;
+            message.Feedback = FeedbackType.ThumbsDown;
+
+            var prompt = message.AssociatedPrompt;
+            var toolNames = message.AssociatedToolNames;
+            if (toolNames?.Count > 0)
+            {
+                foreach (var toolName in toolNames)
+                    ChatFeedbackService.SaveCorrection(prompt, toolName, null);
+                StatusMessage = "Correction saved";
+            }
+        }
+
+        private ChatMessage AddAssistantMessage(string content)
+        {
+            var msg = ChatMessage.FromAssistant(content);
+            msg.AssociatedPrompt = _lastUserPrompt;
+            msg.AssociatedToolNames = _lastToolNames.Count > 0 ? new List<string>(_lastToolNames) : null;
+            Messages.Add(msg);
+            return msg;
         }
 
         public void Cleanup()

@@ -38,6 +38,7 @@
     <Compile Include="..\RevitChat\Skills\*.cs" Link="Skills\%(Filename)%(Extension)" />
     <Compile Include="..\RevitChat\Handler\*.cs" Link="Handler\%(Filename)%(Extension)" />
     <Compile Include="..\RevitChat\Models\*.cs" Link="Models\%(Filename)%(Extension)" />
+    <Compile Include="..\RevitChat\Services\ChatFeedbackService.cs" Link="Services\ChatFeedbackService.cs" />
     <Compile Include="..\RevitChat\ViewModel\BaseChatViewModel.cs" Link="ViewModel\BaseChatViewModel.cs" />
   </ItemGroup>
 

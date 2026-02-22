@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace RevitChat.Models
 {
@@ -10,13 +13,37 @@ namespace RevitChat.Models
         Tool
     }
 
-    public class ChatMessage
+    public enum FeedbackType
+    {
+        None = 0,
+        ThumbsUp = 1,
+        ThumbsDown = -1
+    }
+
+    public class ChatMessage : INotifyPropertyChanged
     {
         public ChatRole Role { get; set; }
         public string Content { get; set; }
         public DateTime Timestamp { get; set; } = DateTime.Now;
         public bool IsToolCall { get; set; }
         public string ToolName { get; set; }
+
+        public string AssociatedPrompt { get; set; }
+        public List<string> AssociatedToolNames { get; set; }
+
+        private FeedbackType _feedback = FeedbackType.None;
+        public FeedbackType Feedback
+        {
+            get => _feedback;
+            set { _feedback = value; OnPropertyChanged(); OnPropertyChanged(nameof(ShowFeedbackButtons)); }
+        }
+
+        public bool ShowFeedbackButtons =>
+            Role == ChatRole.Assistant && !IsToolCall && Feedback == FeedbackType.None;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void OnPropertyChanged([CallerMemberName] string name = null) =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
         public static ChatMessage FromUser(string content) =>
             new() { Role = ChatRole.User, Content = content };
