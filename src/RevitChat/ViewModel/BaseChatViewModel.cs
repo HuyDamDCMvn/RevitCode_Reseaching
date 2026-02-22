@@ -407,10 +407,17 @@ namespace RevitChat.ViewModel
             {
                 "delete_elements", "set_parameter_value", "rename_elements",
                 "move_elements", "copy_elements", "mirror_elements",
-                "duplicate_views", "duplicate_sheets"
+                "duplicate_views", "duplicate_sheets", "resize_mep_elements"
             };
 
             if (!riskyTools.Contains(call.FunctionName)) return false;
+            if (call.Arguments != null && call.Arguments.TryGetValue("dry_run", out var dryObj))
+            {
+                if (dryObj is System.Text.Json.JsonElement je && je.ValueKind == System.Text.Json.JsonValueKind.True)
+                    return false;
+                if (dryObj is bool b && b) return false;
+            }
+            if (call.FunctionName.Equals("resize_mep_elements", StringComparison.OrdinalIgnoreCase)) return true;
             if (call.Arguments == null || call.Arguments.Count == 0) return true;
 
             if (call.Arguments.ContainsKey("element_id")) return false;

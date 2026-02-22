@@ -9,6 +9,7 @@
     <RootNamespace>RevitChat</RootNamespace>
     <AssemblyName>RevitChat</AssemblyName>
     <Description>AI Chatbot for Revit - Query, Modify, Export via natural language</Description>
+    <NoWarn>$(NoWarn);MSB3277</NoWarn>
   </PropertyGroup>
 
   <!-- Project Reference -->

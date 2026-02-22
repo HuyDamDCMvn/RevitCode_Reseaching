@@ -20,11 +20,11 @@ namespace RevitChat.Skills
         {
             ["Core"] = new[] { "Query", "ProjectInfo", "Modify", "Export" },
             ["ViewControl"] = new[] { "ViewControl", "SelectionFilter" },
-            ["MEP"] = new[] { "MepSystemAnalysis", "MepEquipment", "MepSpace", "MepQuantityTakeoff", "MepValidation" },
+            ["MEP"] = new[] { "MepSystemAnalysis", "MepEquipment", "MepSpace", "MepQuantityTakeoff", "MepValidation", "MepConnectivity", "MepModeler" },
             ["Modeler"] = new[] {
                 "FamilyPlacement", "SheetManagement", "FilterTemplate",
                 "DimensionTag", "WorksetPhase", "Group", "Material",
-                "RoomArea", "GridLevel", "SharedParameter", "RevisionMarkup"
+                "RoomArea", "GridLevel", "SharedParameter", "RevisionMarkup", "Schedule"
             },
             ["BIMCoordinator"] = new[] {
                 "ModelHealth", "NamingAudit", "PurgeAudit",
@@ -93,6 +93,8 @@ namespace RevitChat.Skills
             registry.Register(new MepSpaceSkill());
             registry.Register(new MepQuantityTakeoffSkill());
             registry.Register(new MepValidationSkill());
+            registry.Register(new MepConnectivitySkill());
+            registry.Register(new MepModelerSkill());
             registry.Register(new ViewControlSkill());
             registry.Register(new RevitLinkSkill());
             registry.Register(new FamilyPlacementSkill());
@@ -112,6 +114,7 @@ namespace RevitChat.Skills
             registry.Register(new CoordinationReportSkill());
             registry.Register(new RevisionMarkupSkill());
             registry.Register(new SelectionFilterSkill());
+            registry.Register(new ScheduleSkill());
             return registry;
         }
     }

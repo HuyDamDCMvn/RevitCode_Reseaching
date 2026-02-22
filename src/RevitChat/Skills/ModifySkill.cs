@@ -34,7 +34,8 @@ namespace RevitChat.Skills
                     "properties": {
                         "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to modify" },
                         "param_name": { "type": "string", "description": "Parameter name to set" },
-                        "value": { "type": "string", "description": "New value (as string)" }
+                        "value": { "type": "string", "description": "New value (as string)" },
+                        "dry_run": { "type": "boolean", "description": "Preview changes only (no transaction). Default false." }
                     },
                     "required": ["element_ids", "param_name", "value"]
                 }
@@ -46,7 +47,8 @@ namespace RevitChat.Skills
                 {
                     "type": "object",
                     "properties": {
-                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to delete" }
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to delete" },
+                        "dry_run": { "type": "boolean", "description": "Preview deletions only (no transaction). Default false." }
                     },
                     "required": ["element_ids"]
                 }
@@ -72,7 +74,8 @@ namespace RevitChat.Skills
                     "properties": {
                         "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to rename" },
                         "new_name": { "type": "string", "description": "New name/mark value" },
-                        "param_name": { "type": "string", "description": "Parameter to set: 'Mark', 'Name', or any writable string param. Default: Mark" }
+                        "param_name": { "type": "string", "description": "Parameter to set: 'Mark', 'Name', or any writable string param. Default: Mark" },
+                        "dry_run": { "type": "boolean", "description": "Preview rename only (no transaction). Default false." }
                     },
                     "required": ["element_ids", "new_name"]
                 }
@@ -87,7 +90,8 @@ namespace RevitChat.Skills
                         "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to copy" },
                         "offset_x": { "type": "number", "description": "X offset in feet (default 0)" },
                         "offset_y": { "type": "number", "description": "Y offset in feet (default 0)" },
-                        "offset_z": { "type": "number", "description": "Z offset in feet (default 0)" }
+                        "offset_z": { "type": "number", "description": "Z offset in feet (default 0)" },
+                        "dry_run": { "type": "boolean", "description": "Preview copy only (no transaction). Default false." }
                     },
                     "required": ["element_ids"]
                 }
@@ -102,7 +106,8 @@ namespace RevitChat.Skills
                         "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to move" },
                         "offset_x": { "type": "number", "description": "X offset in feet (default 0)" },
                         "offset_y": { "type": "number", "description": "Y offset in feet (default 0)" },
-                        "offset_z": { "type": "number", "description": "Z offset in feet (default 0)" }
+                        "offset_z": { "type": "number", "description": "Z offset in feet (default 0)" },
+                        "dry_run": { "type": "boolean", "description": "Preview move only (no transaction). Default false." }
                     },
                     "required": ["element_ids"]
                 }
@@ -117,7 +122,8 @@ namespace RevitChat.Skills
                         "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to mirror" },
                         "axis": { "type": "string", "enum": ["x", "y"], "description": "Mirror axis: 'x' (mirror across YZ plane) or 'y' (mirror across XZ plane)" },
                         "origin_x": { "type": "number", "description": "X coordinate of axis origin in feet (default 0)" },
-                        "origin_y": { "type": "number", "description": "Y coordinate of axis origin in feet (default 0)" }
+                        "origin_y": { "type": "number", "description": "Y coordinate of axis origin in feet (default 0)" },
+                        "dry_run": { "type": "boolean", "description": "Preview mirror only (no transaction). Default false." }
                     },
                     "required": ["element_ids", "axis"]
                 }
@@ -131,7 +137,8 @@ namespace RevitChat.Skills
                     "properties": {
                         "view_ids": { "type": "array", "items": { "type": "integer" }, "description": "View IDs to duplicate" },
                         "suffix": { "type": "string", "description": "Suffix to append to duplicated view names (default: ' - Copy')" },
-                        "duplicate_option": { "type": "string", "enum": ["independent", "with_detailing", "as_dependent"], "description": "Duplication type (default: independent)" }
+                        "duplicate_option": { "type": "string", "enum": ["independent", "with_detailing", "as_dependent"], "description": "Duplication type (default: independent)" },
+                        "dry_run": { "type": "boolean", "description": "Preview duplicate only (no transaction). Default false." }
                     },
                     "required": ["view_ids"]
                 }
@@ -144,7 +151,8 @@ namespace RevitChat.Skills
                     "type": "object",
                     "properties": {
                         "sheet_ids": { "type": "array", "items": { "type": "integer" }, "description": "Sheet IDs to duplicate" },
-                        "new_numbers": { "type": "array", "items": { "type": "string" }, "description": "New sheet numbers (must match sheet_ids count)" }
+                        "new_numbers": { "type": "array", "items": { "type": "string" }, "description": "New sheet numbers (must match sheet_ids count)" },
+                        "dry_run": { "type": "boolean", "description": "Preview duplicate only (no transaction). Default false." }
                     },
                     "required": ["sheet_ids"]
                 }
@@ -176,9 +184,43 @@ namespace RevitChat.Skills
             var ids = GetArgLongArray(args, "element_ids");
             var paramName = GetArg<string>(args, "param_name");
             var value = GetArg<string>(args, "value");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
             if (string.IsNullOrEmpty(paramName)) return JsonError("param_name required.");
+
+            if (dryRun)
+            {
+                int wouldChange = 0, unchanged = 0, previewFailed = 0;
+                var previewErrors = new List<string>();
+                var preview = new List<object>();
+
+                foreach (var id in ids)
+                {
+                    var elem = doc.GetElement(new ElementId(id));
+                    if (elem == null) { previewFailed++; previewErrors.Add($"Element {id} not found"); continue; }
+
+                    var param = elem.LookupParameter(paramName);
+                    if (param == null) { previewFailed++; previewErrors.Add($"Parameter '{paramName}' not found on {id}"); continue; }
+                    if (param.IsReadOnly) { previewFailed++; previewErrors.Add($"Parameter '{paramName}' is read-only on {id}"); continue; }
+
+                    var current = GetParameterValueAsString(doc, param);
+                    bool change = !string.Equals(current ?? "", value ?? "", StringComparison.OrdinalIgnoreCase);
+                    if (change) wouldChange++; else unchanged++;
+                    if (preview.Count < 20)
+                        preview.Add(new { id, from = current, to = value, would_change = change });
+                }
+
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_change = wouldChange,
+                    unchanged,
+                    failed = previewFailed,
+                    preview,
+                    errors = previewErrors.Take(10)
+                }, JsonOpts);
+            }
 
             int success = 0, failed = 0;
             var errors = new List<string>();
@@ -212,6 +254,28 @@ namespace RevitChat.Skills
         {
             var ids = GetArgLongArray(args, "element_ids");
             if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+            bool dryRun = GetArg(args, "dry_run", false);
+
+            if (dryRun)
+            {
+                var previewErrors = new List<string>();
+                var items = new List<object>();
+                foreach (var id in ids)
+                {
+                    var elem = doc.GetElement(new ElementId(id));
+                    if (elem == null) { previewErrors.Add($"Element {id} not found"); continue; }
+                    items.Add(new { id, category = elem.Category?.Name ?? "-", name = elem.Name ?? "-" });
+                }
+
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    deletable = items.Count,
+                    missing = ids.Count - items.Count,
+                    elements = items.Take(50),
+                    errors = previewErrors.Take(10)
+                }, JsonOpts);
+            }
 
             int deleted = 0;
             var errors = new List<string>();
@@ -265,9 +329,51 @@ namespace RevitChat.Skills
             var ids = GetArgLongArray(args, "element_ids");
             var newName = GetArg<string>(args, "new_name");
             var paramName = GetArg(args, "param_name", "Mark");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
             if (string.IsNullOrEmpty(newName)) return JsonError("new_name required.");
+
+            if (dryRun)
+            {
+                int wouldChange = 0, unchanged = 0, previewFailed = 0;
+                var previewErrors = new List<string>();
+                var preview = new List<object>();
+
+                foreach (var id in ids)
+                {
+                    var elem = doc.GetElement(new ElementId(id));
+                    if (elem == null) { previewFailed++; previewErrors.Add($"Element {id} not found"); continue; }
+
+                    var param = elem.LookupParameter(paramName);
+                    if (param == null || param.IsReadOnly)
+                    {
+                        param = elem.get_Parameter(BuiltInParameter.ALL_MODEL_MARK);
+                    }
+                    if (param == null || param.IsReadOnly)
+                    {
+                        previewFailed++; previewErrors.Add($"No writable '{paramName}' on {id}"); continue;
+                    }
+
+                    var current = GetParameterValueAsString(doc, param);
+                    bool change = !string.Equals(current ?? "", newName ?? "", StringComparison.OrdinalIgnoreCase);
+                    if (change) wouldChange++; else unchanged++;
+                    if (preview.Count < 20)
+                        preview.Add(new { id, from = current, to = newName, would_change = change });
+                }
+
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    param_name = paramName,
+                    new_name = newName,
+                    would_change = wouldChange,
+                    unchanged,
+                    failed = previewFailed,
+                    preview,
+                    errors = previewErrors.Take(10)
+                }, JsonOpts);
+            }
 
             int success = 0, failed = 0;
             var errors = new List<string>();
@@ -309,9 +415,20 @@ namespace RevitChat.Skills
             double oy = GetArg(args, "offset_y", 0.0);
             double oz = GetArg(args, "offset_z", 0.0);
             var translation = new XYZ(ox, oy, oz);
+            bool dryRun = GetArg(args, "dry_run", false);
 
             var elemIds = ids.Select(id => new ElementId(id)).Where(id => doc.GetElement(id) != null).ToList();
             if (elemIds.Count == 0) return JsonError("No valid elements found.");
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_copy = elemIds.Count,
+                    offset = new { x = ox, y = oy, z = oz }
+                }, JsonOpts);
+            }
 
             ICollection<ElementId> copied;
             using (var trans = new Transaction(doc, "AI: Copy Elements"))
@@ -339,11 +456,22 @@ namespace RevitChat.Skills
             double oy = GetArg(args, "offset_y", 0.0);
             double oz = GetArg(args, "offset_z", 0.0);
             var translation = new XYZ(ox, oy, oz);
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (translation.IsZeroLength()) return JsonError("Offset is zero — nothing to move.");
 
             var elemIds = ids.Select(id => new ElementId(id)).Where(id => doc.GetElement(id) != null).ToList();
             if (elemIds.Count == 0) return JsonError("No valid elements found.");
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_move = elemIds.Count,
+                    offset = new { x = ox, y = oy, z = oz }
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Move Elements"))
             {
@@ -368,6 +496,7 @@ namespace RevitChat.Skills
             var axis = GetArg(args, "axis", "x");
             double originX = GetArg(args, "origin_x", 0.0);
             double originY = GetArg(args, "origin_y", 0.0);
+            bool dryRun = GetArg(args, "dry_run", false);
 
             var origin = new XYZ(originX, originY, 0);
             XYZ direction = axis == "y" ? XYZ.BasisX : XYZ.BasisY;
@@ -375,6 +504,17 @@ namespace RevitChat.Skills
 
             var elemIds = ids.Select(id => new ElementId(id)).Where(id => doc.GetElement(id) != null).ToList();
             if (elemIds.Count == 0) return JsonError("No valid elements found.");
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_mirror = elemIds.Count,
+                    axis,
+                    origin = new { x = originX, y = originY }
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Mirror Elements"))
             {
@@ -399,6 +539,7 @@ namespace RevitChat.Skills
 
             var suffix = GetArg(args, "suffix", " - Copy");
             var optStr = GetArg(args, "duplicate_option", "independent");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             var dupOpt = optStr switch
             {
@@ -406,6 +547,38 @@ namespace RevitChat.Skills
                 "as_dependent" => ViewDuplicateOption.AsDependent,
                 _ => ViewDuplicateOption.Duplicate
             };
+
+            if (dryRun)
+            {
+                int duplicatable = 0;
+                var previewResults = new List<object>();
+                var previewErrors = new List<string>();
+
+                foreach (var id in viewIds)
+                {
+                    var view = doc.GetElement(new ElementId(id)) as View;
+                    if (view == null) { previewErrors.Add($"Element {id} is not a view"); continue; }
+                    if (!view.CanViewBeDuplicated(dupOpt)) { previewErrors.Add($"View '{view.Name}' cannot be duplicated with option '{optStr}'"); continue; }
+
+                    duplicatable++;
+                    if (previewResults.Count < 50)
+                    {
+                        previewResults.Add(new
+                        {
+                            original = view.Name,
+                            new_name = view.Name + suffix
+                        });
+                    }
+                }
+
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    duplicatable,
+                    views = previewResults,
+                    errors = previewErrors.Take(10)
+                }, JsonOpts);
+            }
 
             int success = 0;
             var results = new List<object>();
@@ -446,6 +619,37 @@ namespace RevitChat.Skills
             if (sheetIds == null || sheetIds.Count == 0) return JsonError("sheet_ids required.");
 
             var newNumbers = GetArgStringArray(args, "new_numbers");
+            bool dryRun = GetArg(args, "dry_run", false);
+
+            if (dryRun)
+            {
+                int duplicatable = 0;
+                var previewResults = new List<object>();
+                var previewErrors = new List<string>();
+
+                for (int i = 0; i < sheetIds.Count; i++)
+                {
+                    var sheet = doc.GetElement(new ElementId(sheetIds[i])) as ViewSheet;
+                    if (sheet == null) { previewErrors.Add($"Element {sheetIds[i]} is not a sheet"); continue; }
+
+                    var number = (newNumbers != null && i < newNumbers.Count) ? newNumbers[i] : sheet.SheetNumber + "-COPY";
+                    previewResults.Add(new
+                    {
+                        original_number = sheet.SheetNumber,
+                        new_number = number,
+                        name = sheet.Name
+                    });
+                    duplicatable++;
+                }
+
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    duplicatable,
+                    sheets = previewResults,
+                    errors = previewErrors.Take(10)
+                }, JsonOpts);
+            }
 
             int success = 0;
             var results = new List<object>();

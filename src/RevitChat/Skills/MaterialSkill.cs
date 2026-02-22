@@ -56,7 +56,8 @@ namespace RevitChat.Skills
                     "type": "object",
                     "properties": {
                         "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to change" },
-                        "material_id": { "type": "integer", "description": "Material ID to assign" }
+                        "material_id": { "type": "integer", "description": "Material ID to assign" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["element_ids", "material_id"]
                 }
@@ -182,11 +183,42 @@ namespace RevitChat.Skills
         {
             var ids = GetArgLongArray(args, "element_ids");
             long materialId = GetArg<long>(args, "material_id");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
 
             var mat = doc.GetElement(new ElementId(materialId)) as Material;
             if (mat == null) return JsonError($"Material {materialId} not found.");
+
+            if (dryRun)
+            {
+                int wouldSet = 0, failed = 0;
+                var previewErrors = new List<string>();
+                foreach (var id in ids)
+                {
+                    var elem = doc.GetElement(new ElementId(id));
+                    if (elem == null) { failed++; previewErrors.Add($"Element {id} not found."); continue; }
+
+                    var param = elem.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM);
+                    if (param == null || param.IsReadOnly)
+                    {
+                        failed++;
+                        previewErrors.Add($"Element {id}: no writable Structural Material parameter.");
+                        continue;
+                    }
+
+                    wouldSet++;
+                }
+
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_set = wouldSet,
+                    material = mat.Name,
+                    failed,
+                    errors = previewErrors.Take(10)
+                }, JsonOpts);
+            }
 
             int success = 0;
             var errors = new List<string>();

@@ -42,7 +42,8 @@ namespace RevitChat.Skills
                     "type": "object",
                     "properties": {
                         "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to move" },
-                        "workset_name": { "type": "string", "description": "Target workset name" }
+                        "workset_name": { "type": "string", "description": "Target workset name" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["element_ids", "workset_name"]
                 }
@@ -81,7 +82,8 @@ namespace RevitChat.Skills
                     "properties": {
                         "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs" },
                         "phase_name": { "type": "string", "description": "Phase name to assign" },
-                        "phase_type": { "type": "string", "enum": ["created", "demolished"], "description": "Set 'created' or 'demolished' phase (default: created)" }
+                        "phase_type": { "type": "string", "enum": ["created", "demolished"], "description": "Set 'created' or 'demolished' phase (default: created)" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["element_ids", "phase_name"]
                 }
@@ -144,6 +146,7 @@ namespace RevitChat.Skills
         {
             var ids = GetArgLongArray(args, "element_ids");
             var wsName = GetArg<string>(args, "workset_name");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
             if (string.IsNullOrEmpty(wsName)) return JsonError("workset_name required.");
@@ -155,6 +158,35 @@ namespace RevitChat.Skills
                 .FirstOrDefault(ws => ws.Name.Equals(wsName, StringComparison.OrdinalIgnoreCase));
 
             if (workset == null) return JsonError($"Workset '{wsName}' not found.");
+
+            if (dryRun)
+            {
+                int wouldMove = 0, failed = 0;
+                var previewErrors = new List<string>();
+                foreach (var id in ids)
+                {
+                    var elem = doc.GetElement(new ElementId(id));
+                    if (elem == null) { failed++; previewErrors.Add($"Element {id} not found."); continue; }
+
+                    var wsParam = elem.get_Parameter(BuiltInParameter.ELEM_PARTITION_PARAM);
+                    if (wsParam == null || wsParam.IsReadOnly)
+                    {
+                        failed++; previewErrors.Add($"Element {id}: cannot change workset.");
+                        continue;
+                    }
+
+                    wouldMove++;
+                }
+
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_move = wouldMove,
+                    workset = wsName,
+                    failed,
+                    errors = previewErrors.Take(10)
+                }, JsonOpts);
+            }
 
             int success = 0;
             var errors = new List<string>();
@@ -255,6 +287,7 @@ namespace RevitChat.Skills
             var ids = GetArgLongArray(args, "element_ids");
             var phaseName = GetArg<string>(args, "phase_name");
             var phaseType = GetArg(args, "phase_type", "created");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
             if (string.IsNullOrEmpty(phaseName)) return JsonError("phase_name required.");
@@ -265,6 +298,40 @@ namespace RevitChat.Skills
                 .FirstOrDefault(p => p.Name.IndexOf(phaseName, StringComparison.OrdinalIgnoreCase) >= 0);
 
             if (phase == null) return JsonError($"Phase '{phaseName}' not found.");
+
+            if (dryRun)
+            {
+                int wouldSet = 0, failed = 0;
+                var previewErrors = new List<string>();
+                var previewBipParam = phaseType == "demolished"
+                    ? BuiltInParameter.PHASE_DEMOLISHED
+                    : BuiltInParameter.PHASE_CREATED;
+
+                foreach (var id in ids)
+                {
+                    var elem = doc.GetElement(new ElementId(id));
+                    if (elem == null) { failed++; previewErrors.Add($"Element {id} not found."); continue; }
+
+                    var param = elem.get_Parameter(previewBipParam);
+                    if (param == null || param.IsReadOnly)
+                    {
+                        failed++; previewErrors.Add($"Element {id}: cannot set phase.");
+                        continue;
+                    }
+
+                    wouldSet++;
+                }
+
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_set = wouldSet,
+                    phase = phase.Name,
+                    phase_type = phaseType,
+                    failed,
+                    errors = previewErrors.Take(10)
+                }, JsonOpts);
+            }
 
             var bipParam = phaseType == "demolished"
                 ? BuiltInParameter.PHASE_DEMOLISHED

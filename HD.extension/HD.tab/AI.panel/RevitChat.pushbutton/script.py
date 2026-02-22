@@ -19,5 +19,9 @@ launch_dll(
         "CommunityToolkit.Mvvm.dll",
         "OpenAI.dll",
         "System.ClientModel.dll",
+        "System.Memory.Data.dll",
+        "System.Net.ServerSentEvents.dll",
+        "Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "Microsoft.Extensions.Logging.Abstractions.dll",
     ]
 )

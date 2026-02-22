@@ -105,6 +105,7 @@ Rules:
 
             var response = await _client.CompleteChatAsync(messages, options, ct);
             var completion = response.Value;
+            DebugMessage?.Invoke($"OpenAI: finish={completion.FinishReason}, tool_calls={completion.ToolCalls?.Count ?? 0}");
 
             if (completion.FinishReason == ChatFinishReason.ToolCalls)
             {

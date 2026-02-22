@@ -74,7 +74,8 @@ namespace RevitChat.Skills
                         "group": { "type": "string", "enum": ["General", "Identity Data", "Constraints", "Dimensions", "Structural", "Mechanical", "Electrical", "Other"], "description": "Parameter group (default: General)" },
                         "categories": { "type": "array", "items": { "type": "string" }, "description": "Category names to bind parameter to" },
                         "is_instance": { "type": "boolean", "description": "Instance parameter (true) or Type parameter (false). Default: true" },
-                        "data_type": { "type": "string", "enum": ["text", "integer", "number", "yes_no", "length", "area", "volume"], "description": "Parameter data type (default: text)" }
+                        "data_type": { "type": "string", "enum": ["text", "integer", "number", "yes_no", "length", "area", "volume"], "description": "Parameter data type (default: text)" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["parameter_name", "categories"]
                 }
@@ -253,6 +254,7 @@ namespace RevitChat.Skills
             bool isInstance = GetArg(args, "is_instance", true);
             var groupStr = GetArg(args, "group", "General");
             var dataTypeStr = GetArg(args, "data_type", "text");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (string.IsNullOrEmpty(paramName))
                 return JsonError("parameter_name required.");
@@ -271,6 +273,19 @@ namespace RevitChat.Skills
             }
 
             if (catSet.IsEmpty) return JsonError("No valid categories resolved.");
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_add = true,
+                    name = paramName,
+                    binding = isInstance ? "Instance" : "Type",
+                    data_type = dataTypeStr,
+                    categories = categoryNames
+                }, JsonOpts);
+            }
 
             var specTypeId = dataTypeStr switch
             {

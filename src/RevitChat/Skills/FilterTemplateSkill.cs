@@ -57,7 +57,8 @@ namespace RevitChat.Skills
                     "type": "object",
                     "properties": {
                         "view_ids": { "type": "array", "items": { "type": "integer" }, "description": "View IDs to apply template to" },
-                        "template_id": { "type": "integer", "description": "View template ID" }
+                        "template_id": { "type": "integer", "description": "View template ID" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["view_ids", "template_id"]
                 }
@@ -73,7 +74,8 @@ namespace RevitChat.Skills
                         "categories": { "type": "array", "items": { "type": "string" }, "description": "Category names to apply filter to" },
                         "parameter_name": { "type": "string", "description": "Parameter to filter on" },
                         "rule_type": { "type": "string", "enum": ["equals", "not_equals", "contains", "does_not_contain", "begins_with", "ends_with", "greater", "less"], "description": "Rule comparison type" },
-                        "value": { "type": "string", "description": "Value to compare against" }
+                        "value": { "type": "string", "description": "Value to compare against" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["filter_name", "categories", "parameter_name", "rule_type", "value"]
                 }
@@ -170,12 +172,35 @@ namespace RevitChat.Skills
         {
             var viewIds = GetArgLongArray(args, "view_ids");
             long templateId = GetArg<long>(args, "template_id");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (viewIds == null || viewIds.Count == 0) return JsonError("view_ids required.");
 
             var template = doc.GetElement(new ElementId(templateId)) as View;
             if (template == null || !template.IsTemplate)
                 return JsonError($"View template {templateId} not found or is not a template.");
+
+            if (dryRun)
+            {
+                int wouldApply = 0, failed = 0;
+                var previewErrors = new List<string>();
+                foreach (var vid in viewIds)
+                {
+                    var view = doc.GetElement(new ElementId(vid)) as View;
+                    if (view == null) { failed++; previewErrors.Add($"View {vid} not found."); continue; }
+                    if (view.IsTemplate) { failed++; previewErrors.Add($"View {vid} is a template itself."); continue; }
+                    wouldApply++;
+                }
+
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_apply = wouldApply,
+                    template_name = template.Name,
+                    failed,
+                    errors = previewErrors.Take(10)
+                }, JsonOpts);
+            }
 
             int success = 0;
             var errors = new List<string>();
@@ -212,6 +237,7 @@ namespace RevitChat.Skills
             var paramName = GetArg<string>(args, "parameter_name");
             var ruleType = GetArg<string>(args, "rule_type");
             var value = GetArg<string>(args, "value");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (string.IsNullOrEmpty(filterName) || categoryNames == null || categoryNames.Count == 0)
                 return JsonError("filter_name and categories are required.");
@@ -248,6 +274,20 @@ namespace RevitChat.Skills
                 return JsonError($"Parameter '{paramName}' not found on elements of the specified categories.");
 
             var paramId = param.Id;
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_create = true,
+                    name = filterName,
+                    categories = categoryNames,
+                    parameter = paramName,
+                    rule = ruleType,
+                    value
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Create Parameter Filter"))
             {

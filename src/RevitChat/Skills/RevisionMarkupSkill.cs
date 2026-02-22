@@ -57,7 +57,8 @@ namespace RevitChat.Skills
                         "date": { "type": "string", "description": "Revision date string (e.g. '2025-01-15')" },
                         "description": { "type": "string", "description": "Revision description" },
                         "issued_to": { "type": "string", "description": "Optional: issued to" },
-                        "issued_by": { "type": "string", "description": "Optional: issued by" }
+                        "issued_by": { "type": "string", "description": "Optional: issued by" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["description"]
                 }
@@ -193,9 +194,23 @@ namespace RevitChat.Skills
             var date = GetArg<string>(args, "date");
             var issuedTo = GetArg<string>(args, "issued_to");
             var issuedBy = GetArg<string>(args, "issued_by");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (string.IsNullOrEmpty(description))
                 return JsonError("description required.");
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_create = true,
+                    description,
+                    date,
+                    issued_to = issuedTo,
+                    issued_by = issuedBy
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Add Revision"))
             {

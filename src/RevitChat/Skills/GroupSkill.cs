@@ -43,7 +43,8 @@ namespace RevitChat.Skills
                     "type": "object",
                     "properties": {
                         "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to group" },
-                        "group_name": { "type": "string", "description": "Optional name for the new group type" }
+                        "group_name": { "type": "string", "description": "Optional name for the new group type" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["element_ids"]
                 }
@@ -55,7 +56,8 @@ namespace RevitChat.Skills
                 {
                     "type": "object",
                     "properties": {
-                        "group_ids": { "type": "array", "items": { "type": "integer" }, "description": "Group instance IDs to ungroup" }
+                        "group_ids": { "type": "array", "items": { "type": "integer" }, "description": "Group instance IDs to ungroup" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["group_ids"]
                 }
@@ -82,7 +84,8 @@ namespace RevitChat.Skills
                         "group_type_id": { "type": "integer", "description": "GroupType ID" },
                         "x": { "type": "number", "description": "X coordinate in feet" },
                         "y": { "type": "number", "description": "Y coordinate in feet" },
-                        "z": { "type": "number", "description": "Z coordinate in feet (default 0)" }
+                        "z": { "type": "number", "description": "Z coordinate in feet (default 0)" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["group_type_id", "x", "y"]
                 }
@@ -154,10 +157,21 @@ namespace RevitChat.Skills
         {
             var ids = GetArgLongArray(args, "element_ids");
             var groupName = GetArg<string>(args, "group_name");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
 
             var elemIds = ids.Select(id => new ElementId(id)).ToList();
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_group = elemIds.Count,
+                    group_name = groupName
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Create Group"))
             {
@@ -183,10 +197,29 @@ namespace RevitChat.Skills
         private string Ungroup(Document doc, Dictionary<string, object> args)
         {
             var ids = GetArgLongArray(args, "group_ids");
+            bool dryRun = GetArg(args, "dry_run", false);
             if (ids == null || ids.Count == 0) return JsonError("group_ids required.");
 
             int success = 0;
             var errors = new List<string>();
+
+            if (dryRun)
+            {
+                int wouldUngroup = 0;
+                foreach (var id in ids)
+                {
+                    var group = doc.GetElement(new ElementId(id)) as Group;
+                    if (group == null) { errors.Add($"Element {id} is not a Group."); continue; }
+                    wouldUngroup++;
+                }
+
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_ungroup = wouldUngroup,
+                    errors = errors.Take(10)
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Ungroup"))
             {
@@ -240,9 +273,21 @@ namespace RevitChat.Skills
             double x = GetArg(args, "x", 0.0);
             double y = GetArg(args, "y", 0.0);
             double z = GetArg(args, "z", 0.0);
+            bool dryRun = GetArg(args, "dry_run", false);
 
             var groupType = doc.GetElement(new ElementId(typeId)) as GroupType;
             if (groupType == null) return JsonError($"GroupType {typeId} not found.");
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_place = true,
+                    group_type = groupType.Name,
+                    location = new { x, y, z }
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Place Group Instance"))
             {

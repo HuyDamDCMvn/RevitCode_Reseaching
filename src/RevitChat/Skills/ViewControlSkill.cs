@@ -62,7 +62,8 @@ namespace RevitChat.Skills
                 {
                     "type": "object",
                     "properties": {
-                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to hide" }
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to hide" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["element_ids"]
                 }
@@ -74,7 +75,8 @@ namespace RevitChat.Skills
                 {
                     "type": "object",
                     "properties": {
-                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to unhide" }
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to unhide" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["element_ids"]
                 }
@@ -86,7 +88,8 @@ namespace RevitChat.Skills
                 {
                     "type": "object",
                     "properties": {
-                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to isolate (show only these)" }
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to isolate (show only these)" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["element_ids"]
                 }
@@ -98,7 +101,8 @@ namespace RevitChat.Skills
                 {
                     "type": "object",
                     "properties": {
-                        "category": { "type": "string", "description": "Category name (e.g. 'Walls', 'Ducts', 'Pipes')" }
+                        "category": { "type": "string", "description": "Category name (e.g. 'Walls', 'Ducts', 'Pipes')" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["category"]
                 }
@@ -110,7 +114,8 @@ namespace RevitChat.Skills
                 {
                     "type": "object",
                     "properties": {
-                        "category": { "type": "string", "description": "Category name to hide" }
+                        "category": { "type": "string", "description": "Category name to hide" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["category"]
                 }
@@ -122,7 +127,8 @@ namespace RevitChat.Skills
                 {
                     "type": "object",
                     "properties": {
-                        "category": { "type": "string", "description": "Category name to unhide" }
+                        "category": { "type": "string", "description": "Category name to unhide" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["category"]
                 }
@@ -133,7 +139,9 @@ namespace RevitChat.Skills
                 BinaryData.FromString("""
                 {
                     "type": "object",
-                    "properties": {},
+                    "properties": {
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
+                    },
                     "required": []
                 }
                 """)),
@@ -157,7 +165,8 @@ namespace RevitChat.Skills
                     "type": "object",
                     "properties": {
                         "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to color" },
-                        "color": { "type": "string", "description": "Color name (Red, Blue, Green, Yellow, Orange, Purple, Cyan, Pink, etc.) or RGB hex (#FF0000)" }
+                        "color": { "type": "string", "description": "Color name (Red, Blue, Green, Yellow, Orange, Purple, Cyan, Pink, etc.) or RGB hex (#FF0000)" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["element_ids", "color"]
                 }
@@ -170,7 +179,8 @@ namespace RevitChat.Skills
                     "type": "object",
                     "properties": {
                         "category": { "type": "string", "description": "Category name (e.g. 'Walls', 'Ducts')" },
-                        "color": { "type": "string", "description": "Color name (Red, Blue, Green, etc.) or RGB hex (#FF0000)" }
+                        "color": { "type": "string", "description": "Color name (Red, Blue, Green, etc.) or RGB hex (#FF0000)" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["category", "color"]
                 }
@@ -182,7 +192,8 @@ namespace RevitChat.Skills
                 {
                     "type": "object",
                     "properties": {
-                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to reset overrides for" }
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to reset overrides for" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["element_ids"]
                 }
@@ -195,7 +206,8 @@ namespace RevitChat.Skills
                     "type": "object",
                     "properties": {
                         "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to set transparency" },
-                        "transparency": { "type": "integer", "description": "Transparency value 0-100 (0=opaque, 100=transparent)" }
+                        "transparency": { "type": "integer", "description": "Transparency value 0-100 (0=opaque, 100=transparent)" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["element_ids", "transparency"]
                 }
@@ -229,7 +241,8 @@ namespace RevitChat.Skills
                 {
                     "type": "object",
                     "properties": {
-                        "level_name": { "type": "string", "description": "Level name (e.g. 'Level 1', 'Level 01', 'Ground Floor')" }
+                        "level_name": { "type": "string", "description": "Level name (e.g. 'Level 1', 'Level 01', 'Ground Floor')" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["level_name"]
                 }
@@ -241,7 +254,8 @@ namespace RevitChat.Skills
                 {
                     "type": "object",
                     "properties": {
-                        "level_name": { "type": "string", "description": "Level name to hide elements for" }
+                        "level_name": { "type": "string", "description": "Level name to hide elements for" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["level_name"]
                 }
@@ -254,7 +268,8 @@ namespace RevitChat.Skills
                     "type": "object",
                     "properties": {
                         "level_name": { "type": "string", "description": "Level name" },
-                        "color": { "type": "string", "description": "Color name (Red, Blue, Green, etc.) or hex (#FF0000)" }
+                        "color": { "type": "string", "description": "Color name (Red, Blue, Green, etc.) or hex (#FF0000)" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["level_name", "color"]
                 }
@@ -269,7 +284,8 @@ namespace RevitChat.Skills
                         "level_name": { "type": "string", "description": "Optional: filter by level name" },
                         "category": { "type": "string", "description": "Optional: filter by category (e.g. 'Walls', 'Ducts')" },
                         "param_name": { "type": "string", "description": "Optional: parameter name to filter by" },
-                        "param_value": { "type": "string", "description": "Optional: parameter value to match (requires param_name)" }
+                        "param_value": { "type": "string", "description": "Optional: parameter value to match (requires param_name)" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": []
                 }
@@ -285,7 +301,8 @@ namespace RevitChat.Skills
                         "category": { "type": "string", "description": "Optional: filter by category" },
                         "param_name": { "type": "string", "description": "Optional: parameter name to filter by" },
                         "param_value": { "type": "string", "description": "Optional: parameter value to match" },
-                        "color": { "type": "string", "description": "Color name or hex" }
+                        "color": { "type": "string", "description": "Color name or hex" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["color"]
                 }
@@ -309,7 +326,7 @@ namespace RevitChat.Skills
                 "isolate_category" => IsolateCategory(doc, view, args),
                 "hide_category" => HideCategory(doc, view, args),
                 "unhide_category" => UnhideCategory(doc, view, args),
-                "reset_view_isolation" => ResetIsolation(doc, view),
+                "reset_view_isolation" => ResetIsolation(doc, view, args),
                 "get_hidden_elements" => GetHiddenElements(doc, view, args),
                 "override_element_color" => OverrideElementColor(doc, view, args),
                 "override_category_color" => OverrideCategoryColor(doc, view, args),
@@ -332,6 +349,7 @@ namespace RevitChat.Skills
         {
             var ids = GetArgLongArray(args, "element_ids");
             if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             var elemIds = ResolveValidIds(doc, view, ids, out var notFound);
             if (elemIds.Count == 0) return JsonError("No valid, visible elements found for the given IDs.");
@@ -343,6 +361,16 @@ namespace RevitChat.Skills
                 return view.CanCategoryBeHidden(elem.Category.Id);
             }).ToList();
             if (canHide.Count == 0) return JsonError("None of the elements can be hidden in this view.");
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_hide = canHide.Count,
+                    not_found = notFound.Count > 0 ? notFound.Take(10).ToList() : null
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Hide Elements"))
             {
@@ -363,6 +391,7 @@ namespace RevitChat.Skills
         {
             var ids = GetArgLongArray(args, "element_ids");
             if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             var elemIds = ids
                 .Select(id => new ElementId(id))
@@ -370,6 +399,15 @@ namespace RevitChat.Skills
                 .ToList();
 
             if (elemIds.Count == 0) return JsonError("No valid elements found.");
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_unhide = elemIds.Count
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Unhide Elements"))
             {
@@ -389,6 +427,7 @@ namespace RevitChat.Skills
         {
             var ids = GetArgLongArray(args, "element_ids");
             if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             var elemIds = ids
                 .Select(id => new ElementId(id))
@@ -396,6 +435,16 @@ namespace RevitChat.Skills
                 .ToList();
 
             if (elemIds.Count == 0) return JsonError("No valid elements found.");
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_isolate = elemIds.Count,
+                    view_name = view.Name
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Isolate Elements"))
             {
@@ -416,6 +465,7 @@ namespace RevitChat.Skills
         {
             var categoryName = GetArg<string>(args, "category");
             if (string.IsNullOrEmpty(categoryName)) return JsonError("category required.");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             var bic = ResolveCategoryFilter(doc, categoryName);
             if (!bic.HasValue) return JsonError($"Category '{categoryName}' not found in the model.");
@@ -429,6 +479,17 @@ namespace RevitChat.Skills
                 .ToList();
 
             if (elemIds.Count == 0) return JsonError($"No elements of category '{categoryName}' found in the active view.");
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_isolate = elemIds.Count,
+                    category = categoryName,
+                    view_name = view.Name
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Isolate Category"))
             {
@@ -450,6 +511,7 @@ namespace RevitChat.Skills
         {
             var categoryName = GetArg<string>(args, "category");
             if (string.IsNullOrEmpty(categoryName)) return JsonError("category required.");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             var bic = ResolveCategoryFilter(doc, categoryName);
             if (!bic.HasValue) return JsonError($"Category '{categoryName}' not found.");
@@ -457,6 +519,17 @@ namespace RevitChat.Skills
             var categoryId = new ElementId(bic.Value);
             if (!view.CanCategoryBeHidden(categoryId))
                 return JsonError($"Category '{categoryName}' cannot be hidden in this view type.");
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_hide = true,
+                    category = categoryName,
+                    view_name = view.Name
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Hide Category"))
             {
@@ -478,11 +551,23 @@ namespace RevitChat.Skills
         {
             var categoryName = GetArg<string>(args, "category");
             if (string.IsNullOrEmpty(categoryName)) return JsonError("category required.");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             var bic = ResolveCategoryFilter(doc, categoryName);
             if (!bic.HasValue) return JsonError($"Category '{categoryName}' not found.");
 
             var categoryId = new ElementId(bic.Value);
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_unhide = true,
+                    category = categoryName,
+                    view_name = view.Name
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Unhide Category"))
             {
@@ -500,8 +585,19 @@ namespace RevitChat.Skills
             }, JsonOpts);
         }
 
-        private string ResetIsolation(Document doc, View view)
+        private string ResetIsolation(Document doc, View view, Dictionary<string, object> args)
         {
+            bool dryRun = GetArg(args, "dry_run", false);
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_reset = true,
+                    view_name = view.Name
+                }, JsonOpts);
+            }
+
             using (var trans = new Transaction(doc, "AI: Reset View Isolation"))
             {
                 trans.Start();
@@ -574,6 +670,7 @@ namespace RevitChat.Skills
         {
             var ids = GetArgLongArray(args, "element_ids");
             var colorStr = GetArg<string>(args, "color");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
             if (string.IsNullOrEmpty(colorStr)) return JsonError("color required (e.g. 'Red', '#FF0000').");
@@ -593,6 +690,28 @@ namespace RevitChat.Skills
 
             int applied = 0;
             var notFound = new List<long>();
+
+            if (dryRun)
+            {
+                foreach (var id in ids)
+                {
+                    var elemId = new ElementId(id);
+                    if (doc.GetElement(elemId) == null) { notFound.Add(id); continue; }
+                    applied++;
+                }
+
+                if (applied == 0) return JsonError("No valid elements found to override.");
+
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_override = applied,
+                    color = colorStr,
+                    rgb = new { r = color.Red, g = color.Green, b = color.Blue },
+                    view_name = view.Name,
+                    not_found = notFound.Count > 0 ? notFound.Take(10).ToList() : null
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Override Element Color"))
             {
@@ -625,6 +744,7 @@ namespace RevitChat.Skills
         {
             var categoryName = GetArg<string>(args, "category");
             var colorStr = GetArg<string>(args, "color");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (string.IsNullOrEmpty(categoryName)) return JsonError("category required.");
             if (string.IsNullOrEmpty(colorStr)) return JsonError("color required.");
@@ -645,6 +765,19 @@ namespace RevitChat.Skills
                 ogs.SetSurfaceForegroundPatternId(solidFillId);
             ogs.SetCutLineColor(color);
             ogs.SetCutForegroundPatternColor(color);
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_override = true,
+                    category = categoryName,
+                    color = colorStr,
+                    rgb = new { r = color.Red, g = color.Green, b = color.Blue },
+                    view_name = view.Name
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Override Category Color"))
             {
@@ -667,9 +800,17 @@ namespace RevitChat.Skills
         {
             var ids = GetArgLongArray(args, "element_ids");
             if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             var blank = new OverrideGraphicSettings();
             int reset = 0;
+
+            if (dryRun)
+            {
+                var elemIds = ids.Select(id => new ElementId(id)).Where(id => doc.GetElement(id) != null).ToList();
+                if (elemIds.Count == 0) return JsonError("No valid elements found.");
+                return JsonSerializer.Serialize(new { dry_run = true, would_reset = elemIds.Count, view_name = view.Name }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Reset Element Overrides"))
             {
@@ -697,11 +838,19 @@ namespace RevitChat.Skills
         {
             var ids = GetArgLongArray(args, "element_ids");
             var transparency = GetArg(args, "transparency", 50);
+            bool dryRun = GetArg(args, "dry_run", false);
             transparency = Math.Max(0, Math.Min(100, transparency));
 
             if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
 
             int applied = 0;
+
+            if (dryRun)
+            {
+                var elemIds = ids.Select(id => new ElementId(id)).Where(id => doc.GetElement(id) != null).ToList();
+                if (elemIds.Count == 0) return JsonError("No valid elements found.");
+                return JsonSerializer.Serialize(new { dry_run = true, would_set = elemIds.Count, transparency }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Set Element Transparency"))
             {
@@ -808,10 +957,22 @@ namespace RevitChat.Skills
         {
             var levelName = GetArg<string>(args, "level_name");
             if (string.IsNullOrEmpty(levelName)) return JsonError("level_name required.");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             var elemIds = CollectElementsByLevel(doc, view, levelName);
             if (elemIds == null) return JsonError($"Level '{levelName}' not found in the model.");
             if (elemIds.Count == 0) return JsonError($"No elements found on level '{levelName}' in the active view.");
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_isolate = elemIds.Count,
+                    level = levelName,
+                    view_name = view.Name
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Isolate by Level"))
             {
@@ -833,6 +994,7 @@ namespace RevitChat.Skills
         {
             var levelName = GetArg<string>(args, "level_name");
             if (string.IsNullOrEmpty(levelName)) return JsonError("level_name required.");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             var elemIds = CollectElementsByLevel(doc, view, levelName);
             if (elemIds == null) return JsonError($"Level '{levelName}' not found in the model.");
@@ -846,6 +1008,17 @@ namespace RevitChat.Skills
                 .ToList();
 
             if (canHide.Count == 0) return JsonError("None of the elements on this level can be hidden in this view.");
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_hide = canHide.Count,
+                    level = levelName,
+                    view_name = view.Name
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Hide by Level"))
             {
@@ -867,6 +1040,7 @@ namespace RevitChat.Skills
         {
             var levelName = GetArg<string>(args, "level_name");
             var colorStr = GetArg<string>(args, "color");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (string.IsNullOrEmpty(levelName)) return JsonError("level_name required.");
             if (string.IsNullOrEmpty(colorStr)) return JsonError("color required.");
@@ -880,6 +1054,18 @@ namespace RevitChat.Skills
 
             var solidFillId = GetSolidFillPatternId(doc);
             var ogs = BuildColorOverride(color, solidFillId);
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_override = elemIds.Count,
+                    level = levelName,
+                    color = colorStr,
+                    view_name = view.Name
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Color by Level"))
             {
@@ -901,9 +1087,21 @@ namespace RevitChat.Skills
 
         private string IsolateByFilter(Document doc, View view, Dictionary<string, object> args)
         {
+            bool dryRun = GetArg(args, "dry_run", false);
             var elemIds = CollectByFilter(doc, view, args, out string desc);
             if (elemIds == null) return JsonError(desc);
             if (elemIds.Count == 0) return JsonError($"No elements match the filter ({desc}) in the active view.");
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_isolate = elemIds.Count,
+                    filter = desc,
+                    view_name = view.Name
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Isolate by Filter"))
             {
@@ -924,6 +1122,7 @@ namespace RevitChat.Skills
         private string OverrideColorByFilter(Document doc, View view, Dictionary<string, object> args)
         {
             var colorStr = GetArg<string>(args, "color");
+            bool dryRun = GetArg(args, "dry_run", false);
             if (string.IsNullOrEmpty(colorStr)) return JsonError("color required.");
 
             var color = ParseColor(colorStr);
@@ -935,6 +1134,18 @@ namespace RevitChat.Skills
 
             var solidFillId = GetSolidFillPatternId(doc);
             var ogs = BuildColorOverride(color, solidFillId);
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_override = elemIds.Count,
+                    filter = desc,
+                    color = colorStr,
+                    view_name = view.Name
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Color by Filter"))
             {

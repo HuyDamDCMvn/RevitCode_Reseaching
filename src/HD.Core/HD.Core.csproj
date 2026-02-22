@@ -9,6 +9,7 @@
     <RootNamespace>HD.Core</RootNamespace>
     <AssemblyName>HD.Core</AssemblyName>
     <Description>Shared library for HD Revit tools - Models, Services, Helpers</Description>
+    <NoWarn>$(NoWarn);MSB3277</NoWarn>
   </PropertyGroup>
 
   <!-- Revit API References -->

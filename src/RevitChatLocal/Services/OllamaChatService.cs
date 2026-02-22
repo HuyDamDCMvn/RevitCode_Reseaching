@@ -79,7 +79,7 @@ namespace RevitChatLocal.Services
             {
                 Name = "MEP",
                 Keywords = new[] { "duct", "pipe", "mep", "hvac", "mechanical", "electrical", "plumbing", "conduit", "cable", "ống", "điện", "fire", "sprinkler", "cháy" },
-                Tools = new[] { "get_mep_systems", "get_system_elements", "get_duct_summary", "get_pipe_summary", "get_conduit_summary", "get_cable_tray_summary", "get_mechanical_equipment", "get_plumbing_fixtures", "get_electrical_equipment", "get_fire_protection_equipment", "get_fittings", "check_disconnected_elements", "mep_quantity_takeoff" }
+                Tools = new[] { "get_mep_systems", "get_system_elements", "get_duct_summary", "get_pipe_summary", "get_conduit_summary", "get_cable_tray_summary", "get_mechanical_equipment", "get_plumbing_fixtures", "get_electrical_equipment", "get_fire_protection_equipment", "get_fittings", "check_disconnected_elements", "mep_quantity_takeoff", "get_connector_info", "get_system_connectivity" }
             },
             new KeywordGroup
             {
@@ -144,8 +144,20 @@ namespace RevitChatLocal.Services
             new KeywordGroup
             {
                 Name = "MEP Validation",
-                Keywords = new[] { "missing", "oversized", "elevation", "validate", "thiếu", "quá cỡ" },
-                Tools = new[] { "check_missing_parameters", "check_elevation_conflicts", "check_oversized_elements", "get_warnings_mep" }
+                Keywords = new[] { "missing", "oversized", "elevation", "validate", "thiếu", "quá cỡ", "slope", "độ dốc" },
+                Tools = new[] { "check_missing_parameters", "check_elevation_conflicts", "check_oversized_elements", "get_warnings_mep", "check_pipe_slope" }
+            },
+            new KeywordGroup
+            {
+                Name = "Connectivity / Trace",
+                Keywords = new[] { "connect", "connector", "trace", "path", "route", "kết nối", "đường đi", "đường ống" },
+                Tools = new[] { "get_connector_info", "get_system_connectivity" }
+            },
+            new KeywordGroup
+            {
+                Name = "Size / Resize",
+                Keywords = new[] { "size", "resize", "diameter", "width", "height", "đổi size", "kích thước", "đường kính" },
+                Tools = new[] { "resize_mep_elements" }
             },
             new KeywordGroup
             {
@@ -216,8 +228,8 @@ namespace RevitChatLocal.Services
             new KeywordGroup
             {
                 Name = "Schedule",
-                Keywords = new[] { "schedule", "bảng" },
-                Tools = new[] { "get_schedule_data" }
+                Keywords = new[] { "schedule", "bảng", "field", "fields", "column", "columns" },
+                Tools = new[] { "get_schedule_data", "create_schedule", "get_schedule_fields" }
             },
             new KeywordGroup
             {
@@ -271,10 +283,11 @@ namespace RevitChatLocal.Services
             "count", "how many", "list", "show", "get", "export", "rename", "delete", "move",
             "copy", "mirror", "create", "update", "set", "override", "change", "modify", "hide",
             "unhide", "isolate", "select", "zoom", "place", "check", "audit", "report", "compare",
+            "trace", "connect", "connector", "slope", "resize", "schedule", "fields", "columns", "preview", "dry run",
             "đếm", "liệt kê",
             "hiển thị", "xem", "xuất", "đổi tên", "xóa", "di chuyển", "sao chép", "tạo",
-            "cập nhật", "đặt", "tô màu", "thay đổi", "ẩn", "hiện", "cô lập", "chọn",
-            "phóng to", "đặt", "kiểm tra", "báo cáo", "so sánh"
+            "cập nhật", "đặt", "tô màu", "thay đổi", "ẩn", "hiện", "cô lập", "chọn", "xem trước",
+            "phóng to", "đặt", "kiểm tra", "báo cáo", "so sánh", "độ dốc", "kích thước", "schedule"
         };
 
         private static readonly Dictionary<string, string> ToolSchemaHints = new()
@@ -283,40 +296,209 @@ namespace RevitChatLocal.Services
             ["count_elements"] = "category?, level?, view_name?",
             ["search_elements"] = "category, param_name, param_value",
             ["get_element_parameters"] = "element_id (integer)",
-            ["set_parameter_value"] = "element_ids (array), param_name, value",
-            ["delete_elements"] = "element_ids (array)",
-            ["rename_elements"] = "category|element_ids, old_text, new_text",
+            ["set_parameter_value"] = "element_ids (array), param_name, value, dry_run?",
+            ["delete_elements"] = "element_ids (array), dry_run?",
+            ["rename_elements"] = "element_ids (array), new_name, param_name? (default Mark), dry_run?",
             ["select_elements"] = "element_ids (array) — use get_elements first to get IDs",
-            ["hide_elements"] = "element_ids (array)",
-            ["unhide_elements"] = "element_ids (array)",
-            ["isolate_elements"] = "element_ids (array)",
-            ["override_element_color"] = "element_ids (array), color",
-            ["override_category_color"] = "category, color",
-            ["set_element_transparency"] = "element_ids (array), transparency (0-100)",
+            ["hide_elements"] = "element_ids (array), dry_run?",
+            ["unhide_elements"] = "element_ids (array), dry_run?",
+            ["isolate_elements"] = "element_ids (array), dry_run?",
+            ["override_element_color"] = "element_ids (array), color, dry_run?",
+            ["override_category_color"] = "category, color, dry_run?",
+            ["set_element_transparency"] = "element_ids (array), transparency (0-100), dry_run?",
             ["get_current_selection"] = "no args",
             ["get_current_view"] = "no args",
             ["zoom_to_elements"] = "element_ids (array)",
-            ["isolate_by_level"] = "level_name (exact name from model)",
-            ["override_color_by_filter"] = "view_name?, filter_name, color",
+            ["isolate_by_level"] = "level_name (exact name from model), dry_run?",
+            ["override_color_by_filter"] = "level_name?, category?, param_name?, param_value?, color, dry_run?",
             ["export_to_csv"] = "category, param_names (array of parameter names for columns), file_path?, level?",
             ["export_mep_boq"] = "categories (array), file_path? — export BOQ to CSV file",
-            ["rename_elements"] = "element_ids (array), new_name, param_name? (default Mark)",
             ["get_model_warnings"] = "no args — all warnings in model",
             ["get_warning_elements"] = "text (filter), limit? — elements involved in specific warnings",
             ["get_warnings_mep"] = "no args — MEP-specific warnings only",
             ["get_rooms"] = "level? — basic room list",
             ["get_rooms_detailed"] = "level_name?, department?, limit? — detailed room data with areas",
-            ["copy_elements"] = "element_ids (array), offset_x, offset_y, offset_z (in feet)",
-            ["move_elements"] = "element_ids (array), offset_x, offset_y, offset_z (in feet)",
-            ["mirror_elements"] = "element_ids (array), axis",
-            ["place_family_instance"] = "family_type_id (integer), x, y, z? (feet), level_name?",
+            ["copy_elements"] = "element_ids (array), offset_x, offset_y, offset_z (in feet), dry_run?",
+            ["move_elements"] = "element_ids (array), offset_x, offset_y, offset_z (in feet), dry_run?",
+            ["mirror_elements"] = "element_ids (array), axis, dry_run?",
+            ["place_family_instance"] = "family_type_id (integer), x, y, z? (feet), level_name?, dry_run?",
             ["mep_quantity_takeoff"] = "categories (array of strings)",
             ["check_clashes"] = "category_a, category_b, limit?",
             ["check_clearance"] = "category_a, category_b, min_distance_feet, limit?",
-            ["create_sheet"] = "sheet_number, sheet_name, titleblock_type_id?",
-            ["create_level"] = "name, elevation, unit? (mm|ft, default mm)",
+            ["create_sheet"] = "sheet_number, sheet_name, titleblock_type_id?, dry_run?",
+            ["place_view_on_sheet"] = "sheet_id, view_id, x?, y?, dry_run?",
+            ["remove_viewport"] = "viewport_id, dry_run?",
+            ["create_level"] = "name, elevation, unit? (mm|ft, default mm), dry_run?",
             ["select_by_parameter_value"] = "category, parameter_name, value, match_type?",
-            ["get_rooms_detailed"] = "level_name?, department?, limit?",
+            ["get_connector_info"] = "element_id (integer)",
+            ["get_system_connectivity"] = "element_id, system_name?, max_depth?, max_elements?",
+            ["check_pipe_slope"] = "system_name?, level?, min_slope_pct?, max_slope_pct?, limit?",
+            ["resize_mep_elements"] = "element_ids (array), width_mm?, height_mm?, diameter_mm?, dry_run?",
+            ["create_schedule"] = "category, field_names (array), schedule_name?, if_exists?, dry_run?",
+            ["get_schedule_fields"] = "category",
+            ["apply_view_template"] = "view_ids (array), template_id, dry_run?",
+            ["create_parameter_filter"] = "filter_name, categories (array), parameter_name, rule_type, value, dry_run?",
+            ["move_to_workset"] = "element_ids (array), workset_name, dry_run?",
+            ["set_phase"] = "element_ids (array), phase_name, phase_type?, dry_run?",
+            ["add_project_parameter"] = "parameter_name, categories (array), group?, is_instance?, data_type?, dry_run?",
+            ["add_revision"] = "description, date?, issued_to?, issued_by?, dry_run?",
+            ["duplicate_views"] = "view_ids (array), suffix?, duplicate_option?, dry_run?",
+            ["duplicate_sheets"] = "sheet_ids (array), new_numbers?, dry_run?",
+            ["create_grid"] = "name, start_x, start_y, end_x, end_y, dry_run?",
+            ["rename_level"] = "level_id, new_name, dry_run?",
+            ["delete_levels"] = "level_ids (array), dry_run?",
+            ["duplicate_levels_offset"] = "offset_mm, suffix?, prefix?, dry_run?",
+            ["set_element_material"] = "element_ids (array), material_id, dry_run?",
+            ["tag_elements"] = "element_ids (array), tag_type_id?, add_leader?, tag_orientation?, dry_run?",
+            ["tag_all_in_view"] = "category, add_leader?, dry_run?",
+            ["add_text_note"] = "text, x, y, text_type_id?, dry_run?",
+            ["create_group"] = "element_ids (array), group_name?, dry_run?",
+            ["ungroup"] = "group_ids (array), dry_run?",
+            ["place_group_instance"] = "group_type_id, x, y, z?, dry_run?",
+            ["load_family"] = "file_path, dry_run?",
+            ["swap_family_type"] = "element_ids (array), new_type_id, dry_run?",
+            ["reset_element_overrides"] = "element_ids (array), dry_run?",
+            ["reset_view_isolation"] = "dry_run?",
+            ["hide_category"] = "category, dry_run?",
+            ["unhide_category"] = "category, dry_run?",
+            ["override_color_by_level"] = "level_name, color, dry_run?",
+            ["isolate_by_filter"] = "level_name?, category?, param_name?, param_value?, dry_run?",
+            ["hide_by_level"] = "level_name, dry_run?",
+
+            // ProjectInfo (read-only)
+            ["get_project_info"] = "no args",
+            ["get_levels"] = "no args",
+            ["get_categories"] = "no args",
+            ["get_schedule_data"] = "schedule_name",
+
+            // MepSystemAnalysis (read-only)
+            ["get_mep_systems"] = "domain? (HVAC|Piping|Electrical)",
+            ["get_system_elements"] = "system_name, limit?",
+            ["get_duct_summary"] = "level?, system_name?",
+            ["get_pipe_summary"] = "level?, system_name?",
+            ["get_conduit_summary"] = "level?",
+            ["get_cable_tray_summary"] = "level?",
+
+            // MepEquipment (read-only)
+            ["get_mechanical_equipment"] = "level?, limit?",
+            ["get_plumbing_fixtures"] = "level?, limit?",
+            ["get_electrical_equipment"] = "level?, limit?",
+            ["get_fire_protection_equipment"] = "level?, limit?",
+            ["get_fittings"] = "category? (Duct Fittings|Pipe Fittings), level?, limit?",
+
+            // MepSpace (read-only)
+            ["get_mep_spaces"] = "level?, limit?",
+            ["get_hvac_zones"] = "limit?",
+            ["check_space_airflow"] = "level?, limit?",
+            ["get_unoccupied_spaces"] = "level?, limit?",
+
+            // MepQuantityTakeoff (read-only)
+            ["get_insulation_quantities"] = "category?, level?",
+            ["get_hanger_quantities"] = "category?, level?",
+
+            // MepValidation (read-only)
+            ["check_disconnected_elements"] = "category?, level?, limit?",
+            ["check_missing_parameters"] = "category, param_names (array), level?, limit?",
+            ["check_elevation_conflicts"] = "category?, tolerance_mm?, limit?",
+            ["check_oversized_elements"] = "category?, max_size_mm?, limit?",
+
+            // FilterTemplate (read-only)
+            ["get_view_filters"] = "view_id?",
+            ["get_view_templates"] = "type_filter?",
+            ["get_filter_rules"] = "filter_id",
+
+            // WorksetPhase (read-only)
+            ["get_worksets"] = "include_counts?",
+            ["get_phases"] = "no args",
+            ["get_elements_by_phase"] = "phase_name, phase_status?, limit?",
+
+            // SheetManagement (read-only)
+            ["get_sheets_summary"] = "limit?",
+            ["get_sheet_viewports"] = "sheet_id",
+
+            // Group (read-only)
+            ["get_groups"] = "limit?",
+            ["get_group_members"] = "group_id",
+
+            // DimensionTag (read-only)
+            ["get_untagged_elements"] = "category, limit?",
+
+            // GridLevel (read-only)
+            ["get_grids"] = "no args",
+            ["check_grid_alignment"] = "tolerance_mm?",
+            ["get_levels_detailed"] = "no args",
+            ["check_level_consistency"] = "no args",
+            ["find_off_axis_elements"] = "category?, tolerance_degrees?, limit?",
+
+            // RoomArea (read-only)
+            ["get_room_boundaries"] = "room_id",
+            ["get_room_finishes"] = "level?, limit?",
+            ["get_area_schemes"] = "no args",
+            ["get_unplaced_rooms"] = "limit?",
+            ["get_redundant_rooms"] = "limit?",
+
+            // RevisionMarkup (read-only)
+            ["get_revisions"] = "no args",
+            ["get_revision_clouds"] = "revision_id?, limit?",
+            ["get_sheets_by_revision"] = "revision_id",
+            ["get_revision_schedule"] = "no args",
+
+            // SelectionFilter (read-only)
+            ["select_by_bounding_box"] = "min_x, min_y, max_x, max_y, category?, limit?",
+            ["select_elements_in_view"] = "view_id?, category?, limit?",
+            ["get_selection_summary"] = "no args",
+
+            // ModelHealth (read-only)
+            ["get_model_statistics"] = "no args",
+            ["find_imported_cad"] = "limit?",
+            ["find_inplace_families"] = "limit?",
+            ["find_unused_families"] = "limit?",
+
+            // PurgeAudit (read-only)
+            ["get_purgeable_elements"] = "limit?",
+            ["find_duplicate_types"] = "category?, limit?",
+            ["find_unresolved_references"] = "limit?",
+            ["get_design_options"] = "no args",
+            ["audit_detail_levels"] = "limit?",
+
+            // CoordinationReport (read-only)
+            ["generate_clash_report"] = "category_a, category_b, limit?",
+            ["compare_element_counts"] = "link_name?",
+            ["get_link_coordination_status"] = "no args",
+            ["get_scope_box_summary"] = "no args",
+
+            // RevitLink (read-only)
+            ["get_linked_models"] = "no args",
+            ["get_linked_elements"] = "link_name, category?, limit?",
+            ["count_linked_elements"] = "link_name, category?",
+            ["get_linked_element_parameters"] = "link_name, element_id",
+            ["search_linked_elements"] = "link_name, category, param_name, param_value",
+            ["get_link_types"] = "link_name",
+
+            // ClashDetection (read-only)
+            ["find_overlapping"] = "category?, limit?",
+            ["get_clash_summary"] = "category_a?, category_b?",
+
+            // FamilyPlacement (read-only)
+            ["get_family_types"] = "family_name?, category?",
+
+            // Material (read-only)
+            ["get_materials"] = "limit?",
+            ["get_element_material"] = "element_ids (array)",
+            ["get_material_quantities"] = "category, limit?",
+
+            // SharedParameter (read-only)
+            ["get_shared_parameters"] = "limit?",
+            ["get_project_parameters"] = "limit?",
+            ["check_parameter_values"] = "category, param_name, expected_value?, limit?",
+            ["get_parameter_bindings"] = "param_name",
+
+            // NamingAudit (read-only)
+            ["audit_view_names"] = "pattern?, limit?",
+            ["audit_sheet_numbers"] = "pattern?, limit?",
+            ["audit_level_names"] = "pattern?, limit?",
+            ["audit_family_names"] = "pattern?, limit?",
+            ["audit_workset_names"] = "pattern?, limit?"
         };
 
         #endregion
@@ -472,6 +654,16 @@ namespace RevitChatLocal.Services
                 "User: summarize all ducts\nAssistant:\n<tool_call>\n{\"name\": \"get_duct_summary\", \"arguments\": {}}\n</tool_call>"),
             (new[] { "pipe", "summary", "tóm tắt" },
                 "User: summarize all pipes\nAssistant:\n<tool_call>\n{\"name\": \"get_pipe_summary\", \"arguments\": {}}\n</tool_call>"),
+            (new[] { "connector", "kết nối", "đầu nối" },
+                "User: kiểm tra connector của element 12345\nAssistant:\n<tool_call>\n{\"name\": \"get_connector_info\", \"arguments\": {\"element_id\": 12345}}\n</tool_call>"),
+            (new[] { "trace", "path", "đường ống", "route" },
+                "User: trace hệ thống từ element 12345\nAssistant:\n<tool_call>\n{\"name\": \"get_system_connectivity\", \"arguments\": {\"element_id\": 12345, \"max_depth\": 30}}\n</tool_call>"),
+            (new[] { "slope", "độ dốc" },
+                "User: kiểm tra độ dốc ống thoát nước tầng 1 (min 1%)\nAssistant:\n<tool_call>\n{\"name\": \"check_pipe_slope\", \"arguments\": {\"system_name\": \"Drainage\", \"level\": \"Level 1\", \"min_slope_pct\": 1.0}}\n</tool_call>"),
+            (new[] { "resize", "size", "đổi size" },
+                "User: đổi size duct 400x200 thành 500x250 cho elements 100, 200\nAssistant:\n<tool_call>\n{\"name\": \"resize_mep_elements\", \"arguments\": {\"element_ids\": [100, 200], \"width_mm\": 500, \"height_mm\": 250}}\n</tool_call>"),
+            (new[] { "preview", "dry run", "xem trước" },
+                "User: preview resize ducts 100,200 to 500x250\nAssistant:\n<tool_call>\n{\"name\": \"resize_mep_elements\", \"arguments\": {\"element_ids\": [100, 200], \"width_mm\": 500, \"height_mm\": 250, \"dry_run\": true}}\n</tool_call>"),
             (new[] { "mechanical", "equipment", "thiết bị cơ", "FCU", "AHU" },
                 "User: list all mechanical equipment\nAssistant:\n<tool_call>\n{\"name\": \"get_mechanical_equipment\", \"arguments\": {}}\n</tool_call>"),
             (new[] { "plumbing", "fixture", "vệ sinh" },
@@ -484,6 +676,16 @@ namespace RevitChatLocal.Services
             // Sheet management
             (new[] { "create", "sheet", "tạo", "bản vẽ" },
                 "User: create sheet A101 named Floor Plan\nAssistant:\n<tool_call>\n{\"name\": \"create_sheet\", \"arguments\": {\"sheet_number\": \"A101\", \"sheet_name\": \"Floor Plan\"}}\n</tool_call>"),
+            (new[] { "schedule", "bảng", "tạo schedule" },
+                "User: tạo schedule cho Ducts gồm System Name, Size, Length, Level\nAssistant:\n<tool_call>\n{\"name\": \"create_schedule\", \"arguments\": {\"category\": \"Ducts\", \"field_names\": [\"System Name\", \"Size\", \"Length\", \"Level\"]}}\n</tool_call>"),
+            (new[] { "schedule", "fields", "columns" },
+                "User: list available schedule fields for Ducts\nAssistant:\n<tool_call>\n{\"name\": \"get_schedule_fields\", \"arguments\": {\"category\": \"Ducts\"}}\n</tool_call>"),
+            (new[] { "trace", "connectivity", "path" },
+                "User: trace connectivity from element 12345\nAssistant:\n<tool_call>\n{\"name\": \"get_system_connectivity\", \"arguments\": {\"element_id\": 12345, \"max_depth\": 30}}\n</tool_call>"),
+            (new[] { "pipe", "slope" },
+                "User: check pipe slopes in Drainage system (min 1%)\nAssistant:\n<tool_call>\n{\"name\": \"check_pipe_slope\", \"arguments\": {\"system_name\": \"Drainage\", \"min_slope_pct\": 1.0}}\n</tool_call>"),
+            (new[] { "resize", "duct", "size" },
+                "User: resize ducts 100,200 to 500x250\nAssistant:\n<tool_call>\n{\"name\": \"resize_mep_elements\", \"arguments\": {\"element_ids\": [100, 200], \"width_mm\": 500, \"height_mm\": 250}}\n</tool_call>"),
 
             // Selection filter
             (new[] { "select by", "chọn theo", "parameter" },

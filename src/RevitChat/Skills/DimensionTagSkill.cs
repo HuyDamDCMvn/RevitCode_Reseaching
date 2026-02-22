@@ -32,7 +32,8 @@ namespace RevitChat.Skills
                         "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to tag" },
                         "tag_type_id": { "type": "integer", "description": "Optional: tag FamilySymbol ID. If omitted, uses default tag." },
                         "add_leader": { "type": "boolean", "description": "Add leader line (default: false)" },
-                        "tag_orientation": { "type": "string", "enum": ["horizontal", "vertical"], "description": "Tag orientation (default: horizontal)" }
+                        "tag_orientation": { "type": "string", "enum": ["horizontal", "vertical"], "description": "Tag orientation (default: horizontal)" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["element_ids"]
                 }
@@ -58,7 +59,8 @@ namespace RevitChat.Skills
                     "type": "object",
                     "properties": {
                         "category": { "type": "string", "description": "Category name (e.g. 'Doors', 'Rooms', 'Windows')" },
-                        "add_leader": { "type": "boolean", "description": "Add leader line (default: false)" }
+                        "add_leader": { "type": "boolean", "description": "Add leader line (default: false)" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["category"]
                 }
@@ -73,7 +75,8 @@ namespace RevitChat.Skills
                         "text": { "type": "string", "description": "Text content" },
                         "x": { "type": "number", "description": "X coordinate in feet" },
                         "y": { "type": "number", "description": "Y coordinate in feet" },
-                        "text_type_id": { "type": "integer", "description": "Optional: TextNoteType ID" }
+                        "text_type_id": { "type": "integer", "description": "Optional: TextNoteType ID" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["text", "x", "y"]
                 }
@@ -104,10 +107,39 @@ namespace RevitChat.Skills
             long tagTypeId = GetArg<long>(args, "tag_type_id");
             bool addLeader = GetArg(args, "add_leader", false);
             var orientStr = GetArg(args, "tag_orientation", "horizontal");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
 
             var orient = orientStr == "vertical" ? TagOrientation.Vertical : TagOrientation.Horizontal;
+
+            if (dryRun)
+            {
+                int taggable = 0, failed = 0;
+                var previewErrors = new List<string>();
+                foreach (var id in ids)
+                {
+                    var elem = doc.GetElement(new ElementId(id));
+                    if (elem == null) { failed++; previewErrors.Add($"Element {id} not found."); continue; }
+
+                    var loc = elem.Location;
+                    if (loc is LocationPoint || loc is LocationCurve)
+                        taggable++;
+                    else
+                    {
+                        failed++;
+                        previewErrors.Add($"Element {id}: no location.");
+                    }
+                }
+
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_tag = taggable,
+                    failed,
+                    errors = previewErrors.Take(10)
+                }, JsonOpts);
+            }
 
             int success = 0;
             var errors = new List<string>();
@@ -204,6 +236,7 @@ namespace RevitChat.Skills
         {
             var catName = GetArg<string>(args, "category");
             bool addLeader = GetArg(args, "add_leader", false);
+            bool dryRun = GetArg(args, "dry_run", false);
 
             var bic = ResolveCategoryFilter(doc, catName);
             if (!bic.HasValue) return JsonError($"Category '{catName}' not found.");
@@ -216,6 +249,18 @@ namespace RevitChat.Skills
             var taggedIds = CollectTaggedElementIds(doc, view);
             var untaggedElements = elements.Where(e => !taggedIds.Contains(e.Id.Value)).ToList();
             int success = 0;
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    category = catName,
+                    total_in_view = elements.Count,
+                    already_tagged = taggedIds.Count,
+                    would_tag = untaggedElements.Count
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, $"AI: Tag All {catName}"))
             {
@@ -256,6 +301,7 @@ namespace RevitChat.Skills
             double x = GetArg(args, "x", 0.0);
             double y = GetArg(args, "y", 0.0);
             long textTypeId = GetArg<long>(args, "text_type_id");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (string.IsNullOrEmpty(text)) return JsonError("text is required.");
 
@@ -270,6 +316,18 @@ namespace RevitChat.Skills
                     .OfClass(typeof(TextNoteType))
                     .FirstOrDefault();
                 typeId = defaultType?.Id ?? ElementId.InvalidElementId;
+            }
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_create = true,
+                    text,
+                    location = new { x, y },
+                    text_type_id = typeId.Value
+                }, JsonOpts);
             }
 
             using (var trans = new Transaction(doc, "AI: Add Text Note"))

@@ -45,7 +45,8 @@ namespace RevitChat.Skills
                     "properties": {
                         "sheet_number": { "type": "string", "description": "Sheet number (e.g. 'A101')" },
                         "sheet_name": { "type": "string", "description": "Sheet name/title" },
-                        "titleblock_type_id": { "type": "integer", "description": "Optional: title block FamilySymbol ID. If omitted, uses first available." }
+                        "titleblock_type_id": { "type": "integer", "description": "Optional: title block FamilySymbol ID. If omitted, uses first available." },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["sheet_number", "sheet_name"]
                 }
@@ -60,7 +61,8 @@ namespace RevitChat.Skills
                         "sheet_id": { "type": "integer", "description": "Sheet ElementId" },
                         "view_id": { "type": "integer", "description": "View ElementId to place" },
                         "x": { "type": "number", "description": "X position on sheet in feet (default: center)" },
-                        "y": { "type": "number", "description": "Y position on sheet in feet (default: center)" }
+                        "y": { "type": "number", "description": "Y position on sheet in feet (default: center)" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["sheet_id", "view_id"]
                 }
@@ -84,7 +86,8 @@ namespace RevitChat.Skills
                 {
                     "type": "object",
                     "properties": {
-                        "viewport_id": { "type": "integer", "description": "Viewport ElementId to remove" }
+                        "viewport_id": { "type": "integer", "description": "Viewport ElementId to remove" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["viewport_id"]
                 }
@@ -162,6 +165,7 @@ namespace RevitChat.Skills
             var number = GetArg<string>(args, "sheet_number");
             var name = GetArg<string>(args, "sheet_name");
             long tbTypeId = GetArg<long>(args, "titleblock_type_id");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (string.IsNullOrEmpty(number) || string.IsNullOrEmpty(name))
                 return JsonError("sheet_number and sheet_name are required.");
@@ -180,6 +184,25 @@ namespace RevitChat.Skills
                 if (tb == null)
                     return JsonError("No titleblock family found in the project. Load a titleblock family first, or provide a titleblock_type_id.");
                 titleBlockId = tb.Id;
+            }
+
+            var existing = new FilteredElementCollector(doc)
+                .OfClass(typeof(ViewSheet))
+                .Cast<ViewSheet>()
+                .FirstOrDefault(s => s.SheetNumber.Equals(number, StringComparison.OrdinalIgnoreCase));
+            if (existing != null)
+                return JsonError($"Sheet number '{number}' already exists.");
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_create = true,
+                    sheet_number = number,
+                    sheet_name = name,
+                    titleblock_type_id = titleBlockId.Value
+                }, JsonOpts);
             }
 
             using (var trans = new Transaction(doc, "AI: Create Sheet"))
@@ -206,6 +229,7 @@ namespace RevitChat.Skills
             long viewId = GetArg<long>(args, "view_id");
             double x = GetArg(args, "x", 1.0);
             double y = GetArg(args, "y", 1.0);
+            bool dryRun = GetArg(args, "dry_run", false);
 
             var sheet = doc.GetElement(new ElementId(sheetId)) as ViewSheet;
             if (sheet == null) return JsonError($"Sheet {sheetId} not found.");
@@ -215,6 +239,18 @@ namespace RevitChat.Skills
 
             if (!Viewport.CanAddViewToSheet(doc, sheet.Id, view.Id))
                 return JsonError("Cannot add this view to the sheet. It may already be placed on another sheet.");
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_place = true,
+                    sheet = sheet.SheetNumber,
+                    view_name = view.Name,
+                    position = new { x, y }
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Place View on Sheet"))
             {
@@ -270,10 +306,16 @@ namespace RevitChat.Skills
         private string RemoveViewport(Document doc, Dictionary<string, object> args)
         {
             long vpId = GetArg<long>(args, "viewport_id");
+            bool dryRun = GetArg(args, "dry_run", false);
             var vp = doc.GetElement(new ElementId(vpId)) as Viewport;
             if (vp == null) return JsonError($"Viewport {vpId} not found.");
 
             var viewName = (doc.GetElement(vp.ViewId) as View)?.Name ?? "-";
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new { dry_run = true, would_remove = true, viewport_id = vpId, view_name = viewName }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Remove Viewport"))
             {

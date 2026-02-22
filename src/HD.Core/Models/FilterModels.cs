@@ -14,7 +14,9 @@ namespace HD.Core.Models
         public List<long> ElementIds { get; set; } = new();
         public string DisplayName => ElementCount > 0 ? $"{Name} ({ElementCount})" : Name;
         public bool IsAllItem => CategoryId == -1;
+#pragma warning disable CS0067
         public event PropertyChangedEventHandler PropertyChanged;
+#pragma warning restore CS0067
     }
 
     /// <summary>
@@ -28,7 +30,9 @@ namespace HD.Core.Models
         public List<long> ElementIds { get; set; } = new();
         public string DisplayName => ElementCount > 0 ? $"{FamilyName} ({ElementCount})" : FamilyName;
         public bool IsAllItem => FamilyName?.StartsWith("(") == true;
+#pragma warning disable CS0067
         public event PropertyChangedEventHandler PropertyChanged;
+#pragma warning restore CS0067
     }
 
     /// <summary>
@@ -43,7 +47,9 @@ namespace HD.Core.Models
         public List<long> ElementIds { get; set; } = new();
         public string DisplayName => ElementCount > 0 ? $"{TypeName} ({ElementCount})" : TypeName;
         public bool IsAllItem => TypeName?.StartsWith("(") == true;
+#pragma warning disable CS0067
         public event PropertyChangedEventHandler PropertyChanged;
+#pragma warning restore CS0067
     }
 
     /// <summary>
@@ -56,7 +62,9 @@ namespace HD.Core.Models
         public List<long> ElementIds { get; set; } = new();
         public string DisplayName => ElementCount > 0 ? $"{Value} ({ElementCount})" : Value;
         public bool IsAllItem => Value?.StartsWith("(") == true;
+#pragma warning disable CS0067
         public event PropertyChangedEventHandler PropertyChanged;
+#pragma warning restore CS0067
     }
 
     /// <summary>

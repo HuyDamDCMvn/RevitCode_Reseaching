@@ -49,7 +49,8 @@ namespace RevitChat.Skills
                         "y": { "type": "number", "description": "Y coordinate in feet" },
                         "z": { "type": "number", "description": "Z coordinate in feet (default 0)" },
                         "level_name": { "type": "string", "description": "Optional: level name to place on" },
-                        "structural_type": { "type": "string", "enum": ["non_structural", "beam", "brace", "column", "footing"], "description": "Structural type (default: non_structural)" }
+                        "structural_type": { "type": "string", "enum": ["non_structural", "beam", "brace", "column", "footing"], "description": "Structural type (default: non_structural)" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["family_type_id", "x", "y"]
                 }
@@ -62,7 +63,8 @@ namespace RevitChat.Skills
                     "type": "object",
                     "properties": {
                         "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to change type" },
-                        "new_type_id": { "type": "integer", "description": "New FamilySymbol (type) ID" }
+                        "new_type_id": { "type": "integer", "description": "New FamilySymbol (type) ID" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["element_ids", "new_type_id"]
                 }
@@ -74,7 +76,8 @@ namespace RevitChat.Skills
                 {
                     "type": "object",
                     "properties": {
-                        "file_path": { "type": "string", "description": "Full path to the .rfa file" }
+                        "file_path": { "type": "string", "description": "Full path to the .rfa file" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["file_path"]
                 }
@@ -135,6 +138,7 @@ namespace RevitChat.Skills
             double z = GetArg(args, "z", 0.0);
             var levelName = GetArg<string>(args, "level_name");
             var structStr = GetArg(args, "structural_type", "non_structural");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             var symbol = doc.GetElement(new ElementId(typeId)) as FamilySymbol;
             if (symbol == null) return JsonError($"FamilySymbol with ID {typeId} not found.");
@@ -166,6 +170,19 @@ namespace RevitChat.Skills
 
             var point = new XYZ(x, y, z);
 
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_place = true,
+                    family = symbol.Family?.Name,
+                    type = symbol.Name,
+                    location = new { x, y, z },
+                    level = level.Name
+                }, JsonOpts);
+            }
+
             using (var trans = new Transaction(doc, "AI: Place Family Instance"))
             {
                 trans.Start();
@@ -189,11 +206,34 @@ namespace RevitChat.Skills
         {
             var ids = GetArgLongArray(args, "element_ids");
             long newTypeId = GetArg<long>(args, "new_type_id");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
 
             var newSymbol = doc.GetElement(new ElementId(newTypeId)) as FamilySymbol;
             if (newSymbol == null) return JsonError($"FamilySymbol with ID {newTypeId} not found.");
+
+            if (dryRun)
+            {
+                int wouldSwap = 0, failed = 0;
+                var previewErrors = new List<string>();
+                foreach (var id in ids)
+                {
+                    var fi = doc.GetElement(new ElementId(id)) as FamilyInstance;
+                    if (fi == null) { failed++; previewErrors.Add($"Element {id} is not a FamilyInstance"); continue; }
+                    wouldSwap++;
+                }
+
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_swap = wouldSwap,
+                    new_type = newSymbol.Name,
+                    new_family = newSymbol.Family?.Name,
+                    failed,
+                    errors = previewErrors.Take(10)
+                }, JsonOpts);
+            }
 
             int success = 0;
             var errors = new List<string>();
@@ -228,6 +268,7 @@ namespace RevitChat.Skills
         private string LoadFamily(Document doc, Dictionary<string, object> args)
         {
             var filePath = GetArg<string>(args, "file_path");
+            bool dryRun = GetArg(args, "dry_run", false);
             if (string.IsNullOrEmpty(filePath)) return JsonError("file_path required.");
 
             filePath = System.IO.Path.GetFullPath(filePath);
@@ -236,6 +277,16 @@ namespace RevitChat.Skills
 
             if (!System.IO.File.Exists(filePath))
                 return JsonError($"File not found: {filePath}");
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_load = true,
+                    file_path = filePath
+                }, JsonOpts);
+            }
 
             bool loaded = doc.LoadFamily(filePath, out Family family);
 

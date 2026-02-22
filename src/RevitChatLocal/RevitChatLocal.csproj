@@ -9,6 +9,7 @@
     <RootNamespace>RevitChatLocal</RootNamespace>
     <AssemblyName>RevitChatLocal</AssemblyName>
     <Description>Local AI Chatbot for Revit using Ollama - free, no API key needed</Description>
+    <NoWarn>$(NoWarn);MSB3277</NoWarn>
   </PropertyGroup>
 
   <!-- Project Reference -->

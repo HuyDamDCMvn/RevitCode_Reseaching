@@ -17,7 +17,8 @@ namespace RevitChat.Skills
         private static readonly HashSet<string> HandledTools = new()
         {
             "check_disconnected_elements", "check_missing_parameters",
-            "check_elevation_conflicts", "check_oversized_elements", "get_warnings_mep"
+            "check_elevation_conflicts", "check_oversized_elements", "get_warnings_mep",
+            "check_pipe_slope"
         };
 
         public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
@@ -97,6 +98,22 @@ namespace RevitChat.Skills
                     "required": []
                 }
                 """))
+            ,
+            ChatTool.CreateFunctionTool("check_pipe_slope",
+                "Check pipe slopes and flag pipes outside the allowed slope range (percent).",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "system_name": { "type": "string", "description": "Optional system name filter (partial match)" },
+                        "level": { "type": "string", "description": "Optional level filter" },
+                        "min_slope_pct": { "type": "number", "description": "Minimum slope percentage. Default 0.1.", "default": 0.1 },
+                        "max_slope_pct": { "type": "number", "description": "Maximum slope percentage. Optional." },
+                        "limit": { "type": "integer", "description": "Max issues to return. Default 100.", "default": 100 }
+                    },
+                    "required": []
+                }
+                """))
         };
 
         public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
@@ -111,6 +128,7 @@ namespace RevitChat.Skills
                 "check_elevation_conflicts" => CheckElevation(doc, args),
                 "check_oversized_elements" => CheckOversized(doc, args),
                 "get_warnings_mep" => GetMepWarnings(doc, args),
+                "check_pipe_slope" => CheckPipeSlope(doc, args),
                 _ => JsonError($"MepValidationSkill: unknown tool '{functionName}'")
             };
         }
@@ -455,6 +473,112 @@ namespace RevitChat.Skills
                 mep_warnings_shown = results.Count,
                 warnings = results
             }, JsonOpts);
+        }
+
+        private string CheckPipeSlope(Document doc, Dictionary<string, object> args)
+        {
+            var systemFilter = GetArg<string>(args, "system_name");
+            var levelFilter = GetArg<string>(args, "level");
+            int limit = GetArg(args, "limit", 100);
+
+            bool hasMin = args != null && args.ContainsKey("min_slope_pct");
+            bool hasMax = args != null && args.ContainsKey("max_slope_pct");
+            double minSlope = hasMin ? GetArg(args, "min_slope_pct", 0.1) : 0.1;
+            double maxSlope = hasMax ? GetArg(args, "max_slope_pct", 0.0) : double.NaN;
+
+            var collector = new FilteredElementCollector(doc)
+                .OfCategory(BuiltInCategory.OST_PipeCurves)
+                .WhereElementIsNotElementType();
+
+            if (!string.IsNullOrEmpty(levelFilter))
+            {
+                var level = new FilteredElementCollector(doc)
+                    .OfClass(typeof(Level))
+                    .Cast<Level>()
+                    .FirstOrDefault(l => l.Name.Equals(levelFilter, StringComparison.OrdinalIgnoreCase));
+                if (level == null) return JsonError($"Level '{levelFilter}' not found.");
+                collector = collector.WherePasses(new ElementLevelFilter(level.Id));
+            }
+
+            int checkedCount = 0;
+            var issues = new List<object>();
+
+            foreach (var elem in collector)
+            {
+                var sys = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "";
+                if (!string.IsNullOrEmpty(systemFilter) &&
+                    sys.IndexOf(systemFilter, StringComparison.OrdinalIgnoreCase) < 0)
+                    continue;
+
+                var slopeInfo = GetPipeSlope(elem);
+                if (slopeInfo.source == "vertical" || slopeInfo.source == "unknown")
+                    continue;
+
+                checkedCount++;
+                var slopePct = slopeInfo.slopeRatio * 100.0;
+                var absPct = Math.Abs(slopePct);
+
+                bool belowMin = absPct < minSlope;
+                bool aboveMax = !double.IsNaN(maxSlope) && absPct > maxSlope;
+
+                if (belowMin || aboveMax)
+                {
+                    issues.Add(new
+                    {
+                        id = elem.Id.Value,
+                        category = elem.Category?.Name ?? "-",
+                        type = GetElementTypeName(doc, elem),
+                        size = elem.get_Parameter(BuiltInParameter.RBS_CALCULATED_SIZE)?.AsString() ?? "-",
+                        level = GetElementLevel(doc, elem),
+                        system = sys,
+                        slope_pct = Math.Round(slopePct, 3),
+                        slope_source = slopeInfo.source,
+                        issue = belowMin ? "below_min" : "above_max"
+                    });
+                }
+
+                if (issues.Count >= limit) break;
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                checked_pipes = checkedCount,
+                min_slope_pct = minSlope,
+                max_slope_pct = double.IsNaN(maxSlope) ? (double?)null : maxSlope,
+                issues_found = issues.Count,
+                issues
+            }, JsonOpts);
+        }
+
+        private static (double slopeRatio, string source) GetPipeSlope(Element elem)
+        {
+            var param = elem.get_Parameter(BuiltInParameter.RBS_PIPE_SLOPE);
+            if (param != null && param.HasValue)
+            {
+                try
+                {
+                    return (param.AsDouble(), "parameter");
+                }
+                catch { }
+            }
+
+            if (elem.Location is LocationCurve lc)
+            {
+                var start = lc.Curve.GetEndPoint(0);
+                var end = lc.Curve.GetEndPoint(1);
+                var dx = end.X - start.X;
+                var dy = end.Y - start.Y;
+                var horizontal = Math.Sqrt(dx * dx + dy * dy);
+                if (horizontal < 1e-6)
+                    return (0, "vertical");
+                if (horizontal > 1e-6)
+                {
+                    var slope = (end.Z - start.Z) / horizontal;
+                    return (slope, "geometry");
+                }
+            }
+
+            return (0, "unknown");
         }
     }
 }

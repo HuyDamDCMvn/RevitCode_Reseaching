@@ -92,7 +92,8 @@ namespace RevitChat.Skills
                     "properties": {
                         "name": { "type": "string", "description": "Name for the new level" },
                         "elevation": { "type": "number", "description": "Elevation value" },
-                        "unit": { "type": "string", "enum": ["ft", "mm"], "description": "Elevation unit: 'ft' (feet) or 'mm' (millimeters). Default: mm" }
+                        "unit": { "type": "string", "enum": ["ft", "mm"], "description": "Elevation unit: 'ft' (feet) or 'mm' (millimeters). Default: mm" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["name", "elevation"]
                 }
@@ -106,7 +107,8 @@ namespace RevitChat.Skills
                     "properties": {
                         "offset_mm": { "type": "number", "description": "Elevation offset in millimeters (positive = up, negative = down). e.g. 500 means +500mm above each existing level." },
                         "suffix": { "type": "string", "description": "Suffix to append to each new level name (e.g. '_add', '_structural')" },
-                        "prefix": { "type": "string", "description": "Optional prefix to prepend to each new level name" }
+                        "prefix": { "type": "string", "description": "Optional prefix to prepend to each new level name" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["offset_mm"]
                 }
@@ -119,7 +121,8 @@ namespace RevitChat.Skills
                     "type": "object",
                     "properties": {
                         "level_id": { "type": "integer", "description": "Level element ID" },
-                        "new_name": { "type": "string", "description": "New name for the level" }
+                        "new_name": { "type": "string", "description": "New name for the level" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["level_id", "new_name"]
                 }
@@ -131,7 +134,8 @@ namespace RevitChat.Skills
                 {
                     "type": "object",
                     "properties": {
-                        "level_ids": { "type": "array", "items": { "type": "integer" }, "description": "Level IDs to delete" }
+                        "level_ids": { "type": "array", "items": { "type": "integer" }, "description": "Level IDs to delete" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["level_ids"]
                 }
@@ -147,7 +151,8 @@ namespace RevitChat.Skills
                         "start_x": { "type": "number", "description": "Start X coordinate in feet" },
                         "start_y": { "type": "number", "description": "Start Y coordinate in feet" },
                         "end_x": { "type": "number", "description": "End X coordinate in feet" },
-                        "end_y": { "type": "number", "description": "End Y coordinate in feet" }
+                        "end_y": { "type": "number", "description": "End Y coordinate in feet" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
                     },
                     "required": ["name", "start_x", "start_y", "end_x", "end_y"]
                 }
@@ -452,12 +457,25 @@ namespace RevitChat.Skills
             var name = GetArg<string>(args, "name");
             double elevation = GetArg(args, "elevation", 0.0);
             var unit = GetArg(args, "unit", "mm");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (string.IsNullOrWhiteSpace(name)) return JsonError("name required.");
 
             double elevFt = unit.Equals("mm", StringComparison.OrdinalIgnoreCase)
                 ? elevation * MmToFeet
                 : elevation;
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_create = true,
+                    name,
+                    elevation_ft = Math.Round(elevFt, 4),
+                    elevation_mm = Math.Round(elevation, 1)
+                }, JsonOpts);
+            }
 
             Level newLevel;
             using (var trans = new Transaction(doc, "AI: Create Level"))
@@ -484,6 +502,7 @@ namespace RevitChat.Skills
             double offsetMm = GetArg(args, "offset_mm", 0.0);
             var suffix = GetArg(args, "suffix", "");
             var prefix = GetArg(args, "prefix", "");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (offsetMm == 0 && string.IsNullOrEmpty(suffix) && string.IsNullOrEmpty(prefix))
                 return JsonError("At least offset_mm or suffix/prefix must be provided.");
@@ -500,6 +519,32 @@ namespace RevitChat.Skills
 
             var created = new List<object>();
             var errors = new List<string>();
+
+            if (dryRun)
+            {
+                foreach (var lvl in existingLevels)
+                {
+                    double newElev = lvl.Elevation + offsetFt;
+                    string newName = $"{prefix}{lvl.Name}{suffix}";
+                    created.Add(new
+                    {
+                        name = newName,
+                        elevation_ft = Math.Round(newElev, 4),
+                        elevation_mm = Math.Round(newElev / MmToFeet, 1),
+                        based_on = lvl.Name
+                    });
+                }
+
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_create = created.Count,
+                    offset_mm = offsetMm,
+                    suffix,
+                    prefix,
+                    levels = created.Take(50)
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Duplicate Levels with Offset"))
             {
@@ -557,6 +602,7 @@ namespace RevitChat.Skills
         {
             long levelId = GetArg(args, "level_id", 0L);
             var newName = GetArg<string>(args, "new_name");
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (levelId == 0) return JsonError("level_id required.");
             if (string.IsNullOrWhiteSpace(newName)) return JsonError("new_name required.");
@@ -565,6 +611,18 @@ namespace RevitChat.Skills
             if (level == null) return JsonError($"Element {levelId} is not a level or doesn't exist.");
 
             string oldName = level.Name;
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    id = levelId,
+                    old_name = oldName,
+                    new_name = newName,
+                    would_rename = true
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Rename Level"))
             {
@@ -593,10 +651,29 @@ namespace RevitChat.Skills
         private string DeleteLevels(Document doc, Dictionary<string, object> args)
         {
             var ids = GetArgLongArray(args, "level_ids");
+            bool dryRun = GetArg(args, "dry_run", false);
             if (ids == null || ids.Count == 0) return JsonError("level_ids required.");
 
             int deleted = 0;
             var errors = new List<string>();
+
+            if (dryRun)
+            {
+                int deletable = 0;
+                foreach (var id in ids)
+                {
+                    var level = doc.GetElement(new ElementId(id)) as Level;
+                    if (level == null) { errors.Add($"Element {id} is not a level"); continue; }
+                    deletable++;
+                }
+
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    deletable,
+                    errors = errors.Take(10)
+                }, JsonOpts);
+            }
 
             using (var trans = new Transaction(doc, "AI: Delete Levels"))
             {
@@ -633,6 +710,7 @@ namespace RevitChat.Skills
             double y1 = GetArg(args, "start_y", 0.0);
             double x2 = GetArg(args, "end_x", 0.0);
             double y2 = GetArg(args, "end_y", 0.0);
+            bool dryRun = GetArg(args, "dry_run", false);
 
             if (string.IsNullOrWhiteSpace(name)) return JsonError("name required.");
 
@@ -643,6 +721,19 @@ namespace RevitChat.Skills
                 return JsonError("Start and end points are too close. Grid line must have a minimum length.");
 
             var line = Line.CreateBound(start, end);
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_create = true,
+                    name,
+                    start = new { x = x1, y = y1 },
+                    end_point = new { x = x2, y = y2 },
+                    length_ft = Math.Round(line.Length, 4)
+                }, JsonOpts);
+            }
 
             Grid grid;
             using (var trans = new Transaction(doc, "AI: Create Grid"))
