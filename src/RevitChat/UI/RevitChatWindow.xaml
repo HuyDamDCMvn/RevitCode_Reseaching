@@ -35,12 +35,12 @@
                     </Border>
                     <StackPanel Orientation="Horizontal" Margin="4,2,0,0"
                                 Visibility="{Binding ShowFeedbackButtons, Converter={StaticResource BoolToVis}}">
-                        <Button Style="{StaticResource IconButtonStyle}" Padding="3" ToolTip="Good response"
+                        <Button Style="{DynamicResource IconButtonStyle}" Padding="3" ToolTip="Good response"
                                 Command="{Binding DataContext.ThumbsUpCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                                 CommandParameter="{Binding}">
                             <TextBlock Text="&#xE8E1;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="#9E9E9E"/>
                         </Button>
-                        <Button Style="{StaticResource IconButtonStyle}" Padding="3" Margin="2,0,0,0" ToolTip="Wrong response"
+                        <Button Style="{DynamicResource IconButtonStyle}" Padding="3" Margin="2,0,0,0" ToolTip="Wrong response"
                                 Command="{Binding DataContext.ThumbsDownCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                                 CommandParameter="{Binding}">
                             <TextBlock Text="&#xE8E0;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="#9E9E9E"/>
