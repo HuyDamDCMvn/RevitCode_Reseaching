@@ -1071,8 +1071,10 @@ Example:
             if (string.IsNullOrWhiteSpace(text)) return text;
             var result = Regex.Replace(text, @"</?tool_call>", "", RegexOptions.IgnoreCase);
             result = Regex.Replace(result, @"\{[^{}]*""name""\s*:\s*""[a-z_]+""[^{}]*\}", "", RegexOptions.Singleline);
-            result = Regex.Replace(result, @"\{[^{}]*""arguments""[^{}]*\}", "", RegexOptions.Singleline);
+            result = Regex.Replace(result, @"""arguments""\s*:\s*\{(?:[^{}]|\{[^{}]*\})*\}", "", RegexOptions.Singleline);
+            result = Regex.Replace(result, @"[A-Za-z]+:\s*""[a-z_]+""\s*,?\s*""arguments""", "", RegexOptions.IgnoreCase);
             result = Regex.Replace(result, @"```json?\s*```", "", RegexOptions.IgnoreCase);
+            result = Regex.Replace(result, @"[\{\}\[\]"",:]+\s*$", "");
             result = result.Trim();
             return string.IsNullOrWhiteSpace(result) ? "" : result;
         }
@@ -1187,6 +1189,24 @@ Example:
                 }
             }
 
+            if (results.Count > 0) return results;
+
+            // 6) Fuzzy: extract quoted tool-like name + "arguments" block
+            var fuzzyPattern = new Regex(
+                @"""([a-z_]{3,})""\s*,\s*""arguments""\s*:\s*(\{(?:[^{}]|\{[^{}]*\})*\})",
+                RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            var fm = fuzzyPattern.Match(text);
+            if (fm.Success)
+            {
+                var candidateName = fm.Groups[1].Value;
+                var resolved = _allToolNames.Contains(candidateName) ? candidateName : FuzzyMatchToolName(candidateName);
+                if (resolved != null)
+                {
+                    var call = TryParseOneToolCallWithName(resolved, fm.Groups[2].Value);
+                    if (call != null) results.Add(call);
+                }
+            }
+
             if (results.Count > 5)
                 results = results.Take(2).ToList();
 
@@ -1221,6 +1241,38 @@ Example:
             }
         }
 
+        private string FuzzyMatchToolName(string candidate)
+        {
+            if (string.IsNullOrEmpty(candidate)) return null;
+            var lower = candidate.ToLowerInvariant().Replace("-", "_");
+
+            foreach (var tool in _allToolNames)
+            {
+                if (tool.Contains(lower) || lower.Contains(tool))
+                    return tool;
+            }
+
+            var parts = lower.Split('_');
+            string best = null;
+            int bestScore = 0;
+            foreach (var tool in _allToolNames)
+            {
+                int score = 0;
+                foreach (var part in parts)
+                {
+                    if (part.Length >= 3 && tool.Contains(part))
+                        score += part.Length;
+                }
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    best = tool;
+                }
+            }
+
+            return bestScore >= 3 ? best : null;
+        }
+
         private RevitChat.Models.ToolCallRequest TryParseOneToolCall(string json)
         {
             try
@@ -1232,8 +1284,10 @@ Example:
                 if (root.TryGetProperty("name", out var nameProp))
                     name = nameProp.GetString();
 
-                if (string.IsNullOrEmpty(name) || !_allToolNames.Contains(name))
-                    return null;
+                if (string.IsNullOrEmpty(name)) return null;
+                if (!_allToolNames.Contains(name))
+                    name = FuzzyMatchToolName(name);
+                if (name == null) return null;
 
                 var args = new Dictionary<string, object>();
 
@@ -1267,7 +1321,10 @@ Example:
                     var root = doc.RootElement;
                     if (!root.TryGetProperty("name", out var nameProp)) return null;
                     var name = nameProp.GetString();
-                    if (string.IsNullOrEmpty(name) || !_allToolNames.Contains(name)) return null;
+                    if (string.IsNullOrEmpty(name)) return null;
+                    if (!_allToolNames.Contains(name))
+                        name = FuzzyMatchToolName(name);
+                    if (name == null) return null;
 
                     var args = new Dictionary<string, object>();
                     if (TryReadArguments(root, out var parsedArgs))
@@ -1361,8 +1418,10 @@ Example:
             if (text.Contains("tool_call", StringComparison.OrdinalIgnoreCase)
                 && text.Contains("{")) return true;
             if (Regex.IsMatch(text, @"""name""\s*:\s*""[a-z_]+""", RegexOptions.IgnoreCase)) return true;
+            if (text.Contains("\"arguments\"") && text.Contains("{")) return true;
             if (Regex.IsMatch(text, @"[a-z_]{3,}\(.*\)", RegexOptions.IgnoreCase)
                 && text.Contains("\"")) return true;
+            if (Regex.IsMatch(text, @"""[a-z_]{3,}""\s*,\s*""arguments""", RegexOptions.IgnoreCase)) return true;
             return false;
         }
 

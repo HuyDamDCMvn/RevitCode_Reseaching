@@ -349,7 +349,7 @@ namespace RevitChat.ViewModel
                 return true;
             if (t.Contains("<tool_call>") || t.Contains("</tool_call>"))
                 return true;
-            if (t.Contains("\"name\"") && t.Contains("\"arguments\"") && t.Contains("{"))
+            if (t.Contains("\"arguments\"") && t.Contains("{"))
                 return true;
             if (System.Text.RegularExpressions.Regex.IsMatch(t, @"^\s*[\{\};,"":\[\]]+\s*$"))
                 return true;
