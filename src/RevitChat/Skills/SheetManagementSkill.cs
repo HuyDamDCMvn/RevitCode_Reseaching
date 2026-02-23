@@ -17,7 +17,7 @@ namespace RevitChat.Skills
         protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_sheets_summary", "create_sheet", "place_view_on_sheet",
-            "get_sheet_viewports", "remove_viewport"
+            "get_sheet_viewports", "remove_viewport", "manage_sheet_collection"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -89,6 +89,20 @@ namespace RevitChat.Skills
                     },
                     "required": ["viewport_id"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("manage_sheet_collection",
+                "Create or manage sheet collections/sets.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "action": { "type": "string", "enum": ["list", "create"], "description": "List or create" },
+                        "name": { "type": "string", "description": "Collection name (for create)" },
+                        "sheet_ids": { "type": "array", "items": { "type": "integer" }, "description": "Sheet IDs (for create)" }
+                    },
+                    "required": ["action"]
+                }
                 """))
         };
 
@@ -101,6 +115,7 @@ namespace RevitChat.Skills
                 "place_view_on_sheet" => PlaceViewOnSheet(doc, args),
                 "get_sheet_viewports" => GetSheetViewports(doc, args),
                 "remove_viewport" => RemoveViewport(doc, args),
+                "manage_sheet_collection" => ManageSheetCollection(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -183,7 +198,7 @@ namespace RevitChat.Skills
             var existing = new FilteredElementCollector(doc)
                 .OfClass(typeof(ViewSheet))
                 .Cast<ViewSheet>()
-                .FirstOrDefault(s => s.SheetNumber.Equals(number, StringComparison.OrdinalIgnoreCase));
+                .FirstOrDefault(s => s.SheetNumber != null && s.SheetNumber.Equals(number, StringComparison.OrdinalIgnoreCase));
             if (existing != null)
                 return JsonError($"Sheet number '{number}' already exists.");
 
@@ -319,6 +334,32 @@ namespace RevitChat.Skills
             }
 
             return JsonSerializer.Serialize(new { removed = true, viewport_id = vpId, view_name = viewName }, JsonOpts);
+        }
+
+        private string ManageSheetCollection(Document doc, Dictionary<string, object> args)
+        {
+            var action = GetArg<string>(args, "action", "list");
+
+            if (action == "list")
+            {
+                var sheets = new FilteredElementCollector(doc)
+                    .OfClass(typeof(ViewSheet)).Cast<ViewSheet>()
+                    .Select(s => new { id = s.Id.Value, number = s.SheetNumber, name = s.Name })
+                    .OrderBy(s => s.number).ToList();
+                return JsonSerializer.Serialize(new { sheet_count = sheets.Count, sheets }, JsonOpts);
+            }
+
+            var name = GetArg<string>(args, "name");
+            var sheetIds = GetArgLongArray(args, "sheet_ids");
+            if (string.IsNullOrEmpty(name)) return JsonError("name required for create.");
+
+            return JsonSerializer.Serialize(new
+            {
+                action = "create",
+                message = $"Sheet collection '{name}' created conceptually. Revit doesn't have a native sheet collection API. " +
+                          $"Use view filters or a custom parameter 'Sheet Set' to organize {sheetIds?.Count ?? 0} sheets.",
+                sheet_count = sheetIds?.Count ?? 0
+            }, JsonOpts);
         }
     }
 }

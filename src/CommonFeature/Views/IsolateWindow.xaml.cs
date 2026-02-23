@@ -41,6 +41,8 @@ namespace CommonFeature.Views
         public Action ResetIsolateCallback { get; set; }
         public Func<string, string, string, string, string, List<long>> ReIsolateCallback { get; set; }
         public Func<string> GetViewNameCallback { get; set; }
+        /// <summary>Call to refresh cached view when user switches views in Revit.</summary>
+        public Action RefreshIsolateViewRequested { get; set; }
         
         #endregion
 
@@ -409,6 +411,8 @@ namespace CommonFeature.Views
             
             try
             {
+                // Refresh cache from Revit thread so GetViewNameCallback returns current view
+                RefreshIsolateViewRequested?.Invoke();
                 var viewName = GetViewNameCallback();
                 if (!string.IsNullOrEmpty(viewName) && viewName != _lastViewName)
                 {

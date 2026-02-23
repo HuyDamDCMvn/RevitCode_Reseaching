@@ -101,9 +101,9 @@ namespace HD.Core.Services
         }
 
         /// <summary>
-        /// Zoom to fit all elements in view.
+        /// Refresh the active view (e.g. after DirectContext3D updates).
         /// </summary>
-        public static bool ZoomToFit(UIDocument uidoc)
+        public static bool RefreshView(UIDocument uidoc)
         {
             if (uidoc == null) return false;
 

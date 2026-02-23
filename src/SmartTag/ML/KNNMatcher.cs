@@ -15,12 +15,15 @@ namespace SmartTag.ML
     {
         private List<TrainingSample> _samples;
         private Dictionary<string, List<TrainingSample>> _samplesByCategory;
+        private Dictionary<(int, int), List<TrainingSample>> _spatialBuckets;
         private readonly FeatureExtractor _featureExtractor;
+        private const double GridCellSize = 5.0;
 
         public KNNMatcher()
         {
             _samples = new List<TrainingSample>();
             _samplesByCategory = new Dictionary<string, List<TrainingSample>>(StringComparer.OrdinalIgnoreCase);
+            _spatialBuckets = new Dictionary<(int, int), List<TrainingSample>>();
             _featureExtractor = new FeatureExtractor();
         }
 
@@ -85,11 +88,22 @@ namespace SmartTag.ML
                 _samplesByCategory[cat] = list;
             }
             list.Add(sample);
+
+            var cx = sample.Element?.CenterX ?? 0;
+            var cy = sample.Element?.CenterY ?? 0;
+            var key = ((int)Math.Floor(cx / GridCellSize), (int)Math.Floor(cy / GridCellSize));
+            if (!_spatialBuckets.TryGetValue(key, out var bucket))
+            {
+                bucket = new List<TrainingSample>();
+                _spatialBuckets[key] = bucket;
+            }
+            bucket.Add(sample);
         }
 
         private void RebuildCategoryIndex()
         {
             _samplesByCategory.Clear();
+            _spatialBuckets.Clear();
             foreach (var sample in _samples)
             {
                 var cat = sample.Element?.Category ?? "Other";
@@ -99,6 +113,16 @@ namespace SmartTag.ML
                     _samplesByCategory[cat] = list;
                 }
                 list.Add(sample);
+
+                var cx = sample.Element?.CenterX ?? 0;
+                var cy = sample.Element?.CenterY ?? 0;
+                var key = ((int)Math.Floor(cx / GridCellSize), (int)Math.Floor(cy / GridCellSize));
+                if (!_spatialBuckets.TryGetValue(key, out var bucket))
+                {
+                    bucket = new List<TrainingSample>();
+                    _spatialBuckets[key] = bucket;
+                }
+                bucket.Add(sample);
             }
         }
 
@@ -108,26 +132,56 @@ namespace SmartTag.ML
 
         /// <summary>
         /// Find K nearest neighbors for given features.
+        /// When queryCenterX and queryCenterY are provided, uses spatial bucketing to search only nearby grid cells.
         /// </summary>
-        public List<(TrainingSample sample, double distance)> FindKNearest(float[] features, int k = 5)
+        public List<(TrainingSample sample, double distance)> FindKNearest(float[] features, int k = 5,
+            double? queryCenterX = null, double? queryCenterY = null)
         {
             if (_samples.Count == 0 || features == null)
                 return new List<(TrainingSample, double)>();
 
-            var distances = new List<(TrainingSample sample, double distance)>();
+            var candidates = queryCenterX.HasValue && queryCenterY.HasValue
+                ? GetSamplesInNearbyCells(queryCenterX.Value, queryCenterY.Value)
+                : _samples;
 
-            foreach (var sample in _samples)
+            var distances = new List<(TrainingSample sample, double distance)>(candidates.Count);
+
+            foreach (var sample in candidates)
             {
                 var sampleFeatures = ExtractFeaturesFromSample(sample);
                 var distance = EuclideanDistance(features, sampleFeatures);
                 distances.Add((sample, distance));
             }
 
-            // Return K nearest
             return distances
                 .OrderBy(d => d.distance)
                 .Take(k)
                 .ToList();
+        }
+
+        private List<TrainingSample> GetSamplesInNearbyCells(double centerX, double centerY)
+        {
+            var baseIx = (int)Math.Floor(centerX / GridCellSize);
+            var baseIy = (int)Math.Floor(centerY / GridCellSize);
+            var result = new List<TrainingSample>();
+            var seen = new HashSet<TrainingSample>();
+
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    var key = (baseIx + dx, baseIy + dy);
+                    if (_spatialBuckets.TryGetValue(key, out var bucket))
+                    {
+                        foreach (var s in bucket)
+                        {
+                            if (seen.Add(s)) result.Add(s);
+                        }
+                    }
+                }
+            }
+
+            return result.Count > 0 ? result : _samples;
         }
 
         /// <summary>

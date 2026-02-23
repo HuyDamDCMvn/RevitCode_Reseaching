@@ -332,9 +332,7 @@ namespace RevitChat.Skills
             Space targetSpace = null;
 
             if (spaceId > 0)
-            {
                 targetSpace = doc.GetElement(new ElementId(spaceId)) as Space;
-            }
 
             if (targetSpace == null && !string.IsNullOrEmpty(spaceNumber))
             {
@@ -350,6 +348,10 @@ namespace RevitChat.Skills
             var spaceIdVal = targetSpace.Id.Value;
             var spaceName = targetSpace.get_Parameter(BuiltInParameter.ROOM_NAME)?.AsString() ?? "-";
 
+            var spaceBB = targetSpace.get_BoundingBox(null);
+            if (spaceBB == null)
+                return JsonError($"Space '{spaceNumber}' has no geometry (bounding box is null).");
+
             BuiltInCategory? bicFilter = null;
             if (!string.IsNullOrEmpty(categoryFilter))
                 bicFilter = ResolveCategoryFilter(doc, categoryFilter);
@@ -359,27 +361,42 @@ namespace RevitChat.Skills
 
             if (bicFilter.HasValue)
                 collector = collector.OfCategory(bicFilter.Value);
+            else
+                collector = collector.WherePasses(new BoundingBoxIntersectsFilter(new Outline(spaceBB.Min, spaceBB.Max)));
 
             var results = new List<object>();
             var categoryCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var elem in collector)
             {
-                if (!(elem is FamilyInstance fi)) continue;
+                if (elem.Id.Value == spaceIdVal) continue;
+                if (elem.Category == null) continue;
+                if (elem is SpatialElement) continue;
 
-                Space elemSpace = null;
-                try { elemSpace = fi.Space; } catch { }
+                bool inside = false;
 
-                if (elemSpace == null || elemSpace.Id.Value != spaceIdVal) continue;
+                if (elem is FamilyInstance fi)
+                {
+                    try { inside = fi.Space?.Id.Value == spaceIdVal; } catch { }
+                }
+
+                if (!inside)
+                {
+                    var bb = elem.get_BoundingBox(null);
+                    if (bb == null) continue;
+                    inside = BoundingBoxInsideSpace(bb, spaceBB);
+                }
+
+                if (!inside) continue;
 
                 if (!string.IsNullOrEmpty(categoryFilter) && !bicFilter.HasValue)
                 {
-                    var catName = elem.Category?.Name ?? "";
+                    var catName = elem.Category.Name ?? "";
                     if (!catName.Contains(categoryFilter, StringComparison.OrdinalIgnoreCase))
                         continue;
                 }
 
-                var cat = elem.Category?.Name ?? "-";
+                var cat = elem.Category.Name ?? "-";
                 categoryCounts.TryGetValue(cat, out int c);
                 categoryCounts[cat] = c + 1;
 
@@ -411,6 +428,17 @@ namespace RevitChat.Skills
                 by_category = summary,
                 elements = results
             }, JsonOpts);
+        }
+
+        private static bool BoundingBoxInsideSpace(BoundingBoxXYZ elemBB, BoundingBoxXYZ spaceBB)
+        {
+            double cx = (elemBB.Min.X + elemBB.Max.X) / 2;
+            double cy = (elemBB.Min.Y + elemBB.Max.Y) / 2;
+            double cz = (elemBB.Min.Z + elemBB.Max.Z) / 2;
+
+            return cx >= spaceBB.Min.X && cx <= spaceBB.Max.X &&
+                   cy >= spaceBB.Min.Y && cy <= spaceBB.Max.Y &&
+                   cz >= spaceBB.Min.Z && cz <= spaceBB.Max.Z;
         }
 
         private static double? GetParamDouble(Element elem, string paramName)

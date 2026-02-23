@@ -30,7 +30,11 @@ namespace RevitChat.Skills
                 "ModelHealth", "NamingAudit", "PurgeAudit",
                 "CoordinationReport", "ClashDetection"
             },
-            ["LinkedModels"] = new[] { "RevitLink" }
+            ["LinkedModels"] = new[] { "RevitLink" },
+            ["Electrical"] = new[] { "ElectricalAnalysis" },
+            ["Structure"] = new[] { "StructuralAnalysis" },
+            ["Energy"] = new[] { "EnergyAnalysis" },
+            ["Admin"] = new[] { "AddInManagement" }
         };
 
         public IReadOnlyList<IRevitSkill> Skills => _skills;
@@ -118,6 +122,10 @@ namespace RevitChat.Skills
             registry.Register(new OpeningCreatorSkill());
             registry.Register(new MepDistanceSkill());
             registry.Register(new MepFittingSkill());
+            registry.Register(new ElectricalAnalysisSkill());
+            registry.Register(new StructuralAnalysisSkill());
+            registry.Register(new EnergyAnalysisSkill());
+            registry.Register(new AddInManagementSkill());
             return registry;
         }
     }

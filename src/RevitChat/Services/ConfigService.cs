@@ -44,8 +44,9 @@ namespace RevitChat.Services
                         return _cached;
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
+                    System.Diagnostics.Debug.WriteLine($"[ConfigService] Load: {ex.Message}");
                 }
 
                 _cached = new ChatConfig();

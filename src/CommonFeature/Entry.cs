@@ -22,6 +22,18 @@ namespace CommonFeature
         {
             try
             {
+                if (uiapp == null)
+                {
+                    TaskDialog.Show("CommonFeature Error", "UIApplication is null.");
+                    return;
+                }
+
+                if (uiapp.ActiveUIDocument?.Document == null)
+                {
+                    TaskDialog.Show("CommonFeature Error", "No active document. Please open a project first.");
+                    return;
+                }
+
                 // If window exists and is visible, just activate it
                 if (_window != null && _window.IsVisible)
                 {

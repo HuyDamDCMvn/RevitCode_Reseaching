@@ -1,0 +1,16 @@
+{
+    "naming_patterns": {
+        "Views": "^(Level|Section|Elevation|3D|Detail)\\s.+",
+        "Sheets": "^[A-Z]\\d{3}\\s-.+",
+        "Levels": "^(Level|Tầng)\\s\\d+"
+    },
+    "required_parameters": {
+        "Pipes": ["System Name", "Size"],
+        "Ducts": ["System Name", "Size"],
+        "Walls": ["Type"]
+    },
+    "forbidden_families": [],
+    "max_warnings": 500,
+    "max_unused_families_percent": 30,
+    "notes": "Default company standards. Customize per project."
+}

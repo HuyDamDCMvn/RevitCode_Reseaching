@@ -48,9 +48,14 @@ namespace CommonFeature.Views
         /// </summary>
 
         /// <summary>
-        /// Callback to get current selection from Revit
+        /// Callback to get current selection from Revit (cached, thread-safe)
         /// </summary>
         public Func<List<long>> GetCurrentSelectionCallback { get; set; }
+
+        /// <summary>
+        /// Call to refresh cached selection via ExternalEvent before reading.
+        /// </summary>
+        public Action RefreshSelectionRequested { get; set; }
 
         /// <summary>
         /// Callback to pick elements in Revit (runs via ExternalEvent)
@@ -111,6 +116,7 @@ namespace CommonFeature.Views
         {
             try
             {
+                RefreshSelectionRequested?.Invoke();
                 var currentSelection = GetCurrentSelectionCallback?.Invoke();
                 if (currentSelection == null) return;
                 

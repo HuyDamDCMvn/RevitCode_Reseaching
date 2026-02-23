@@ -17,7 +17,7 @@ namespace RevitChat.Skills
 
         protected override HashSet<string> HandledFunctions { get; } = new()
         {
-            "place_family_instance", "swap_family_type", "get_family_types", "load_family"
+            "place_family_instance", "swap_family_type", "get_family_types", "load_family", "create_floor"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -79,6 +79,30 @@ namespace RevitChat.Skills
                     },
                     "required": ["file_path"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("create_floor",
+                "Create a floor from a set of boundary points.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "points": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "x_ft": { "type": "number" },
+                                    "y_ft": { "type": "number" }
+                                }
+                            },
+                            "description": "Boundary points in feet (minimum 3). Z=0 assumed."
+                        },
+                        "floor_type_id": { "type": "integer", "description": "Floor type ID (optional, uses default)" },
+                        "level_id": { "type": "integer", "description": "Level ID (optional, uses first level)" }
+                    },
+                    "required": ["points"]
+                }
                 """))
         };
 
@@ -90,6 +114,7 @@ namespace RevitChat.Skills
                 "place_family_instance" => PlaceFamilyInstance(doc, args),
                 "swap_family_type" => SwapFamilyType(doc, args),
                 "load_family" => LoadFamily(doc, args),
+                "create_floor" => CreateFloor(uidoc, doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -307,6 +332,64 @@ namespace RevitChat.Skills
                 category = family.FamilyCategory?.Name ?? "-",
                 types = typeNames
             }, JsonOpts);
+        }
+
+        private string CreateFloor(UIDocument uidoc, Document doc, Dictionary<string, object> args)
+        {
+            long typeIdVal = GetArg<long>(args, "floor_type_id");
+            long levelIdVal = GetArg<long>(args, "level_id");
+
+            var points = new List<XYZ>();
+            if (args.TryGetValue("points", out var ptsObj) && ptsObj is JsonElement je && je.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var pt in je.EnumerateArray())
+                {
+                    double x = pt.TryGetProperty("x_ft", out var xp) ? xp.GetDouble() : 0;
+                    double y = pt.TryGetProperty("y_ft", out var yp) ? yp.GetDouble() : 0;
+                    points.Add(new XYZ(x, y, 0));
+                }
+            }
+
+            if (points.Count < 3) return JsonError("At least 3 boundary points required.");
+
+            var levelId = levelIdVal > 0 ? new ElementId(levelIdVal) : ElementId.InvalidElementId;
+            if (levelId == ElementId.InvalidElementId)
+            {
+                var firstLevel = new FilteredElementCollector(doc).OfClass(typeof(Level)).FirstOrDefault() as Level;
+                if (firstLevel != null) levelId = firstLevel.Id;
+            }
+            if (levelId == ElementId.InvalidElementId) return JsonError("No level found.");
+
+            var floorTypeId = typeIdVal > 0 ? new ElementId(typeIdVal) : ElementId.InvalidElementId;
+            if (floorTypeId == ElementId.InvalidElementId)
+            {
+                var ft = new FilteredElementCollector(doc).OfClass(typeof(FloorType)).FirstOrDefault();
+                if (ft != null) floorTypeId = ft.Id;
+            }
+            if (floorTypeId == ElementId.InvalidElementId) return JsonError("No floor type found.");
+
+            var curveLoop = new CurveLoop();
+            for (int i = 0; i < points.Count; i++)
+            {
+                var next = points[(i + 1) % points.Count];
+                curveLoop.Append(Line.CreateBound(points[i], next));
+            }
+
+            using (var trans = new Transaction(doc, "AI: Create Floor"))
+            {
+                trans.Start();
+                try
+                {
+                    var floor = Floor.Create(doc, new List<CurveLoop> { curveLoop }, floorTypeId, levelId);
+                    trans.Commit();
+                    return JsonSerializer.Serialize(new { created = true, floor_id = floor.Id.Value, points_count = points.Count }, JsonOpts);
+                }
+                catch (Exception ex)
+                {
+                    if (trans.HasStarted()) trans.RollBack();
+                    return JsonError($"Create floor failed: {ex.Message}");
+                }
+            }
         }
     }
 }

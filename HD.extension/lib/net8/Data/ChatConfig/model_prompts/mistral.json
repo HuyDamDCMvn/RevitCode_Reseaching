@@ -1,0 +1,9 @@
+{
+    "model_pattern": "mistral",
+    "tool_call_format": "[TOOL_CALL]\n{\"name\": \"{tool_name}\", \"arguments\": {args}}\n[/TOOL_CALL]",
+    "stop_tokens": ["</s>", "[/INST]"],
+    "max_tools_in_catalog": 20,
+    "few_shot_style": "json",
+    "supports_system_role": true,
+    "notes": "Mistral models use bracketed tool call format. Fewer tools for reliability."
+}

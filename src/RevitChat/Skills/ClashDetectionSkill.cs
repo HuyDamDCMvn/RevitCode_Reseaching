@@ -22,14 +22,16 @@ namespace RevitChat.Skills
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("check_clashes",
-                "Find geometric intersections between two categories (e.g. Ducts vs Structural Framing).",
+                "Find geometric intersections between two categories (e.g. Ducts vs Structural Framing). Supports system_pair filter.",
                 BinaryData.FromString("""
                 {
                     "type": "object",
                     "properties": {
                         "category_a": { "type": "string", "description": "First category name" },
                         "category_b": { "type": "string", "description": "Second category name" },
-                        "limit": { "type": "integer", "description": "Max clashes to return (default 50)" }
+                        "system_pair": { "type": "string", "description": "Filter by system names, e.g. 'Hot Water vs Cold Water'" },
+                        "max_results": { "type": "integer", "description": "Max clashes to return (default 100)" },
+                        "limit": { "type": "integer", "description": "Alias for max_results (default 50)" }
                     },
                     "required": ["category_a", "category_b"]
                 }
@@ -91,12 +93,35 @@ namespace RevitChat.Skills
         {
             var catA = GetArg<string>(args, "category_a");
             var catB = GetArg<string>(args, "category_b");
-            int limit = GetArg(args, "limit", 50);
+            var systemPair = GetArg<string>(args, "system_pair");
+            int maxResults = GetArg(args, "max_results", 0);
+            int limit = maxResults > 0 ? maxResults : GetArg(args, "limit", 100);
 
             var bicA = ResolveCategoryFilter(doc, catA);
             var bicB = ResolveCategoryFilter(doc, catB);
             if (!bicA.HasValue) return JsonError($"Category '{catA}' not found.");
             if (!bicB.HasValue) return JsonError($"Category '{catB}' not found.");
+
+            string systemA = null, systemB = null;
+            if (!string.IsNullOrEmpty(systemPair))
+            {
+                var parts = systemPair.Split(new[] { " vs ", " VS ", " Vs " }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 2) { systemA = parts[0].Trim(); systemB = parts[1].Trim(); }
+            }
+
+            var elemsB = new FilteredElementCollector(doc)
+                .OfCategory(bicB.Value)
+                .WhereElementIsNotElementType()
+                .ToList();
+
+            var bIndex = new List<(Element Elem, BoundingBoxXYZ BB)>();
+            foreach (var b in elemsB)
+            {
+                if (systemB != null && !MatchesSystem(b, systemB)) continue;
+                BoundingBoxXYZ bb;
+                try { bb = b.get_BoundingBox(null); } catch { continue; }
+                if (bb != null) bIndex.Add((b, bb));
+            }
 
             var elemsA = new FilteredElementCollector(doc)
                 .OfCategory(bicA.Value)
@@ -104,33 +129,39 @@ namespace RevitChat.Skills
                 .ToList();
 
             var clashes = new List<object>();
+            int totalEstimate = 0;
+            var seen = new HashSet<(long, long)>();
 
             foreach (var a in elemsA)
             {
-                if (clashes.Count >= limit) break;
+                if (clashes.Count >= limit) { totalEstimate = -1; break; }
+                if (systemA != null && !MatchesSystem(a, systemA)) continue;
 
                 BoundingBoxXYZ bbA;
                 try { bbA = a.get_BoundingBox(null); } catch { continue; }
                 if (bbA == null) continue;
 
-                var outline = new Outline(bbA.Min, bbA.Max);
-                var bbFilter = new BoundingBoxIntersectsFilter(outline);
-
-                var intersecting = new FilteredElementCollector(doc)
-                    .OfCategory(bicB.Value)
-                    .WhereElementIsNotElementType()
-                    .WherePasses(bbFilter)
-                    .ToList();
-
-                foreach (var b in intersecting)
+                foreach (var (b, bbB) in bIndex)
                 {
                     if (b.Id == a.Id) continue;
-                    if (clashes.Count >= limit) break;
-                    clashes.Add(new
+                    var pairKey = (Math.Min(a.Id.Value, b.Id.Value), Math.Max(a.Id.Value, b.Id.Value));
+                    if (seen.Contains(pairKey)) continue;
+
+                    if (bbA.Max.X < bbB.Min.X || bbA.Min.X > bbB.Max.X ||
+                        bbA.Max.Y < bbB.Min.Y || bbA.Min.Y > bbB.Max.Y ||
+                        bbA.Max.Z < bbB.Min.Z || bbA.Min.Z > bbB.Max.Z)
+                        continue;
+
+                    seen.Add(pairKey);
+                    totalEstimate++;
+                    if (clashes.Count < limit)
                     {
-                        element_a = new { id = a.Id.Value, name = a.Name, category = catA },
-                        element_b = new { id = b.Id.Value, name = b.Name, category = catB }
-                    });
+                        clashes.Add(new
+                        {
+                            element_a = new { id = a.Id.Value, name = a.Name, category = catA },
+                            element_b = new { id = b.Id.Value, name = b.Name, category = catB }
+                        });
+                    }
                 }
             }
 
@@ -138,9 +169,21 @@ namespace RevitChat.Skills
             {
                 category_a = catA,
                 category_b = catB,
+                system_pair = systemPair,
                 clash_count = clashes.Count,
+                estimated_total = totalEstimate >= 0 ? totalEstimate : clashes.Count,
+                capped = totalEstimate < 0,
                 clashes
             }, JsonOpts);
+        }
+
+        private static bool MatchesSystem(Element elem, string systemName)
+        {
+            var sysParam = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)
+                        ?? elem.get_Parameter(BuiltInParameter.RBS_PIPING_SYSTEM_TYPE_PARAM);
+            if (sysParam == null) return false;
+            var val = sysParam.AsString() ?? sysParam.AsValueString() ?? "";
+            return val.IndexOf(systemName, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         private string CheckClearance(Document doc, Dictionary<string, object> args)
@@ -283,34 +326,38 @@ namespace RevitChat.Skills
 
             foreach (var (nameA, bicA, nameB, bicB) in pairs)
             {
-                int countA = new FilteredElementCollector(doc).OfCategory(bicA).WhereElementIsNotElementType().GetElementCount();
-                int countB = new FilteredElementCollector(doc).OfCategory(bicB).WhereElementIsNotElementType().GetElementCount();
+                var elemsA = new FilteredElementCollector(doc).OfCategory(bicA).WhereElementIsNotElementType().ToList();
+                var elemsBWithBB = new List<(Element Elem, BoundingBoxXYZ BB)>();
+                foreach (var b in new FilteredElementCollector(doc).OfCategory(bicB).WhereElementIsNotElementType())
+                {
+                    BoundingBoxXYZ bb;
+                    try { bb = b.get_BoundingBox(null); } catch { continue; }
+                    if (bb != null) elemsBWithBB.Add((b, bb));
+                }
 
+                int countA = elemsA.Count;
+                int countB = elemsBWithBB.Count;
                 if (countA == 0 || countB == 0) continue;
 
                 var clashingBIds = new HashSet<long>();
-                var elemsA = new FilteredElementCollector(doc).OfCategory(bicA).WhereElementIsNotElementType().ToList();
                 int elementsWithClash = 0;
-
                 bool sameCat = bicA == bicB;
+
                 foreach (var a in elemsA)
                 {
-                    BoundingBoxXYZ bb;
-                    try { bb = a.get_BoundingBox(null); } catch { continue; }
-                    if (bb == null) continue;
-
-                    var outline = new Outline(bb.Min, bb.Max);
-                    var intersecting = new FilteredElementCollector(doc)
-                        .OfCategory(bicB)
-                        .WhereElementIsNotElementType()
-                        .WherePasses(new BoundingBoxIntersectsFilter(outline))
-                        .ToElementIds();
+                    BoundingBoxXYZ bbA;
+                    try { bbA = a.get_BoundingBox(null); } catch { continue; }
+                    if (bbA == null) continue;
 
                     bool hasClash = false;
-                    foreach (var bid in intersecting)
+                    foreach (var (b, bbB) in elemsBWithBB)
                     {
-                        if (sameCat && bid == a.Id) continue;
-                        clashingBIds.Add(bid.Value);
+                        if (sameCat && b.Id == a.Id) continue;
+                        if (bbA.Max.X < bbB.Min.X || bbA.Min.X > bbB.Max.X ||
+                            bbA.Max.Y < bbB.Min.Y || bbA.Min.Y > bbB.Max.Y ||
+                            bbA.Max.Z < bbB.Min.Z || bbA.Min.Z > bbB.Max.Z)
+                            continue;
+                        clashingBIds.Add(b.Id.Value);
                         hasClash = true;
                     }
                     if (hasClash) elementsWithClash++;

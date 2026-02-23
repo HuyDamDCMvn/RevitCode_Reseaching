@@ -17,7 +17,8 @@ namespace RevitChat.Skills
         protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_linked_models", "get_linked_elements", "count_linked_elements",
-            "get_linked_element_parameters", "search_linked_elements", "get_link_types"
+            "get_linked_element_parameters", "search_linked_elements", "get_link_types",
+            "check_link_coordinates"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -99,6 +100,19 @@ namespace RevitChat.Skills
                     "properties": {},
                     "required": []
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("check_link_coordinates",
+                "Verify linked model shared coordinates alignment.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "link_id": { "type": "integer", "description": "Specific link ID (default: all)" },
+                        "tolerance_mm": { "type": "number", "description": "Tolerance in mm (default 10)" }
+                    },
+                    "required": []
+                }
                 """))
         };
 
@@ -112,6 +126,7 @@ namespace RevitChat.Skills
                 "get_linked_element_parameters" => GetLinkedElementParameters(doc, args),
                 "search_linked_elements" => SearchLinkedElements(doc, args),
                 "get_link_types" => GetLinkTypes(doc),
+                "check_link_coordinates" => CheckLinkCoordinates(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -407,6 +422,45 @@ namespace RevitChat.Skills
                 return ModelPathUtils.ConvertModelPathToUserVisiblePath(extRef.GetAbsolutePath());
             }
             catch { return "-"; }
+        }
+
+        private string CheckLinkCoordinates(Document doc, Dictionary<string, object> args)
+        {
+            long linkId = GetArg<long>(args, "link_id");
+            double tolerance = GetArg(args, "tolerance_mm", 10.0) / 304.8;
+
+            var links = new FilteredElementCollector(doc)
+                .OfClass(typeof(RevitLinkInstance)).Cast<RevitLinkInstance>().ToList();
+
+            if (linkId > 0)
+                links = links.Where(l => l.Id.Value == linkId).ToList();
+
+            var results = links.Select(link =>
+            {
+                var transform = link.GetTotalTransform();
+                var origin = transform.Origin;
+                double offsetMm = origin.GetLength() * 304.8;
+                bool aligned = offsetMm <= tolerance * 304.8;
+                return new
+                {
+                    link_id = link.Id.Value,
+                    link_name = link.Name,
+                    origin_x_ft = Math.Round(origin.X, 4),
+                    origin_y_ft = Math.Round(origin.Y, 4),
+                    origin_z_ft = Math.Round(origin.Z, 4),
+                    offset_mm = Math.Round(offsetMm, 1),
+                    aligned
+                };
+            }).ToList();
+
+            int misaligned = results.Count(r => !r.aligned);
+            return JsonSerializer.Serialize(new
+            {
+                links_checked = results.Count,
+                misaligned,
+                tolerance_mm = tolerance * 304.8,
+                links = results
+            }, JsonOpts);
         }
     }
 }

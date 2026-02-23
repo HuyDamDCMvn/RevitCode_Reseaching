@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Autodesk.Revit.DB;
@@ -272,5 +273,32 @@ namespace RevitChat.Skills
         }
 
         #endregion
+
+        internal static string ValidateOutputPath(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath)) return null;
+            try
+            {
+                filePath = Path.GetFullPath(filePath);
+                var desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                var docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                var downloads = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+                var temp = Path.GetTempPath();
+
+                foreach (var allowed in new[] { desktop, docs, downloads, temp })
+                {
+                    if (string.IsNullOrEmpty(allowed)) continue;
+                    var normalized = allowed.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                    if (filePath.Equals(normalized, StringComparison.OrdinalIgnoreCase))
+                        return null;
+                    if (filePath.StartsWith(normalized, StringComparison.OrdinalIgnoreCase) &&
+                        filePath.Length > normalized.Length &&
+                        (filePath[normalized.Length] == Path.DirectorySeparatorChar || filePath[normalized.Length] == Path.AltDirectorySeparatorChar))
+                        return null;
+                }
+                return $"Path '{filePath}' is outside allowed directories (Desktop, Documents, Downloads, Temp).";
+            }
+            catch (Exception ex) { return $"Invalid path: {ex.Message}"; }
+        }
     }
 }

@@ -30,7 +30,9 @@ namespace CommonFeature
         GetParameterValues,
         UpdateParameterValues,
         SelectElements,
-        CreateSectionBox
+        CreateSectionBox,
+        RefreshSelection,
+        RefreshIsolateView
     }
 
     /// <summary>
@@ -70,6 +72,8 @@ namespace CommonFeature
             => new(RequestType.SelectElements, elementIds);
         public static CommonFeatureRequest CreateSectionBox(List<long> elementIds)
             => new(RequestType.CreateSectionBox, elementIds);
+        public static CommonFeatureRequest RefreshSelection() => new(RequestType.RefreshSelection);
+        public static CommonFeatureRequest RefreshIsolateView() => new(RequestType.RefreshIsolateView);
     }
 
     /// <summary>
@@ -87,6 +91,11 @@ namespace CommonFeature
         // ExternalEvent reference for async operations
         private ExternalEvent _externalEvent;
 
+        // Cached values for thread-safe access from WPF callbacks (no Revit API on WPF thread)
+        private volatile List<long> _cachedSelectionIds = new();
+        private volatile ElementId _cachedActiveViewId;
+        private volatile string _cachedViewName = "";
+
         /// <summary>
         /// Callback when operation completes.
         /// </summary>
@@ -102,6 +111,12 @@ namespace CommonFeature
         /// Parameter: feature name (Isolate, Info, Parameter, Boundary)
         /// </summary>
         public event Action<string> OnFeatureWindowClosed;
+
+        /// <summary>
+        /// Fired when selection cache is updated (after RefreshSelection).
+        /// Passes the updated selection list for immediate use.
+        /// </summary>
+        public event Action<List<long>> OnSelectionRefreshed;
 
         /// <summary>
         /// Set the ExternalEvent reference for async operations
@@ -152,6 +167,12 @@ namespace CommonFeature
                         break;
                     case RequestType.CreateSectionBox:
                         ExecuteCreateSectionBox(app, request.ElementIds);
+                        break;
+                    case RequestType.RefreshSelection:
+                        ExecuteRefreshSelection(app);
+                        break;
+                    case RequestType.RefreshIsolateView:
+                        ExecuteRefreshIsolateView(app);
                         break;
                 }
             }
@@ -934,38 +955,68 @@ namespace CommonFeature
                 return;
             }
 
+            // Cache view for thread-safe access from callbacks (callbacks may run on WPF thread)
+            _cachedActiveViewId = activeView.Id;
+            _cachedViewName = activeView.Name ?? "";
+
             // Show Isolate Window
             var isolateWindow = new IsolateWindow();
             
-            // Setup callbacks for data loading - uses current active view (may change)
+            // Setup callbacks - use cached view ID only (no uidoc.ActiveView on WPF thread).
+            // Wrap Revit API calls in try-catch; data may be stale until RefreshIsolateView is called.
             isolateWindow.GetCategoriesCallback = () => 
             {
-                var currentView = uidoc.ActiveView;
-                return currentView != null ? GetCategoriesForIsolate(doc, currentView.Id) : new List<CategoryItem>();
+                try
+                {
+                    var viewId = _cachedActiveViewId;
+                    return viewId != null && viewId != ElementId.InvalidElementId 
+                        ? GetCategoriesForIsolate(doc, viewId) : new List<CategoryItem>();
+                }
+                catch { return new List<CategoryItem>(); }
             };
             
             isolateWindow.GetFamiliesCallback = (categoryName) => 
             {
-                var currentView = uidoc.ActiveView;
-                return currentView != null ? GetFamiliesForCategory(doc, currentView.Id, categoryName) : new List<FamilyItem>();
+                try
+                {
+                    var viewId = _cachedActiveViewId;
+                    return viewId != null && viewId != ElementId.InvalidElementId 
+                        ? GetFamiliesForCategory(doc, viewId, categoryName) : new List<FamilyItem>();
+                }
+                catch { return new List<FamilyItem>(); }
             };
             
             isolateWindow.GetTypesCallback = (categoryName, familyName) => 
             {
-                var currentView = uidoc.ActiveView;
-                return currentView != null ? GetFamilyTypesForFamily(doc, currentView.Id, categoryName, familyName) : new List<FamilyTypeItem>();
+                try
+                {
+                    var viewId = _cachedActiveViewId;
+                    return viewId != null && viewId != ElementId.InvalidElementId 
+                        ? GetFamilyTypesForFamily(doc, viewId, categoryName, familyName) : new List<FamilyTypeItem>();
+                }
+                catch { return new List<FamilyTypeItem>(); }
             };
             
             isolateWindow.GetParametersCallback = (categoryName, familyName, familyTypeName) => 
             {
-                var currentView = uidoc.ActiveView;
-                return currentView != null ? GetParametersForIsolate(doc, currentView.Id, categoryName, familyName, familyTypeName) : new List<string>();
+                try
+                {
+                    var viewId = _cachedActiveViewId;
+                    return viewId != null && viewId != ElementId.InvalidElementId 
+                        ? GetParametersForIsolate(doc, viewId, categoryName, familyName, familyTypeName) : new List<string>();
+                }
+                catch { return new List<string>(); }
             };
             
             isolateWindow.GetValuesCallback = (categoryName, familyName, familyTypeName, paramName) => 
             {
-                var currentView = uidoc.ActiveView;
-                return currentView != null ? GetParameterValuesForIsolate(doc, currentView.Id, categoryName, familyName, familyTypeName, paramName) : new List<ParameterValueItem>();
+                try
+                {
+                    var viewId = _cachedActiveViewId;
+                    return viewId != null && viewId != ElementId.InvalidElementId 
+                        ? GetParameterValuesForIsolate(doc, viewId, categoryName, familyName, familyTypeName, paramName) : new List<ParameterValueItem>();
+                }
+                catch { return new List<ParameterValueItem>(); }
             };
             
             // Setup isolate callback - uses ExternalEvent to run on Revit main thread
@@ -983,24 +1034,27 @@ namespace CommonFeature
                 _externalEvent?.Raise();
             };
             
-            // Setup callback to get current view name (for detecting view change)
-            isolateWindow.GetViewNameCallback = () =>
-            {
-                try { return uidoc.ActiveView?.Name ?? ""; }
-                catch { return ""; }
-            };
+            // Use cached view name (no Revit API on WPF thread). Call RefreshIsolateView to update when view changes.
+            isolateWindow.GetViewNameCallback = () => _cachedViewName ?? "";
             
-            // Setup callback to re-isolate on view change
+            // Re-isolate uses cached view ID. Wrap in try-catch.
             isolateWindow.ReIsolateCallback = (categoryName, familyName, familyTypeName, paramName, paramValue) =>
             {
                 try
                 {
-                    var currentView = uidoc.ActiveView;
-                    return currentView != null 
-                        ? GetElementIdsForIsolate(doc, currentView.Id, categoryName, familyName, familyTypeName, paramName, paramValue) 
+                    var viewId = _cachedActiveViewId;
+                    return viewId != null && viewId != ElementId.InvalidElementId 
+                        ? GetElementIdsForIsolate(doc, viewId, categoryName, familyName, familyTypeName, paramName, paramValue) 
                         : new List<long>();
                 }
                 catch { return new List<long>(); }
+            };
+
+            // Allow window to refresh view cache when user switches views
+            isolateWindow.RefreshIsolateViewRequested = () =>
+            {
+                SetRequest(CommonFeatureRequest.RefreshIsolateView());
+                _externalEvent?.Raise();
             };
             
             // Subscribe to window closed event to reset active state
@@ -1467,9 +1521,17 @@ namespace CommonFeature
                 var infoWindow = new InfoWindow();
                 _currentInfoWindow = infoWindow;
                 
-                // Setup callbacks for parameter retrieval (synchronous, called during handler execution)
-                infoWindow.GetParametersCallback = (ids) => GetParametersFromElements(_currentDoc, ids);
-                infoWindow.GetParameterValuesCallback = (ids, names) => GetParameterValues(_currentDoc, ids, names);
+                // Setup callbacks - use cached doc, wrap in try-catch (may be called from WPF thread)
+                infoWindow.GetParametersCallback = (ids) =>
+                {
+                    try { return _currentDoc != null ? GetParametersFromElements(_currentDoc, ids) : new List<ParameterInfo>(); }
+                    catch { return new List<ParameterInfo>(); }
+                };
+                infoWindow.GetParameterValuesCallback = (ids, names) =>
+                {
+                    try { return _currentDoc != null ? GetParameterValues(_currentDoc, ids, names) : new Dictionary<long, ParameterValuesResult>(); }
+                    catch { return new Dictionary<long, ParameterValuesResult>(); }
+                };
                 
                 // Setup async update callback using ExternalEvent
                 infoWindow.RaiseUpdateEvent = (updates) =>
@@ -1621,7 +1683,7 @@ namespace CommonFeature
                 return;
             }
 
-            // Step 4: Get current selection (safely)
+            // Step 4: Get current selection and cache for thread-safe callback access
             List<long> currentSelection;
             try
             {
@@ -1641,6 +1703,7 @@ namespace CommonFeature
                 OnError?.Invoke($"Failed to get selection: {selEx.Message}");
                 currentSelection = new List<long>();
             }
+            _cachedSelectionIds = currentSelection ?? new List<long>();
 
             // Step 5: Create ExternalEvent handler
             Handlers.ParameterExternalHandler parameterHandler;
@@ -1687,53 +1750,32 @@ namespace CommonFeature
                 parameterHandler.Window = parameterWindow;
                 parameterWindow.Initialize(parameterHandler, parameterEvent);
 
-                // Setup callback to get current selection from Revit
-                parameterWindow.GetCurrentSelectionCallback = () =>
+                // Callback returns cached selection (no Revit API on WPF thread).
+                // Call RefreshSelectionRequested before reading to sync with current Revit selection.
+                parameterWindow.GetCurrentSelectionCallback = () => GetCachedSelection();
+                parameterWindow.RefreshSelectionRequested = () =>
                 {
-                    try
-                    {
-                        // Validate uidoc is still valid
-                        if (uidoc == null) return new List<long>();
-                        
-                        var currentDoc = uidoc.Document;
-                        if (currentDoc == null || !currentDoc.IsValidObject) return new List<long>();
-
-                        string currentPath = currentDoc.PathName ?? currentDoc.Title ?? "Untitled";
-                        if (currentPath != originalDocPath)
-                        {
-                            // Document changed - close window safely
-                            try
-                            {
-                                parameterWindow.Dispatcher.BeginInvoke(new Action(() =>
-                                {
-                                    try
-                                    {
-                                        System.Windows.MessageBox.Show(
-                                            "Document has changed. Closing Parameter Manager window.",
-                                            "Document Changed", MessageBoxButton.OK, MessageBoxImage.Information);
-                                        parameterWindow.Close();
-                                    }
-                                    catch { /* Ignore close errors */ }
-                                }));
-                            }
-                            catch { /* Ignore dispatcher errors */ }
-                            return new List<long>();
-                        }
-
-                        var sel = uidoc.Selection;
-                        if (sel == null) return new List<long>();
-                        
-                        var ids = sel.GetElementIds();
-                        return ids?.Select(id => id.Value).ToList() ?? new List<long>();
-                    }
-                    catch 
-                    { 
-                        return new List<long>(); 
-                    }
+                    SetRequest(CommonFeatureRequest.RefreshSelection());
+                    _externalEvent?.Raise();
                 };
+                Action<List<long>> onSelectionRefreshed = (ids) => parameterWindow.Dispatcher.Invoke(() =>
+                {
+                    if (!parameterWindow.PendingLoadFromSelection) return;
+                    parameterWindow.PendingLoadFromSelection = false;
+                    if (ids != null && ids.Count > 0)
+                        parameterWindow.LoadElements(ids);
+                    else
+                        System.Windows.MessageBox.Show("No elements selected in Revit. Please select elements first.",
+                            "No Selection", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                });
+                OnSelectionRefreshed += onSelectionRefreshed;
 
-                // Subscribe to window closed event to reset active state
-                parameterWindow.Closed += (s, e) => OnFeatureWindowClosed?.Invoke("Parameter");
+                // Subscribe to window closed event to reset active state and unsubscribe
+                parameterWindow.Closed += (s, e) =>
+                {
+                    OnSelectionRefreshed -= onSelectionRefreshed;
+                    OnFeatureWindowClosed?.Invoke("Parameter");
+                };
 
                 // Load initial selection if any (after window is loaded)
                 if (currentSelection.Count > 0)
@@ -1782,10 +1824,11 @@ namespace CommonFeature
 
             var doc = uidoc.Document;
 
-            // Get current selection
+            // Get current selection and cache for thread-safe callback access
             var currentSelection = uidoc.Selection.GetElementIds()
                 .Select(id => id.Value)
                 .ToList();
+            _cachedSelectionIds = currentSelection ?? new List<long>();
 
             // Create graphics server
             var graphicsServer = new BoundaryGraphicsServer(doc);
@@ -1802,38 +1845,14 @@ namespace CommonFeature
                 var boundaryWindow = new BoundaryWindow();
                 boundaryHandler.Window = boundaryWindow;
 
-                // Store document path to detect document changes
-                string originalDocPath = doc.PathName ?? doc.Title;
-                
-                // Setup callbacks
-                boundaryWindow.GetCurrentSelectionCallback = () =>
+                // Callback returns cached selection (no Revit API on WPF thread).
+                boundaryWindow.GetCurrentSelectionCallback = () => GetCachedSelection();
+                boundaryWindow.RefreshSelectionRequested = () =>
                 {
-                    try
-                    {
-                        // Check if document has changed
-                        var currentDoc = uidoc.Document;
-                        if (currentDoc == null || !currentDoc.IsValidObject) return new List<long>();
-                        
-                        string currentPath = currentDoc.PathName ?? currentDoc.Title;
-                        if (currentPath != originalDocPath)
-                        {
-                            // Document changed - close window
-                            boundaryWindow.Dispatcher.BeginInvoke(new Action(() =>
-                            {
-                                System.Windows.MessageBox.Show(
-                                    "Document has changed. Closing Boundary window.",
-                                    "Document Changed", MessageBoxButton.OK, MessageBoxImage.Information);
-                                boundaryWindow.Close();
-                            }));
-                            return new List<long>();
-                        }
-                        
-                        return uidoc.Selection.GetElementIds()
-                            .Select(id => id.Value)
-                            .ToList();
-                    }
-                    catch { return new List<long>(); }
+                    SetRequest(CommonFeatureRequest.RefreshSelection());
+                    _externalEvent?.Raise();
                 };
+                _cachedViewName = uidoc.ActiveView?.Name ?? "";
 
                 boundaryWindow.PickElementsCallback = () =>
                 {
@@ -1853,11 +1872,7 @@ namespace CommonFeature
                     boundaryEvent.Raise();
                 };
 
-                boundaryWindow.GetViewNameCallback = () =>
-                {
-                    try { return uidoc.ActiveView?.Name ?? ""; }
-                    catch { return ""; }
-                };
+                boundaryWindow.GetViewNameCallback = () => _cachedViewName ?? "";
 
                 // Cleanup when window closes
                 boundaryWindow.Closed += (s, e) =>
@@ -2089,6 +2104,48 @@ namespace CommonFeature
             {
                 OnError?.Invoke($"Create section box failed: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Get cached selection IDs (thread-safe, no Revit API).
+        /// Call after RefreshSelection completes or use initial value from ExecuteShowParameter/ExecuteShowBoundary.
+        /// </summary>
+        public List<long> GetCachedSelection()
+        {
+            var ids = _cachedSelectionIds;
+            return ids != null ? new List<long>(ids) : new List<long>();
+        }
+
+        private void ExecuteRefreshSelection(UIApplication app)
+        {
+            var uidoc = app?.ActiveUIDocument;
+            if (uidoc == null) return;
+            try
+            {
+                var ids = uidoc.Selection?.GetElementIds();
+                _cachedSelectionIds = ids?.Select(id => id.Value).ToList() ?? new List<long>();
+                var view = uidoc.ActiveView;
+                if (view != null) _cachedViewName = view.Name ?? "";
+                var copy = new List<long>(_cachedSelectionIds);
+                OnSelectionRefreshed?.Invoke(copy);
+            }
+            catch { _cachedSelectionIds = new List<long>(); }
+        }
+
+        private void ExecuteRefreshIsolateView(UIApplication app)
+        {
+            var uidoc = app?.ActiveUIDocument;
+            if (uidoc == null) return;
+            try
+            {
+                var view = uidoc.ActiveView;
+                if (view != null)
+                {
+                    _cachedActiveViewId = view.Id;
+                    _cachedViewName = view.Name ?? "";
+                }
+            }
+            catch { }
         }
 
         public string GetName() => "CommonFeature.Handler";

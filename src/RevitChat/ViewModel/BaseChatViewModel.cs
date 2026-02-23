@@ -29,6 +29,7 @@ namespace RevitChat.ViewModel
         private string _lastUserPrompt;
         private List<string> _lastToolNames = new();
         private List<ToolCallRequest> _lastToolCalls = new();
+        private readonly Action _onModelModifiedHandler;
 
         private const int AnalyzeThresholdChars = 1200;
         private ChatMessage _streamingMessage;
@@ -62,6 +63,8 @@ namespace RevitChat.ViewModel
             _skillRegistry = skillRegistry;
             _dispatcher = Dispatcher.CurrentDispatcher;
             _toolExec = new ToolExecutionService(externalEvent, handler, queue);
+            _onModelModifiedHandler = () => _contextService.InvalidateCache();
+            _toolExec.OnModelModified += _onModelModifiedHandler;
         }
 
         #region Streaming
@@ -118,7 +121,7 @@ namespace RevitChat.ViewModel
             Messages.Add(ChatMessage.FromAssistant(msg));
         }
 
-        protected virtual int MaxToolResultChars => 8000;
+        protected virtual int MaxToolResultChars => 4000;
 
         [RelayCommand(CanExecute = nameof(CanSend))]
         private async Task SendAsync()
@@ -270,6 +273,21 @@ namespace RevitChat.ViewModel
         {
             while (toolCalls != null && toolCalls.Count > 0)
             {
+                // Auto-dry-run preview runs BEFORE confirmation so bulk ops show impact first
+                var autoDryRun = toolCalls.Where(ChatGuardService.ShouldAutoDryRun).ToList();
+                if (autoDryRun.Count > 0)
+                {
+                    var previewCalls = autoDryRun.Select(ChatGuardService.CloneWithDryRun).ToList();
+                    StatusMessage = "Running preview...";
+                    var previewResults = await _toolExec.ExecuteAsync(previewCalls, ToolTimeoutMs, _cts.Token);
+                    var previewText = string.Join("\n", previewResults.Values.Take(3).Select(v =>
+                        v.Length > 500 ? v[..500] + "..." : v));
+                    Messages.Add(ChatMessage.FromAssistant($"Preview of changes:\n{previewText}\n\nConfirm to proceed or cancel."));
+                    _pendingToolCalls = toolCalls;
+                    StatusMessage = "Awaiting confirmation";
+                    return;
+                }
+
                 if (ChatGuardService.RequiresConfirmation(toolCalls, out var prompt))
                 {
                     _pendingToolCalls = toolCalls;
@@ -344,10 +362,7 @@ namespace RevitChat.ViewModel
         {
             var dispatcher = Application.Current?.Dispatcher ?? _dispatcher;
             if (dispatcher == null || dispatcher.HasShutdownStarted)
-            {
-                action();
-                return;
-            }
+                return; // skip UI updates when dispatcher is unavailable or shutting down
             dispatcher.BeginInvoke(action);
         }
 
@@ -450,6 +465,8 @@ namespace RevitChat.ViewModel
         {
             if (_diagnosticService != null)
                 _diagnosticService.DebugMessage -= HandleChatDebug;
+            if (_onModelModifiedHandler != null)
+                _toolExec.OnModelModified -= _onModelModifiedHandler;
             EndStreaming();
             _streamingMessage = null;
             _toolExec.Cleanup();

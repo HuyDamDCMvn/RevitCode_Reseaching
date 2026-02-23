@@ -29,7 +29,8 @@ namespace RevitChat.Skills
             "create_3d_view", "create_3d_view_by_system",
             "create_section_box", "create_section_view",
             "override_color_by_system", "override_color_by_parameter",
-            "set_view_range", "screenshot_view"
+            "set_view_range", "screenshot_view",
+            "create_callout", "create_drafting_view", "get_view_crop_region", "compare_views"
         };
 
         private static readonly Dictionary<string, (byte R, byte G, byte B)> NamedColors = new(StringComparer.OrdinalIgnoreCase)
@@ -441,6 +442,66 @@ namespace RevitChat.Skills
                     },
                     "required": []
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("create_callout",
+                "Create a callout view from a region on a floor plan.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "parent_view_id": { "type": "integer", "description": "Parent view ID" },
+                        "min_x_ft": { "type": "number", "description": "Min X of callout region in feet" },
+                        "min_y_ft": { "type": "number", "description": "Min Y in feet" },
+                        "max_x_ft": { "type": "number", "description": "Max X in feet" },
+                        "max_y_ft": { "type": "number", "description": "Max Y in feet" },
+                        "view_name": { "type": "string", "description": "Optional name for the new callout view" }
+                    },
+                    "required": ["parent_view_id", "min_x_ft", "min_y_ft", "max_x_ft", "max_y_ft"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("create_drafting_view",
+                "Create a new empty drafting view.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "name": { "type": "string", "description": "View name" },
+                        "scale": { "type": "integer", "description": "View scale (e.g. 50 for 1:50). Default 100." }
+                    },
+                    "required": ["name"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("get_view_crop_region",
+                "Get or set the crop region of a view.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "view_id": { "type": "integer", "description": "View ID (default: active view)" },
+                        "action": { "type": "string", "enum": ["get", "set"], "description": "Get or set. Default: get" },
+                        "min_x_ft": { "type": "number", "description": "For set: min X in feet" },
+                        "min_y_ft": { "type": "number", "description": "For set: min Y in feet" },
+                        "max_x_ft": { "type": "number", "description": "For set: max X in feet" },
+                        "max_y_ft": { "type": "number", "description": "For set: max Y in feet" }
+                    },
+                    "required": []
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("compare_views",
+                "Compare elements visible in two views. Show differences.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "view_id_1": { "type": "integer", "description": "First view ID" },
+                        "view_id_2": { "type": "integer", "description": "Second view ID" }
+                    },
+                    "required": ["view_id_1", "view_id_2"]
+                }
                 """))
         };
 
@@ -479,6 +540,10 @@ namespace RevitChat.Skills
                 "override_color_by_parameter" => OverrideColorByParameter(doc, view, args),
                 "set_view_range" => SetViewRange(doc, args),
                 "screenshot_view" => ScreenshotView(doc, args),
+                "create_callout" => CreateCallout(uidoc, doc, args),
+                "create_drafting_view" => CreateDraftingView(doc, args),
+                "get_view_crop_region" => GetViewCropRegion(uidoc, doc, args),
+                "compare_views" => CompareViews(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -2157,6 +2222,184 @@ namespace RevitChat.Skills
                 elements_framed = found,
                 direction = resolvedDir,
                 message = $"Section view '{sectionView.Name}' created through {found} element(s)."
+            }, JsonOpts);
+        }
+
+        #endregion
+
+        #region Callout / Drafting / Crop / Compare
+
+        private string CreateCallout(UIDocument uidoc, Document doc, Dictionary<string, object> args)
+        {
+            long parentId = GetArg<long>(args, "parent_view_id");
+            double minX = GetArg(args, "min_x_ft", 0.0);
+            double minY = GetArg(args, "min_y_ft", 0.0);
+            double maxX = GetArg(args, "max_x_ft", 0.0);
+            double maxY = GetArg(args, "max_y_ft", 0.0);
+            var viewName = GetArg<string>(args, "view_name");
+
+            if (parentId <= 0) return JsonError("parent_view_id required.");
+            var parentView = doc.GetElement(new ElementId(parentId)) as ViewPlan;
+            if (parentView == null) return JsonError($"Element {parentId} is not a floor plan view.");
+
+            var viewFamilyTypes = new FilteredElementCollector(doc)
+                .OfClass(typeof(ViewFamilyType))
+                .Cast<ViewFamilyType>()
+                .Where(v => v.ViewFamily == ViewFamily.FloorPlan || v.ViewFamily == ViewFamily.Detail)
+                .ToList();
+            var vft = viewFamilyTypes.FirstOrDefault();
+            if (vft == null) return JsonError("No suitable view family type found.");
+
+            View calloutView;
+            using (var trans = new Transaction(doc, "AI: Create Callout"))
+            {
+                trans.Start();
+                try
+                {
+                    calloutView = ViewSection.CreateCallout(doc, parentView.Id, vft.Id,
+                        new XYZ(minX, minY, 0), new XYZ(maxX, maxY, 0));
+                    if (!string.IsNullOrEmpty(viewName))
+                    {
+                        try { calloutView.Name = viewName; } catch { }
+                    }
+                    trans.Commit();
+                }
+                catch (Exception ex)
+                {
+                    if (trans.HasStarted()) trans.RollBack();
+                    return JsonError($"Create callout failed: {ex.Message}");
+                }
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                created = true,
+                callout_view_id = calloutView.Id.Value,
+                parent_view_id = parentId,
+                region = new { min_x = minX, min_y = minY, max_x = maxX, max_y = maxY }
+            }, JsonOpts);
+        }
+
+        private string CreateDraftingView(Document doc, Dictionary<string, object> args)
+        {
+            var name = GetArg<string>(args, "name");
+            int scale = GetArg(args, "scale", 100);
+            if (string.IsNullOrEmpty(name)) return JsonError("name required.");
+
+            var vft = new FilteredElementCollector(doc)
+                .OfClass(typeof(ViewFamilyType))
+                .Cast<ViewFamilyType>()
+                .FirstOrDefault(v => v.ViewFamily == ViewFamily.Drafting);
+            if (vft == null) return JsonError("No Drafting view family type found.");
+
+            ElementId viewId;
+            using (var trans = new Transaction(doc, "AI: Create Drafting View"))
+            {
+                trans.Start();
+                try
+                {
+                    var dv = ViewDrafting.Create(doc, vft.Id);
+                    try { dv.Name = name; } catch { }
+                    dv.Scale = scale;
+                    viewId = dv.Id;
+                    trans.Commit();
+                }
+                catch (Exception ex)
+                {
+                    if (trans.HasStarted()) trans.RollBack();
+                    return JsonError($"Create drafting view failed: {ex.Message}");
+                }
+            }
+
+            return JsonSerializer.Serialize(new { created = true, view_id = viewId.Value, name, scale }, JsonOpts);
+        }
+
+        private string GetViewCropRegion(UIDocument uidoc, Document doc, Dictionary<string, object> args)
+        {
+            long viewIdVal = GetArg<long>(args, "view_id");
+            var action = GetArg(args, "action", "get");
+
+            var view = viewIdVal > 0 ? doc.GetElement(new ElementId(viewIdVal)) as View : uidoc.ActiveView;
+            if (view == null) return JsonError("View not found.");
+
+            if (action == "get")
+            {
+                var cb = view.CropBox;
+                return JsonSerializer.Serialize(new
+                {
+                    view_id = view.Id.Value,
+                    view_name = view.Name,
+                    crop_active = view.CropBoxActive,
+                    crop_visible = view.CropBoxVisible,
+                    min = new { x = Math.Round(cb.Min.X, 4), y = Math.Round(cb.Min.Y, 4), z = Math.Round(cb.Min.Z, 4) },
+                    max = new { x = Math.Round(cb.Max.X, 4), y = Math.Round(cb.Max.Y, 4), z = Math.Round(cb.Max.Z, 4) }
+                }, JsonOpts);
+            }
+
+            double minX = GetArg(args, "min_x_ft", 0.0);
+            double minY = GetArg(args, "min_y_ft", 0.0);
+            double maxX = GetArg(args, "max_x_ft", 0.0);
+            double maxY = GetArg(args, "max_y_ft", 0.0);
+
+            using (var trans = new Transaction(doc, "AI: Set Crop Region"))
+            {
+                trans.Start();
+                try
+                {
+                    var cb = view.CropBox;
+                    view.CropBox = new BoundingBoxXYZ
+                    {
+                        Min = new XYZ(minX, minY, cb.Min.Z),
+                        Max = new XYZ(maxX, maxY, cb.Max.Z)
+                    };
+                    view.CropBoxActive = true;
+                    view.CropBoxVisible = true;
+                    trans.Commit();
+                }
+                catch (Exception ex)
+                {
+                    if (trans.HasStarted()) trans.RollBack();
+                    return JsonError($"Set crop region failed: {ex.Message}");
+                }
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                view_id = view.Id.Value,
+                action = "set",
+                crop = new { min_x = minX, min_y = minY, max_x = maxX, max_y = maxY }
+            }, JsonOpts);
+        }
+
+        private string CompareViews(Document doc, Dictionary<string, object> args)
+        {
+            long id1 = GetArg<long>(args, "view_id_1");
+            long id2 = GetArg<long>(args, "view_id_2");
+            if (id1 <= 0 || id2 <= 0) return JsonError("Both view_id_1 and view_id_2 required.");
+
+            var view1 = doc.GetElement(new ElementId(id1)) as View;
+            var view2 = doc.GetElement(new ElementId(id2)) as View;
+            if (view1 == null) return JsonError($"View {id1} not found.");
+            if (view2 == null) return JsonError($"View {id2} not found.");
+
+            var elems1 = new FilteredElementCollector(doc, view1.Id)
+                .WhereElementIsNotElementType().ToElementIds().Select(e => e.Value).ToHashSet();
+            var elems2 = new FilteredElementCollector(doc, view2.Id)
+                .WhereElementIsNotElementType().ToElementIds().Select(e => e.Value).ToHashSet();
+
+            var onlyIn1 = elems1.Except(elems2).Take(50).ToList();
+            var onlyIn2 = elems2.Except(elems1).Take(50).ToList();
+            var common = elems1.Intersect(elems2).Count();
+
+            return JsonSerializer.Serialize(new
+            {
+                view_1 = new { id = id1, name = view1.Name, element_count = elems1.Count },
+                view_2 = new { id = id2, name = view2.Name, element_count = elems2.Count },
+                common_elements = common,
+                only_in_view_1 = onlyIn1.Count,
+                only_in_view_2 = onlyIn2.Count,
+                sample_only_in_1 = onlyIn1,
+                sample_only_in_2 = onlyIn2
             }, JsonOpts);
         }
 

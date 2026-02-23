@@ -22,7 +22,21 @@ namespace RevitChat.Services
             "get_grids", "get_levels_detailed", "get_worksets", "get_phases", "get_materials",
             "get_revisions", "get_view_filters", "get_view_templates", "get_family_types",
             "get_shared_parameters", "get_project_parameters", "get_current_selection",
-            "get_tag_rules", "get_available_tag_types"
+            "get_tag_rules", "get_available_tag_types",
+            "get_element_host", "get_element_connections", "get_element_geometry",
+            "find_elements_near", "get_wall_layers", "get_view_crop_region",
+            "compare_views", "check_clashes", "check_clearance",
+            "get_clash_summary", "find_overlapping", "get_mep_elevation_table",
+            "check_velocity", "check_insulation_coverage", "check_noise_level",
+            "check_access_panel", "get_critical_path", "analyze_pressure_loss",
+            "get_flow_distribution", "traverse_mep_network", "get_ceiling_grid",
+            "audit_model_standards", "find_duplicate_elements", "audit_room_enclosure",
+            "get_panel_schedules", "get_circuit_loads", "check_panel_capacity",
+            "get_voltage_drop", "get_phase_balance", "get_structural_model",
+            "check_rebar_coverage", "get_rebar_schedule", "get_building_schedules",
+            "get_space_energy_data", "get_loaded_addins", "get_addin_load_times",
+            "get_empty_tags", "get_untagged_elements", "screenshot_view",
+            "get_ifc_mappings"
         };
 
         private readonly ConcurrentDictionary<string, (DateTime Time, string Result)> _resultCache = new();
@@ -35,6 +49,11 @@ namespace RevitChat.Services
 
         private readonly Action<Dictionary<string, string>> _onCompleted;
         private readonly Action<string> _onError;
+
+        public event Action<string> OnProgress;
+        public event Action OnModelModified;
+
+        public void ReportProgress(string message) => OnProgress?.Invoke(message);
 
         private TaskCompletionSource<Dictionary<string, string>> _toolResultsTcs;
         private readonly SemaphoreSlim _execLock = new(1, 1);
@@ -120,7 +139,10 @@ namespace RevitChat.Services
 
                     var hasModify = toExecute.Any(t => !ReadOnlyTools.Contains(t.FunctionName));
                     if (hasModify)
+                    {
                         _resultCache.Clear();
+                        OnModelModified?.Invoke();
+                    }
                     else
                     {
                         foreach (var req in toExecute)

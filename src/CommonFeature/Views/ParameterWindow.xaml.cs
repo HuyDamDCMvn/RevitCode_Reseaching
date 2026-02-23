@@ -49,8 +49,12 @@ namespace CommonFeature.Views
         private List<EmptyParameterInfo> _emptyValues = new();
         private List<DuplicateGroup> _duplicates = new();
 
-        // Callbacks for getting current selection from Revit
+        // Callbacks for getting current selection from Revit (cached, thread-safe)
         public Func<List<long>> GetCurrentSelectionCallback { get; set; }
+        /// <summary>Call to refresh cached selection via ExternalEvent before reading.</summary>
+        public Action RefreshSelectionRequested { get; set; }
+        /// <summary>Set when user clicks Load from Selection; cleared when OnSelectionRefreshed delivers data.</summary>
+        public bool PendingLoadFromSelection { get; set; }
 
         #endregion
 
@@ -1065,15 +1069,9 @@ namespace CommonFeature.Views
 
         private void LoadFromSelectionButton_Click(object sender, RoutedEventArgs e)
         {
-            var elementIds = GetCurrentSelectionCallback?.Invoke();
-            if (elementIds == null || elementIds.Count == 0)
-            {
-                MessageBox.Show("No elements selected in Revit. Please select elements first.", 
-                    "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
-
-            LoadElements(elementIds);
+            PendingLoadFromSelection = true;
+            RefreshSelectionRequested?.Invoke();
+            // Load will happen when OnSelectionRefreshed fires (async via ExternalEvent)
         }
 
         private void RefreshButton_Click(object sender, RoutedEventArgs e)

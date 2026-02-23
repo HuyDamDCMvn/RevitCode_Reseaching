@@ -18,7 +18,8 @@ namespace RevitChat.Skills
         {
             "get_elements", "count_elements", "get_element_parameters", "search_elements",
             "compare_element_parameters", "find_empty_parameters", "find_duplicate_values",
-            "get_element_geometry", "find_elements_near", "get_wall_layers"
+            "get_element_geometry", "find_elements_near", "get_wall_layers",
+            "get_element_host", "get_element_connections"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -165,6 +166,31 @@ namespace RevitChat.Skills
                     },
                     "required": ["element_ids"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("get_element_host",
+                "Get the host element of hosted elements (e.g., door's wall, fixture's floor).",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to check" }
+                    },
+                    "required": ["element_ids"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("get_element_connections",
+                "Get all elements connected to given elements (joins, connectors, hosted).",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_id": { "type": "integer", "description": "Element ID to check connections for" },
+                        "connection_type": { "type": "string", "enum": ["all", "connector", "join", "host"], "description": "Type of connections. Default: all" }
+                    },
+                    "required": ["element_id"]
+                }
                 """))
         };
 
@@ -182,6 +208,8 @@ namespace RevitChat.Skills
                 "get_element_geometry" => GetElementGeometry(doc, args),
                 "find_elements_near" => FindElementsNear(doc, args),
                 "get_wall_layers" => GetWallLayers(doc, args),
+                "get_element_host" => GetElementHost(doc, args),
+                "get_element_connections" => GetElementConnections(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -597,6 +625,130 @@ namespace RevitChat.Skills
             }
 
             return JsonSerializer.Serialize(new { walls = results }, JsonOpts);
+        }
+
+        private string GetElementHost(Document doc, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "element_ids");
+            if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+
+            var results = new List<object>();
+            foreach (var id in ids.Take(50))
+            {
+                var elem = doc.GetElement(new ElementId(id));
+                if (elem == null) { results.Add(new { element_id = id, error = "not found" }); continue; }
+
+                Element host = null;
+                if (elem is FamilyInstance fi) host = fi.Host;
+                if (host == null && elem is Opening opening)
+                    host = opening.Host;
+
+                if (host != null)
+                {
+                    results.Add(new
+                    {
+                        element_id = id,
+                        host_id = host.Id.Value,
+                        host_category = host.Category?.Name ?? "-",
+                        host_name = host.Name ?? "-",
+                        host_type = GetElementTypeName(doc, host)
+                    });
+                }
+                else
+                {
+                    results.Add(new { element_id = id, host_id = (long?)null, message = "No host found (not a hosted element)" });
+                }
+            }
+
+            return JsonSerializer.Serialize(new { count = results.Count, elements = results }, JsonOpts);
+        }
+
+        private string GetElementConnections(Document doc, Dictionary<string, object> args)
+        {
+            long elemId = GetArg<long>(args, "element_id");
+            var connType = GetArg(args, "connection_type", "all");
+            if (elemId <= 0) return JsonError("element_id required.");
+
+            var elem = doc.GetElement(new ElementId(elemId));
+            if (elem == null) return JsonError($"Element {elemId} not found.");
+
+            var connections = new List<object>();
+
+            if (connType is "all" or "host")
+            {
+                if (elem is FamilyInstance fi && fi.Host != null)
+                    connections.Add(new { type = "host", id = fi.Host.Id.Value, category = fi.Host.Category?.Name, name = fi.Host.Name });
+
+                var hosted = new FilteredElementCollector(doc).OfClass(typeof(FamilyInstance))
+                    .WhereElementIsNotElementType()
+                    .Cast<FamilyInstance>()
+                    .Where(f => f.Host?.Id == elem.Id)
+                    .Take(20);
+                foreach (var h in hosted)
+                    connections.Add(new { type = "hosted_by_this", id = h.Id.Value, category = h.Category?.Name, name = h.Name });
+            }
+
+            if (connType is "all" or "join")
+            {
+                if (elem is Wall wall && wall.Location is LocationCurve lc)
+                {
+                    for (int end = 0; end <= 1; end++)
+                    {
+                        try
+                        {
+                            var joined = lc.get_ElementsAtJoin(end);
+                            if (joined != null)
+                            {
+                                foreach (Element jw in joined)
+                                {
+                                    if (jw.Id == wall.Id) continue;
+                                    connections.Add(new { type = $"wall_join_end{end}", id = jw.Id.Value, name = jw.Name });
+                                }
+                            }
+                        }
+                        catch { }
+                    }
+                }
+            }
+
+            if (connType is "all" or "connector")
+            {
+                try
+                {
+                    ConnectorManager cm = null;
+                    if (elem is MEPCurve mep) cm = mep.ConnectorManager;
+                    else if (elem is FamilyInstance fi2) cm = fi2.MEPModel?.ConnectorManager;
+
+                    if (cm != null)
+                    {
+                        foreach (Connector c in cm.Connectors)
+                        {
+                            if (c.AllRefs == null) continue;
+                            foreach (Connector other in c.AllRefs)
+                            {
+                                if (other.Owner.Id == elem.Id) continue;
+                                connections.Add(new
+                                {
+                                    type = "mep_connector",
+                                    id = other.Owner.Id.Value,
+                                    category = other.Owner.Category?.Name,
+                                    name = other.Owner.Name,
+                                    connector_domain = c.Domain.ToString()
+                                });
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                element_id = elemId,
+                connection_type = connType,
+                connection_count = connections.Count,
+                connections
+            }, JsonOpts);
         }
 
         #region compare_element_parameters

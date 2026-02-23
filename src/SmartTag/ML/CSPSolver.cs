@@ -218,13 +218,13 @@ namespace SmartTag.ML
                 }
             }
 
-            // No valid candidate found, try to find best violating candidate
-            // and adjust its position
+            // No valid candidate found, try to adjust best candidate
             return TryAdjustBestCandidate(sortedCandidates, existingTags, elementBounds, viewCrop);
         }
 
         /// <summary>
         /// Try to adjust the best candidate to satisfy constraints.
+        /// Returns null if no valid placement found; callers must handle null.
         /// </summary>
         private TagPlacement TryAdjustBestCandidate(
             List<TagPlacement> candidates,
@@ -266,8 +266,7 @@ namespace SmartTag.ML
                 shiftAmount *= 1.5; // Increase shift for next attempt
             }
 
-            // Return best candidate even if constraints not fully satisfied
-            return best;
+            return null;
         }
 
         /// <summary>

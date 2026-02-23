@@ -22,7 +22,8 @@ namespace RevitChat.Skills
             "rename_elements", "copy_elements", "move_elements",
             "mirror_elements", "duplicate_views", "duplicate_sheets",
             "apply_parameter_formula", "transfer_parameters", "batch_update_parameters",
-            "batch_rename_pattern"
+            "batch_rename_pattern", "undo_last_action", "create_element",
+            "split_wall", "join_elements"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -231,6 +232,69 @@ namespace RevitChat.Skills
                     },
                     "required": ["element_ids"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("undo_last_action",
+                "Undo the last action performed by the AI bot. Only undoes bot-created transactions.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "count": { "type": "integer", "description": "Number of undo steps (default 1, max 5)" }
+                    },
+                    "required": []
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("create_element",
+                "Create a basic wall from two endpoints, type, level, and height.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_type": { "type": "string", "enum": ["wall"], "description": "Type of element to create (currently only wall)" },
+                        "start_x_ft": { "type": "number", "description": "Start X coordinate in feet" },
+                        "start_y_ft": { "type": "number", "description": "Start Y coordinate in feet" },
+                        "end_x_ft": { "type": "number", "description": "End X coordinate in feet" },
+                        "end_y_ft": { "type": "number", "description": "End Y coordinate in feet" },
+                        "type_id": { "type": "integer", "description": "Wall type ID (optional, uses default)" },
+                        "level_id": { "type": "integer", "description": "Level ID (optional, uses active view level)" },
+                        "height_ft": { "type": "number", "description": "Wall height in feet (default 10)" },
+                        "structural": { "type": "boolean", "description": "Is structural wall. Default false" },
+                        "dry_run": { "type": "boolean", "description": "Preview only. Default false." }
+                    },
+                    "required": ["element_type", "start_x_ft", "start_y_ft", "end_x_ft", "end_y_ft"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("split_wall",
+                "Split a wall at a given point. Creates two wall segments.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "wall_id": { "type": "integer", "description": "Wall element ID" },
+                        "split_x_ft": { "type": "number", "description": "X coordinate of split point in feet" },
+                        "split_y_ft": { "type": "number", "description": "Y coordinate of split point in feet" },
+                        "dry_run": { "type": "boolean", "description": "Preview only. Default false." }
+                    },
+                    "required": ["wall_id", "split_x_ft", "split_y_ft"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("join_elements",
+                "Join or unjoin geometry between two elements.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_id_1": { "type": "integer", "description": "First element ID" },
+                        "element_id_2": { "type": "integer", "description": "Second element ID" },
+                        "action": { "type": "string", "enum": ["join", "unjoin"], "description": "Action to perform (default: join)" },
+                        "dry_run": { "type": "boolean", "description": "Preview only. Default false." }
+                    },
+                    "required": ["element_id_1", "element_id_2"]
+                }
                 """))
         };
 
@@ -251,6 +315,10 @@ namespace RevitChat.Skills
                 "transfer_parameters" => TransferParameters(doc, args),
                 "batch_update_parameters" => BatchUpdateParameters(doc, args),
                 "batch_rename_pattern" => BatchRenamePattern(doc, args),
+                "undo_last_action" => UndoLastAction(uidoc, doc, args),
+                "create_element" => CreateElement(uidoc, doc, args),
+                "split_wall" => SplitWall(doc, args),
+                "join_elements" => JoinElements(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -772,6 +840,20 @@ namespace RevitChat.Skills
                         var tb = tbCollector.FirstOrDefault() as FamilyInstance;
                         if (tb != null) titleBlockId = tb.GetTypeId();
 
+                        if (titleBlockId == ElementId.InvalidElementId)
+                        {
+                            var docTb = new FilteredElementCollector(doc)
+                                .OfCategory(BuiltInCategory.OST_TitleBlocks)
+                                .OfClass(typeof(FamilySymbol))
+                                .FirstOrDefault();
+                            if (docTb != null) titleBlockId = docTb.Id;
+                        }
+                        if (titleBlockId == ElementId.InvalidElementId)
+                        {
+                            errors.Add($"Sheet '{sheet.SheetNumber}' has no title block and no title block family in document.");
+                            continue;
+                        }
+
                         var newSheet = ViewSheet.Create(doc, titleBlockId);
                         var number = (newNumbers != null && i < newNumbers.Count) ? newNumbers[i] : sheet.SheetNumber + "-COPY";
                         try { newSheet.SheetNumber = number; } catch { }
@@ -985,14 +1067,21 @@ namespace RevitChat.Skills
 
             if (dryRun)
             {
-                var preview = updates.Take(30).Select(u =>
+                var preview = new List<object>();
+                var validationErrors = new List<string>();
+                foreach (var u in updates.Take(30))
                 {
                     var elem = doc.GetElement(new ElementId(u.id));
-                    var param = elem?.LookupParameter(u.param);
-                    return new { u.id, param_name = u.param, new_value = u.value,
-                        current = param != null ? GetParameterValueAsString(doc, param) : "(not found)" };
-                }).ToList();
-                return JsonSerializer.Serialize(new { dry_run = true, update_count = updates.Count, preview }, JsonOpts);
+                    if (elem == null) { validationErrors.Add($"Element {u.id} not found"); continue; }
+                    var param = elem.LookupParameter(u.param);
+                    if (param == null) { validationErrors.Add($"Parameter '{u.param}' not found on element {u.id}"); continue; }
+                    if (param.IsReadOnly) { validationErrors.Add($"Parameter '{u.param}' is read-only on element {u.id}"); continue; }
+                    var current = GetParameterValueAsString(doc, param);
+                    bool typeOk = ValidateParamValueType(param, u.value);
+                    if (!typeOk) validationErrors.Add($"Type mismatch: '{u.param}' on {u.id} is {param.StorageType}, value '{u.value}' may not convert");
+                    preview.Add(new { u.id, param_name = u.param, new_value = u.value, current, storage_type = param.StorageType.ToString(), type_valid = typeOk });
+                }
+                return JsonSerializer.Serialize(new { dry_run = true, update_count = updates.Count, validation_errors = validationErrors, preview }, JsonOpts);
             }
 
             int success = 0;
@@ -1163,6 +1252,285 @@ namespace RevitChat.Skills
             var mark = elem.get_Parameter(BuiltInParameter.ALL_MODEL_MARK);
             if (mark != null && !mark.IsReadOnly) { mark.Set(value); return true; }
             return false;
+        }
+
+        #region undo_last_action
+
+        private string UndoLastAction(UIDocument uidoc, Document doc, Dictionary<string, object> args)
+        {
+            int count = GetArg(args, "count", 1);
+            if (count < 1) count = 1;
+            if (count > 5) count = 5;
+
+            try
+            {
+                var cmdId = RevitCommandId.LookupPostableCommandId(PostableCommand.Undo);
+                if (cmdId == null) return JsonError("Undo command not available.");
+
+                for (int i = 0; i < count; i++)
+                    CurrentApp.PostCommand(cmdId);
+
+                return JsonSerializer.Serialize(new
+                {
+                    undone = count,
+                    message = $"Posted {count} undo command(s). The undo will execute after this handler returns."
+                }, JsonOpts);
+            }
+            catch (Exception ex) { return JsonError($"Undo failed: {ex.Message}"); }
+        }
+
+        #endregion
+
+        #region create_element
+
+        private string CreateElement(UIDocument uidoc, Document doc, Dictionary<string, object> args)
+        {
+            var elemType = GetArg(args, "element_type", "wall");
+            if (elemType != "wall") return JsonError("Currently only 'wall' element type is supported.");
+
+            double sx = GetArg(args, "start_x_ft", 0.0);
+            double sy = GetArg(args, "start_y_ft", 0.0);
+            double ex = GetArg(args, "end_x_ft", 0.0);
+            double ey = GetArg(args, "end_y_ft", 0.0);
+            double height = GetArg(args, "height_ft", 10.0);
+            bool structural = GetArg(args, "structural", false);
+            long typeIdVal = GetArg<long>(args, "type_id");
+            long levelIdVal = GetArg<long>(args, "level_id");
+            bool dryRun = GetArg(args, "dry_run", false);
+
+            var startPt = new XYZ(sx, sy, 0);
+            var endPt = new XYZ(ex, ey, 0);
+            if (startPt.DistanceTo(endPt) < 0.01) return JsonError("Start and end points are too close.");
+
+            var line = Line.CreateBound(startPt, endPt);
+
+            var levelId = levelIdVal > 0 ? new ElementId(levelIdVal) : ElementId.InvalidElementId;
+            if (levelId == ElementId.InvalidElementId)
+            {
+                var view = uidoc.ActiveView;
+                if (view?.GenLevel != null) levelId = view.GenLevel.Id;
+                else
+                {
+                    var firstLevel = new FilteredElementCollector(doc).OfClass(typeof(Level)).FirstOrDefault() as Level;
+                    if (firstLevel != null) levelId = firstLevel.Id;
+                }
+            }
+            if (levelId == ElementId.InvalidElementId) return JsonError("No valid level found. Provide level_id.");
+
+            var wallTypeId = typeIdVal > 0 ? new ElementId(typeIdVal) : ElementId.InvalidElementId;
+            if (wallTypeId == ElementId.InvalidElementId)
+            {
+                var defaultType = new FilteredElementCollector(doc).OfClass(typeof(WallType)).FirstOrDefault();
+                if (defaultType != null) wallTypeId = defaultType.Id;
+            }
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_create = "wall",
+                    start = new { x = sx, y = sy },
+                    end = new { x = ex, y = ey },
+                    length_ft = Math.Round(line.Length, 2),
+                    height_ft = height,
+                    structural,
+                    message = "Would create wall between specified points."
+                }, JsonOpts);
+            }
+
+            ElementId newWallId;
+            using (var trans = new Transaction(doc, "AI: Create Wall"))
+            {
+                trans.Start();
+                try
+                {
+                    var wall = Wall.Create(doc, line, wallTypeId, levelId, height, 0, false, structural);
+                    newWallId = wall.Id;
+                    trans.Commit();
+                }
+                catch (Exception ex2)
+                {
+                    if (trans.HasStarted()) trans.RollBack();
+                    return JsonError($"Failed to create wall: {ex2.Message}");
+                }
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                created = true,
+                element_id = newWallId.Value,
+                element_type = "wall",
+                length_ft = Math.Round(line.Length, 2),
+                height_ft = height
+            }, JsonOpts);
+        }
+
+        #endregion
+
+        #region split_wall
+
+        private string SplitWall(Document doc, Dictionary<string, object> args)
+        {
+            long wallId = GetArg<long>(args, "wall_id");
+            double splitX = GetArg(args, "split_x_ft", 0.0);
+            double splitY = GetArg(args, "split_y_ft", 0.0);
+            bool dryRun = GetArg(args, "dry_run", false);
+
+            if (wallId <= 0) return JsonError("wall_id required.");
+            var wall = doc.GetElement(new ElementId(wallId)) as Wall;
+            if (wall == null) return JsonError($"Element {wallId} is not a wall.");
+
+            var locCurve = wall.Location as LocationCurve;
+            if (locCurve == null) return JsonError("Wall has no location curve.");
+
+            var splitPoint = new XYZ(splitX, splitY, 0);
+            var curve = locCurve.Curve;
+            var proj = curve.Project(splitPoint);
+            if (proj == null) return JsonError("Split point could not be projected onto wall.");
+
+            var breakPoint = proj.XYZPoint;
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    wall_id = wallId,
+                    split_point = new { x = splitX, y = splitY },
+                    message = "Would split wall at specified point."
+                }, JsonOpts);
+            }
+            var start = curve.GetEndPoint(0);
+            var end = curve.GetEndPoint(1);
+            if (breakPoint.DistanceTo(start) < 0.01 || breakPoint.DistanceTo(end) < 0.01)
+                return JsonError("Split point is too close to wall endpoints.");
+
+            using (var trans = new Transaction(doc, "AI: Split Wall"))
+            {
+                trans.Start();
+                try
+                {
+                    var copiedIds = ElementTransformUtils.CopyElement(doc, wall.Id, XYZ.Zero);
+                    if (copiedIds == null || copiedIds.Count == 0)
+                    {
+                        trans.RollBack();
+                        return JsonError("Failed to copy wall for split.");
+                    }
+                    var newWallId = copiedIds.First();
+                    var newWall = doc.GetElement(newWallId) as Wall;
+                    var newLc = newWall?.Location as LocationCurve;
+                    if (newLc == null)
+                    {
+                        doc.Delete(newWallId);
+                        trans.RollBack();
+                        return JsonError("Copied wall has no location curve.");
+                    }
+                    locCurve.Curve = Line.CreateBound(start, breakPoint);
+                    newLc.Curve = Line.CreateBound(breakPoint, end);
+                    trans.Commit();
+                    return JsonSerializer.Serialize(new
+                    {
+                        split = true,
+                        original_wall_id = wallId,
+                        new_wall_id = newWallId.Value,
+                        split_point = new { x = splitX, y = splitY }
+                    }, JsonOpts);
+                }
+                catch (Exception ex)
+                {
+                    if (trans.HasStarted()) trans.RollBack();
+                    return JsonError($"Split failed: {ex.Message}");
+                }
+            }
+        }
+
+        #endregion
+
+        #region join_elements
+
+        private string JoinElements(Document doc, Dictionary<string, object> args)
+        {
+            long id1 = GetArg<long>(args, "element_id_1");
+            long id2 = GetArg<long>(args, "element_id_2");
+            var action = GetArg(args, "action", "join");
+            bool dryRun = GetArg(args, "dry_run", false);
+
+            if (id1 <= 0 || id2 <= 0) return JsonError("Both element_id_1 and element_id_2 required.");
+            var elem1 = doc.GetElement(new ElementId(id1));
+            var elem2 = doc.GetElement(new ElementId(id2));
+            if (elem1 == null) return JsonError($"Element {id1} not found.");
+            if (elem2 == null) return JsonError($"Element {id2} not found.");
+
+            if (dryRun)
+            {
+                bool alreadyJoined = JoinGeometryUtils.AreElementsJoined(doc, elem1, elem2);
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    element_id_1 = id1,
+                    element_id_2 = id2,
+                    action,
+                    already_joined = alreadyJoined,
+                    message = alreadyJoined
+                        ? (action == "unjoin" ? "Would unjoin elements." : "Elements are already joined.")
+                        : (action == "join" ? "Would join elements." : "Elements are not joined.")
+                }, JsonOpts);
+            }
+
+            using (var trans = new Transaction(doc, $"AI: {(action == "unjoin" ? "Unjoin" : "Join")} Elements"))
+            {
+                trans.Start();
+                try
+                {
+                    if (action == "unjoin")
+                    {
+                        if (JoinGeometryUtils.AreElementsJoined(doc, elem1, elem2))
+                            JoinGeometryUtils.UnjoinGeometry(doc, elem1, elem2);
+                        else
+                        {
+                            trans.RollBack();
+                            return JsonSerializer.Serialize(new { action = "unjoin", message = "Elements are not joined." }, JsonOpts);
+                        }
+                    }
+                    else
+                    {
+                        if (!JoinGeometryUtils.AreElementsJoined(doc, elem1, elem2))
+                            JoinGeometryUtils.JoinGeometry(doc, elem1, elem2);
+                        else
+                        {
+                            trans.RollBack();
+                            return JsonSerializer.Serialize(new { action = "join", message = "Elements are already joined." }, JsonOpts);
+                        }
+                    }
+                    trans.Commit();
+                    return JsonSerializer.Serialize(new { action, success = true, element_1 = id1, element_2 = id2 }, JsonOpts);
+                }
+                catch (Exception ex)
+                {
+                    if (trans.HasStarted()) trans.RollBack();
+                    return JsonError($"{action} failed: {ex.Message}");
+                }
+            }
+        }
+
+        #endregion
+
+        private static bool ValidateParamValueType(Parameter param, string value)
+        {
+            switch (param.StorageType)
+            {
+                case StorageType.String: return true;
+                case StorageType.Integer:
+                    if (param.Definition?.GetDataType() == SpecTypeId.Boolean.YesNo) return true;
+                    return int.TryParse(value, out _);
+                case StorageType.Double:
+                    return double.TryParse(value, System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture, out _);
+                case StorageType.ElementId:
+                    return long.TryParse(value, out _);
+                default: return false;
+            }
         }
     }
 }

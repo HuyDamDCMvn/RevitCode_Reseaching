@@ -18,14 +18,21 @@ namespace RevitChat.Skills
         public string Description => SkillDescription;
         public bool CanHandle(string functionName) => HandledFunctions.Contains(functionName);
 
+        protected UIApplication CurrentApp { get; private set; }
+        protected IProgress<string> CurrentProgress { get; set; }
+
         public abstract IReadOnlyList<ChatTool> GetToolDefinitions();
 
         public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
+            CurrentApp = app;
             var uidoc = app?.ActiveUIDocument;
             if (uidoc == null)
                 return RevitHelpers.JsonError("No active document.");
-            return ExecuteTool(functionName, uidoc, uidoc.Document, args);
+            var doc = uidoc.Document;
+            if (doc == null)
+                return RevitHelpers.JsonError("Document is null. The active view may not have a valid document.");
+            return ExecuteTool(functionName, uidoc, doc, args);
         }
 
         protected abstract string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args);

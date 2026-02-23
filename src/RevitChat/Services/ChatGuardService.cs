@@ -23,7 +23,17 @@ namespace RevitChat.Services
             "measure_distance_to_slab",
             "disconnect_mep_elements", "delete_mep_system", "auto_connect_mep",
             "flip_mep_elements", "create_elbow", "create_tap_connection",
-            "bloom_connectors", "insert_coupling"
+            "bloom_connectors", "insert_coupling",
+            "undo_last_action",
+            "create_element", "split_wall", "join_elements",
+            "route_mep_between", "auto_size_mep",
+            "create_floor", "create_dimension", "create_spot_elevation",
+            "import_from_csv",
+            "set_element_material", "swap_family_type",
+            "create_group", "place_group_instance", "ungroup",
+            "create_schedule", "apply_view_template",
+            "add_revision",
+            "create_sheet", "place_view_on_sheet", "remove_viewport"
         };
 
         public static bool IsEchoResponse(string text)
@@ -104,6 +114,36 @@ namespace RevitChat.Services
             foreach (var kvp in results)
                 total += kvp.Value?.Length ?? 0;
             return total;
+        }
+
+        private static readonly HashSet<string> AutoDryRunTools = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "delete_elements", "purge_unused_elements", "batch_update_parameters",
+            "batch_rename_pattern", "apply_parameter_formula"
+        };
+
+        public static bool ShouldAutoDryRun(ToolCallRequest call)
+        {
+            if (!AutoDryRunTools.Contains(call.FunctionName)) return false;
+            if (call.Arguments != null && call.Arguments.TryGetValue("dry_run", out var dryObj))
+            {
+                if (dryObj is JsonElement je && je.ValueKind == JsonValueKind.True) return false;
+                if (dryObj is bool b && b) return false;
+            }
+            return true;
+        }
+
+        public static ToolCallRequest CloneWithDryRun(ToolCallRequest call)
+        {
+            var newArgs = call.Arguments != null
+                ? new Dictionary<string, object>(call.Arguments) : new Dictionary<string, object>();
+            newArgs["dry_run"] = true;
+            return new ToolCallRequest
+            {
+                ToolCallId = call.ToolCallId + "_preview",
+                FunctionName = call.FunctionName,
+                Arguments = newArgs
+            };
         }
     }
 }

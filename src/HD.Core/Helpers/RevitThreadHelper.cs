@@ -3,6 +3,9 @@ using Autodesk.Revit.UI;
 
 namespace HD.Core.Helpers
 {
+    // File contains ExternalEventHandlerBase and RequestHandler<T> for Revit ExternalEvent pattern.
+    // No RevitThreadHelper class; name retained for historical reasons.
+
     /// <summary>
     /// Helper for ExternalEvent pattern - ensures Revit API calls run on main thread.
     /// </summary>

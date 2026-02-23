@@ -18,7 +18,8 @@ namespace RevitChat.Skills
         {
             "get_connector_info", "get_system_connectivity",
             "get_mep_routing_path", "connect_mep_elements",
-            "disconnect_mep_elements", "delete_mep_system", "auto_connect_mep"
+            "disconnect_mep_elements", "delete_mep_system", "auto_connect_mep",
+            "traverse_mep_network"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -51,12 +52,14 @@ namespace RevitChat.Skills
                 """)),
 
             ChatTool.CreateFunctionTool("get_mep_routing_path",
-                "Trace an ordered routing path from a start element to the end of the run. Returns elements in order with cumulative distance and elevation.",
+                "Trace an ordered routing path from a start element toward the end of the run. Can stop early when reaching an element whose family/type matches a target name (e.g. 'riser', 'VAV', 'AHU'). Returns elements in order with cumulative distance and elevation.",
                 BinaryData.FromString("""
                 {
                     "type": "object",
                     "properties": {
                         "element_id": { "type": "integer", "description": "Starting element ID" },
+                        "stop_at_family": { "type": "string", "description": "Stop when reaching an element whose family or type name contains this string (partial, case-insensitive). E.g. 'riser', 'VAV', 'AHU'." },
+                        "stop_at_vertical": { "type": "boolean", "description": "Stop when reaching a vertical MEP element (riser). Default false." },
                         "max_elements": { "type": "integer", "description": "Max elements in path. Default 100.", "default": 100 }
                     },
                     "required": ["element_id"]
@@ -115,6 +118,20 @@ namespace RevitChat.Skills
                     },
                     "required": ["source_id", "target_id"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("traverse_mep_network",
+                "Traverse MEP network from a starting element, following connectors upstream/downstream.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_id": { "type": "integer", "description": "Starting element ID" },
+                        "direction": { "type": "string", "enum": ["both", "upstream", "downstream"], "description": "Traversal direction. Default: both" },
+                        "max_depth": { "type": "integer", "description": "Max traversal depth. Default: 20" }
+                    },
+                    "required": ["element_id"]
+                }
                 """))
         };
 
@@ -129,6 +146,7 @@ namespace RevitChat.Skills
                 "disconnect_mep_elements" => DisconnectMepElements(doc, args),
                 "delete_mep_system" => DeleteMepSystem(doc, args),
                 "auto_connect_mep" => AutoConnectMep(doc, args),
+                "traverse_mep_network" => TraverseMepNetwork(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -298,17 +316,22 @@ namespace RevitChat.Skills
         {
             var elementId = GetArg<long>(args, "element_id");
             int maxElements = GetArg(args, "max_elements", 100);
+            var stopAtFamily = GetArg<string>(args, "stop_at_family");
+            bool stopAtVertical = GetArg(args, "stop_at_vertical", false);
             if (maxElements < 2) maxElements = 2;
 
             var start = doc.GetElement(new ElementId(elementId));
             if (start == null) return JsonError($"Element {elementId} not found.");
 
             var path = new List<object>();
+            var pathIds = new List<long>();
             var visited = new HashSet<long> { start.Id.Value };
             double cumulativeDistM = 0;
+            string stoppedReason = null;
 
             var current = start;
             path.Add(BuildPathNode(doc, current, cumulativeDistM));
+            pathIds.Add(current.Id.Value);
 
             while (path.Count < maxElements)
             {
@@ -336,15 +359,49 @@ namespace RevitChat.Skills
                 cumulativeDistM += currentLen * 0.3048;
                 current = next;
                 path.Add(BuildPathNode(doc, current, Math.Round(cumulativeDistM, 3)));
+                pathIds.Add(current.Id.Value);
+
+                if (!string.IsNullOrEmpty(stopAtFamily))
+                {
+                    var famName = GetFamilyName(doc, current) ?? "";
+                    var typeName = GetElementTypeName(doc, current) ?? "";
+                    if (famName.IndexOf(stopAtFamily, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        typeName.IndexOf(stopAtFamily, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        stoppedReason = $"Reached element matching '{stopAtFamily}': {famName} / {typeName} (ID {current.Id.Value})";
+                        break;
+                    }
+                }
+
+                if (stopAtVertical && IsVerticalElement(current))
+                {
+                    stoppedReason = $"Reached vertical element (riser): {current.Category?.Name} ID {current.Id.Value}";
+                    break;
+                }
             }
 
-            return JsonSerializer.Serialize(new
+            var result = new Dictionary<string, object>
             {
-                start_element_id = elementId,
-                path_length = path.Count,
-                total_distance_m = Math.Round(cumulativeDistM, 3),
-                path
-            }, JsonOpts);
+                ["start_element_id"] = elementId,
+                ["path_length"] = path.Count,
+                ["total_distance_m"] = Math.Round(cumulativeDistM, 3),
+                ["element_ids"] = pathIds,
+                ["path"] = path
+            };
+            if (stoppedReason != null) result["stopped_reason"] = stoppedReason;
+
+            return JsonSerializer.Serialize(result, JsonOpts);
+        }
+
+        private static bool IsVerticalElement(Element elem)
+        {
+            if (!(elem.Location is LocationCurve lc)) return false;
+            var line = lc.Curve;
+            var start = line.GetEndPoint(0);
+            var end = line.GetEndPoint(1);
+            double dz = Math.Abs(end.Z - start.Z);
+            double dxy = Math.Sqrt(Math.Pow(end.X - start.X, 2) + Math.Pow(end.Y - start.Y, 2));
+            return dz > 0.1 && dz > dxy * 5;
         }
 
         private static object BuildPathNode(Document doc, Element elem, double cumulativeDistM)
@@ -657,6 +714,52 @@ namespace RevitChat.Skills
         }
 
         #endregion
+
+        private string TraverseMepNetwork(Document doc, Dictionary<string, object> args)
+        {
+            long startId = GetArg<long>(args, "element_id");
+            var direction = GetArg(args, "direction", "both");
+            int maxDepth = GetArg(args, "max_depth", 20);
+            if (startId <= 0) return JsonError("element_id required.");
+
+            var startElem = doc.GetElement(new ElementId(startId));
+            if (startElem == null) return JsonError($"Element {startId} not found.");
+
+            var visited = new HashSet<long>();
+            var path = new List<object>();
+
+            void Traverse(Element elem, int depth)
+            {
+                if (depth > maxDepth || visited.Contains(elem.Id.Value) || path.Count >= 200) return;
+                visited.Add(elem.Id.Value);
+                path.Add(new { id = elem.Id.Value, name = elem.Name, category = elem.Category?.Name, depth });
+
+                ConnectorManager cm = null;
+                if (elem is MEPCurve mep) cm = mep.ConnectorManager;
+                else if (elem is FamilyInstance fi) cm = fi.MEPModel?.ConnectorManager;
+                if (cm == null) return;
+
+                foreach (Connector c in cm.Connectors)
+                {
+                    if (c.AllRefs == null) continue;
+                    foreach (Connector other in c.AllRefs)
+                    {
+                        if (other.Owner == null || other.Owner.Id == elem.Id) continue;
+                        Traverse(other.Owner, depth + 1);
+                    }
+                }
+            }
+
+            Traverse(startElem, 0);
+
+            return JsonSerializer.Serialize(new
+            {
+                start_element = startId, direction, max_depth = maxDepth,
+                traversed_count = path.Count,
+                element_ids = visited.ToList(),
+                network = path
+            }, JsonOpts);
+        }
 
         #region Tool 4: auto_connect_mep
 

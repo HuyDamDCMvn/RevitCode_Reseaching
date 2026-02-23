@@ -10,9 +10,19 @@ namespace RevitChat.Services
 {
     public class ContextCollectionService
     {
+        private readonly object _cacheLock = new();
         private string _cachedViewContext;
         private DateTime _cacheTime;
-        private static readonly TimeSpan ViewCacheTTL = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan ViewCacheTTL = TimeSpan.FromSeconds(60);
+
+        public void InvalidateCache()
+        {
+            lock (_cacheLock)
+            {
+                _cachedViewContext = null;
+                _cacheTime = DateTime.MinValue;
+            }
+        }
 
         private static readonly string[] SelectionKeywords =
             { "selected", "chọn", "highlighted", "selection", "lựa chọn", "đang chọn", "these", "this", "này" };
@@ -23,7 +33,11 @@ namespace RevitChat.Services
         {
             var lower = userText?.ToLowerInvariant() ?? "";
             bool needsSelection = SelectionKeywords.Any(k => lower.Contains(k));
-            bool viewCacheValid = _cachedViewContext != null && (DateTime.UtcNow - _cacheTime) < ViewCacheTTL;
+            bool viewCacheValid;
+            lock (_cacheLock)
+            {
+                viewCacheValid = _cachedViewContext != null && (DateTime.UtcNow - _cacheTime) < ViewCacheTTL;
+            }
 
             var calls = new List<ToolCallRequest>();
             if (!viewCacheValid)
@@ -37,7 +51,10 @@ namespace RevitChat.Services
             if (calls.Count == 0)
             {
                 var sb2 = new StringBuilder();
-                if (!string.IsNullOrEmpty(_cachedViewContext)) sb2.AppendLine(_cachedViewContext);
+                lock (_cacheLock)
+                {
+                    if (!string.IsNullOrEmpty(_cachedViewContext)) sb2.AppendLine(_cachedViewContext);
+                }
                 AppendKeywordHints(sb2, lower);
                 return sb2.ToString().Trim();
             }
@@ -55,15 +72,24 @@ namespace RevitChat.Services
             var contextStr = BuildContextString(results);
             if (!string.IsNullOrEmpty(contextStr) && !needsSelection)
             {
-                _cachedViewContext = contextStr;
-                _cacheTime = DateTime.UtcNow;
+                lock (_cacheLock)
+                {
+                    _cachedViewContext = contextStr;
+                    _cacheTime = DateTime.UtcNow;
+                }
             }
 
             var sb = new StringBuilder();
             if (!string.IsNullOrEmpty(contextStr))
                 sb.AppendLine(contextStr);
-            else if (!string.IsNullOrEmpty(_cachedViewContext))
-                sb.AppendLine(_cachedViewContext);
+            else
+            {
+                lock (_cacheLock)
+                {
+                    if (!string.IsNullOrEmpty(_cachedViewContext))
+                        sb.AppendLine(_cachedViewContext);
+                }
+            }
 
             AppendKeywordHints(sb, lower);
             return sb.ToString().Trim();

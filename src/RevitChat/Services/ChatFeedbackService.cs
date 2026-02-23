@@ -86,7 +86,10 @@ namespace RevitChat.Services
                         return;
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ChatFeedbackService] Load: {ex.Message}");
+                }
                 _data = new FeedbackData();
             }
         }
@@ -102,7 +105,10 @@ namespace RevitChat.Services
                     if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
                     File.WriteAllText(_filePath, JsonSerializer.Serialize(_data, JsonOpts));
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ChatFeedbackService] Save: {ex.Message}");
+                }
             }
         }
 

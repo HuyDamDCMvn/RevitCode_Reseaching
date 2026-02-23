@@ -27,6 +27,11 @@
     <Compile Include="..\RevitChat\ViewModel\BaseChatViewModel.cs" Link="ViewModel\BaseChatViewModel.cs" />
   </ItemGroup>
 
+  <!-- Include ChatConfig for runtime (copy to output; extension lib already has Data/ChatConfig) -->
+  <ItemGroup>
+    <None Include="..\..\HD.extension\lib\net8\Data\ChatConfig\**\*" CopyToOutputDirectory="PreserveNewest" Link="Data\ChatConfig\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
   <!-- Post-build: Copy dependency DLLs (skip ones already deployed by other projects) -->
   <Target Name="CopyDepsToExtension" AfterTargets="CopyMainDllToExtension">
     <ItemGroup>

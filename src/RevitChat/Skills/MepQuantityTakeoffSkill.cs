@@ -25,7 +25,7 @@ namespace RevitChat.Skills
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("mep_quantity_takeoff",
-                "Aggregate MEP quantities by category (duct/pipe/conduit/cable tray), grouped by size and level. Returns total length and count.",
+                "Aggregate MEP quantities by category (duct/pipe/conduit/cable tray), grouped by system, size, and level. Returns total length, surface area, and count.",
                 BinaryData.FromString("""
                 {
                     "type": "object",
@@ -68,7 +68,7 @@ namespace RevitChat.Skills
                 """)),
 
             ChatTool.CreateFunctionTool("export_mep_boq",
-                "Export MEP Bill of Quantities to CSV, grouped by category/size/level with total lengths.",
+                "Export MEP Bill of Quantities to CSV, grouped by category/size/level with lengths and surface areas.",
                 BinaryData.FromString("""
                 {
                     "type": "object",
@@ -129,12 +129,15 @@ namespace RevitChat.Skills
                         !lvl.Equals(levelFilter, StringComparison.OrdinalIgnoreCase))
                         continue;
 
+                    double lengthFt = elem.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH)?.AsDouble() ?? 0;
+
                     items.Add(new MepLineItem
                     {
                         Id = elem.Id.Value,
                         Category = elem.Category?.Name ?? "-",
                         Size = elem.get_Parameter(BuiltInParameter.RBS_CALCULATED_SIZE)?.AsString() ?? "-",
-                        LengthFt = elem.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH)?.AsDouble() ?? 0,
+                        LengthFt = lengthFt,
+                        AreaSqFt = CalculateSurfaceArea(elem, lengthFt),
                         Level = lvl,
                         SystemName = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "-",
                         Family = GetFamilyName(doc, elem),
@@ -159,16 +162,19 @@ namespace RevitChat.Skills
             }
 
             var groups = items
-                .GroupBy(i => new { i.Category, i.Size, i.Level })
+                .GroupBy(i => new { i.Category, i.SystemName, i.Size, i.Level })
                 .Select(g => new
                 {
                     category = g.Key.Category,
+                    system = g.Key.SystemName,
                     size = g.Key.Size,
                     level = g.Key.Level,
                     count = g.Count(),
-                    total_length_m = Math.Round(g.Sum(i => i.LengthFt) * 0.3048, 2)
+                    total_length_m = Math.Round(g.Sum(i => i.LengthFt) * 0.3048, 2),
+                    total_area_sqm = Math.Round(g.Sum(i => i.AreaSqFt) * 0.092903, 2)
                 })
-                .OrderBy(g => g.category).ThenBy(g => g.level).ThenByDescending(g => g.total_length_m)
+                .OrderBy(g => g.category).ThenBy(g => g.system).ThenBy(g => g.level)
+                .ThenByDescending(g => g.total_length_m)
                 .ToList();
 
             var categorySummary = items
@@ -177,16 +183,32 @@ namespace RevitChat.Skills
                 {
                     category = g.Key,
                     count = g.Count(),
-                    total_length_m = Math.Round(g.Sum(i => i.LengthFt) * 0.3048, 2)
+                    total_length_m = Math.Round(g.Sum(i => i.LengthFt) * 0.3048, 2),
+                    total_area_sqm = Math.Round(g.Sum(i => i.AreaSqFt) * 0.092903, 2)
                 })
                 .OrderByDescending(g => g.total_length_m)
+                .ToList();
+
+            var systemSummary = items
+                .GroupBy(i => new { i.Category, i.SystemName })
+                .Select(g => new
+                {
+                    category = g.Key.Category,
+                    system = g.Key.SystemName,
+                    count = g.Count(),
+                    total_length_m = Math.Round(g.Sum(i => i.LengthFt) * 0.3048, 2),
+                    total_area_sqm = Math.Round(g.Sum(i => i.AreaSqFt) * 0.092903, 2)
+                })
+                .OrderBy(g => g.category).ThenByDescending(g => g.total_length_m)
                 .ToList();
 
             return JsonSerializer.Serialize(new
             {
                 total_elements = items.Count,
                 total_length_m = Math.Round(items.Sum(i => i.LengthFt) * 0.3048, 2),
+                total_area_sqm = Math.Round(items.Sum(i => i.AreaSqFt) * 0.092903, 2),
                 by_category = categorySummary,
+                by_system = systemSummary,
                 details = groups
             }, JsonOpts);
         }
@@ -294,17 +316,23 @@ namespace RevitChat.Skills
                 filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
                     $"MEP_BOQ_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
 
+            filePath = Path.GetFullPath(filePath);
+            var pathErr = ValidateOutputPath(filePath);
+            if (pathErr != null) return JsonError(pathErr);
+
             var items = CollectMepLines(doc, args);
 
             var sb = new StringBuilder();
-            sb.AppendLine("Category,System,Size,Family,Type,Level,Length_m,ElementId");
+            sb.AppendLine("Category,System,Size,Family,Type,Level,Length_m,Area_sqm,ElementId");
 
             foreach (var item in items.OrderBy(i => i.Category).ThenBy(i => i.Level).ThenBy(i => i.Size))
             {
                 sb.AppendLine(string.Join(",",
                     Esc(item.Category), Esc(item.SystemName), Esc(item.Size),
                     Esc(item.Family), Esc(item.Type), Esc(item.Level),
-                    Math.Round(item.LengthFt * 0.3048, 3), item.Id));
+                    Math.Round(item.LengthFt * 0.3048, 3),
+                    Math.Round(item.AreaSqFt * 0.092903, 3),
+                    item.Id));
             }
 
             try
@@ -319,7 +347,13 @@ namespace RevitChat.Skills
             }
 
             var catSummary = items.GroupBy(i => i.Category)
-                .Select(g => new { category = g.Key, count = g.Count(), length_m = Math.Round(g.Sum(i => i.LengthFt) * 0.3048, 2) })
+                .Select(g => new
+                {
+                    category = g.Key,
+                    count = g.Count(),
+                    length_m = Math.Round(g.Sum(i => i.LengthFt) * 0.3048, 2),
+                    area_sqm = Math.Round(g.Sum(i => i.AreaSqFt) * 0.092903, 2)
+                })
                 .ToList();
 
             return JsonSerializer.Serialize(new
@@ -330,6 +364,29 @@ namespace RevitChat.Skills
             }, JsonOpts);
         }
 
+        private static double CalculateSurfaceArea(Element elem, double lengthFt)
+        {
+            var areaParam = elem.LookupParameter("Area");
+            if (areaParam != null && areaParam.HasValue && areaParam.StorageType == StorageType.Double)
+            {
+                double a = areaParam.AsDouble();
+                if (a > 0) return a;
+            }
+
+            double w = elem.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM)?.AsDouble() ?? 0;
+            double h = elem.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM)?.AsDouble() ?? 0;
+            if (w > 0 && h > 0)
+                return 2 * (w + h) * lengthFt;
+
+            double d = elem.get_Parameter(BuiltInParameter.RBS_CURVE_DIAMETER_PARAM)?.AsDouble() ?? 0;
+            if (d <= 0)
+                d = elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)?.AsDouble() ?? 0;
+            if (d > 0)
+                return Math.PI * d * lengthFt;
+
+            return 0;
+        }
+
         private static string Esc(string v) => EscapeCsv(v);
 
         private class MepLineItem
@@ -337,6 +394,7 @@ namespace RevitChat.Skills
             public long Id;
             public string Category, Size, Level, SystemName, Family, Type;
             public double LengthFt;
+            public double AreaSqFt;
         }
 
         private class InsGroup

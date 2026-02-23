@@ -20,7 +20,7 @@ namespace RevitChat.Skills
         {
             "resize_mep_elements", "split_mep_elements", "set_pipe_slope",
             "change_mep_system_type", "batch_set_offset", "add_change_insulation",
-            "flip_mep_elements"
+            "flip_mep_elements", "auto_size_mep", "route_mep_between"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -129,6 +129,39 @@ namespace RevitChat.Skills
                     },
                     "required": ["element_ids"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("auto_size_mep",
+                "Auto-size pipes/ducts based on flow rate and target velocity.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Elements to resize" },
+                        "target_velocity_ms": { "type": "number", "description": "Target velocity in m/s (default 2.0 for pipes, 6.0 for ducts)" },
+                        "dry_run": { "type": "boolean", "description": "Preview only. Default true." }
+                    },
+                    "required": ["element_ids"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("route_mep_between",
+                "Auto-route a pipe or duct between two connector points using L-shaped routing. Supports obstacle avoidance for structural elements in current and linked models.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "start_element_id": { "type": "integer", "description": "Start equipment/fitting ID" },
+                        "end_element_id": { "type": "integer", "description": "End equipment/fitting ID" },
+                        "mep_type": { "type": "string", "enum": ["Pipe", "Duct"], "description": "Type of MEP element" },
+                        "elevation_ft": { "type": "number", "description": "Routing elevation in feet (optional)" },
+                        "avoid_categories": { "type": "string", "description": "Comma-separated categories to avoid, e.g. 'Structural Columns,Structural Framing,Walls'. Use 'structural' or 'kết cấu' for all structural categories." },
+                        "include_links": { "type": "boolean", "description": "Also check obstacles from linked models. Default false." },
+                        "clearance_mm": { "type": "number", "description": "Minimum clearance from obstacles in mm. Default 100." },
+                        "dry_run": { "type": "boolean", "description": "Preview only. Default false." }
+                    },
+                    "required": ["start_element_id", "end_element_id", "mep_type"]
+                }
                 """))
         };
 
@@ -143,6 +176,8 @@ namespace RevitChat.Skills
                 "batch_set_offset" => BatchSetOffset(doc, args),
                 "add_change_insulation" => AddChangeInsulation(doc, args),
                 "flip_mep_elements" => FlipMepElements(doc, args),
+                "auto_size_mep" => AutoSizeMep(doc, args),
+                "route_mep_between" => RouteMepBetween(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -887,6 +922,359 @@ namespace RevitChat.Skills
             return err != null
                 ? JsonError(err)
                 : JsonSerializer.Serialize(new { status = "ok", flipped, skipped, details = results }, JsonOpts);
+        }
+
+        #endregion
+
+        #region auto_size_mep
+
+        private string AutoSizeMep(Document doc, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "element_ids");
+            double targetVelocity = GetArg(args, "target_velocity_ms", 0.0);
+            bool dryRun = GetArg(args, "dry_run", true);
+
+            if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+
+            var preview = new List<object>();
+            foreach (var id in ids.Take(50))
+            {
+                var elem = doc.GetElement(new ElementId(id));
+                if (elem == null) continue;
+
+                bool isPipe = elem.Category?.Id.Value == (long)BuiltInCategory.OST_PipeCurves;
+                double defaultVel = isPipe ? 2.0 : 6.0;
+                double vel = targetVelocity > 0 ? targetVelocity : defaultVel;
+                double velFps = vel * 3.28084;
+
+                var flowParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_FLOW_PARAM)
+                             ?? elem.get_Parameter(BuiltInParameter.RBS_DUCT_FLOW_PARAM);
+                double flow = flowParam?.AsDouble() ?? 0;
+                if (flow <= 0) { preview.Add(new { id, error = "no flow data" }); continue; }
+
+                bool isDuct = (elem.Category?.Name ?? "").IndexOf("Duct", StringComparison.OrdinalIgnoreCase) >= 0;
+                double flowForArea = isDuct ? flow / 60.0 : flow;
+                double requiredArea = flowForArea / velFps;
+                double requiredDiameter = 2 * Math.Sqrt(requiredArea / Math.PI);
+                double requiredDiaMm = requiredDiameter * 304.8;
+
+                double[] standardSizes = isPipe
+                    ? new[] { 15.0, 20.0, 25.0, 32.0, 40.0, 50.0, 65.0, 80.0, 100.0, 125.0, 150.0, 200.0, 250.0, 300.0 }
+                    : new[] { 100.0, 125.0, 150.0, 200.0, 250.0, 300.0, 350.0, 400.0, 450.0, 500.0, 600.0, 700.0, 800.0 };
+
+                double selectedMm = standardSizes.FirstOrDefault(s => s >= requiredDiaMm);
+                if (selectedMm == 0) selectedMm = standardSizes.Last();
+
+                var currentDia = elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)
+                              ?? elem.get_Parameter(BuiltInParameter.RBS_CURVE_DIAMETER_PARAM);
+                double currentMm = (currentDia?.AsDouble() ?? 0) * 304.8;
+
+                preview.Add(new { id, flow_cfs = Math.Round(flow, 4),
+                    current_dia_mm = Math.Round(currentMm, 0), recommended_dia_mm = selectedMm,
+                    would_change = Math.Abs(currentMm - selectedMm) > 1 });
+            }
+
+            if (dryRun)
+                return JsonSerializer.Serialize(new { dry_run = true, elements = preview }, JsonOpts);
+
+            int changed = 0;
+            using (var trans = new Transaction(doc, "AI: Auto Size MEP"))
+            {
+                trans.Start();
+                foreach (var id in ids)
+                {
+                    var elem = doc.GetElement(new ElementId(id));
+                    if (elem == null) continue;
+                    bool isPipe2 = elem.Category?.Id.Value == (long)BuiltInCategory.OST_PipeCurves;
+                    var diaParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)
+                                ?? elem.get_Parameter(BuiltInParameter.RBS_CURVE_DIAMETER_PARAM);
+                    if (diaParam == null || diaParam.IsReadOnly) continue;
+
+                    var flowParam2 = elem.get_Parameter(BuiltInParameter.RBS_PIPE_FLOW_PARAM)
+                                  ?? elem.get_Parameter(BuiltInParameter.RBS_DUCT_FLOW_PARAM);
+                    double flow2 = flowParam2?.AsDouble() ?? 0;
+                    if (flow2 <= 0) continue;
+
+                    bool isDuct2 = (elem.Category?.Name ?? "").IndexOf("Duct", StringComparison.OrdinalIgnoreCase) >= 0;
+                    double flowForArea2 = isDuct2 ? flow2 / 60.0 : flow2;
+                    double vel2 = targetVelocity > 0 ? targetVelocity : (isPipe2 ? 2.0 : 6.0);
+                    double reqArea = flowForArea2 / (vel2 * 3.28084);
+                    double reqDia = 2 * Math.Sqrt(reqArea / Math.PI);
+                    double reqMm = reqDia * 304.8;
+
+                    double[] sizes = isPipe2
+                        ? new[] { 15.0, 20.0, 25.0, 32.0, 40.0, 50.0, 65.0, 80.0, 100.0, 125.0, 150.0, 200.0, 250.0, 300.0 }
+                        : new[] { 100.0, 125.0, 150.0, 200.0, 250.0, 300.0, 350.0, 400.0, 450.0, 500.0, 600.0, 700.0, 800.0 };
+                    double selMm = sizes.FirstOrDefault(s => s >= reqMm);
+                    if (selMm == 0) selMm = sizes.Last();
+
+                    diaParam.Set(selMm / 304.8);
+                    changed++;
+                }
+                if (changed > 0) trans.Commit(); else trans.RollBack();
+            }
+
+            return JsonSerializer.Serialize(new { resized = changed, total = ids.Count }, JsonOpts);
+        }
+
+        #endregion
+
+        #region route_mep_between
+
+        private static readonly Dictionary<string, BuiltInCategory> ObstacleCategoryMap =
+            new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Structural Columns"] = BuiltInCategory.OST_StructuralColumns,
+            ["Structural Framing"] = BuiltInCategory.OST_StructuralFraming,
+            ["Structural Foundations"] = BuiltInCategory.OST_StructuralFoundation,
+            ["Columns"] = BuiltInCategory.OST_Columns,
+            ["Walls"] = BuiltInCategory.OST_Walls,
+            ["Floors"] = BuiltInCategory.OST_Floors,
+        };
+
+        private string RouteMepBetween(Document doc, Dictionary<string, object> args)
+        {
+            long startId = GetArg<long>(args, "start_element_id");
+            long endId = GetArg<long>(args, "end_element_id");
+            var mepType = GetArg(args, "mep_type", "Pipe");
+            double elevation = GetArg(args, "elevation_ft", double.NaN);
+            bool dryRun = GetArg(args, "dry_run", false);
+            var avoidCats = GetArg<string>(args, "avoid_categories");
+            bool includeLinks = GetArg(args, "include_links", false);
+            double clearanceMm = GetArg(args, "clearance_mm", 100.0);
+
+            if (startId <= 0 || endId <= 0) return JsonError("Both start_element_id and end_element_id required.");
+            var startElem = doc.GetElement(new ElementId(startId));
+            var endElem = doc.GetElement(new ElementId(endId));
+            if (startElem == null) return JsonError($"Start element {startId} not found.");
+            if (endElem == null) return JsonError($"End element {endId} not found.");
+
+            Connector startConn = FindOpenConnector(startElem);
+            Connector endConn = FindOpenConnector(endElem);
+            if (startConn == null) return JsonError($"No open connector on start element {startId}.");
+            if (endConn == null) return JsonError($"No open connector on end element {endId}.");
+
+            XYZ startPt = startConn.Origin;
+            XYZ endPt = endConn.Origin;
+
+            if (!double.IsNaN(elevation))
+            {
+                startPt = new XYZ(startPt.X, startPt.Y, elevation);
+                endPt = new XYZ(endPt.X, endPt.Y, elevation);
+            }
+
+            var variants = new (string Name, XYZ Mid)[]
+            {
+                ("L-shape(X→Y)", new XYZ(endPt.X, startPt.Y, startPt.Z)),
+                ("L-shape(Y→X)", new XYZ(startPt.X, endPt.Y, startPt.Z)),
+            };
+
+            string bestRouteName = variants[0].Name;
+            XYZ bestMidPt = variants[0].Mid;
+            int bestClashCount = 0;
+            int obstacleCount = 0;
+            var clashWarnings = new List<string>();
+
+            if (!string.IsNullOrEmpty(avoidCats))
+            {
+                double clearanceFt = clearanceMm / 304.8;
+                var obstacles = CollectObstacleBounds(doc, avoidCats, includeLinks, clearanceFt);
+                obstacleCount = obstacles.Count;
+
+                if (obstacles.Count > 0)
+                {
+                    double halfWidth = 0.5;
+                    int minClashes = int.MaxValue;
+
+                    foreach (var (name, mid) in variants)
+                    {
+                        int clashes = CountSegmentClashes(startPt, mid, obstacles, halfWidth)
+                                    + CountSegmentClashes(mid, endPt, obstacles, halfWidth);
+                        if (clashes < minClashes)
+                        {
+                            minClashes = clashes;
+                            bestMidPt = mid;
+                            bestRouteName = name;
+                        }
+                        if (clashes == 0) break;
+                    }
+
+                    bestClashCount = minClashes;
+                    if (bestClashCount > 0)
+                        clashWarnings.Add($"Best route '{bestRouteName}' still intersects {bestClashCount} obstacle(s). Manual adjustment may be needed.");
+                }
+            }
+
+            if (dryRun)
+            {
+                var result = new Dictionary<string, object>
+                {
+                    ["dry_run"] = true,
+                    ["mep_type"] = mepType,
+                    ["route"] = bestRouteName,
+                    ["start_element"] = startId,
+                    ["end_element"] = endId,
+                    ["start_point"] = new { x = Math.Round(startPt.X, 3), y = Math.Round(startPt.Y, 3), z = Math.Round(startPt.Z, 3) },
+                    ["mid_point"] = new { x = Math.Round(bestMidPt.X, 3), y = Math.Round(bestMidPt.Y, 3), z = Math.Round(bestMidPt.Z, 3) },
+                    ["end_point"] = new { x = Math.Round(endPt.X, 3), y = Math.Round(endPt.Y, 3), z = Math.Round(endPt.Z, 3) },
+                    ["obstacles_checked"] = obstacleCount,
+                    ["remaining_clashes"] = bestClashCount,
+                    ["message"] = bestClashCount > 0
+                        ? $"Would route {mepType} via {bestRouteName}, but {bestClashCount} obstacle clash(es) remain."
+                        : $"Would route {mepType} via {bestRouteName}. Path clear of obstacles."
+                };
+                if (clashWarnings.Count > 0) result["warnings"] = clashWarnings;
+                return JsonSerializer.Serialize(result, JsonOpts);
+            }
+
+            using (var trans = new Transaction(doc, "AI: Route MEP"))
+            {
+                trans.Start();
+                try
+                {
+                    if (mepType == "Pipe")
+                    {
+                        var pipeType = new FilteredElementCollector(doc)
+                            .OfClass(typeof(PipeType)).FirstOrDefault();
+                        var level = new FilteredElementCollector(doc).OfClass(typeof(Level)).FirstOrDefault() as Level;
+                        if (pipeType == null || level == null) { trans.RollBack(); return JsonError("No pipe type or level found."); }
+
+                        Pipe.Create(doc, pipeType.Id, level.Id, startConn, bestMidPt);
+                        Pipe.Create(doc, pipeType.Id, level.Id, endConn, bestMidPt);
+                    }
+                    else
+                    {
+                        var ductType = new FilteredElementCollector(doc)
+                            .OfClass(typeof(DuctType)).FirstOrDefault();
+                        var level = new FilteredElementCollector(doc).OfClass(typeof(Level)).FirstOrDefault() as Level;
+                        if (ductType == null || level == null) { trans.RollBack(); return JsonError("No duct type or level found."); }
+
+                        Duct.Create(doc, ductType.Id, level.Id, startConn, bestMidPt);
+                        Duct.Create(doc, ductType.Id, level.Id, endConn, bestMidPt);
+                    }
+                    trans.Commit();
+                }
+                catch (Exception ex)
+                {
+                    if (trans.HasStarted()) trans.RollBack();
+                    return JsonError($"Routing failed: {ex.Message}");
+                }
+            }
+
+            var execResult = new Dictionary<string, object>
+            {
+                ["routed"] = true,
+                ["mep_type"] = mepType,
+                ["route"] = bestRouteName,
+                ["start_element"] = startId,
+                ["end_element"] = endId,
+                ["obstacles_checked"] = obstacleCount,
+                ["remaining_clashes"] = bestClashCount,
+                ["message"] = bestClashCount > 0
+                    ? $"Routed {mepType} via {bestRouteName}, but {bestClashCount} obstacle clash(es) detected. Consider manual adjustment."
+                    : $"Routed {mepType} via {bestRouteName}. Path clear of obstacles."
+            };
+            if (clashWarnings.Count > 0) execResult["warnings"] = clashWarnings;
+            return JsonSerializer.Serialize(execResult, JsonOpts);
+        }
+
+        private List<(XYZ Min, XYZ Max)> CollectObstacleBounds(
+            Document doc, string avoidCategories, bool includeLinks, double clearanceFt)
+        {
+            var obstacles = new List<(XYZ, XYZ)>();
+
+            var bics = new HashSet<BuiltInCategory>();
+            foreach (var name in avoidCategories.Split(',').Select(c => c.Trim()).Where(c => c.Length > 0))
+            {
+                if (ObstacleCategoryMap.TryGetValue(name, out var bic))
+                    bics.Add(bic);
+                if (name.IndexOf("structural", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    name.IndexOf("kết cấu", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    bics.Add(BuiltInCategory.OST_StructuralColumns);
+                    bics.Add(BuiltInCategory.OST_StructuralFraming);
+                    bics.Add(BuiltInCategory.OST_StructuralFoundation);
+                }
+            }
+
+            if (bics.Count == 0) return obstacles;
+
+            void Collect(Document d, Transform xform)
+            {
+                foreach (var cat in bics)
+                {
+                    foreach (var elem in new FilteredElementCollector(d)
+                                 .OfCategory(cat).WhereElementIsNotElementType())
+                    {
+                        var bb = elem.get_BoundingBox(null);
+                        if (bb == null) continue;
+                        XYZ min = bb.Min, max = bb.Max;
+                        if (xform != null)
+                        {
+                            min = xform.OfPoint(min);
+                            max = xform.OfPoint(max);
+                        }
+                        obstacles.Add((
+                            new XYZ(Math.Min(min.X, max.X) - clearanceFt,
+                                    Math.Min(min.Y, max.Y) - clearanceFt,
+                                    Math.Min(min.Z, max.Z) - clearanceFt),
+                            new XYZ(Math.Max(min.X, max.X) + clearanceFt,
+                                    Math.Max(min.Y, max.Y) + clearanceFt,
+                                    Math.Max(min.Z, max.Z) + clearanceFt)));
+                    }
+                }
+            }
+
+            Collect(doc, null);
+
+            if (includeLinks)
+            {
+                foreach (var linkInst in new FilteredElementCollector(doc)
+                             .OfClass(typeof(RevitLinkInstance)).Cast<RevitLinkInstance>())
+                {
+                    var linkDoc = linkInst.GetLinkDocument();
+                    if (linkDoc == null) continue;
+                    Collect(linkDoc, linkInst.GetTotalTransform());
+                }
+            }
+
+            return obstacles;
+        }
+
+        private static int CountSegmentClashes(
+            XYZ p1, XYZ p2, List<(XYZ Min, XYZ Max)> obstacles, double halfWidth)
+        {
+            double segMinX = Math.Min(p1.X, p2.X) - halfWidth;
+            double segMinY = Math.Min(p1.Y, p2.Y) - halfWidth;
+            double segMinZ = Math.Min(p1.Z, p2.Z) - halfWidth;
+            double segMaxX = Math.Max(p1.X, p2.X) + halfWidth;
+            double segMaxY = Math.Max(p1.Y, p2.Y) + halfWidth;
+            double segMaxZ = Math.Max(p1.Z, p2.Z) + halfWidth;
+
+            int count = 0;
+            foreach (var (boxMin, boxMax) in obstacles)
+            {
+                if (segMaxX >= boxMin.X && segMinX <= boxMax.X &&
+                    segMaxY >= boxMin.Y && segMinY <= boxMax.Y &&
+                    segMaxZ >= boxMin.Z && segMinZ <= boxMax.Z)
+                    count++;
+            }
+            return count;
+        }
+
+        private static Connector FindOpenConnector(Element elem)
+        {
+            ConnectorManager cm = null;
+            if (elem is MEPCurve mep) cm = mep.ConnectorManager;
+            else if (elem is FamilyInstance fi) cm = fi.MEPModel?.ConnectorManager;
+            if (cm == null) return null;
+
+            foreach (Connector c in cm.Connectors)
+            {
+                if (!c.IsConnected) return c;
+            }
+            foreach (Connector c in cm.Connectors) return c;
+            return null;
         }
 
         #endregion

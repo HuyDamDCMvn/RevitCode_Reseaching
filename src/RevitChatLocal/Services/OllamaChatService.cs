@@ -1,6 +1,7 @@
 using System;
 using System.ClientModel;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -156,7 +157,12 @@ namespace RevitChatLocal.Services
 
             NormalizationMap = new List<(string from, string to)>();
             foreach (var item in cnDoc.GetProperty("normalization_map").EnumerateArray())
-                NormalizationMap.Add((item.GetProperty("from").GetString(), item.GetProperty("to").GetString()));
+            {
+                var fromVal = item.GetProperty("from").GetString();
+                var toVal = item.GetProperty("to").GetString();
+                if (fromVal != null && toVal != null)
+                    NormalizationMap.Add((fromVal, toVal));
+            }
 
             ChitchatPatterns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var item in cnDoc.GetProperty("chitchat_patterns").EnumerateArray())
@@ -283,8 +289,31 @@ namespace RevitChatLocal.Services
             if (string.IsNullOrWhiteSpace(input)) return "";
             var text = input.ToLowerInvariant();
             foreach (var (from, to) in NormalizationMap)
+            {
+                if (from == null || to == null) continue;
                 text = text.Replace(from, to);
-            return text;
+            }
+            var stripped = StripVietnameseDiacritics(text);
+            foreach (var (from, to) in NormalizationMap)
+            {
+                if (from == null || to == null) continue;
+                stripped = stripped.Replace(StripVietnameseDiacritics(from), to);
+            }
+            return stripped;
+        }
+
+        private static string StripVietnameseDiacritics(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+            var normalized = text.Normalize(NormalizationForm.FormD);
+            var sb = new StringBuilder(normalized.Length);
+            foreach (var ch in normalized)
+            {
+                if (CharUnicodeInfo.GetUnicodeCategory(ch) != UnicodeCategory.NonSpacingMark)
+                    sb.Append(ch);
+            }
+            var result = sb.ToString().Normalize(NormalizationForm.FormC);
+            return result.Replace('đ', 'd').Replace('Đ', 'D');
         }
 
         private static bool ContainsActionVerb(string normalizedText)
@@ -333,6 +362,18 @@ namespace RevitChatLocal.Services
 
         private static bool MatchesKeyword(string text, string kw)
         {
+            if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(kw)) return false;
+            if (MatchesKeywordCore(text, kw))
+                return true;
+            var strippedKw = StripVietnameseDiacritics(kw);
+            if (strippedKw != kw && MatchesKeywordCore(text, strippedKw))
+                return true;
+            return false;
+        }
+
+        private static bool MatchesKeywordCore(string text, string kw)
+        {
+            if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(kw)) return false;
             if (kw.Contains(' '))
             {
                 var parts = kw.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -426,7 +467,8 @@ namespace RevitChatLocal.Services
                     "detect clashes, manage sheets/views, create 3D views, modify parameters, " +
                     "measure distances, check insulation, generate BOQ, audit naming conventions, " +
                     "and 170+ more specialized BIM operations. " +
-                    "Reply in the same language the user uses. Do NOT output any <tool_call> tags. " +
+                    "Understand Vietnamese, English, and mixed-language prompts. Reply in the language the user primarily uses. " +
+                    "Do NOT output any <tool_call> tags. " +
                     "If the user asks something you cannot help with, reply: \"This matter haven't yet train, Please contact your Digital Lead to update me.\"")
             };
             messages.AddRange(_conversationHistory);
@@ -912,9 +954,9 @@ Example:
             var stripped = Regex.Replace(text, @"```(?:json)?\s*", "", RegexOptions.IgnoreCase);
             stripped = stripped.Replace("```", "");
 
-            // 1) Well-formed <tool_call>...</tool_call>
+            // 1) Well-formed <tool_call>...</tool_call> with balanced braces (handles nested JSON)
             var tagPattern = new Regex(
-                @"<tool_call>\s*(\{.+?\})\s*</tool_call>",
+                @"<tool_call>\s*(\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\})\s*</tool_call>",
                 RegexOptions.Singleline);
 
             foreach (Match match in tagPattern.Matches(stripped))
@@ -932,7 +974,9 @@ Example:
             foreach (Match match in mergedPattern.Matches(stripped))
             {
                 var inner = match.Groups[1].Value;
-                var jsonObjects = Regex.Matches(inner, @"\{[^{}]*""name""[^{}]*\}", RegexOptions.Singleline);
+                var jsonObjects = Regex.Matches(inner,
+                    @"\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}",
+                    RegexOptions.Singleline);
                 foreach (Match jm in jsonObjects)
                 {
                     var call = TryParseOneToolCall(jm.Value);
@@ -1395,7 +1439,7 @@ Assistant:
 {""name"": ""override_category_color"", ""arguments"": {""category"": ""Ducts"", ""color"": ""Red""}}
 </tool_call>";
 
-            var prompt = $@"You are a Revit BIM assistant. Execute tools to answer queries. Understand English and Vietnamese.
+            var prompt = $@"You are a Revit BIM assistant. Execute tools to answer queries. Fully understand English, Vietnamese, and mixed-language prompts (e.g. 'isolate tất cả duct trên Level 1'). Handle missing diacritics (e.g. 'ong gio' = 'ống gió' = Ducts).
 
 ## TOOLS
 {catalog}
@@ -1412,8 +1456,8 @@ Assistant:
 4. After tool results, answer directly. Need more data → one more <tool_call>.
 5. Multi-step: handle FIRST step only. Next step after results.
 6. Destructive ops (delete/modify): confirm first.
-7. NEVER invent data. Reply in user's language.
-8. Vietnamese: tường=Walls, cửa=Doors, cửa sổ=Windows, ống=Ducts/Pipes, phòng=Rooms, sàn=Floors, cột=Columns, dầm=Structural Framing, trần=Ceilings, mái=Roofs, cầu thang=Stairs, thiết bị vệ sinh=Plumbing Fixtures, khay cáp=Cable Trays, đèn=Lighting Fixtures.
+7. NEVER invent data. Reply in the language the user primarily uses.
+8. Vietnamese domain terms: tường=Walls, cửa=Doors, cửa sổ=Windows, ống gió=Ducts, ống nước=Pipes, ống dẫn=Conduits, phòng=Rooms, sàn=Floors, cột=Columns, dầm=Structural Framing, trần=Ceilings, mái=Roofs, cầu thang=Stairs, thiết bị vệ sinh=Plumbing Fixtures, khay cáp=Cable Trays, đèn=Lighting Fixtures, van=Valves, quạt=Fans, bơm=Pumps, phụ kiện=Fittings, bảo ôn=Insulation, cô lập=Isolate, ẩn=Hide, hiện=Unhide, tô màu=Override Color, xuất=Export, kiểm tra=Check/Audit, kết cấu=Structural, liên kết=Link, mạch=Circuit, bảng điện=Electrical Panel.
 9. No matching tool → reply: ""This matter haven't yet train, Please contact your Digital Lead to update me.""
 10. Prefer specific tools (get_duct_summary > get_elements). If 'selected'/'chọn' → use [Context] IDs or get_current_selection.
 11. MEP queries → prefer get_pipe_summary, get_duct_summary over get_elements.
@@ -1460,13 +1504,19 @@ Assistant:
         {
             var config = LocalConfigService.Load();
             int max = config.MaxConversationMessages;
-            int maxTokenBudget = config.MaxTokens * 3;
+            const int maxTokenBudget = 12000;
+            const int keepRecentCount = 6;
 
             int totalTokens = _conversationHistory.Sum(GetMessageTokens);
-            while (totalTokens > maxTokenBudget && _conversationHistory.Count > 4)
+            while (totalTokens > maxTokenBudget && _conversationHistory.Count > keepRecentCount)
             {
                 totalTokens -= GetMessageTokens(_conversationHistory[0]);
                 _conversationHistory.RemoveAt(0);
+                while (_conversationHistory.Count > keepRecentCount && _conversationHistory[0] is ToolChatMessage)
+                {
+                    totalTokens -= GetMessageTokens(_conversationHistory[0]);
+                    _conversationHistory.RemoveAt(0);
+                }
             }
 
             if (_conversationHistory.Count > max)

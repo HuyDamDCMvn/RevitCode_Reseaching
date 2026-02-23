@@ -1,0 +1,50 @@
+[
+    {
+        "id": "qc_check",
+        "label": "QC Check",
+        "icon": "CheckCircle",
+        "prompt": "Run a full QC check on the current model: count warnings, check naming conventions, find unused families, and give a health score."
+    },
+    {
+        "id": "mep_summary",
+        "label": "MEP Summary",
+        "icon": "Plumbing",
+        "prompt": "Give me a summary of all MEP systems: pipe count, duct count, flow rates, and any issues."
+    },
+    {
+        "id": "tag_pipes",
+        "label": "Tag All Pipes",
+        "icon": "Label",
+        "prompt": "Tag all untagged pipes in the current view."
+    },
+    {
+        "id": "count_elements",
+        "label": "Count Elements",
+        "icon": "Numbers",
+        "prompt": "Count all elements in the current view grouped by category."
+    },
+    {
+        "id": "color_by_system",
+        "label": "Color by System",
+        "icon": "Palette",
+        "prompt": "Color all MEP elements in the current view by system name."
+    },
+    {
+        "id": "export_csv",
+        "label": "Export to CSV",
+        "icon": "FileDownload",
+        "prompt": "Export all {category} elements with parameters {param1}, {param2} to CSV."
+    },
+    {
+        "id": "find_clashes",
+        "label": "Find Clashes",
+        "icon": "Warning",
+        "prompt": "Check for clashes between ducts and structural framing in the current model."
+    },
+    {
+        "id": "model_health",
+        "label": "Model Health",
+        "icon": "Heart",
+        "prompt": "Run audit_model_standards and give me the overall model health score."
+    }
+]

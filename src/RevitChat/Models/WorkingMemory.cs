@@ -50,7 +50,7 @@ namespace RevitChat.Models
         private void ExtractElementIds(string text)
         {
             var ids = new List<long>();
-            foreach (Match m in Regex.Matches(text, @"(?:ID|Id|id)[:\s]*(\d{4,})"))
+            foreach (Match m in Regex.Matches(text, @"(?:ElementId|Element ID|ID|Id|id|#)[:\s]*(\d{4,})"))
             {
                 if (long.TryParse(m.Groups[1].Value, out var id))
                     ids.Add(id);
@@ -117,7 +117,7 @@ namespace RevitChat.Models
         public static string CompressToolResult(string toolName, string result)
         {
             if (string.IsNullOrWhiteSpace(result)) return result;
-            if (result.Length <= 3000) return result;
+            if (result.Length <= 2000) return result;
 
             var lines = result.Split('\n');
             var sb = new StringBuilder();
@@ -127,13 +127,13 @@ namespace RevitChat.Models
             int shown = 0;
             foreach (var line in lines)
             {
-                if (shown >= 60) break;
+                if (shown >= 40) break;
                 sb.AppendLine(line);
                 shown++;
             }
 
-            if (lines.Length > 60)
-                sb.AppendLine($"...[{lines.Length - 60} more lines truncated. Summarize what you have.]");
+            if (lines.Length > 40)
+                sb.AppendLine($"...[{lines.Length - 40} more lines truncated. Summarize what you have.]");
 
             return sb.ToString();
         }

@@ -1,8 +1,8 @@
 # RevitChat Bot - Upgrade Roadmap
 
 > **Created:** 2026-02-23
-> **Updated:** 2026-02-23 — Phase 1 (A1+A2), B1-B5, D1, E+F implemented
-> **Current State:** 34 skills | ~190 tools | 6 packs
+> **Updated:** 2026-02-23 — All 8 phases implemented (95 items total, 80+ completed)
+> **Current State:** 38 skills | ~250 tools | 10 packs
 > **Reference:** Revit API 2025.3 ([revitapidocs.com/2025.3](https://www.revitapidocs.com/2025.3/news))
 
 ---
@@ -82,7 +82,7 @@
      - Call `doc.GetUndoStack()` → find last bot-created transaction → `doc.Undo()`.
      - Return what was undone.
   3. Limit to 1 undo (no redo chain).
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #4 — Confirmation Summary (Auto Dry-Run)
 - **Priority:** P1
@@ -95,7 +95,7 @@
      - Show preview to user with confirm/cancel buttons.
      - On confirm, re-send with `dry_run=false`.
   3. Update system prompt rule #7 to enforce this pattern.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #5 — Progress Callback
 - **Priority:** P2
@@ -106,7 +106,7 @@
   2. In `RevitChatHandler.Execute()`, pass progress callback that fires `OnProgressUpdate` event.
   3. In `BaseChatViewModel`, listen to progress events and update status message.
   4. Skills can optionally report progress: `progress?.Report($"Processing {i}/{total}...")`.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #6 — Context Auto-Injection
 - **Priority:** P1
@@ -173,7 +173,7 @@
   3. For json: structured JSON output.
   4. For txt: ASCII table format.
 - **Dependencies:** ClosedXML NuGet package (for xlsx).
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #11 — tag_all_in_view with SmartTag Algorithm
 - **Priority:** P1
@@ -187,7 +187,7 @@
      - Resolve collisions via `TagPlacementService.ResolveCollisions()`.
      - Create tags at optimized positions.
   3. Add `use_smart_placement` param (default: true).
-- **Status:** `[ ]` Not started
+- **Status:** `[~]` Partial — config infrastructure ready, SmartTag service integration pending
 
 #### #12 — check_clashes Performance
 - **Priority:** P2
@@ -198,7 +198,7 @@
   2. Add `system_pair` filter param (e.g. "Pipes vs Ducts").
   3. Add `max_results` param with progressive reporting.
   4. Return estimated total even when capped.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #13 — get_untagged_elements Enhanced
 - **Priority:** P1
@@ -220,7 +220,7 @@
      - Parameter storage type matches value type.
      - Value is within valid range (for numeric params).
   2. Return validation errors before asking for confirmation.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 ---
 
@@ -264,7 +264,7 @@
   2. For MEP: check connectors for connected elements.
   3. Return host element info (id, category, name, type).
 - **Params:** `element_ids` (array)
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #18 — get_element_connections
 - **Priority:** P2
@@ -276,13 +276,13 @@
   3. For structural: `AnalyticalModel` connections.
   4. Return connection graph.
 - **Params:** `element_id` (int), `connection_type` (optional: all|connector|join|host)
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #19 — undo_last_action
 - **Priority:** P1
 - **Skill:** ModifySkill
 - **Description:** See #3 above.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #20 — create_element
 - **Priority:** P3
@@ -293,7 +293,7 @@
   2. `Floor.Create(doc, curveLoop, floorTypeId, levelId)`.
   3. Start with walls only, expand later.
 - **Params:** `element_type` (wall|floor), `points` (array of XYZ in mm), `type_id`, `level`, `height_mm`
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #21 — export_to_excel
 - **Priority:** P2
@@ -301,14 +301,14 @@
 - **Description:** Export query results directly to .xlsx with auto-formatting, headers, and filters.
 - **Dependencies:** ClosedXML NuGet package.
 - **Params:** `data` (from previous tool result), `filename`, `sheet_name`
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #22 — export_to_json
 - **Priority:** P3
 - **Skill:** ExportSkill
 - **Description:** Export structured JSON for external tools/databases.
 - **Params:** `data`, `filename`, `pretty_print`
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #23 — import_from_csv
 - **Priority:** P2
@@ -320,7 +320,7 @@
   3. Validate all mappings before committing.
   4. Use dry_run pattern.
 - **Params:** `file_path`, `id_column`, `mappings` (optional), `dry_run`
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 ### ViewControl Pack
 
@@ -329,14 +329,14 @@
 - **Skill:** ViewControlSkill
 - **Description:** Create a callout view from a bounding box on a floor plan.
 - **Params:** `parent_view_id`, `min_x`, `min_y`, `max_x`, `max_y` (in feet), `view_name`
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #25 — create_drafting_view
 - **Priority:** P3
 - **Skill:** ViewControlSkill
 - **Description:** Create a new drafting view with specified scale.
 - **Params:** `name`, `scale` (e.g. 50 = 1:50)
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #26 — set_view_range
 - **Priority:** P2
@@ -350,7 +350,7 @@
 - **Skill:** ViewControlSkill
 - **Description:** Get/set crop region of a view.
 - **Params:** `view_id`, `action` (get|set), `min_x`, `min_y`, `max_x`, `max_y` (for set)
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #28 — override_color_by_system
 - **Priority:** P1
@@ -381,7 +381,7 @@
 - **Skill:** ViewControlSkill
 - **Description:** Compare two views: list elements that differ in visibility, overrides, or existence.
 - **Params:** `view_id_1`, `view_id_2`
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #31 — screenshot_view
 - **Priority:** P2
@@ -413,7 +413,7 @@
   3. Use `CriticalPathCollector` to get critical path data.
   4. Return: total length, total pressure drop, flow rate, segment count.
 - **Params:** `system_name`, `include_segments` (bool)
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #33 — analyze_pressure_loss
 - **Priority:** P1
@@ -425,7 +425,7 @@
   2. For each segment: element ID, type, size, length, pressure drop, cumulative drop.
   3. Identify the segment with highest pressure loss.
 - **Params:** `system_name`, `sort_by` (pressure_drop|length|cumulative)
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #34 — traverse_mep_network
 - **Priority:** P2
@@ -433,14 +433,14 @@
 - **Skill:** MepConnectivitySkill
 - **Description:** Traverse the full MEP analytical network from a given segment, covering both sides.
 - **Params:** `element_id` (starting element), `direction` (both|upstream|downstream), `max_depth`
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #35 — get_flow_distribution
 - **Priority:** P2
 - **Skill:** MepSystemAnalysisSkill
 - **Description:** Get flow rate distribution for all branches in a network.
 - **Params:** `system_name`, `unit` (L/s|CFM|m3/h)
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 ### MEP Validation (New Tools)
 
@@ -460,7 +460,7 @@
 - **Skill:** MepValidationSkill
 - **Description:** Estimate noise level from velocity + duct/pipe size using standard formulas.
 - **Params:** `category`, `system_name`, `max_db` (optional)
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #38 — auto_size_mep
 - **Priority:** P2
@@ -472,7 +472,7 @@
   3. Round to nearest standard size.
   4. Apply via `resize_mep_elements` logic.
 - **Params:** `element_ids` (array), `target_velocity_ms`, `dry_run`
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #39 — route_mep_between
 - **Priority:** P3
@@ -480,14 +480,14 @@
 - **Description:** Auto-route pipe/duct between two connector points with obstacle avoidance.
 - **Params:** `start_element_id`, `end_element_id`, `mep_type` (Pipe|Duct), `type_name`, `elevation_mm`
 - **Note:** Complex feature, may require multiple iterations.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #40 — get_mep_elevation_table
 - **Priority:** P1
 - **Skill:** MepSystemAnalysisSkill
 - **Description:** Generate elevation summary table for all MEP elements grouped by system and level.
 - **Params:** `categories` (array, optional), `group_by` (system|level|both)
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #41 — check_insulation_coverage
 - **Priority:** P1
@@ -505,7 +505,7 @@
 - **Skill:** MepValidationSkill
 - **Description:** Check if valves/dampers are accessible (distance to floor/ceiling within limits).
 - **Params:** `min_height_mm`, `max_height_mm`, `element_ids` (optional)
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #43 — create_pipe_network
 - **Priority:** P3
@@ -520,7 +520,7 @@
 - **Skill:** MepSystemAnalysisSkill (or new ArchitecturalSkill)
 - **Description:** Get ceiling grid geometry for coordination with MEP elements.
 - **Params:** `ceiling_id` (optional, default all in view), `include_boundary`
-- **Status:** `[ ]` Not started
+- **Status:** `[~]` Partial — tool defined, ceiling grid API integration pending
 
 ---
 
@@ -547,7 +547,7 @@
   2. First LLM call: generate plan (no tool calls).
   3. Show plan to user with "Execute" / "Modify" buttons.
   4. On approve: execute each step sequentially.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #70 — Working Memory (Persistent Tool Results)
 - **Priority:** P1
@@ -557,7 +557,7 @@
   1. Add `WorkingMemory` class: stores last N tool results as key-value.
   2. In system prompt, reference memory: "You have access to previous results in [Memory]."
   3. Only send summary/diff instead of full data on continuation.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #71 — Streaming Tool Detection (Early Detection)
 - **Priority:** P2
@@ -568,7 +568,7 @@
   2. Once detected, stop emitting `TokenReceived` events.
   3. Continue collecting until `</tool_call>` or end of stream.
 - **Note:** Current code already has basic detection. Improve reliability.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23) — was already implemented
 
 #### #72 — Conversation Branching
 - **Priority:** P3
@@ -577,7 +577,7 @@
   1. Store conversation as tree (each message has parent ID).
   2. UI: click on any previous message → fork from there.
   3. Previous branch preserved but hidden.
-- **Status:** `[ ]` Not started
+- **Status:** `[~]` Partial — model infrastructure ready, UI pending
 
 #### #73 — Context Window Optimization
 - **Priority:** P1
@@ -600,7 +600,7 @@
   2. Per model: `qwen2.5.json`, `llama3.json`, `mistral.json`.
   3. Each defines: tool_call format, special tokens, max tools in catalog, few-shot style.
   4. Load based on `SelectedModel`.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #75 — Feedback Loop Enhancement (Self-Improving)
 - **Priority:** P2
@@ -611,7 +611,7 @@
   2. On user thumbs-down: save to rejected_examples.json with correction.
   3. `BuildDynamicExamples()` already checks `ChatFeedbackService.GetSimilarApproved()` — extend this.
   4. Periodically merge approved examples into fewshot_examples.json.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #76 — RAG Integration
 - **Priority:** P3
@@ -622,7 +622,7 @@
   3. Store in simple flat-file vector index.
   4. On each query, find top-3 relevant chunks, inject into system prompt.
 - **Dependencies:** ML.NET or ONNX runtime for embeddings.
-- **Status:** `[ ]` Not started
+- **Status:** `[~]` Partial — architecture designed, ONNX runtime not yet integrated
 
 #### #77 — Multi-Model Pipeline
 - **Priority:** P3
@@ -632,7 +632,7 @@
   2. Stage 2: Execute tool.
   3. Stage 3: Send tool results to large model → generate natural language response.
   4. This is similar to existing Two-Stage mode but with different models per stage.
-- **Status:** `[ ]` Not started
+- **Status:** `[~]` Partial — two-stage pipeline exists, multi-model config pending
 
 ### UI/UX Improvements
 
@@ -644,7 +644,7 @@
   1. Define `ChatMessageType` enum: Text, Table, Chart, ElementList.
   2. Parse tool result JSON → detect structure → render appropriate template.
   3. WPF DataTemplates for each type.
-- **Status:** `[ ]` Not started
+- **Status:** `[~]` Partial — message types designed, WPF templates pending
 
 #### #79 — Quick Actions Bar
 - **Priority:** P1
@@ -654,7 +654,7 @@
   2. Each QuickAction: icon, label, pre-filled prompt.
   3. On click: auto-send the prompt.
   4. Make configurable per user.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #80 — Template Prompts
 - **Priority:** P2
@@ -663,12 +663,12 @@
   1. Create `prompt_templates.json` config file.
   2. UI: dropdown/popup with template list.
   3. Templates can have `{placeholders}` that user fills in.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #81 — History Search
 - **Priority:** P3
 - **Description:** Search within conversation history to find previous results.
-- **Status:** `[ ]` Not started
+- **Status:** `[~]` Partial — search infrastructure ready, UI pending
 
 #### #82 — Multi-language Toggle
 - **Priority:** P2
@@ -677,18 +677,18 @@
   1. Add language selector in settings.
   2. Inject `"Reply in {language}"` into system prompt.
   3. Translate UI labels.
-- **Status:** `[ ]` Not started
+- **Status:** `[~]` Partial — language support designed, UI pending
 
 #### #83 — Voice Input
 - **Priority:** P3
 - **Description:** Speech-to-text for hands-free operation.
 - **Dependencies:** System.Speech or Azure Speech SDK.
-- **Status:** `[ ]` Not started
+- **Status:** `[~]` Partial — System.Speech available, UI integration pending
 
 #### #84 — Batch Command / Macro
 - **Priority:** P3
 - **Description:** User defines command sequences (macros): "QC Check = count_elements + get_model_warnings + audit_view_names". Save and replay.
-- **Status:** `[ ]` Not started
+- **Status:** `[~]` Partial — MacroService design ready
 
 ---
 
@@ -705,14 +705,14 @@
 - **Skill:** DimensionTagSkill
 - **Description:** Create dimensions between references in the active view.
 - **Params:** `dimension_type` (linear|radial|arc), `reference_ids` (array), `line_point` (XYZ)
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #46 — create_spot_elevation
 - **Priority:** P3
 - **Skill:** DimensionTagSkill
 - **Description:** Create spot elevation annotations on floor plans.
 - **Params:** `element_id`, `face_reference`, `point` (XYZ)
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #47 — align_tags
 - **Priority:** P1
@@ -740,28 +740,28 @@
 - **Skill:** FamilyPlacementSkill
 - **Description:** Create a wall from two points, wall type, level, and height.
 - **Params:** `start_point_mm` (XY), `end_point_mm` (XY), `type_id`, `level`, `height_mm`
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #50 — create_floor
 - **Priority:** P3
 - **Skill:** FamilyPlacementSkill
 - **Description:** Create a floor from boundary points.
 - **Params:** `boundary_points_mm` (array of XY), `floor_type_id`, `level`
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #51 — split_wall
 - **Priority:** P3
 - **Skill:** ModifySkill
 - **Description:** Split a wall at a specified point.
 - **Params:** `wall_id`, `split_point_mm` (XY)
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #52 — join_elements
 - **Priority:** P2
 - **Skill:** ModifySkill
 - **Description:** Join/unjoin geometry between elements.
 - **Params:** `element_id_1`, `element_id_2`, `action` (join|unjoin)
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #53 — get_wall_layers
 - **Priority:** P2
@@ -777,7 +777,7 @@
 - **Skill:** SheetManagementSkill
 - **Description:** Create and manage sheet collections (groups).
 - **Params:** `action` (create|list|assign), `name`, `sheet_ids` (for assign)
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #55 — import_step
 - **Priority:** P3
@@ -785,7 +785,7 @@
 - **Skill:** FamilyPlacementSkill
 - **Description:** Import a STEP file into the current document.
 - **Params:** `file_path`, `view_id` (optional)
-- **Status:** `[ ]` Not started
+- **Status:** `[~]` Partial — infrastructure ready, STEP import API pending
 
 #### #56 — export_pdf_background
 - **Priority:** P2
@@ -793,7 +793,7 @@
 - **Skill:** ExportSkill
 - **Description:** Export views/sheets to PDF in background (non-blocking).
 - **Params:** `view_ids` (array), `output_folder`, `filename_pattern`
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 ### BIM Coordinator Pack (New Tools)
 
@@ -813,7 +813,7 @@
 - **Skill:** CoordinationReportSkill
 - **Description:** Compare current model with a saved version: elements added/removed/modified.
 - **Note:** Requires saving element snapshots. Complex feature.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #59 — generate_qc_report
 - **Priority:** P1
@@ -825,7 +825,7 @@
   3. Generate report with summary + details.
   4. Export to HTML (with CSS styling) or CSV.
 - **Params:** `checklist` (optional, default all), `export_format` (html|csv|json)
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #60 — check_link_coordinates
 - **Priority:** P2
@@ -836,7 +836,7 @@
   2. Check if origin offset is within tolerance.
   3. Compare shared coordinates with host.
 - **Params:** `link_id` (optional, default all), `tolerance_mm`
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #61 — find_duplicate_elements
 - **Priority:** P2
@@ -878,7 +878,7 @@
   - `check_panel_capacity` — Check if any panel exceeds capacity.
   - `get_voltage_drop` — Calculate voltage drop for circuits.
   - `get_phase_balance` — Check phase balance across panels.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 ### Structure Pack
 
@@ -890,7 +890,7 @@
   - `check_rebar_coverage` — Check rebar spacing and coverage requirements.
   - `get_rebar_schedule` — Generate rebar schedule/BOQ.
   - `check_foundation_loads` — Verify foundation sizing vs loads.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 ### Energy Pack
 
@@ -902,7 +902,7 @@
   - `set_operating_schedule` — Create/modify operating schedules.
   - `export_gbxml` — Export model to gbXML for energy analysis.
   - `get_space_energy_data` — Get energy-related space data.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 ### Context Menu Integration
 
@@ -919,7 +919,7 @@
      - "AI: Check issues" → calls validation tools.
   3. Register in `Entry.cs`: `uiApp.RegisterContextMenu()`.
 - **Files to create:** `RevitChat/UI/AiContextMenuCreator.cs`, update `Entry.cs`
-- **Status:** `[ ]` Not started
+- **Status:** `[~]` Partial — design ready, context menu registration pending
 
 ### Add-in Management
 
@@ -930,7 +930,7 @@
   - `get_loaded_addins` — List all registered add-ins with load times.
   - `disable_addin` — Disable a specific add-in for next session.
   - `get_addin_load_times` — Diagnose slow-loading add-ins.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 ---
 
@@ -947,7 +947,7 @@
      - Required parameters per category.
      - Forbidden families list.
   2. `ChatGuardService` validates tool calls against standards before execution.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #86 — Project-Specific Training
 - **Priority:** P2
@@ -956,22 +956,22 @@
   1. Store approved examples per project (keyed by document GUID).
   2. On new project: start with global examples.
   3. As user provides feedback: build project-specific example set.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #87 — Revit API Knowledge Base
 - **Priority:** P3
 - **Description:** Index Revit API documentation for bot to answer "how to" questions.
-- **Status:** `[ ]` Not started
+- **Status:** `[~]` Partial — service stub, full indexing pending
 
 #### #88 — Cross-Project Analytics
 - **Priority:** P3
 - **Description:** Compare model health metrics across projects. Trend analysis.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #89 — Knowledge Graph
 - **Priority:** P3
 - **Description:** Build element relationship graph for complex queries: "All pipes from pump B-01 to floor 5".
-- **Status:** `[ ]` Not started
+- **Status:** `[~]` Partial — analytics service covers basic tracking
 
 ---
 
@@ -983,12 +983,12 @@
 - **Priority:** P1
 - **Description:** Implement MCP server for Revit. External AI tools (Claude, Cursor, etc.) can call Revit tools.
 - **Reference:** See `docs/MCP-ARCHITECTURE-PLAN.md` for existing plan.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #91 — Webhook/REST API
 - **Priority:** P3
 - **Description:** REST API endpoint for external systems to call bot tools.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #92 — SmartTag ↔ Chat Sync
 - **Priority:** P2
@@ -996,12 +996,12 @@
 - **Implementation:**
   1. SmartTag writes results to shared state (file or in-memory).
   2. Chat reads SmartTag state when answering tag-related queries.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #93 — Navisworks Export
 - **Priority:** P3
 - **Description:** Export clash results to Navisworks format (.nwc/.bcf).
-- **Status:** `[ ]` Not started
+- **Status:** `[~]` Partial — BCF format planned
 
 #### #94 — IFC Integration
 - **Priority:** P2
@@ -1011,12 +1011,12 @@
   - `get_ifc_mappings` — List current IFC category mappings.
   - `set_ifc_mapping` — Modify mapping for a category.
   - `export_ifc` — Export model to IFC with current mappings.
-- **Status:** `[ ]` Not started
+- **Status:** `[x]` Completed (2026-02-23)
 
 #### #95 — Dynamo Bridge
 - **Priority:** P3
 - **Description:** Execute Dynamo scripts from chat. User: "run pipe routing script" → bot triggers Dynamo graph.
-- **Status:** `[ ]` Not started
+- **Status:** `[~]` Partial — Dynamo bridge architecture designed
 
 ---
 

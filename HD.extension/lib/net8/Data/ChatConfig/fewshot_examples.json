@@ -2151,5 +2151,49 @@
   {
     "keywords": ["screenshot", "export", "image", "hình ảnh", "chụp"],
     "example": "User: export view as image\nAssistant:\n<tool_call>\n{\"name\": \"screenshot_view\", \"arguments\": {\"format\": \"png\", \"resolution\": \"high\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["isolate", "duct", "tất cả", "level"],
+    "example": "User: isolate tất cả duct trên Level 1\nAssistant:\n<tool_call>\n{\"name\": \"isolate_by_filter\", \"arguments\": {\"category\": \"Ducts\", \"level_name\": \"Level 1\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["count", "pipe", "bao nhiêu", "model"],
+    "example": "User: bao nhiêu pipe trong model này?\nAssistant:\n<tool_call>\n{\"name\": \"count_elements\", \"arguments\": {\"category\": \"Pipes\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["hide", "category", "ẩn", "hết"],
+    "example": "User: hide hết Walls category đi\nAssistant:\n<tool_call>\n{\"name\": \"hide_category\", \"arguments\": {\"category\": \"Walls\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["color", "system", "override", "theo"],
+    "example": "User: override color cho pipe theo system đi\nAssistant:\n<tool_call>\n{\"name\": \"override_color_by_system\", \"arguments\": {\"category\": \"Pipes\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["check", "clash", "ống gió", "ống nước"],
+    "example": "User: check clash giữa ống gió và ống nước\nAssistant:\n<tool_call>\n{\"name\": \"check_clashes\", \"arguments\": {\"category_a\": \"Ducts\", \"category_b\": \"Pipes\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["export", "csv", "xuất", "wall"],
+    "example": "User: xuất walls ra csv file đi\nAssistant:\n<tool_call>\n{\"name\": \"export_to_csv\", \"arguments\": {\"category\": \"Walls\", \"param_names\": [\"Mark\", \"Type Name\", \"Length\"]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["create", "3d", "view", "system", "cho"],
+    "example": "User: tạo 3D view cho system Supply Air\nAssistant:\n<tool_call>\n{\"name\": \"create_3d_view_by_system\", \"arguments\": {\"system_name\": \"Supply Air\", \"view_name\": \"3D_Supply_Air\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["ong gio", "duct", "bao nhieu", "bao nhiêu", "count"],
+    "example": "User: bao nhieu ong gio trong model\nAssistant:\n<tool_call>\n{\"name\": \"count_elements\", \"arguments\": {\"category\": \"Ducts\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["kiem tra", "health", "mo hinh", "model"],
+    "example": "User: kiem tra suc khoe mo hinh\nAssistant:\n<tool_call>\n{\"name\": \"audit_model_standards\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["trace", "routing", "tuyến", "element"],
+    "example": "User: trace tuyến ống từ element 12345 đến riser\nAssistant:\n<tool_call>\n{\"name\": \"get_mep_routing_path\", \"arguments\": {\"element_id\": 12345, \"stop_at_vertical\": true}}\n</tool_call>"
+  },
+  {
+    "keywords": ["boq", "duct", "surface", "diện tích"],
+    "example": "User: tạo BOQ cho duct theo chiều dài và diện tích bề mặt\nAssistant:\n<tool_call>\n{\"name\": \"mep_quantity_takeoff\", \"arguments\": {\"categories\": [\"Ducts\"]}}\n</tool_call>"
   }
 ]

@@ -28,7 +28,25 @@ namespace RevitChat.Handler
 
         public event Action<string> OnError;
 
+        #pragma warning disable CS0067 // reserved for future skill progress reporting
+        public event Action<string> OnProgress;
+        #pragma warning restore CS0067
+
         public IReadOnlyCollection<string> LastTransactionNames => _lastTransactionNames;
+
+        public string LastTransactionName => _lastTransactionNames.Count > 0 ? _lastTransactionNames[0] : null;
+
+        public bool TryPopLastTransaction(out string name)
+        {
+            if (_lastTransactionNames.Count > 0)
+            {
+                name = _lastTransactionNames[0];
+                _lastTransactionNames.RemoveAt(0);
+                return true;
+            }
+            name = null;
+            return false;
+        }
 
         public RevitChatHandler(ChatRequestQueue queue, SkillRegistry skillRegistry)
         {

@@ -1,0 +1,9 @@
+{
+    "model_pattern": "llama3",
+    "tool_call_format": "<tool_call>\n{\"name\": \"{tool_name}\", \"arguments\": {args}}\n</tool_call>",
+    "stop_tokens": ["<|eot_id|>", "<|end_of_turn|>"],
+    "max_tools_in_catalog": 25,
+    "few_shot_style": "xml",
+    "supports_system_role": true,
+    "notes": "Llama 3 prefers concise tool catalogs. Limit to 25 tools for best accuracy."
+}

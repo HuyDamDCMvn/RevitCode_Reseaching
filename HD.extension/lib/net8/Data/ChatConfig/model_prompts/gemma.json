@@ -1,0 +1,9 @@
+{
+    "model_pattern": "gemma",
+    "tool_call_format": "<tool_call>\n{\"name\": \"{tool_name}\", \"arguments\": {args}}\n</tool_call>",
+    "stop_tokens": ["<end_of_turn>", "<eos>"],
+    "max_tools_in_catalog": 20,
+    "few_shot_style": "xml",
+    "supports_system_role": false,
+    "notes": "Gemma models may not properly handle system role. Merge into first user message."
+}

@@ -101,6 +101,8 @@ namespace SmartTag.ML
             }
         }
 
+        // RL policy is handled at the TagPlacementService level, not in PlacementEngine.
+
         /// <summary>
         /// Load training data for KNN matching.
         /// </summary>

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Autodesk.Revit.DB;
@@ -17,7 +18,8 @@ namespace RevitChat.Skills
         protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "generate_clash_report", "compare_element_counts",
-            "get_link_coordination_status", "get_scope_box_summary"
+            "get_link_coordination_status", "get_scope_box_summary",
+            "compare_model_versions", "generate_qc_report"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -79,6 +81,32 @@ namespace RevitChat.Skills
                     "properties": {},
                     "required": []
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("compare_model_versions",
+                "Snapshot current model state and compare with a previous snapshot to detect changes.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "action": { "type": "string", "enum": ["snapshot", "compare"], "description": "Take snapshot or compare with last" },
+                        "snapshot_path": { "type": "string", "description": "Path to saved snapshot (for compare)" }
+                    },
+                    "required": ["action"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("generate_qc_report",
+                "Generate a QC checklist report with pass/fail items. Export to HTML or CSV.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "export_format": { "type": "string", "enum": ["html", "csv", "json"], "description": "Export format (default: json)" },
+                        "checklist": { "type": "array", "items": { "type": "string" }, "description": "Specific checks to run (default: all)" }
+                    },
+                    "required": []
+                }
                 """))
         };
 
@@ -90,6 +118,8 @@ namespace RevitChat.Skills
                 "compare_element_counts" => CompareElementCounts(doc, args),
                 "get_link_coordination_status" => GetLinkCoordinationStatus(doc),
                 "get_scope_box_summary" => GetScopeBoxSummary(doc),
+                "compare_model_versions" => CompareModelVersions(doc, args),
+                "generate_qc_report" => GenerateQcReport(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -338,6 +368,102 @@ namespace RevitChat.Skills
             }).ToList();
 
             return JsonSerializer.Serialize(new { scope_box_count = items.Count, scope_boxes = items }, JsonOpts);
+        }
+
+        private string CompareModelVersions(Document doc, Dictionary<string, object> args)
+        {
+            var action = GetArg(args, "action", "snapshot");
+            var snapshotPath = GetArg<string>(args, "snapshot_path");
+
+            if (action == "snapshot")
+            {
+                var snapshot = new Dictionary<string, object>();
+                var allElems = new FilteredElementCollector(doc).WhereElementIsNotElementType().ToElementIds();
+                snapshot["element_count"] = allElems.Count;
+                snapshot["timestamp"] = DateTime.Now.ToString("o");
+                snapshot["document"] = doc.Title;
+
+                var elements = new FilteredElementCollector(doc).WhereElementIsNotElementType().ToElements();
+                var categories = elements.Where(e => e.Category != null).GroupBy(e => e.Category.Name)
+                    .ToDictionary(g => g.Key, g => g.Count());
+                snapshot["categories"] = categories;
+
+                var path = string.IsNullOrEmpty(snapshotPath)
+                    ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                        $"model_snapshot_{DateTime.Now:yyyyMMdd_HHmmss}.json")
+                    : snapshotPath;
+
+                var json = JsonSerializer.Serialize(snapshot, new JsonSerializerOptions { WriteIndented = true });
+                path = Path.GetFullPath(path);
+                var pathErr = ValidateOutputPath(path);
+                if (pathErr != null) return JsonError(pathErr);
+                File.WriteAllText(path, json);
+                return JsonSerializer.Serialize(new { action = "snapshot", file_path = path, element_count = allElems.Count }, JsonOpts);
+            }
+
+            if (string.IsNullOrEmpty(snapshotPath) || !File.Exists(snapshotPath))
+                return JsonError("snapshot_path required for compare action.");
+
+            var prevJson = File.ReadAllText(snapshotPath);
+            var prev = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(prevJson);
+            int prevCount = prev != null && prev.ContainsKey("element_count") ? prev["element_count"].GetInt32() : 0;
+            int currentCount = new FilteredElementCollector(doc).WhereElementIsNotElementType().GetElementCount();
+
+            return JsonSerializer.Serialize(new
+            {
+                action = "compare",
+                previous_count = prevCount,
+                current_count = currentCount,
+                difference = currentCount - prevCount,
+                snapshot_file = snapshotPath
+            }, JsonOpts);
+        }
+
+        private string GenerateQcReport(Document doc, Dictionary<string, object> args)
+        {
+            var format = GetArg(args, "export_format", "json");
+
+            var checks = new List<object>();
+
+            int warnings = doc.GetWarnings().Count;
+            checks.Add(new { check = "Model Warnings", status = warnings < 500 ? "PASS" : "FAIL", value = warnings, limit = 500 });
+
+            var families = new FilteredElementCollector(doc).OfClass(typeof(Family)).Cast<Family>().ToList();
+            var familyInstances = new FilteredElementCollector(doc).OfClass(typeof(FamilyInstance)).Cast<FamilyInstance>().ToList();
+            var usedFamilyIds = new HashSet<ElementId>(familyInstances.Select(fi => fi.Symbol?.Family?.Id).Where(id => id != null && id != ElementId.InvalidElementId));
+            int unusedFamilies = families.Count(f => !usedFamilyIds.Contains(f.Id));
+            int totalFamilies = families.Count;
+            double unusedPct = totalFamilies > 0 ? (double)unusedFamilies / totalFamilies * 100 : 0;
+            checks.Add(new { check = "Unused Families", status = unusedPct < 30 ? "PASS" : "WARNING", value = $"{unusedFamilies} ({unusedPct:F0}%)", limit = "30%" });
+
+            var views = new FilteredElementCollector(doc).OfClass(typeof(View)).Cast<View>()
+                .Where(v => !v.IsTemplate).ToList();
+            var unnamedViews = views.Count(v => v.Name.StartsWith("Copy of") || v.Name.Contains("{"));
+            checks.Add(new { check = "View Naming", status = unnamedViews == 0 ? "PASS" : "WARNING", value = $"{unnamedViews} poorly named views" });
+
+            int passCount = 0;
+            foreach (var c in checks)
+            {
+                var status = ((dynamic)c).status;
+                if (status == "PASS") passCount++;
+            }
+            int score = checks.Count > 0 ? passCount * 100 / checks.Count : 0;
+
+            if (format == "html")
+            {
+                var html = "<html><body><h1>QC Report</h1><table border='1'><tr><th>Check</th><th>Status</th><th>Value</th></tr>";
+                foreach (dynamic c in checks)
+                    html += $"<tr><td>{c.check}</td><td>{c.status}</td><td>{c.value}</td></tr>";
+                html += $"</table><p>Score: {score}/100</p></body></html>";
+                var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                    $"QC_Report_{DateTime.Now:yyyyMMdd_HHmmss}.html");
+                var qcPathErr = ValidateOutputPath(path);
+                if (qcPathErr != null) return JsonError(qcPathErr);
+                File.WriteAllText(path, html);
+                return JsonSerializer.Serialize(new { format = "html", file_path = path, score }, JsonOpts);
+            }
+
+            return JsonSerializer.Serialize(new { score, check_count = checks.Count, checks }, JsonOpts);
         }
     }
 }

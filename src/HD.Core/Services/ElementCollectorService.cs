@@ -126,6 +126,18 @@ namespace HD.Core.Services
 
             var collector = new FilteredElementCollector(doc, viewId)
                 .WhereElementIsNotElementType();
+            try
+            {
+                foreach (Category cat in doc.Settings.Categories)
+                {
+                    if (cat?.Name == categoryName)
+                    {
+                        collector = collector.OfCategoryId(cat.Id);
+                        break;
+                    }
+                }
+            }
+            catch { /* Fall back to no category filter */ }
 
             foreach (var elem in collector)
             {
@@ -165,6 +177,21 @@ namespace HD.Core.Services
 
             var collector = new FilteredElementCollector(doc, viewId)
                 .WhereElementIsNotElementType();
+            if (!string.IsNullOrEmpty(categoryName))
+            {
+                try
+                {
+                    foreach (Category cat in doc.Settings.Categories)
+                    {
+                        if (cat?.Name == categoryName)
+                        {
+                            collector = collector.OfCategoryId(cat.Id);
+                            break;
+                        }
+                    }
+                }
+                catch { /* Fall back to no category filter */ }
+            }
 
             foreach (var elem in collector)
             {
@@ -212,7 +239,10 @@ namespace HD.Core.Services
                 var elemType = doc.GetElement(typeId);
                 if (elemType != null)
                 {
-                    var famNameParam = elemType.get_Parameter(BuiltInParameter.ALL_MODEL_FAMILY_NAME);
+                    var famNameParam = elemType.get_Parameter(BuiltInParameter.SYMBOL_FAMILY_NAME_PARAM);
+                    if (famNameParam?.HasValue == true)
+                        return famNameParam.AsString();
+                    famNameParam = elemType.get_Parameter(BuiltInParameter.ALL_MODEL_FAMILY_NAME);
                     if (famNameParam?.HasValue == true)
                         return famNameParam.AsString();
                     return elemType.Name;

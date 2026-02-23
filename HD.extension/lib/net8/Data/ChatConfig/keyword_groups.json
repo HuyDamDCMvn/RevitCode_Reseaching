@@ -174,19 +174,19 @@
     },
     {
       "name": "Visibility / Isolate",
-      "keywords": ["hide", "show", "unhide", "isolate", "visible", "visibility", "ẩn", "hiện", "cô lập"],
+      "keywords": ["hide", "show", "unhide", "isolate", "visible", "visibility", "ẩn", "hiện", "cô lập", "cách ly", "hiển thị", "tắt", "bật"],
       "tools": ["hide_elements", "unhide_elements", "isolate_elements", "isolate_category", "hide_category", "unhide_category", "reset_view_isolation", "get_hidden_elements", "isolate_by_level", "hide_by_level", "isolate_by_filter", "create_3d_view", "create_3d_view_by_system", "set_view_range", "screenshot_view"],
       "weight": 2
     },
     {
       "name": "MEP",
-      "keywords": ["duct", "pipe", "mep", "hvac", "mechanical", "electrical", "plumbing", "conduit", "cable", "ống", "điện", "fire", "sprinkler", "cháy", "system total", "tổng hệ thống", "thống kê", "theo system", "split", "chia đoạn", "cắt đoạn"],
+      "keywords": ["duct", "pipe", "mep", "hvac", "mechanical", "electrical", "plumbing", "conduit", "cable", "ống", "điện", "fire", "sprinkler", "cháy", "system total", "tổng hệ thống", "thống kê", "theo system", "split", "chia đoạn", "cắt đoạn", "ống gió", "ống nước", "cơ điện", "phụ kiện", "thoát nước", "cấp nước", "thông gió", "điều hòa", "pccc", "phòng cháy", "bơm", "quạt", "van", "damper", "chiller"],
       "tools": ["get_mep_systems", "get_system_elements", "get_duct_summary", "get_pipe_summary", "get_conduit_summary", "get_cable_tray_summary", "get_mechanical_equipment", "get_plumbing_fixtures", "get_electrical_equipment", "get_fire_protection_equipment", "get_fittings", "check_disconnected_elements", "mep_quantity_takeoff", "get_connector_info", "get_system_connectivity", "calculate_system_totals", "split_mep_elements"],
       "weight": 1
     },
     {
       "name": "Space / Zone",
-      "keywords": ["space", "zone", "airflow", "không gian", "lưu lượng", "sensor", "cảm biến", "trong space", "in space", "thiết bị trong", "thể tích", "diện tích", "volume", "area", "cbm", "sqm"],
+      "keywords": ["space", "zone", "airflow", "không gian", "lưu lượng", "sensor", "cảm biến", "trong space", "in space", "thiết bị trong", "thể tích", "diện tích", "volume", "area", "cbm", "sqm", "phân vùng", "khu vực"],
       "tools": ["get_mep_spaces", "get_hvac_zones", "check_space_airflow", "get_unoccupied_spaces", "get_elements_in_space"],
       "weight": 1
     },
@@ -210,7 +210,7 @@
     },
     {
       "name": "Export / BOQ",
-      "keywords": ["export", "csv", "boq", "xuất"],
+      "keywords": ["export", "csv", "boq", "xuất", "khối lượng", "bóc khối lượng", "xuất file", "xuất dữ liệu"],
       "tools": ["export_to_csv", "mep_quantity_takeoff", "export_mep_boq"],
       "weight": 1
     },
@@ -258,7 +258,7 @@
     },
     {
       "name": "Connectivity / Trace",
-      "keywords": ["connect", "connector", "trace", "path", "route", "routing", "kết nối", "đường đi", "đường ống", "nối ống", "nối", "disconnect", "ngắt", "auto connect", "tự nối", "system delete", "xóa system"],
+      "keywords": ["connect", "connector", "trace", "path", "route", "routing", "kết nối", "đường đi", "đường ống", "nối ống", "nối", "disconnect", "ngắt", "auto connect", "tự nối", "system delete", "xóa system", "tuyến", "riser", "traverse", "network", "hệ thống ống"],
       "tools": ["get_connector_info", "get_system_connectivity", "get_mep_routing_path", "connect_mep_elements", "disconnect_mep_elements", "delete_mep_system", "auto_connect_mep"],
       "weight": 1
     },
@@ -270,13 +270,13 @@
     },
     {
       "name": "Clash / Clearance",
-      "keywords": ["clash", "clearance", "overlap", "va chạm"],
+      "keywords": ["clash", "clearance", "overlap", "va chạm", "xung đột", "chồng chéo", "khoảng cách an toàn"],
       "tools": ["check_clashes", "check_clearance", "find_overlapping", "get_clash_summary"],
       "weight": 1
     },
     {
       "name": "Health / Purge",
-      "keywords": ["warning", "health", "purge", "unused", "cảnh báo", "không dùng", "detail level", "design option", "unresolved", "dọn dẹp", "xóa không dùng", "audit", "health score", "duplicate element", "trùng lặp", "đánh giá"],
+      "keywords": ["warning", "health", "purge", "unused", "cảnh báo", "không dùng", "detail level", "design option", "unresolved", "dọn dẹp", "xóa không dùng", "audit", "health score", "duplicate element", "trùng lặp", "đánh giá", "sức khỏe", "mô hình", "chất lượng", "lỗi"],
       "tools": ["get_model_warnings", "get_warning_elements", "get_model_statistics", "find_imported_cad", "find_inplace_families", "find_unused_families", "get_purgeable_elements", "find_duplicate_types", "find_unresolved_references", "get_design_options", "audit_detail_levels", "purge_unused_elements", "audit_model_standards", "find_duplicate_elements"],
       "weight": 1
     },
@@ -306,7 +306,7 @@
     },
     {
       "name": "Links",
-      "keywords": ["link", "linked", "liên kết"],
+      "keywords": ["link", "linked", "liên kết", "mô hình liên kết", "xref"],
       "tools": ["get_linked_models", "get_linked_elements", "count_linked_elements", "get_linked_element_parameters", "search_linked_elements", "get_link_types"],
       "weight": 1
     },
@@ -324,13 +324,13 @@
     },
     {
       "name": "Coordination Report",
-      "keywords": ["coordination", "report", "phối hợp", "báo cáo"],
+      "keywords": ["coordination", "report", "phối hợp", "báo cáo", "đối chiếu", "so sánh mô hình"],
       "tools": ["generate_clash_report", "compare_element_counts", "get_link_coordination_status", "get_scope_box_summary"],
       "weight": 1
     },
     {
       "name": "Insulation / Hanger",
-      "keywords": ["insulation", "hanger", "bảo ôn", "giá đỡ", "cách nhiệt", "insulate"],
+      "keywords": ["insulation", "hanger", "bảo ôn", "giá đỡ", "cách nhiệt", "insulate", "support", "treo"],
       "tools": ["get_insulation_quantities", "get_hanger_quantities", "add_change_insulation"],
       "weight": 1
     },

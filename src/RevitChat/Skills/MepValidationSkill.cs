@@ -19,7 +19,8 @@ namespace RevitChat.Skills
             "check_disconnected_elements", "check_missing_parameters",
             "check_elevation_conflicts", "check_oversized_elements", "get_warnings_mep",
             "check_pipe_slope", "check_slope_continuity", "get_penetration_schedule",
-            "check_fire_dampers", "check_insulation_coverage", "check_velocity"
+            "check_fire_dampers", "check_insulation_coverage", "check_velocity",
+            "check_noise_level", "check_access_panel"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -182,6 +183,34 @@ namespace RevitChat.Skills
                     },
                     "required": ["category"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("check_noise_level",
+                "Estimate noise level from velocity and duct/pipe size using standard formulas.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "category": { "type": "string", "enum": ["Pipes", "Ducts"], "description": "Category" },
+                        "system_name": { "type": "string", "description": "Optional system name filter" },
+                        "max_db": { "type": "number", "description": "Max acceptable noise in dB (default 45)" }
+                    },
+                    "required": ["category"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("check_access_panel",
+                "Check if valves/dampers are at accessible heights from floor.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "min_height_mm": { "type": "number", "description": "Min accessible height in mm (default 600)" },
+                        "max_height_mm": { "type": "number", "description": "Max accessible height in mm (default 2000)" },
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Optional specific elements" }
+                    },
+                    "required": []
+                }
                 """))
         };
 
@@ -200,6 +229,8 @@ namespace RevitChat.Skills
                 "check_fire_dampers" => CheckFireDampers(doc, args),
                 "check_insulation_coverage" => CheckInsulationCoverage(uidoc, doc, args),
                 "check_velocity" => CheckVelocity(doc, args),
+                "check_noise_level" => CheckNoiseLevel(doc, args),
+                "check_access_panel" => CheckAccessPanel(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -642,7 +673,7 @@ namespace RevitChat.Skills
                 var startElem = doc.GetElement(new ElementId(startId));
                 if (startElem == null) return JsonError($"Element {startId} not found.");
                 pipes = pipes.Where(p => p.Id.Value == startId ||
-                    IsInSameRun(doc, startElem, p, pipes)).ToList();
+                    IsInSameSystem(doc, startElem, p, pipes)).ToList();
             }
 
             var issues = new List<object>();
@@ -712,7 +743,7 @@ namespace RevitChat.Skills
             }, JsonOpts);
         }
 
-        private static bool IsInSameRun(Document doc, Element start, Element candidate, List<Element> allPipes)
+        private static bool IsInSameSystem(Document doc, Element start, Element candidate, List<Element> allPipes)
         {
             var sys1 = start.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "";
             var sys2 = candidate.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "";
@@ -1029,6 +1060,101 @@ namespace RevitChat.Skills
                 max_velocity_ms = maxVelocityMs,
                 issues_found = issues.Count,
                 issues
+            }, JsonOpts);
+        }
+
+        private string CheckNoiseLevel(Document doc, Dictionary<string, object> args)
+        {
+            var category = GetArg<string>(args, "category");
+            var systemName = GetArg<string>(args, "system_name");
+            double maxDb = GetArg(args, "max_db", 45.0);
+
+            BuiltInCategory bic = category == "Pipes" ? BuiltInCategory.OST_PipeCurves : BuiltInCategory.OST_DuctCurves;
+            var elements = new FilteredElementCollector(doc).OfCategory(bic).WhereElementIsNotElementType().ToList();
+
+            var results = new List<object>();
+            int overLimit = 0;
+            int totalChecked = 0;
+
+            foreach (var elem in elements)
+            {
+                if (!string.IsNullOrEmpty(systemName))
+                {
+                    var sp = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM);
+                    if (sp == null || (sp.AsString() ?? "").IndexOf(systemName, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                }
+
+                var flowParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_FLOW_PARAM)
+                             ?? elem.get_Parameter(BuiltInParameter.RBS_DUCT_FLOW_PARAM);
+                double flow = flowParam?.AsDouble() ?? 0;
+
+                var diaParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)
+                            ?? elem.get_Parameter(BuiltInParameter.RBS_CURVE_DIAMETER_PARAM);
+                double diameter = diaParam?.AsDouble() ?? 0;
+                if (diameter <= 0) continue;
+
+                totalChecked++;
+                double area = Math.PI * Math.Pow(diameter / 2, 2);
+                double velocity = area > 0
+                    ? (category == "Ducts" ? flow / (60.0 * area) : flow / area)
+                    : 0;
+                double noiseLevelDb = 10 + 50 * Math.Log10(Math.Max(velocity, 0.1)) + 10 * Math.Log10(Math.Max(diameter * 304.8, 1));
+
+                if (noiseLevelDb > maxDb) overLimit++;
+                if (results.Count < 50)
+                    results.Add(new { id = elem.Id.Value, name = elem.Name,
+                        velocity_fps = Math.Round(velocity, 2), estimated_noise_db = Math.Round(noiseLevelDb, 1),
+                        exceeds_limit = noiseLevelDb > maxDb });
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                category, max_db = maxDb, total_checked = totalChecked, over_limit = overLimit, elements = results
+            }, JsonOpts);
+        }
+
+        private string CheckAccessPanel(Document doc, Dictionary<string, object> args)
+        {
+            double minH = GetArg(args, "min_height_mm", 600.0) / 304.8;
+            double maxH = GetArg(args, "max_height_mm", 2000.0) / 304.8;
+            var specificIds = GetArgLongArray(args, "element_ids");
+
+            var elements = new List<Element>();
+            if (specificIds != null && specificIds.Count > 0)
+            {
+                elements = specificIds.Select(id => doc.GetElement(new ElementId(id))).Where(e => e != null).ToList();
+            }
+            else
+            {
+                elements = new FilteredElementCollector(doc)
+                    .OfCategory(BuiltInCategory.OST_PipeAccessory)
+                    .WhereElementIsNotElementType().ToList();
+                elements.AddRange(new FilteredElementCollector(doc)
+                    .OfCategory(BuiltInCategory.OST_DuctAccessory)
+                    .WhereElementIsNotElementType());
+            }
+
+            var accessible = new List<object>();
+            var inaccessible = new List<object>();
+
+            foreach (var elem in elements)
+            {
+                var bb = elem.get_BoundingBox(null);
+                if (bb == null) continue;
+                double centerZ = (bb.Min.Z + bb.Max.Z) / 2;
+                bool ok = centerZ >= minH && centerZ <= maxH;
+                var info = new { id = elem.Id.Value, name = elem.Name, category = elem.Category?.Name,
+                    height_mm = Math.Round(centerZ * 304.8, 0), accessible = ok };
+                if (ok) accessible.Add(info); else inaccessible.Add(info);
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                total = accessible.Count + inaccessible.Count,
+                accessible_count = accessible.Count,
+                inaccessible_count = inaccessible.Count,
+                height_range_mm = new { min = minH * 304.8, max = maxH * 304.8 },
+                inaccessible = inaccessible.Take(50)
             }, JsonOpts);
         }
 

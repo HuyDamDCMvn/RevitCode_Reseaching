@@ -217,21 +217,10 @@ namespace SmartTag
 
             var collector = new ElementCollector(doc, view);
             var stats = collector.GetCategoryStats();
-            
-            // OPTIMIZATION: Don't load tag types here - it's slow
-            // Tag types will be loaded lazily when user selects a category
-            // or in background after initial load
-            
-            // Quick dispatch to UI first (fast feedback)
-            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                OnCategoryStatsLoaded?.Invoke(stats);
-            }));
 
             OnStatusUpdate?.Invoke($"Found {stats.Count} taggable categories");
             
-            // THEN load tag types in background (non-blocking)
-            // This runs after UI is already updated
+            // Load tag types in background (non-blocking)
             foreach (var stat in stats)
             {
                 stat.AvailableTagTypes = collector.GetTagTypesForCategory(stat.Category);

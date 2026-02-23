@@ -51,6 +51,7 @@ namespace CommonFeature.Handlers
         private RequestType _request = RequestType.None;
         private BoundaryDisplaySettings _settings;
         private readonly object _lock = new();
+        private UIDocument _uidoc;
 
         #endregion
 
@@ -105,16 +106,16 @@ namespace CommonFeature.Handlers
                 _settings = null;
             }
 
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return;
-            var doc = uidoc.Document;
+            _uidoc = app.ActiveUIDocument;
+            if (_uidoc == null) return;
+            var doc = _uidoc.Document;
 
             try
             {
                 switch (request)
                 {
                     case RequestType.PickElements:
-                        ExecutePickElements(uidoc);
+                        ExecutePickElements(_uidoc);
                         break;
                     case RequestType.UpdatePreview:
                         ExecuteUpdatePreview(doc, settings);
@@ -252,11 +253,11 @@ namespace CommonFeature.Handlers
 
         private void RefreshActiveView(Document doc)
         {
-            // Force view refresh to update DirectContext3D graphics
+            // Force view refresh to update DirectContext3D graphics.
+            // Use UIDocument from Execute parameter; do not create new UIDocument(doc).
             try
             {
-                var uidoc = new UIDocument(doc);
-                uidoc.RefreshActiveView();
+                _uidoc?.RefreshActiveView();
             }
             catch
             {

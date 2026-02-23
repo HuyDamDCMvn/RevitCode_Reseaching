@@ -20,7 +20,7 @@ namespace RevitChat.Skills
         {
             "tag_elements", "get_untagged_elements", "tag_all_in_view",
             "add_text_note", "get_tag_rules", "get_available_tag_types",
-            "get_empty_tags", "align_tags"
+            "get_empty_tags", "align_tags", "create_dimension", "create_spot_elevation"
         };
 
         #region SmartTag Knowledge
@@ -190,6 +190,34 @@ namespace RevitChat.Skills
                     },
                     "required": ["tag_ids"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("create_dimension",
+                "Create a dimension between references in the active view.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "dimension_type": { "type": "string", "enum": ["linear"], "description": "Dimension type (currently linear only)" },
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to dimension between (2 elements)" },
+                        "line_y_ft": { "type": "number", "description": "Y position of dimension line in feet" }
+                    },
+                    "required": ["element_ids"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("create_spot_elevation",
+                "Create spot elevation annotations on a plan view.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_id": { "type": "integer", "description": "Element to place spot elevation on" },
+                        "point_x_ft": { "type": "number", "description": "X position in feet" },
+                        "point_y_ft": { "type": "number", "description": "Y position in feet" }
+                    },
+                    "required": ["element_id"]
+                }
                 """))
         };
 
@@ -208,6 +236,8 @@ namespace RevitChat.Skills
                 "get_available_tag_types" => GetAvailableTagTypes(doc, args),
                 "get_empty_tags" => GetEmptyTags(doc, view, args),
                 "align_tags" => AlignTags(doc, view, args),
+                "create_dimension" => CreateDimension(uidoc, doc, args),
+                "create_spot_elevation" => CreateSpotElevation(uidoc, doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -883,6 +913,9 @@ namespace RevitChat.Skills
                 typeId = defaultType?.Id ?? ElementId.InvalidElementId;
             }
 
+            if (typeId == ElementId.InvalidElementId)
+                return JsonError("No TextNoteType found in document. Load a text type or provide text_type_id.");
+
             if (dryRun)
             {
                 return JsonSerializer.Serialize(new
@@ -909,6 +942,135 @@ namespace RevitChat.Skills
                     text,
                     location = new { x, y }
                 }, JsonOpts);
+            }
+        }
+
+        #endregion
+
+        #region create_dimension / create_spot_elevation
+
+        private string CreateDimension(UIDocument uidoc, Document doc, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "element_ids");
+            double lineY = GetArg(args, "line_y_ft", double.NaN);
+            if (ids == null || ids.Count < 2) return JsonError("At least 2 element_ids required.");
+
+            var view = uidoc.ActiveView;
+            if (view == null) return JsonError("No active view.");
+
+            var refArray = new ReferenceArray();
+            XYZ pt1 = null, pt2 = null;
+            foreach (var id in ids.Take(2))
+            {
+                var elem = doc.GetElement(new ElementId(id));
+                if (elem == null) return JsonError($"Element {id} not found.");
+                var geom = elem.get_Geometry(new Options { View = view, ComputeReferences = true });
+                if (geom == null) continue;
+                foreach (var obj in geom)
+                {
+                    if (obj is Solid solid)
+                    {
+                        foreach (Face face in solid.Faces)
+                        {
+                            if (face.Reference != null)
+                            {
+                                refArray.Append(face.Reference);
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+                var center = GetElementCenter(elem);
+                if (pt1 == null) pt1 = center; else pt2 = center;
+            }
+
+            if (refArray.Size < 2 || pt1 == null || pt2 == null)
+                return JsonError("Could not get references from elements. Try selecting elements with clear geometry.");
+
+            double y = double.IsNaN(lineY) ? (pt1.Y + pt2.Y) / 2 + 3 : lineY;
+            var dimLine = Line.CreateBound(new XYZ(pt1.X, y, pt1.Z), new XYZ(pt2.X, y, pt2.Z));
+
+            using (var trans = new Transaction(doc, "AI: Create Dimension"))
+            {
+                trans.Start();
+                try
+                {
+                    var dim = doc.Create.NewDimension(view, dimLine, refArray);
+                    trans.Commit();
+                    return JsonSerializer.Serialize(new { created = true, dimension_id = dim.Id.Value }, JsonOpts);
+                }
+                catch (Exception ex)
+                {
+                    if (trans.HasStarted()) trans.RollBack();
+                    return JsonError($"Create dimension failed: {ex.Message}");
+                }
+            }
+        }
+
+        private string CreateSpotElevation(UIDocument uidoc, Document doc, Dictionary<string, object> args)
+        {
+            long elemId = GetArg<long>(args, "element_id");
+            double px = GetArg(args, "point_x_ft", 0.0);
+            double py = GetArg(args, "point_y_ft", 0.0);
+
+            if (elemId <= 0) return JsonError("element_id required.");
+            var elem = doc.GetElement(new ElementId(elemId));
+            if (elem == null) return JsonError($"Element {elemId} not found.");
+
+            var view = uidoc.ActiveView;
+            if (view == null) return JsonError("No active view.");
+
+            var center = GetElementCenter(elem);
+            if (center == null) return JsonError("Cannot determine element location.");
+
+            var spotTypes = new FilteredElementCollector(doc)
+                .OfClass(typeof(SpotDimensionType)).FirstOrDefault();
+            if (spotTypes == null) return JsonError("No spot elevation type found in the document.");
+
+            Reference topRef = null;
+            var geomOpts = new Options { View = view, ComputeReferences = true };
+            var geom = elem.get_Geometry(geomOpts);
+            if (geom != null)
+            {
+                foreach (var obj in geom)
+                {
+                    if (obj is Solid s)
+                    {
+                        foreach (Face f in s.Faces)
+                        {
+                            var normal = f.ComputeNormal(new UV(0.5, 0.5));
+                            if (normal.Z > 0.5 && f.Reference != null)
+                            {
+                                topRef = f.Reference;
+                                break;
+                            }
+                        }
+                    }
+                    if (topRef != null) break;
+                }
+            }
+
+            if (topRef == null) return JsonError("Could not find a top face reference on the element.");
+
+            var point = new XYZ(px, py, center.Z);
+            var bend = point + new XYZ(2, 2, 0);
+            var end = bend + new XYZ(2, 0, 0);
+
+            using (var trans = new Transaction(doc, "AI: Create Spot Elevation"))
+            {
+                trans.Start();
+                try
+                {
+                    var spot = doc.Create.NewSpotElevation(view, topRef, point, bend, end, point, false);
+                    trans.Commit();
+                    return JsonSerializer.Serialize(new { created = true, spot_id = spot.Id.Value }, JsonOpts);
+                }
+                catch (Exception ex)
+                {
+                    if (trans.HasStarted()) trans.RollBack();
+                    return JsonError($"Create spot elevation failed: {ex.Message}");
+                }
             }
         }
 
