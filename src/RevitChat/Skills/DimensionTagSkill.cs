@@ -19,7 +19,8 @@ namespace RevitChat.Skills
         protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "tag_elements", "get_untagged_elements", "tag_all_in_view",
-            "add_text_note", "get_tag_rules", "get_available_tag_types"
+            "add_text_note", "get_tag_rules", "get_available_tag_types",
+            "get_empty_tags", "align_tags"
         };
 
         #region SmartTag Knowledge
@@ -99,7 +100,10 @@ namespace RevitChat.Skills
                     "type": "object",
                     "properties": {
                         "category": { "type": "string", "description": "Category name to check (e.g. 'Doors', 'Pipes', 'Ducts')" },
-                        "limit": { "type": "integer", "description": "Max results (default 100)" }
+                        "limit": { "type": "integer", "description": "Max results (default 100)" },
+                        "system_name": { "type": "string", "description": "Filter by MEP system name" },
+                        "level": { "type": "string", "description": "Filter by level name" },
+                        "include_empty_tags": { "type": "boolean", "description": "Count elements with empty-text tags as untagged (default: true)" }
                     },
                     "required": ["category"]
                 }
@@ -159,6 +163,33 @@ namespace RevitChat.Skills
                     },
                     "required": ["category"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("get_empty_tags",
+                "Find tags in the active view that exist but display empty/no text. Useful for QC checks.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "category": { "type": "string", "description": "Filter by element category (e.g. 'Pipes', 'Ducts')" },
+                        "limit": { "type": "integer", "description": "Max results (default 100)" }
+                    },
+                    "required": []
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("align_tags",
+                "Align multiple tags/text notes to each other using horizontal or vertical alignment.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "tag_ids": { "type": "array", "items": { "type": "integer" }, "description": "Tag element IDs to align" },
+                        "alignment": { "type": "string", "enum": ["left", "right", "center", "top", "bottom"], "description": "Alignment direction (default: left)" },
+                        "dry_run": { "type": "boolean", "description": "Preview only. Default false." }
+                    },
+                    "required": ["tag_ids"]
+                }
                 """))
         };
 
@@ -175,6 +206,8 @@ namespace RevitChat.Skills
                 "add_text_note" => AddTextNote(doc, view, args),
                 "get_tag_rules" => GetTagRules(args),
                 "get_available_tag_types" => GetAvailableTagTypes(doc, args),
+                "get_empty_tags" => GetEmptyTags(doc, view, args),
+                "align_tags" => AlignTags(doc, view, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -462,7 +495,7 @@ namespace RevitChat.Skills
 
         #region get_untagged_elements (enhanced with MEP info)
 
-        private static HashSet<long> CollectTaggedElementIds(Document doc, View view)
+        private static HashSet<long> CollectTaggedElementIds(Document doc, View view, bool excludeEmptyTags = false)
         {
             var taggedIds = new HashSet<long>();
             var tags = new FilteredElementCollector(doc, view.Id)
@@ -473,6 +506,12 @@ namespace RevitChat.Skills
             {
                 try
                 {
+                    bool hasText = true;
+                    if (excludeEmptyTags)
+                    {
+                        try { hasText = tag.HasTagText(); } catch { continue; }
+                        if (!hasText) continue;
+                    }
                     foreach (var e in tag.GetTaggedLocalElements())
                         taggedIds.Add(e.Id.Value);
                 }
@@ -485,6 +524,9 @@ namespace RevitChat.Skills
         {
             var catName = GetArg<string>(args, "category");
             int limit = GetArg(args, "limit", 100);
+            var systemFilter = GetArg<string>(args, "system_name");
+            var levelFilter = GetArg<string>(args, "level");
+            bool includeEmptyTags = GetArg(args, "include_empty_tags", true);
 
             var bic = ResolveCategoryFilter(doc, catName);
             if (!bic.HasValue) return JsonError($"Category '{catName}' not found.");
@@ -494,12 +536,32 @@ namespace RevitChat.Skills
                 .WhereElementIsNotElementType()
                 .ToList();
 
-            var taggedIds = CollectTaggedElementIds(doc, view);
+            var taggedIds = CollectTaggedElementIds(doc, view, excludeEmptyTags: includeEmptyTags);
 
             bool isMep = IsMepCategory(bic.Value);
 
-            var untagged = elements
-                .Where(e => !taggedIds.Contains(e.Id.Value))
+            var query = elements.Where(e => !taggedIds.Contains(e.Id.Value));
+
+            if (!string.IsNullOrEmpty(systemFilter))
+            {
+                query = query.Where(e =>
+                {
+                    var sysParam = e.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM);
+                    return sysParam != null && sysParam.HasValue &&
+                        string.Equals(sysParam.AsString(), systemFilter, StringComparison.OrdinalIgnoreCase);
+                });
+            }
+
+            if (!string.IsNullOrEmpty(levelFilter))
+            {
+                query = query.Where(e =>
+                {
+                    var lvl = GetElementLevel(doc, e);
+                    return string.Equals(lvl, levelFilter, StringComparison.OrdinalIgnoreCase);
+                });
+            }
+
+            var untagged = query
                 .Take(limit)
                 .Select(e =>
                 {
@@ -519,6 +581,9 @@ namespace RevitChat.Skills
                         var size = GetMepSizeString(e);
                         if (size != null) info["size"] = size;
                     }
+
+                    var lvl = GetElementLevel(doc, e);
+                    if (lvl != "-") info["level"] = lvl;
 
                     return info;
                 }).ToList();
@@ -555,6 +620,157 @@ namespace RevitChat.Skills
                 return $"{Math.Round(w.AsDouble() * 304.8)}x{Math.Round(h.AsDouble() * 304.8)}";
 
             return null;
+        }
+
+        #endregion
+
+        #region get_empty_tags
+
+        private string GetEmptyTags(Document doc, View view, Dictionary<string, object> args)
+        {
+            var catFilter = GetArg<string>(args, "category");
+            int limit = GetArg(args, "limit", 100);
+
+            var emptyTags = new List<object>();
+            var tags = new FilteredElementCollector(doc, view.Id)
+                .OfClass(typeof(IndependentTag))
+                .Cast<IndependentTag>();
+
+            foreach (var tag in tags)
+            {
+                bool hasText = true;
+                try { hasText = tag.HasTagText(); } catch { continue; }
+                if (hasText) continue;
+
+                try
+                {
+                    var taggedElements = tag.GetTaggedLocalElements();
+                    if (taggedElements == null || taggedElements.Count == 0) continue;
+
+                    var hostElem = taggedElements.First();
+                    var hostCategory = hostElem?.Category?.Name ?? "-";
+
+                    if (!string.IsNullOrEmpty(catFilter))
+                    {
+                        var bic = ResolveCategoryFilter(doc, catFilter);
+                        if (bic.HasValue && hostElem?.Category?.Id.Value != (long)bic.Value)
+                            continue;
+                    }
+
+                    emptyTags.Add(new
+                    {
+                        tag_id = tag.Id.Value,
+                        host_element_id = hostElem?.Id.Value ?? -1L,
+                        host_category = hostCategory,
+                        host_name = hostElem?.Name ?? "-",
+                        host_type = (doc.GetElement(hostElem?.GetTypeId() ?? ElementId.InvalidElementId) as ElementType)?.Name ?? "-"
+                    });
+                }
+                catch { }
+
+                if (emptyTags.Count >= limit) break;
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                empty_tag_count = emptyTags.Count,
+                empty_tags = emptyTags
+            }, JsonOpts);
+        }
+
+        #endregion
+
+        #region align_tags
+
+        private string AlignTags(Document doc, View view, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "tag_ids");
+            var alignment = GetArg(args, "alignment", "left");
+            bool dryRun = GetArg(args, "dry_run", false);
+
+            if (ids == null || ids.Count < 2)
+                return JsonError("At least 2 tag_ids required for alignment.");
+
+            var elements = new List<Element>();
+            foreach (var id in ids)
+            {
+                var elem = doc.GetElement(new ElementId(id));
+                if (elem != null) elements.Add(elem);
+            }
+
+            if (elements.Count < 2)
+                return JsonError("At least 2 valid tag elements required.");
+
+            try
+            {
+                var utilsType = typeof(Document).Assembly
+                    .GetType("Autodesk.Revit.DB.AnnotationMultipleAlignmentUtils");
+                if (utilsType == null)
+                    return JsonError("align_tags requires Revit 2025 or later.");
+            }
+            catch
+            {
+                return JsonError("align_tags requires Revit 2025 or later.");
+            }
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_align = elements.Count,
+                    alignment
+                }, JsonOpts);
+            }
+
+            int moved = 0;
+            var err = RunInTransaction(doc, "AI: Align Tags", () =>
+            {
+                var boxes = new List<(Element elem, BoundingBoxXYZ bb)>();
+                foreach (var elem in elements)
+                {
+                    var bb = elem.get_BoundingBox(view);
+                    if (bb != null) boxes.Add((elem, bb));
+                }
+
+                if (boxes.Count < 2) return;
+
+                double targetX = 0, targetY = 0;
+                switch (alignment)
+                {
+                    case "left": targetX = boxes.Min(b => b.bb.Min.X); break;
+                    case "right": targetX = boxes.Max(b => b.bb.Max.X); break;
+                    case "center": targetX = boxes.Average(b => (b.bb.Min.X + b.bb.Max.X) / 2); break;
+                    case "top": targetY = boxes.Max(b => b.bb.Max.Y); break;
+                    case "bottom": targetY = boxes.Min(b => b.bb.Min.Y); break;
+                }
+
+                foreach (var (elem, bb) in boxes)
+                {
+                    try
+                    {
+                        double dx = 0, dy = 0;
+                        switch (alignment)
+                        {
+                            case "left": dx = targetX - bb.Min.X; break;
+                            case "right": dx = targetX - bb.Max.X; break;
+                            case "center": dx = targetX - (bb.Min.X + bb.Max.X) / 2; break;
+                            case "top": dy = targetY - bb.Max.Y; break;
+                            case "bottom": dy = targetY - bb.Min.Y; break;
+                        }
+
+                        if (Math.Abs(dx) > 1e-6 || Math.Abs(dy) > 1e-6)
+                        {
+                            ElementTransformUtils.MoveElement(doc, elem.Id, new XYZ(dx, dy, 0));
+                            moved++;
+                        }
+                    }
+                    catch { }
+                }
+            });
+
+            if (err != null) return JsonError(err);
+            return JsonSerializer.Serialize(new { aligned = moved, alignment }, JsonOpts);
         }
 
         #endregion

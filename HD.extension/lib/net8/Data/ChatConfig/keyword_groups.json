@@ -24,7 +24,9 @@
     "isolate_by_level",
     "override_color_by_filter",
     "get_levels_detailed",
-    "get_hidden_elements"
+    "get_hidden_elements",
+    "get_element_geometry",
+    "find_elements_near"
   ],
   "action_keywords": [
     "count",
@@ -160,8 +162,8 @@
   "groups": [
     {
       "name": "Color / Override",
-      "keywords": ["color", "red", "blue", "green", "yellow", "orange", "purple", "pink", "cyan", "override color", "tô màu", "đổi màu"],
-      "tools": ["override_element_color", "override_category_color", "reset_element_overrides", "set_element_transparency", "override_color_by_level", "override_color_by_filter"],
+      "keywords": ["color", "red", "blue", "green", "yellow", "orange", "purple", "pink", "cyan", "override color", "tô màu", "đổi màu", "heat map", "gradient", "by system", "theo hệ thống"],
+      "tools": ["override_element_color", "override_category_color", "reset_element_overrides", "set_element_transparency", "override_color_by_level", "override_color_by_filter", "override_color_by_system", "override_color_by_parameter"],
       "weight": 2
     },
     {
@@ -173,7 +175,7 @@
     {
       "name": "Visibility / Isolate",
       "keywords": ["hide", "show", "unhide", "isolate", "visible", "visibility", "ẩn", "hiện", "cô lập"],
-      "tools": ["hide_elements", "unhide_elements", "isolate_elements", "isolate_category", "hide_category", "unhide_category", "reset_view_isolation", "get_hidden_elements", "isolate_by_level", "hide_by_level", "isolate_by_filter", "create_3d_view", "create_3d_view_by_system"],
+      "tools": ["hide_elements", "unhide_elements", "isolate_elements", "isolate_category", "hide_category", "unhide_category", "reset_view_isolation", "get_hidden_elements", "isolate_by_level", "hide_by_level", "isolate_by_filter", "create_3d_view", "create_3d_view_by_system", "set_view_range", "screenshot_view"],
       "weight": 2
     },
     {
@@ -214,8 +216,8 @@
     },
     {
       "name": "Tag / Dimension",
-      "keywords": ["tag", "dimension", "text", "ghi chú", "kích thước", "untagged", "chưa tag", "chưa được tag", "chưa ghi", "tag type", "tag family", "tag format", "loại tag", "định dạng tag", "tag rule", "annotation"],
-      "tools": ["tag_elements", "get_untagged_elements", "tag_all_in_view", "add_text_note", "get_tag_rules", "get_available_tag_types"],
+      "keywords": ["tag", "dimension", "text", "ghi chú", "kích thước", "untagged", "chưa tag", "chưa được tag", "chưa ghi", "tag type", "tag family", "tag format", "loại tag", "định dạng tag", "tag rule", "annotation", "align", "empty tag", "blank tag", "tag rỗng", "canh chỉnh"],
+      "tools": ["tag_elements", "get_untagged_elements", "tag_all_in_view", "add_text_note", "get_tag_rules", "get_available_tag_types", "align_tags", "get_empty_tags"],
       "weight": 1
     },
     {
@@ -250,8 +252,8 @@
     },
     {
       "name": "MEP Validation",
-      "keywords": ["missing", "oversized", "elevation", "validate", "thiếu", "quá cỡ", "slope", "độ dốc", "continuity", "liên tục", "penetration", "xuyên sàn", "fire damper", "van chống cháy"],
-      "tools": ["check_missing_parameters", "check_elevation_conflicts", "check_oversized_elements", "get_warnings_mep", "check_pipe_slope", "check_slope_continuity", "get_penetration_schedule", "check_fire_dampers"],
+      "keywords": ["missing", "oversized", "elevation", "validate", "thiếu", "quá cỡ", "slope", "độ dốc", "continuity", "liên tục", "penetration", "xuyên sàn", "fire damper", "van chống cháy", "insulation", "bảo ôn", "cách nhiệt", "velocity", "tốc độ", "vận tốc"],
+      "tools": ["check_missing_parameters", "check_elevation_conflicts", "check_oversized_elements", "get_warnings_mep", "check_pipe_slope", "check_slope_continuity", "get_penetration_schedule", "check_fire_dampers", "check_insulation_coverage", "check_velocity"],
       "weight": 1
     },
     {
@@ -274,14 +276,14 @@
     },
     {
       "name": "Health / Purge",
-      "keywords": ["warning", "health", "purge", "unused", "cảnh báo", "không dùng", "detail level", "design option", "unresolved", "dọn dẹp", "xóa không dùng"],
-      "tools": ["get_model_warnings", "get_warning_elements", "get_model_statistics", "find_imported_cad", "find_inplace_families", "find_unused_families", "get_purgeable_elements", "find_duplicate_types", "find_unresolved_references", "get_design_options", "audit_detail_levels", "purge_unused_elements"],
+      "keywords": ["warning", "health", "purge", "unused", "cảnh báo", "không dùng", "detail level", "design option", "unresolved", "dọn dẹp", "xóa không dùng", "audit", "health score", "duplicate element", "trùng lặp", "đánh giá"],
+      "tools": ["get_model_warnings", "get_warning_elements", "get_model_statistics", "find_imported_cad", "find_inplace_families", "find_unused_families", "get_purgeable_elements", "find_duplicate_types", "find_unresolved_references", "get_design_options", "audit_detail_levels", "purge_unused_elements", "audit_model_standards", "find_duplicate_elements"],
       "weight": 1
     },
     {
       "name": "Parameters",
       "keywords": ["parameter", "shared", "tham số", "formula", "công thức", "transfer", "chuyển tham số", "compare parameter", "so sánh tham số", "empty", "trống", "duplicate value", "trùng giá trị", "batch update"],
-      "tools": ["get_shared_parameters", "get_project_parameters", "check_parameter_values", "add_project_parameter", "get_parameter_bindings", "apply_parameter_formula", "compare_element_parameters", "find_empty_parameters", "find_duplicate_values", "transfer_parameters", "batch_update_parameters"],
+      "tools": ["get_shared_parameters", "get_project_parameters", "check_parameter_values", "add_project_parameter", "get_parameter_bindings", "apply_parameter_formula", "compare_element_parameters", "find_empty_parameters", "find_duplicate_values", "transfer_parameters", "batch_update_parameters", "get_wall_layers"],
       "weight": 1
     },
     {
@@ -292,8 +294,8 @@
     },
     {
       "name": "Room / Area",
-      "keywords": ["room", "area", "boundary", "finish", "phòng", "diện tích"],
-      "tools": ["get_rooms_detailed", "get_room_boundaries", "get_room_finishes", "get_area_schemes", "get_unplaced_rooms", "get_redundant_rooms"],
+      "keywords": ["room", "area", "boundary", "finish", "phòng", "diện tích", "enclosure", "enclosed", "not enclosed", "bao quanh", "kín"],
+      "tools": ["get_rooms_detailed", "get_room_boundaries", "get_room_finishes", "get_area_schemes", "get_unplaced_rooms", "get_redundant_rooms", "audit_room_enclosure"],
       "weight": 1
     },
     {

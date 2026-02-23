@@ -17,7 +17,8 @@ namespace RevitChat.Skills
         protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_elements", "count_elements", "get_element_parameters", "search_elements",
-            "compare_element_parameters", "find_empty_parameters", "find_duplicate_values"
+            "compare_element_parameters", "find_empty_parameters", "find_duplicate_values",
+            "get_element_geometry", "find_elements_near", "get_wall_layers"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -32,7 +33,8 @@ namespace RevitChat.Skills
                         "category": { "type": "string", "description": "Revit category name (e.g. 'Walls', 'Doors', 'Windows'). Use get_categories first if unsure." },
                         "type_name": { "type": "string", "description": "Family type name to filter by (partial match)" },
                         "level": { "type": "string", "description": "Level name to filter by" },
-                        "limit": { "type": "integer", "description": "Max elements to return. Default 100.", "default": 100 }
+                        "limit": { "type": "integer", "description": "Max elements to return. Default 100.", "default": 100 },
+                        "group_by": { "type": "string", "enum": ["level", "family", "type", "system"], "description": "Group results by field. Returns grouped counts and first few IDs per group." }
                     },
                     "required": []
                 }
@@ -123,6 +125,46 @@ namespace RevitChat.Skills
                     },
                     "required": ["element_ids", "param_name"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("get_element_geometry",
+                "Get geometry summary of elements: volume, area, length, bounding box dimensions in mm.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs" },
+                        "limit": { "type": "integer", "description": "Max results (default 20)" }
+                    },
+                    "required": ["element_ids"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("find_elements_near",
+                "Find elements within a specified radius from a reference element.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "reference_element_id": { "type": "integer", "description": "Center element ID" },
+                        "radius_mm": { "type": "number", "description": "Search radius in mm" },
+                        "category": { "type": "string", "description": "Filter by category (optional)" },
+                        "limit": { "type": "integer", "description": "Max results (default 50)" }
+                    },
+                    "required": ["reference_element_id", "radius_mm"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("get_wall_layers",
+                "Get wall type compound structure: layers, materials, thickness.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Wall element IDs or wall type IDs" }
+                    },
+                    "required": ["element_ids"]
+                }
                 """))
         };
 
@@ -137,6 +179,9 @@ namespace RevitChat.Skills
                 "compare_element_parameters" => CompareElementParameters(doc, args),
                 "find_empty_parameters" => FindEmptyParameters(doc, args),
                 "find_duplicate_values" => FindDuplicateValues(doc, args),
+                "get_element_geometry" => GetElementGeometry(doc, args),
+                "find_elements_near" => FindElementsNear(doc, args),
+                "get_wall_layers" => GetWallLayers(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -147,6 +192,7 @@ namespace RevitChat.Skills
             var typeName = GetArg<string>(args, "type_name");
             var level = GetArg<string>(args, "level");
             var limit = GetArg<int>(args, "limit", 100);
+            var groupBy = GetArg<string>(args, "group_by");
             if (limit <= 0) limit = 100;
 
             var collector = BuildCollector(doc, category);
@@ -181,13 +227,49 @@ namespace RevitChat.Skills
                     category = elem.Category.Name,
                     family = GetFamilyName(doc, elem),
                     type = elemType ?? GetElementTypeName(doc, elem),
-                    level = elemLevel ?? GetElementLevel(doc, elem)
+                    level = elemLevel ?? GetElementLevel(doc, elem),
+                    system = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "-"
                 });
 
                 if (results.Count >= limit) break;
             }
 
-            return JsonSerializer.Serialize(new { count = results.Count, elements = results }, JsonOpts);
+            if (!string.IsNullOrEmpty(groupBy) && ValidGetElementsGroupFields.Contains(groupBy, StringComparer.OrdinalIgnoreCase))
+            {
+                var groups = results
+                    .GroupBy(r => GetGroupKey(r, groupBy))
+                    .OrderByDescending(g => g.Count())
+                    .Select(g => new
+                    {
+                        key = g.Key,
+                        count = g.Count(),
+                        sample_ids = g.Take(5).Select(x => (long)((dynamic)x).id).ToList()
+                    })
+                    .ToList();
+                return JsonSerializer.Serialize(new { groups, total = results.Count }, JsonOpts);
+            }
+
+            var elements = results.Select(r =>
+            {
+                var d = (dynamic)r;
+                return new { id = (long)d.id, category = (string)d.category, family = (string)d.family, type = (string)d.type, level = (string)d.level };
+            }).ToList();
+            return JsonSerializer.Serialize(new { count = elements.Count, elements }, JsonOpts);
+        }
+
+        private static readonly string[] ValidGetElementsGroupFields = { "level", "family", "type", "system" };
+
+        private static string GetGroupKey(object r, string field)
+        {
+            var d = (dynamic)r;
+            return field.ToLowerInvariant() switch
+            {
+                "level" => (string)d.level ?? "-",
+                "family" => (string)d.family ?? "-",
+                "type" => (string)d.type ?? "-",
+                "system" => (string)d.system ?? "-",
+                _ => "-"
+            };
         }
 
         private string CountElements(Document doc, Dictionary<string, object> args)
@@ -328,6 +410,193 @@ namespace RevitChat.Skills
             }).ToList();
 
             return JsonSerializer.Serialize(new { count = elements.Count, elements }, JsonOpts);
+        }
+
+        private string GetElementGeometry(Document doc, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "element_ids");
+            int limit = GetArg(args, "limit", 20);
+            if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+
+            var results = new List<object>();
+            var opts = new Options { ComputeReferences = false, DetailLevel = ViewDetailLevel.Coarse };
+
+            foreach (var id in ids.Take(limit))
+            {
+                var elem = doc.GetElement(new ElementId(id));
+                if (elem == null) continue;
+
+                double volume = 0, area = 0, length = 0;
+                var bb = elem.get_BoundingBox(null);
+
+                try
+                {
+                    var geom = elem.get_Geometry(opts);
+                    if (geom != null)
+                    {
+                        foreach (var gObj in geom)
+                        {
+                            if (gObj is Solid solid && solid.Volume > 0)
+                            {
+                                volume += solid.Volume;
+                                area += solid.SurfaceArea;
+                            }
+                            else if (gObj is GeometryInstance gi)
+                            {
+                                foreach (var inner in gi.GetInstanceGeometry())
+                                {
+                                    if (inner is Solid s2 && s2.Volume > 0)
+                                    {
+                                        volume += s2.Volume;
+                                        area += s2.SurfaceArea;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch { }
+
+                if (elem.Location is LocationCurve lc)
+                    length = lc.Curve.Length;
+
+                var info = new Dictionary<string, object>
+                {
+                    ["id"] = id,
+                    ["name"] = elem.Name ?? "-",
+                    ["category"] = elem.Category?.Name ?? "-"
+                };
+
+                if (volume > 0) info["volume_m3"] = Math.Round(volume * 0.0283168, 4);
+                if (area > 0) info["area_m2"] = Math.Round(area * 0.092903, 4);
+                if (length > 0) info["length_mm"] = Math.Round(length * 304.8, 1);
+
+                if (bb != null)
+                {
+                    info["bbox_mm"] = new Dictionary<string, object>
+                    {
+                        ["width"] = Math.Round((bb.Max.X - bb.Min.X) * 304.8, 1),
+                        ["depth"] = Math.Round((bb.Max.Y - bb.Min.Y) * 304.8, 1),
+                        ["height"] = Math.Round((bb.Max.Z - bb.Min.Z) * 304.8, 1)
+                    };
+                }
+
+                results.Add(info);
+            }
+
+            return JsonSerializer.Serialize(new { count = results.Count, elements = results }, JsonOpts);
+        }
+
+        private string FindElementsNear(Document doc, Dictionary<string, object> args)
+        {
+            long refId = GetArg(args, "reference_element_id", 0L);
+            double radiusMm = GetArg(args, "radius_mm", 1000.0);
+            var category = GetArg<string>(args, "category");
+            int limit = GetArg(args, "limit", 50);
+
+            var refElem = doc.GetElement(new ElementId(refId));
+            if (refElem == null) return JsonError("Reference element not found.");
+
+            XYZ center;
+            if (refElem.Location is LocationPoint lp) center = lp.Point;
+            else if (refElem.Location is LocationCurve lc) center = lc.Curve.Evaluate(0.5, true);
+            else
+            {
+                var bb = refElem.get_BoundingBox(null);
+                if (bb == null) return JsonError("Cannot determine element location.");
+                center = (bb.Min + bb.Max) / 2;
+            }
+
+            double radiusFt = radiusMm / 304.8;
+            var outline = new Outline(
+                new XYZ(center.X - radiusFt, center.Y - radiusFt, center.Z - radiusFt),
+                new XYZ(center.X + radiusFt, center.Y + radiusFt, center.Z + radiusFt));
+
+            var collector = new FilteredElementCollector(doc)
+                .WherePasses(new BoundingBoxIntersectsFilter(outline))
+                .WhereElementIsNotElementType();
+
+            var bic = ResolveCategoryFilter(doc, category);
+            if (bic.HasValue) collector = collector.OfCategory(bic.Value);
+
+            var list = new List<(long id, string category, string name, double distance_mm)>();
+            foreach (var elem in collector)
+            {
+                if (elem.Id.Value == refId) continue;
+                if (elem.Category == null) continue;
+
+                XYZ elemCenter;
+                if (elem.Location is LocationPoint ep) elemCenter = ep.Point;
+                else if (elem.Location is LocationCurve ec) elemCenter = ec.Curve.Evaluate(0.5, true);
+                else
+                {
+                    var ebb = elem.get_BoundingBox(null);
+                    if (ebb == null) continue;
+                    elemCenter = (ebb.Min + ebb.Max) / 2;
+                }
+
+                double dist = center.DistanceTo(elemCenter) * 304.8;
+                if (dist > radiusMm) continue;
+
+                list.Add((elem.Id.Value, elem.Category.Name, elem.Name ?? "-", dist));
+                if (list.Count >= limit) break;
+            }
+
+            var results = list.OrderBy(x => x.distance_mm)
+                .Select(x => new { id = x.id, category = x.category, name = x.name, distance_mm = Math.Round(x.distance_mm, 1) })
+                .ToList();
+
+            return JsonSerializer.Serialize(new
+            {
+                reference_id = refId,
+                radius_mm = radiusMm,
+                found = results.Count,
+                elements = results
+            }, JsonOpts);
+        }
+
+        private string GetWallLayers(Document doc, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "element_ids");
+            if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+
+            var results = new List<object>();
+            foreach (var id in ids.Take(20))
+            {
+                var elem = doc.GetElement(new ElementId(id));
+                WallType wallType = elem as WallType ?? (elem as Wall)?.WallType;
+                if (wallType == null) continue;
+
+                var cs = wallType.GetCompoundStructure();
+                if (cs == null)
+                {
+                    results.Add(new Dictionary<string, object> { ["wall_type"] = wallType.Name, ["layers"] = Array.Empty<object>(), ["note"] = "No compound structure" });
+                    continue;
+                }
+
+                var layers = new List<object>();
+                foreach (var layer in cs.GetLayers())
+                {
+                    var mat = doc.GetElement(layer.MaterialId);
+                    layers.Add(new Dictionary<string, object>
+                    {
+                        ["function"] = layer.Function.ToString(),
+                        ["material"] = mat?.Name ?? "(none)",
+                        ["thickness_mm"] = Math.Round(layer.Width * 304.8, 1),
+                        ["is_structural"] = layer.Function == MaterialFunctionAssignment.Structure
+                    });
+                }
+
+                results.Add(new Dictionary<string, object>
+                {
+                    ["wall_type"] = wallType.Name,
+                    ["total_thickness_mm"] = Math.Round(wallType.Width * 304.8, 1),
+                    ["layer_count"] = layers.Count,
+                    ["layers"] = layers
+                });
+            }
+
+            return JsonSerializer.Serialize(new { walls = results }, JsonOpts);
         }
 
         #region compare_element_parameters

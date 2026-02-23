@@ -20,6 +20,7 @@ namespace SmartTag.Services
         
         // CACHE: Existing tags - loaded once, used many times
         private Dictionary<long, long> _taggedElementCache; // ElementId -> TagId
+        private HashSet<long> _emptyTagCache;
         private bool _tagCacheInitialized;
 
         public ElementCollector(Document doc, View view)
@@ -28,6 +29,7 @@ namespace SmartTag.Services
             _view = view ?? throw new ArgumentNullException(nameof(view));
             _tagFormatter = new TagTextFormatter(doc);
             _taggedElementCache = new Dictionary<long, long>();
+            _emptyTagCache = new HashSet<long>();
             _tagCacheInitialized = false;
         }
         
@@ -51,10 +53,16 @@ namespace SmartTag.Services
                         var taggedIds = GetTaggedElementIds(tag);
                         if (taggedIds != null)
                         {
+                            bool hasText = true;
+                            try { hasText = tag.HasTagText(); } catch { }
                             foreach (var id in taggedIds)
                             {
                                 if (id != ElementId.InvalidElementId)
+                                {
                                     _taggedElementCache[id.Value] = tag.Id.Value;
+                                    if (!hasText)
+                                        _emptyTagCache.Add(id.Value);
+                                }
                             }
                         }
                     }
@@ -622,16 +630,25 @@ namespace SmartTag.Services
         /// </summary>
         private (bool HasTag, long? TagId) CheckExistingTag(Element elem)
         {
-            // Ensure cache is initialized (only once)
             EnsureTagCacheInitialized();
-            
-            // O(1) lookup from cache
             if (_taggedElementCache.TryGetValue(elem.Id.Value, out var tagId))
-            {
                 return (true, tagId);
-            }
-            
             return (false, null);
+        }
+
+        public bool HasEmptyTag(long elementId)
+        {
+            EnsureTagCacheInitialized();
+            return _emptyTagCache.Contains(elementId);
+        }
+
+        public int EmptyTagCount
+        {
+            get
+            {
+                EnsureTagCacheInitialized();
+                return _emptyTagCache?.Count ?? 0;
+            }
         }
 
         private string GetFamilyName(Element elem)

@@ -33,6 +33,9 @@ namespace RevitChatLocal.Services
             "Core", "ViewControl", "MEP", "Modeler", "BIMCoordinator", "LinkedModels"
         };
 
+        private string _cachedSystemPrompt;
+        private string _cachedPromptKeywords;
+
         #region CoreTools + KeywordGroups (for Smart mode)
 
         private class KeywordGroup
@@ -204,12 +207,12 @@ namespace RevitChatLocal.Services
         {
             if (string.IsNullOrWhiteSpace(userMessage)) return "";
 
-            var lower = userMessage.ToLowerInvariant();
+            var normalized = NormalizeForMatching(userMessage);
 
-            if (_fewShotCache.TryGetValue(lower, out var cached))
+            if (_fewShotCache.TryGetValue(normalized, out var cached))
                 return cached;
 
-            var normalized = NormalizeForMatching(userMessage);
+            var lower = userMessage.ToLowerInvariant();
             var scored = new List<(int score, string example)>();
 
             foreach (var (keywords, example) in FewShotExamples)
@@ -244,7 +247,7 @@ namespace RevitChatLocal.Services
 
             if (scored.Count == 0)
             {
-                CacheFewShotResult(lower, "");
+                CacheFewShotResult(normalized, "");
                 return "";
             }
 
@@ -260,7 +263,7 @@ namespace RevitChatLocal.Services
                 sb.AppendLine();
             }
             var result = sb.ToString();
-            CacheFewShotResult(lower, result);
+            CacheFewShotResult(normalized, result);
             return result;
         }
 
@@ -306,6 +309,7 @@ namespace RevitChatLocal.Services
         private static bool ShouldUseTwoStageInternal(string userMessage)
         {
             if (string.IsNullOrWhiteSpace(userMessage)) return false;
+            if (userMessage.Length < 40) return false;
             var text = NormalizeForMatching(userMessage);
             int actionHits = 0;
             foreach (var kw in ActionKeywords)
@@ -314,10 +318,10 @@ namespace RevitChatLocal.Services
                     actionHits++;
             }
 
-            if (actionHits >= 2) return true;
+            if (actionHits >= 3) return true;
 
-            var separators = new[] { " and ", " then ", " sau đó ", " rồi ", " và ", "&", "->" };
-            return separators.Any(s => text.Contains(s));
+            var explicitSeparators = new[] { " then ", " sau đó ", " rồi ", "->", " after that " };
+            return actionHits >= 2 && explicitSeparators.Any(s => text.Contains(s));
         }
 
         private static Regex GetOrCreateRegex(string word)
@@ -417,8 +421,11 @@ namespace RevitChatLocal.Services
             {
                 new SystemChatMessage(
                     "You are a friendly Revit BIM assistant. Answer the user's greeting or question briefly. " +
-                    "If they ask what you can do, list: query elements, count, color override, isolate, export CSV, " +
-                    "check MEP systems, BOQ, clash detection, modify parameters, create 3D views, and more. " +
+                    "If they ask what you can do, list: query/count/search elements, color override by system/level/filter, " +
+                    "isolate/hide elements, export to CSV, tag elements, check MEP systems, validate models, " +
+                    "detect clashes, manage sheets/views, create 3D views, modify parameters, " +
+                    "measure distances, check insulation, generate BOQ, audit naming conventions, " +
+                    "and 170+ more specialized BIM operations. " +
                     "Reply in the same language the user uses. Do NOT output any <tool_call> tags. " +
                     "If the user asks something you cannot help with, reply: \"This matter haven't yet train, Please contact your Digital Lead to update me.\"")
             };
@@ -479,6 +486,8 @@ namespace RevitChatLocal.Services
         {
             _conversationHistory.Clear();
             _lastUserMessage = "";
+            _cachedSystemPrompt = null;
+            _cachedPromptKeywords = null;
         }
 
         public void RepairHistoryAfterCancel()
@@ -547,10 +556,9 @@ namespace RevitChatLocal.Services
             Dictionary<string, string> toolResults, CancellationToken ct = default)
         {
             if (toolResults == null) toolResults = new Dictionary<string, string>();
-            var sb = new StringBuilder();
-            sb.AppendLine($"The user asked: \"{_lastUserMessage}\"");
-            sb.AppendLine();
-            sb.AppendLine("Tool results:");
+            var sb = new StringBuilder(256);
+            sb.AppendLine($"User asked: \"{_lastUserMessage}\"");
+            sb.AppendLine("Results:");
             int totalChars = 0;
             foreach (var kvp in toolResults)
             {
@@ -558,14 +566,11 @@ namespace RevitChatLocal.Services
                 totalChars += val.Length;
                 sb.AppendLine($"[{kvp.Key}]: {val}");
             }
-            sb.AppendLine();
 
             if (totalChars > 6000)
-                sb.AppendLine("NOTE: The data above is large. Provide a concise summary to the user. Do NOT repeat the raw data.");
+                sb.AppendLine("Data is large. Summarize for user. Don't repeat raw data.");
 
-            sb.AppendLine("Analyze the results and answer the user's original question.");
-            sb.AppendLine("If the user's request has more steps remaining (e.g. they asked to count THEN export), output ONE <tool_call> for the next step.");
-            sb.AppendLine("If all steps are done, respond directly with NO <tool_call> tags.");
+            sb.AppendLine("Answer the user. If more steps needed, output ONE <tool_call>. If done, no <tool_call>.");
 
             _conversationHistory.Add(new UserChatMessage(sb.ToString()));
 
@@ -616,8 +621,10 @@ namespace RevitChatLocal.Services
             List<OaiMessage> messages, ChatCompletionOptions options,
             CancellationToken ct, bool emitTokens = true)
         {
-            var sb = new StringBuilder();
+            var sb = new StringBuilder(512);
             var toolCallDetected = false;
+            var recentChars = new char[32];
+            int recentPos = 0;
 
             await foreach (var update in _client.CompleteChatStreamingAsync(messages, options, ct))
             {
@@ -629,10 +636,22 @@ namespace RevitChatLocal.Services
 
                     if (!toolCallDetected && emitTokens)
                     {
-                        if (sb.ToString().Contains("<tool_call>") || sb.ToString().Contains("{\"name\""))
-                            toolCallDetected = true;
-                        else
-                            TokenReceived?.Invoke(token);
+                        foreach (var ch in token)
+                        {
+                            recentChars[recentPos % 32] = ch;
+                            recentPos++;
+                        }
+
+                        if (token.Contains('<') || token.Contains('{'))
+                        {
+                            var full = sb.ToString();
+                            if (full.Contains("<tool_call>") || full.Contains("{\"name\""))
+                            {
+                                toolCallDetected = true;
+                                continue;
+                            }
+                        }
+                        TokenReceived?.Invoke(token);
                     }
                 }
             }
@@ -812,19 +831,19 @@ Example:
                 }
             }
 
-            const int maxToolsInCatalog = 40;
+            const int maxToolsInCatalog = 25;
             var ordered = selected
                 .Where(t => toolIndex.ContainsKey(t))
                 .OrderBy(t => t, StringComparer.Ordinal)
                 .Take(maxToolsInCatalog)
                 .ToList();
 
-            var sb = new StringBuilder();
+            var sb = new StringBuilder(ordered.Count * 80);
             foreach (var toolName in ordered)
             {
                 var tool = toolIndex[toolName];
                 if (ToolSchemaHints.TryGetValue(tool.FunctionName, out var hint))
-                    sb.AppendLine($"- {tool.FunctionName}: {tool.FunctionDescription} | args: {hint}");
+                    sb.AppendLine($"- {tool.FunctionName}({hint})");
                 else
                     sb.AppendLine($"- {tool.FunctionName}: {tool.FunctionDescription}");
             }
@@ -957,18 +976,22 @@ Example:
 
             if (results.Count > 0) return results;
 
-            // 5) Last resort: find any known tool name followed by JSON-like args in garbled text
-            foreach (var toolName in _allToolNames)
+            // 5) Last resort: find any known tool name in garbled text (skip if text is short or lacks patterns)
+            if (text.Length > 20 && (text.Contains('_') || text.Contains("arguments")))
             {
-                var pattern = new Regex(
-                    $@"(?:^|[\s""':,])({Regex.Escape(toolName)})\s*[\(,:]?\s*\{{(.*?)\}}",
-                    RegexOptions.Singleline | RegexOptions.IgnoreCase);
-                var m = pattern.Match(text);
-                if (m.Success)
+                foreach (var toolName in _allToolNames)
                 {
-                    var argsText = "{" + m.Groups[2].Value + "}";
-                    var call = TryParseOneToolCallWithName(toolName, argsText);
-                    if (call != null) results.Add(call);
+                    if (!text.Contains(toolName, StringComparison.OrdinalIgnoreCase)) continue;
+                    var pattern = new Regex(
+                        $@"(?:^|[\s""':,])({Regex.Escape(toolName)})\s*[\(,:]?\s*\{{(.*?)\}}",
+                        RegexOptions.Singleline | RegexOptions.IgnoreCase);
+                    var m = pattern.Match(text);
+                    if (m.Success)
+                    {
+                        var argsText = "{" + m.Groups[2].Value + "}";
+                        var call = TryParseOneToolCallWithName(toolName, argsText);
+                        if (call != null) results.Add(call);
+                    }
                 }
             }
 
@@ -1263,6 +1286,21 @@ Example:
 
         private string BuildFallbackSuggestion(string userMessage)
         {
+            if (string.IsNullOrWhiteSpace(userMessage)) return FallbackMessage;
+
+            var normalized = NormalizeForMatching(userMessage);
+            var matches = GetMatchedGroups(normalized);
+
+            if (matches.Count > 0)
+            {
+                var topGroup = matches.OrderByDescending(m => m.score).First().group;
+                var toolSuggestions = string.Join(", ", topGroup.Tools.Take(3));
+                var isVi = IsVietnamese(userMessage);
+                return isVi
+                    ? $"Mình chưa xử lý được yêu cầu này tự động. Bạn có thể thử cụ thể hơn? Ví dụ dùng lệnh: {toolSuggestions}"
+                    : $"I couldn't process this automatically. Try being more specific. Related tools: {toolSuggestions}";
+            }
+
             return FallbackMessage;
         }
 
@@ -1319,6 +1357,14 @@ Example:
         private string BuildSystemPrompt(List<string> forcedTools = null)
         {
             var userMsg = _conversationHistory.Count > 0 ? _lastUserMessage : "";
+
+            if (forcedTools == null && _cachedSystemPrompt != null)
+            {
+                var currentKeywords = NormalizeForMatching(userMsg);
+                if (currentKeywords == _cachedPromptKeywords)
+                    return _cachedSystemPrompt;
+            }
+
             var catalog = BuildToolCatalogForMessage(userMsg, forcedTools);
             var dynamicExamples = BuildDynamicExamples(userMsg);
 
@@ -1349,50 +1395,38 @@ Assistant:
 {""name"": ""override_category_color"", ""arguments"": {""category"": ""Ducts"", ""color"": ""Red""}}
 </tool_call>";
 
-            return $@"You are a Revit BIM assistant. You execute tools to get data from the Revit model.
-You understand both English and Vietnamese.
+            var prompt = $@"You are a Revit BIM assistant. Execute tools to answer queries. Understand English and Vietnamese.
 
-## AVAILABLE TOOLS
+## TOOLS
 {catalog}
 
 ## FORMAT
-To call a tool, output EXACTLY this (no code fences, no extra text after it):
-
 <tool_call>
 {{""name"": ""tool_name"", ""arguments"": {{""param1"": ""value1""}}}}
 </tool_call>
 
 ## RULES
-1. When the user asks about model data, output a <tool_call> immediately. Do NOT describe what you will do.
-2. Output ONLY ONE <tool_call> per response. Stop writing IMMEDIATELY after </tool_call>.
-3. Do NOT wrap <tool_call> in ```json``` code blocks.
-4. The ""arguments"" field MUST be a JSON object with the tool's parameters inside it.
-5. After receiving tool results, answer the user directly. If you need more data, output ONE more <tool_call>.
-6. For multi-step requests (e.g. ""count ducts then export""), handle the FIRST step only. You will get results back and can do the next step then.
-7. For destructive operations (delete, modify), confirm with the user FIRST before calling the tool.
-8. NEVER invent data. Only use tool results.
-9. Reply in the same language the user uses.
-10. Vietnamese category mapping: tường=Walls, cửa=Doors, cửa sổ=Windows, ống=Ducts/Pipes, phòng=Rooms, sàn=Floors, cột=Columns, dầm=Structural Framing, trần=Ceilings, mái=Roofs, cầu thang=Stairs, lan can=Railings, thiết bị vệ sinh=Plumbing Fixtures, khay cáp=Cable Trays, ống dẫn=Conduits, đèn=Lighting Fixtures.
-11. If you cannot find any matching tool for the user's request, respond EXACTLY with: ""This matter haven't yet train, Please contact your Digital Lead to update me."" Do NOT make up tools or guess.
-12. When multiple tools could match the request:
-    - Prefer tools that EXACTLY match the category mentioned by the user.
-    - Prefer specific tools over generic ones (e.g. get_duct_summary > get_elements for duct queries).
-    - If still ambiguous, ask the user to clarify which action they want.
-
-## WRONG (do NOT do this):
-```json
-<tool_call>
-{{""name"": ""get_walls"", ""category"": ""Walls""}}
-</tool_call>
-```
-
-## CORRECT:
-<tool_call>
-{{""name"": ""count_elements"", ""arguments"": {{""category"": ""Walls""}}}}
-</tool_call>
+1. Output <tool_call> immediately for data queries. No explanation before tool calls.
+2. ONE <tool_call> per response. For independent queries (count pipes AND ducts), up to 3.
+3. No code fences around <tool_call>. ""arguments"" must be a JSON object.
+4. After tool results, answer directly. Need more data → one more <tool_call>.
+5. Multi-step: handle FIRST step only. Next step after results.
+6. Destructive ops (delete/modify): confirm first.
+7. NEVER invent data. Reply in user's language.
+8. Vietnamese: tường=Walls, cửa=Doors, cửa sổ=Windows, ống=Ducts/Pipes, phòng=Rooms, sàn=Floors, cột=Columns, dầm=Structural Framing, trần=Ceilings, mái=Roofs, cầu thang=Stairs, thiết bị vệ sinh=Plumbing Fixtures, khay cáp=Cable Trays, đèn=Lighting Fixtures.
+9. No matching tool → reply: ""This matter haven't yet train, Please contact your Digital Lead to update me.""
+10. Prefer specific tools (get_duct_summary > get_elements). If 'selected'/'chọn' → use [Context] IDs or get_current_selection.
+11. MEP queries → prefer get_pipe_summary, get_duct_summary over get_elements.
 
 {examplesSection}
 {tagKnowledgeSection}";
+
+            if (forcedTools == null)
+            {
+                _cachedSystemPrompt = prompt;
+                _cachedPromptKeywords = NormalizeForMatching(userMsg);
+            }
+            return prompt;
         }
 
         private List<OaiMessage> BuildMessages(List<string> forcedTools = null)
@@ -1408,7 +1442,7 @@ To call a tool, output EXACTLY this (no code fences, no extra text after it):
         private static int EstimateTokens(string text)
         {
             if (string.IsNullOrEmpty(text)) return 0;
-            return text.Length / 3;
+            return text.Length / 4;
         }
 
         private static int GetMessageTokens(OaiMessage msg)
@@ -1445,13 +1479,21 @@ To call a tool, output EXACTLY this (no code fences, no extra text after it):
                     for (int i = 0; i < toSummarize; i++)
                     {
                         var msg = _conversationHistory[i];
-                        if (msg is UserChatMessage)
-                            sb.AppendLine($"- User asked about model data");
+                        if (msg is UserChatMessage um)
+                        {
+                            var text = um.Content?.FirstOrDefault()?.Text ?? "";
+                            if (text.Length > 100) text = text[..100] + "...";
+                            sb.AppendLine($"- User: {text}");
+                        }
                         else if (msg is AssistantChatMessage am)
                         {
                             var text = am.Content?.FirstOrDefault()?.Text ?? "";
-                            if (text.Length > 80) text = text[..80] + "...";
-                            sb.AppendLine($"- Assistant: {text}");
+                            if (text.Contains("tool call") || text.Contains("<tool_call>"))
+                                sb.AppendLine($"- Assistant: executed tool");
+                            else if (text.Length > 120)
+                                sb.AppendLine($"- Assistant: {text[..120]}...");
+                            else
+                                sb.AppendLine($"- Assistant: {text}");
                         }
                     }
 

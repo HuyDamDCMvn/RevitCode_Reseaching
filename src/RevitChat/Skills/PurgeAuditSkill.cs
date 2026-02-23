@@ -17,7 +17,8 @@ namespace RevitChat.Skills
         protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_purgeable_elements", "find_duplicate_types", "find_unresolved_references",
-            "get_design_options", "audit_detail_levels", "purge_unused_elements"
+            "get_design_options", "audit_detail_levels", "purge_unused_elements",
+            "find_duplicate_elements"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -93,6 +94,20 @@ namespace RevitChat.Skills
                     },
                     "required": []
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("find_duplicate_elements",
+                "Find elements at the same location (overlapping walls, duplicate pipes). Useful for model cleanup.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "category": { "type": "string", "description": "Category to check (e.g. 'Walls', 'Pipes', 'Ducts')" },
+                        "tolerance_mm": { "type": "number", "description": "Position tolerance in mm (default: 10)" },
+                        "limit": { "type": "integer", "description": "Max duplicate groups to return (default: 50)" }
+                    },
+                    "required": ["category"]
+                }
                 """))
         };
 
@@ -106,6 +121,7 @@ namespace RevitChat.Skills
                 "get_design_options" => GetDesignOptions(doc),
                 "audit_detail_levels" => AuditDetailLevels(doc, args),
                 "purge_unused_elements" => PurgeUnusedElements(doc, args),
+                "find_duplicate_elements" => FindDuplicateElements(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -421,6 +437,77 @@ namespace RevitChat.Skills
                 deleted,
                 failed = errors.Count,
                 errors = errors.Take(10)
+            }, JsonOpts);
+        }
+
+        private string FindDuplicateElements(Document doc, Dictionary<string, object> args)
+        {
+            var category = GetArg<string>(args, "category");
+            if (string.IsNullOrEmpty(category)) return JsonError("category is required.");
+
+            double toleranceMm = GetArg(args, "tolerance_mm", 10.0);
+            int limit = GetArg(args, "limit", 50);
+
+            var bic = ResolveCategoryFilter(doc, category);
+            if (!bic.HasValue) return JsonError($"Category '{category}' not found.");
+
+            var elements = new FilteredElementCollector(doc)
+                .OfCategory(bic.Value)
+                .WhereElementIsNotElementType()
+                .ToElements()
+                .ToList();
+
+            double tolFt = toleranceMm / 304.8;
+            if (tolFt < 0.001) tolFt = 0.001;
+
+            string RoundKey(XYZ p)
+            {
+                if (p == null) return null;
+                double rx = Math.Round(p.X / tolFt) * tolFt;
+                double ry = Math.Round(p.Y / tolFt) * tolFt;
+                double rz = Math.Round(p.Z / tolFt) * tolFt;
+                return $"{rx:F6}_{ry:F6}_{rz:F6}";
+            }
+
+            var byLocation = new Dictionary<string, List<Element>>();
+            foreach (var elem in elements)
+            {
+                var center = GetElementCenter(elem);
+                var key = RoundKey(center);
+                if (key == null) continue;
+                if (!byLocation.TryGetValue(key, out var list))
+                {
+                    list = new List<Element>();
+                    byLocation[key] = list;
+                }
+                list.Add(elem);
+            }
+
+            var duplicateGroups = byLocation
+                .Where(kv => kv.Value.Count >= 2)
+                .Take(limit)
+                .Select(kv =>
+                {
+                    var first = kv.Value[0];
+                    var center = GetElementCenter(first);
+                    return new
+                    {
+                        location = center != null ? new { x = Math.Round(center.X, 4), y = Math.Round(center.Y, 4), z = Math.Round(center.Z, 4) } : (object)null,
+                        elements = kv.Value.Select(e => new
+                        {
+                            id = e.Id.Value,
+                            name = e.Name ?? "-",
+                            type = GetElementTypeName(doc, e)
+                        }).ToList(),
+                        count = kv.Value.Count
+                    };
+                })
+                .ToList();
+
+            return JsonSerializer.Serialize(new
+            {
+                duplicate_groups = duplicateGroups,
+                total_duplicate_groups = byLocation.Count(kv => kv.Value.Count >= 2)
             }, JsonOpts);
         }
     }

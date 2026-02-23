@@ -198,5 +198,19 @@
   "create_elbow": "element_id_1, element_id_2 — create elbow fitting between two non-collinear MEP elements",
   "create_tap_connection": "main_id (duct/pipe to tap), branch_id (branch element) — create tap/takeoff fitting",
   "bloom_connectors": "element_ids (array), extension_mm? (0=auto), dry_run? — extend unused connectors with new duct/pipe segments",
-  "insert_coupling": "element_id_1, element_id_2 — insert coupling/union fitting between two piping elements"
+  "insert_coupling": "element_id_1, element_id_2 — insert coupling/union fitting between two piping elements",
+  "get_element_geometry": "element_ids (array), limit?",
+  "find_elements_near": "reference_element_id, radius_mm, category?, limit?",
+  "get_wall_layers": "element_ids (array)",
+  "get_empty_tags": "category?, limit?",
+  "align_tags": "tag_ids (array), alignment? (left|right|center|top|bottom), dry_run?",
+  "check_insulation_coverage": "category? (Pipes|Ducts|all), system_name?, level?, limit?",
+  "check_velocity": "category (Pipes|Ducts), max_velocity_ms?, system_name?, limit?",
+  "override_color_by_system": "category? (Pipes|Ducts|all), dry_run?",
+  "override_color_by_parameter": "category, param_name, dry_run?",
+  "set_view_range": "view_id?, cut_plane_mm?, top_mm?, bottom_mm?",
+  "screenshot_view": "view_id?, format? (png|jpg), resolution? (low|medium|high)",
+  "audit_model_standards": "include? (array: warnings|families|cad|naming)",
+  "find_duplicate_elements": "category, tolerance_mm?, limit?",
+  "audit_room_enclosure": "level?, limit?"
 }

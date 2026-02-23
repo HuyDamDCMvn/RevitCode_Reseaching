@@ -18,7 +18,8 @@ namespace RevitChat.Skills
         protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_rooms_detailed", "get_room_boundaries", "get_room_finishes",
-            "get_area_schemes", "get_unplaced_rooms", "get_redundant_rooms"
+            "get_area_schemes", "get_unplaced_rooms", "get_redundant_rooms",
+            "audit_room_enclosure"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -91,6 +92,19 @@ namespace RevitChat.Skills
                     "properties": {},
                     "required": []
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("audit_room_enclosure",
+                "Check if rooms are properly enclosed. Find 'Not Enclosed' or 'Redundant' rooms.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "level": { "type": "string", "description": "Filter by level name (optional)" },
+                        "limit": { "type": "integer", "description": "Max results (default 100)" }
+                    },
+                    "required": []
+                }
                 """))
         };
 
@@ -104,6 +118,7 @@ namespace RevitChat.Skills
                 "get_area_schemes" => GetAreaSchemes(doc),
                 "get_unplaced_rooms" => GetUnplacedRooms(doc),
                 "get_redundant_rooms" => GetRedundantRooms(doc),
+                "audit_room_enclosure" => AuditRoomEnclosure(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -322,6 +337,79 @@ namespace RevitChat.Skills
                 redundant_count = items.Count,
                 message = items.Count > 0 ? "These rooms are placed but not enclosed or have 0 area." : "No redundant rooms found.",
                 rooms = items
+            }, JsonOpts);
+        }
+
+        private string AuditRoomEnclosure(Document doc, Dictionary<string, object> args)
+        {
+            var levelFilter = GetArg<string>(args, "level");
+            int limit = GetArg(args, "limit", 100);
+
+            var rooms = new FilteredElementCollector(doc)
+                .OfCategory(BuiltInCategory.OST_Rooms)
+                .WhereElementIsNotElementType()
+                .Cast<Room>()
+                .ToList();
+
+            var issues = new List<object>();
+            int enclosed = 0, notEnclosed = 0, redundant = 0, notPlaced = 0;
+
+            foreach (var room in rooms)
+            {
+                if (!string.IsNullOrEmpty(levelFilter))
+                {
+                    var lvl = doc.GetElement(room.LevelId);
+                    if (lvl != null && !lvl.Name.Contains(levelFilter, StringComparison.OrdinalIgnoreCase))
+                        continue;
+                }
+
+                if (room.Location == null)
+                {
+                    notPlaced++;
+                    if (issues.Count < limit)
+                        issues.Add(new { id = room.Id.Value, name = room.get_Parameter(BuiltInParameter.ROOM_NAME)?.AsString() ?? "-", number = room.Number ?? "-", status = "NOT_PLACED" });
+                    continue;
+                }
+
+                if (room.Area <= 0)
+                {
+                    notEnclosed++;
+                    if (issues.Count < limit)
+                        issues.Add(new { id = room.Id.Value, name = room.get_Parameter(BuiltInParameter.ROOM_NAME)?.AsString() ?? "-", number = room.Number ?? "-",
+                            level = doc.GetElement(room.LevelId)?.Name ?? "-", status = "NOT_ENCLOSED" });
+                    continue;
+                }
+
+                enclosed++;
+            }
+
+            var duplicates = rooms.Where(r => r.Location != null && r.Area > 0)
+                .GroupBy(r => $"{r.LevelId.Value}_{r.Number ?? ""}")
+                .Where(g => g.Count() > 1)
+                .ToList();
+
+            foreach (var dup in duplicates)
+            {
+                redundant += dup.Count() - 1;
+                if (issues.Count < limit)
+                {
+                    foreach (var room in dup.Skip(1))
+                    {
+                        issues.Add(new { id = room.Id.Value, name = room.get_Parameter(BuiltInParameter.ROOM_NAME)?.AsString() ?? "-", number = room.Number ?? "-",
+                            level = doc.GetElement(room.LevelId)?.Name ?? "-", status = "DUPLICATE_NUMBER" });
+                    }
+                }
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                total_rooms = rooms.Count,
+                enclosed,
+                not_enclosed = notEnclosed,
+                not_placed = notPlaced,
+                duplicate_numbers = redundant,
+                issues_count = issues.Count,
+                issues
             }, JsonOpts);
         }
     }

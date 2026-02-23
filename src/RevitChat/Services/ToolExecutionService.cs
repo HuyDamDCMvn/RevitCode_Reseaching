@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Autodesk.Revit.UI;
@@ -11,6 +13,21 @@ namespace RevitChat.Services
 {
     public class ToolExecutionService
     {
+        private static readonly HashSet<string> ReadOnlyTools = new()
+        {
+            "get_elements", "count_elements", "get_element_parameters", "search_elements",
+            "get_levels", "get_categories", "get_current_view", "get_rooms", "get_project_info",
+            "get_mep_systems", "get_duct_summary", "get_pipe_summary", "get_model_warnings",
+            "get_model_statistics", "get_linked_models", "get_sheets_summary", "get_schedule_data",
+            "get_grids", "get_levels_detailed", "get_worksets", "get_phases", "get_materials",
+            "get_revisions", "get_view_filters", "get_view_templates", "get_family_types",
+            "get_shared_parameters", "get_project_parameters", "get_current_selection",
+            "get_tag_rules", "get_available_tag_types"
+        };
+
+        private readonly ConcurrentDictionary<string, (DateTime Time, string Result)> _resultCache = new();
+        private const int CacheTtlSeconds = 60;
+
         private readonly ExternalEvent _externalEvent;
         private readonly RevitChatHandler _handler;
         private readonly ChatRequestQueue _queue;
@@ -23,6 +40,8 @@ namespace RevitChat.Services
         private readonly SemaphoreSlim _execLock = new(1, 1);
 
         public WorkingMemory WorkingMemory => _workingMemory;
+
+        public void InvalidateCache() => _resultCache.Clear();
 
         public ToolExecutionService(ExternalEvent externalEvent, RevitChatHandler handler, ChatRequestQueue queue)
         {
@@ -46,37 +65,77 @@ namespace RevitChat.Services
 
             try
             {
-                _toolResultsTcs = new TaskCompletionSource<Dictionary<string, string>>();
+                var results = new Dictionary<string, string>();
+                var toExecute = new List<ToolCallRequest>();
+                var cutoff = DateTime.UtcNow.AddSeconds(-CacheTtlSeconds);
 
-                using var ctReg = ct.Register(() => _toolResultsTcs.TrySetCanceled());
-
-                _queue.Clear();
-                _queue.EnqueueAll(toolCalls);
-                _externalEvent.Raise();
-
-                using var timeoutCts = new CancellationTokenSource(timeoutMs);
-                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
-
-                try
+                foreach (var req in toolCalls)
                 {
-                    var timeoutTask = Task.Delay(Timeout.Infinite, linkedCts.Token);
-                    var completed = await Task.WhenAny(_toolResultsTcs.Task, timeoutTask);
+                    if (ReadOnlyTools.Contains(req.FunctionName))
+                    {
+                        var key = GetCacheKey(req.FunctionName, req.Arguments);
+                        if (_resultCache.TryGetValue(key, out var cached) && cached.Time > cutoff)
+                        {
+                            results[req.ToolCallId] = cached.Result;
+                            continue;
+                        }
+                    }
+                    toExecute.Add(req);
+                }
 
-                    if (completed != _toolResultsTcs.Task)
+                if (toExecute.Count > 0)
+                {
+                    _toolResultsTcs = new TaskCompletionSource<Dictionary<string, string>>();
+                    using var ctReg = ct.Register(() => _toolResultsTcs.TrySetCanceled());
+
+                    _queue.Clear();
+                    _queue.EnqueueAll(toExecute);
+                    _externalEvent.Raise();
+
+                    using var timeoutCts = new CancellationTokenSource(timeoutMs);
+                    using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
+
+                    try
+                    {
+                        var timeoutTask = Task.Delay(Timeout.Infinite, linkedCts.Token);
+                        var completed = await Task.WhenAny(_toolResultsTcs.Task, timeoutTask);
+
+                        if (completed != _toolResultsTcs.Task)
+                        {
+                            _toolResultsTcs.TrySetCanceled();
+                            if (ct.IsCancellationRequested)
+                                throw new OperationCanceledException("Tool execution was cancelled.", ct);
+                            throw new TimeoutException("Tool execution timed out. Revit may be busy or a modal dialog is open.");
+                        }
+                    }
+                    catch (OperationCanceledException) when (!ct.IsCancellationRequested)
                     {
                         _toolResultsTcs.TrySetCanceled();
-                        if (ct.IsCancellationRequested)
-                            throw new OperationCanceledException("Tool execution was cancelled.", ct);
                         throw new TimeoutException("Tool execution timed out. Revit may be busy or a modal dialog is open.");
                     }
-                }
-                catch (OperationCanceledException) when (!ct.IsCancellationRequested)
-                {
-                    _toolResultsTcs.TrySetCanceled();
-                    throw new TimeoutException("Tool execution timed out. Revit may be busy or a modal dialog is open.");
+
+                    var execResults = await _toolResultsTcs.Task;
+                    foreach (var kvp in execResults)
+                        results[kvp.Key] = kvp.Value;
+
+                    var hasModify = toExecute.Any(t => !ReadOnlyTools.Contains(t.FunctionName));
+                    if (hasModify)
+                        _resultCache.Clear();
+                    else
+                    {
+                        foreach (var req in toExecute)
+                        {
+                            if (ReadOnlyTools.Contains(req.FunctionName) && results.TryGetValue(req.ToolCallId, out var res)
+                                && !string.IsNullOrEmpty(res) && !res.Contains("\"error\""))
+                            {
+                                var key = GetCacheKey(req.FunctionName, req.Arguments);
+                                _resultCache[key] = (DateTime.UtcNow, res);
+                            }
+                        }
+                    }
                 }
 
-                return await _toolResultsTcs.Task;
+                return results;
             }
             finally
             {
@@ -98,6 +157,29 @@ namespace RevitChat.Services
             }
         }
 
+        private static string GetCacheKey(string functionName, Dictionary<string, object> args)
+        {
+            var sorted = args != null
+                ? args.OrderBy(kvp => kvp.Key).ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+                : new Dictionary<string, object>();
+            return functionName + JsonSerializer.Serialize(sorted);
+        }
+
+        public static string EnrichErrorContext(string functionName, string errorJson)
+        {
+            if (string.IsNullOrWhiteSpace(errorJson)) return errorJson;
+            var lower = errorJson.ToLowerInvariant();
+            if (lower.Contains("element not found"))
+                return errorJson + " Some element IDs may be invalid. Try get_elements or search_elements first.";
+            if (lower.Contains("parameter is read-only"))
+                return errorJson + " This parameter cannot be modified via API.";
+            if (lower.Contains("transaction"))
+                return errorJson + " Revit may be in edit mode or busy. Try again after finishing current operation.";
+            if (lower.Contains("not found"))
+                return errorJson + " The specified item was not found in the document.";
+            return errorJson;
+        }
+
         public static Dictionary<string, string> CompressAndTruncate(
             List<ToolCallRequest> toolCalls, Dictionary<string, string> results, int maxPerResult)
         {
@@ -106,6 +188,9 @@ namespace RevitChat.Services
             {
                 var toolName = toolCalls.FirstOrDefault(t => t.ToolCallId == kvp.Key)?.FunctionName ?? "unknown";
                 var val = WorkingMemory.CompressToolResult(toolName, kvp.Value);
+
+                if (val != null && val.Contains("\"error\""))
+                    val = EnrichErrorContext(toolName, val);
 
                 if (val != null && val.Length > maxPerResult)
                     val = val[..maxPerResult] + $"\n...[TRUNCATED — {kvp.Value?.Length ?? 0} chars total]";

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Autodesk.Revit.DB;
@@ -26,7 +27,9 @@ namespace RevitChat.Skills
             "isolate_by_level", "hide_by_level", "override_color_by_level",
             "isolate_by_filter", "override_color_by_filter",
             "create_3d_view", "create_3d_view_by_system",
-            "create_section_box", "create_section_view"
+            "create_section_box", "create_section_view",
+            "override_color_by_system", "override_color_by_parameter",
+            "set_view_range", "screenshot_view"
         };
 
         private static readonly Dictionary<string, (byte R, byte G, byte B)> NamedColors = new(StringComparer.OrdinalIgnoreCase)
@@ -52,6 +55,22 @@ namespace RevitChat.Skills
             ["olive"] = (128, 128, 0),
             ["coral"] = (255, 127, 80),
             ["gold"] = (255, 215, 0),
+        };
+
+        private static readonly (string Name, byte R, byte G, byte B)[] SystemColorPalette = new[]
+        {
+            ("Red", (byte)255, (byte)0, (byte)0),
+            ("Blue", (byte)0, (byte)0, (byte)255),
+            ("Green", (byte)0, (byte)180, (byte)0),
+            ("Orange", (byte)255, (byte)140, (byte)0),
+            ("Purple", (byte)128, (byte)0, (byte)128),
+            ("Cyan", (byte)0, (byte)200, (byte)200),
+            ("Magenta", (byte)255, (byte)0, (byte)255),
+            ("Yellow", (byte)200, (byte)200, (byte)0),
+            ("Lime", (byte)100, (byte)255, (byte)0),
+            ("Pink", (byte)255, (byte)105, (byte)180),
+            ("Teal", (byte)0, (byte)128, (byte)128),
+            ("Gold", (byte)218, (byte)165, (byte)32)
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -366,6 +385,62 @@ namespace RevitChat.Skills
                     },
                     "required": ["element_ids"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("override_color_by_system",
+                "Color-code MEP elements by system name. Auto-assigns distinct colors per system for visual identification.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "category": { "type": "string", "enum": ["Pipes", "Ducts", "all"], "description": "Category to color (default: all)" },
+                        "dry_run": { "type": "boolean", "description": "Preview system list without applying colors. Default false." }
+                    },
+                    "required": []
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("override_color_by_parameter",
+                "Heat map: color elements by parameter value range (blue=low, red=high).",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "category": { "type": "string", "description": "Category to color (e.g. 'Pipes', 'Ducts', 'Walls')" },
+                        "param_name": { "type": "string", "description": "Parameter name to base coloring on" },
+                        "dry_run": { "type": "boolean", "description": "Preview value range without applying. Default false." }
+                    },
+                    "required": ["category", "param_name"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("set_view_range",
+                "Set view range (cut plane, top, bottom) for plan views. Values in mm offset from level.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "view_id": { "type": "integer", "description": "View ID (default: active view)" },
+                        "cut_plane_mm": { "type": "number", "description": "Cut plane offset from level in mm (e.g. 1200)" },
+                        "top_mm": { "type": "number", "description": "Top clip offset in mm" },
+                        "bottom_mm": { "type": "number", "description": "Bottom clip offset in mm" }
+                    },
+                    "required": []
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("screenshot_view",
+                "Export current view as image file (PNG/JPG).",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "view_id": { "type": "integer", "description": "View ID (default: active view)" },
+                        "format": { "type": "string", "enum": ["png", "jpg"], "description": "Image format (default: png)" },
+                        "resolution": { "type": "string", "enum": ["low", "medium", "high"], "description": "Resolution (default: medium)" }
+                    },
+                    "required": []
+                }
                 """))
         };
 
@@ -400,6 +475,10 @@ namespace RevitChat.Skills
                 "create_3d_view_by_system" => Create3DViewBySystem(uidoc, doc, args),
                 "create_section_box" => CreateSectionBox(uidoc, doc, args),
                 "create_section_view" => CreateSectionView(uidoc, doc, args),
+                "override_color_by_system" => OverrideColorBySystem(doc, view, args),
+                "override_color_by_parameter" => OverrideColorByParameter(doc, view, args),
+                "set_view_range" => SetViewRange(doc, args),
+                "screenshot_view" => ScreenshotView(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -1341,6 +1420,257 @@ namespace RevitChat.Skills
             ogs.SetCutLineColor(color);
             ogs.SetCutForegroundPatternColor(color);
             return ogs;
+        }
+
+        private static Color InterpolateColor(double ratio)
+        {
+            ratio = Math.Max(0, Math.Min(1, ratio));
+            byte r, g, b;
+            if (ratio < 0.25) { r = 0; g = (byte)(ratio / 0.25 * 255); b = 255; }
+            else if (ratio < 0.5) { r = 0; g = 255; b = (byte)((0.5 - ratio) / 0.25 * 255); }
+            else if (ratio < 0.75) { r = (byte)((ratio - 0.5) / 0.25 * 255); g = 255; b = 0; }
+            else { r = 255; g = (byte)((1.0 - ratio) / 0.25 * 255); b = 0; }
+            return new Color(r, g, b);
+        }
+
+        private string OverrideColorBySystem(Document doc, View view, Dictionary<string, object> args)
+        {
+            var category = GetArg<string>(args, "category") ?? "all";
+            bool dryRun = GetArg(args, "dry_run", false);
+
+            var pipeCat = BuiltInCategory.OST_PipeCurves;
+            var ductCat = BuiltInCategory.OST_DuctCurves;
+            var categories = new List<BuiltInCategory>();
+            if (category.Equals("all", StringComparison.OrdinalIgnoreCase))
+            {
+                categories.Add(pipeCat);
+                categories.Add(ductCat);
+            }
+            else if (category.Equals("Pipes", StringComparison.OrdinalIgnoreCase))
+                categories.Add(pipeCat);
+            else if (category.Equals("Ducts", StringComparison.OrdinalIgnoreCase))
+                categories.Add(ductCat);
+            else
+                return JsonError($"category must be 'Pipes', 'Ducts', or 'all'.");
+
+            var bySystem = new Dictionary<string, List<ElementId>>(StringComparer.OrdinalIgnoreCase);
+            foreach (var bic in categories)
+            {
+                foreach (var elem in new FilteredElementCollector(doc, view.Id)
+                    .OfCategory(bic).WhereElementIsNotElementType())
+                {
+                    var sn = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString();
+                    var key = string.IsNullOrEmpty(sn) ? "(No System)" : sn;
+                    if (!bySystem.TryGetValue(key, out var list))
+                    {
+                        list = new List<ElementId>();
+                        bySystem[key] = list;
+                    }
+                    list.Add(elem.Id);
+                }
+            }
+
+            if (bySystem.Count == 0)
+                return JsonError($"No pipes or ducts found in the active view for category '{category}'.");
+
+            var systems = new List<object>();
+            int idx = 0;
+            foreach (var kv in bySystem.OrderByDescending(x => x.Value.Count))
+            {
+                var pal = SystemColorPalette[idx % SystemColorPalette.Length];
+                systems.Add(new { name = kv.Key, color = pal.Name, count = kv.Value.Count });
+                idx++;
+            }
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new { dry_run = true, systems }, JsonOpts);
+            }
+
+            var solidFillId = GetSolidFillPatternId(doc);
+            idx = 0;
+            using (var trans = new Transaction(doc, "AI: Override Color by System"))
+            {
+                trans.Start();
+                foreach (var kv in bySystem.OrderByDescending(x => x.Value.Count))
+                {
+                    var pal = SystemColorPalette[idx % SystemColorPalette.Length];
+                    var color = new Color(pal.R, pal.G, pal.B);
+                    var ogs = BuildColorOverride(color, solidFillId);
+                    foreach (var id in kv.Value)
+                        view.SetElementOverrides(id, ogs);
+                    idx++;
+                }
+                trans.Commit();
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                systems,
+                message = $"Applied color overrides by system to {bySystem.Sum(x => x.Value.Count)} element(s) in '{view.Name}'."
+            }, JsonOpts);
+        }
+
+        private string OverrideColorByParameter(Document doc, View view, Dictionary<string, object> args)
+        {
+            var categoryName = GetArg<string>(args, "category");
+            var paramName = GetArg<string>(args, "param_name");
+            bool dryRun = GetArg(args, "dry_run", false);
+
+            if (string.IsNullOrEmpty(categoryName)) return JsonError("category required.");
+            if (string.IsNullOrEmpty(paramName)) return JsonError("param_name required.");
+
+            var bic = ResolveCategoryFilter(doc, categoryName);
+            if (!bic.HasValue) return JsonError($"Category '{categoryName}' not found.");
+
+            var elements = new FilteredElementCollector(doc, view.Id)
+                .OfCategory(bic.Value)
+                .WhereElementIsNotElementType()
+                .ToList();
+
+            var values = new List<(ElementId Id, double Value)>();
+            foreach (var elem in elements)
+            {
+                var p = elem.LookupParameter(paramName);
+                if (p == null || !p.HasValue) continue;
+                double val;
+                if (p.StorageType == StorageType.Double)
+                    val = p.AsDouble();
+                else if (p.StorageType == StorageType.Integer)
+                    val = p.AsInteger();
+                else
+                    continue;
+                values.Add((elem.Id, val));
+            }
+
+            if (values.Count == 0)
+                return JsonError($"No elements of category '{categoryName}' with numeric parameter '{paramName}' found in the active view.");
+
+            var minVal = values.Min(x => x.Value);
+            var maxVal = values.Max(x => x.Value);
+            var range = maxVal - minVal;
+            if (range < 1e-9) range = 1;
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    min = minVal,
+                    max = maxVal,
+                    element_count = values.Count,
+                    color_range = "blue→green→red"
+                }, JsonOpts);
+            }
+
+            var solidFillId = GetSolidFillPatternId(doc);
+            using (var trans = new Transaction(doc, "AI: Override Color by Parameter"))
+            {
+                trans.Start();
+                foreach (var (id, val) in values)
+                {
+                    var ratio = (val - minVal) / range;
+                    var color = InterpolateColor(ratio);
+                    var ogs = BuildColorOverride(color, solidFillId);
+                    view.SetElementOverrides(id, ogs);
+                }
+                trans.Commit();
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                min = minVal,
+                max = maxVal,
+                element_count = values.Count,
+                color_range = "blue→green→red",
+                message = $"Applied heat map to {values.Count} element(s) by '{paramName}' in '{view.Name}'."
+            }, JsonOpts);
+        }
+
+        private string SetViewRange(Document doc, Dictionary<string, object> args)
+        {
+            var viewId = GetArg(args, "view_id", 0);
+            var cutPlaneMm = GetArg(args, "cut_plane_mm", double.NaN);
+            var topMm = GetArg(args, "top_mm", double.NaN);
+            var bottomMm = GetArg(args, "bottom_mm", double.NaN);
+
+            if (double.IsNaN(cutPlaneMm) && double.IsNaN(topMm) && double.IsNaN(bottomMm))
+                return JsonError("At least one of cut_plane_mm, top_mm, or bottom_mm is required.");
+
+            var view = (viewId > 0 ? doc.GetElement(new ElementId((long)viewId)) : doc.ActiveView) as ViewPlan;
+            if (view == null) return JsonError("Active view is not a plan view.");
+
+            var range = view.GetViewRange();
+            const double mmToFeet = 1.0 / 304.8;
+
+            if (!double.IsNaN(cutPlaneMm))
+                range.SetOffset(PlanViewPlane.CutPlane, cutPlaneMm * mmToFeet);
+            if (!double.IsNaN(topMm))
+                range.SetOffset(PlanViewPlane.TopClipPlane, topMm * mmToFeet);
+            if (!double.IsNaN(bottomMm))
+                range.SetOffset(PlanViewPlane.BottomClipPlane, bottomMm * mmToFeet);
+
+            using (var trans = new Transaction(doc, "AI: Set View Range"))
+            {
+                trans.Start();
+                view.SetViewRange(range);
+                trans.Commit();
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                view_id = view.Id.Value,
+                view_name = view.Name,
+                cut_plane_mm = double.IsNaN(cutPlaneMm) ? null : (double?)cutPlaneMm,
+                top_mm = double.IsNaN(topMm) ? null : (double?)topMm,
+                bottom_mm = double.IsNaN(bottomMm) ? null : (double?)bottomMm,
+                message = $"Updated view range for '{view.Name}'."
+            }, JsonOpts);
+        }
+
+        private string ScreenshotView(Document doc, Dictionary<string, object> args)
+        {
+            var viewId = GetArg(args, "view_id", 0);
+            var format = GetArg<string>(args, "format") ?? "png";
+            var resolution = GetArg<string>(args, "resolution") ?? "medium";
+
+            var view = (viewId > 0 ? doc.GetElement(new ElementId((long)viewId)) : doc.ActiveView) as View;
+            if (view == null) return JsonError("No valid view found.");
+
+            var ext = format.Equals("jpg", StringComparison.OrdinalIgnoreCase) ? ".jpg" : ".png";
+            var filePath = Path.Combine(Path.GetTempPath(), $"revit_screenshot_{DateTime.Now:yyyyMMdd_HHmmss}{ext}");
+
+            var options = new ImageExportOptions
+            {
+                ExportRange = ExportRange.SetOfViews,
+                FilePath = filePath,
+                HLRandWFViewsFileType = format.Equals("jpg", StringComparison.OrdinalIgnoreCase) ? ImageFileType.JPEGLossless : ImageFileType.PNG,
+                ImageResolution = resolution switch { "high" => ImageResolution.DPI_300, "low" => ImageResolution.DPI_72, _ => ImageResolution.DPI_150 },
+                ZoomType = ZoomFitType.FitToPage,
+                PixelSize = resolution switch { "high" => 3840, "low" => 1280, _ => 1920 }
+            };
+            options.SetViewsAndSheets(new List<ElementId> { view.Id });
+
+            try
+            {
+                doc.ExportImage(options);
+            }
+            catch (Exception ex)
+            {
+                return JsonError($"Export failed: {ex.Message}");
+            }
+
+            if (!File.Exists(filePath))
+                return JsonError("Image file was not created.");
+
+            return JsonSerializer.Serialize(new
+            {
+                file_path = filePath,
+                view_name = view.Name,
+                format = format.ToLower(),
+                resolution,
+                message = $"Exported view '{view.Name}' to {filePath}."
+            }, JsonOpts);
         }
 
         #endregion

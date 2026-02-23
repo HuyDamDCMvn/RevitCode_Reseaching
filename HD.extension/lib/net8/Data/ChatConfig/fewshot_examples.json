@@ -2095,5 +2095,61 @@
   {
     "keywords": ["coupling", "union", "nối ống"],
     "example": "User: chèn coupling giữa pipe 100 và pipe 200\nAssistant:\n<tool_call>\n{\"name\": \"insert_coupling\", \"arguments\": {\"element_id_1\": 100, \"element_id_2\": 200}}\n</tool_call>"
+  },
+  {
+    "keywords": ["empty", "tag", "blank", "rỗng"],
+    "example": "User: tìm tag rỗng trong view\nAssistant:\n<tool_call>\n{\"name\": \"get_empty_tags\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["align", "tag", "canh"],
+    "example": "User: canh chỉnh các tag cho thẳng hàng\nAssistant:\n<tool_call>\n{\"name\": \"align_tags\", \"arguments\": {\"tag_ids\": [], \"alignment\": \"left\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["insulation", "bảo ôn", "cách nhiệt", "uninsulated"],
+    "example": "User: check which pipes are missing insulation\nAssistant:\n<tool_call>\n{\"name\": \"check_insulation_coverage\", \"arguments\": {\"category\": \"Pipes\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["velocity", "tốc độ", "vận tốc", "flow speed"],
+    "example": "User: check pipe velocity exceeding 2 m/s\nAssistant:\n<tool_call>\n{\"name\": \"check_velocity\", \"arguments\": {\"category\": \"Pipes\", \"max_velocity_ms\": 2.0}}\n</tool_call>"
+  },
+  {
+    "keywords": ["color", "system", "màu", "hệ thống"],
+    "example": "User: tô màu ống theo hệ thống\nAssistant:\n<tool_call>\n{\"name\": \"override_color_by_system\", \"arguments\": {\"category\": \"Pipes\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["heat", "map", "gradient", "parameter", "giá trị"],
+    "example": "User: color ducts by velocity parameter\nAssistant:\n<tool_call>\n{\"name\": \"override_color_by_parameter\", \"arguments\": {\"category\": \"Ducts\", \"param_name\": \"Velocity\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["audit", "health", "score", "đánh giá", "sức khỏe"],
+    "example": "User: đánh giá sức khỏe model\nAssistant:\n<tool_call>\n{\"name\": \"audit_model_standards\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["duplicate", "overlapping", "trùng", "chồng"],
+    "example": "User: find duplicate walls\nAssistant:\n<tool_call>\n{\"name\": \"find_duplicate_elements\", \"arguments\": {\"category\": \"Walls\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["room", "enclosed", "enclosure", "phòng", "kín"],
+    "example": "User: kiểm tra phòng chưa kín\nAssistant:\n<tool_call>\n{\"name\": \"audit_room_enclosure\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["geometry", "volume", "area", "thể tích", "diện tích"],
+    "example": "User: get the volume of these elements\nAssistant:\n<tool_call>\n{\"name\": \"get_element_geometry\", \"arguments\": {\"element_ids\": []}}\n</tool_call>"
+  },
+  {
+    "keywords": ["near", "nearby", "radius", "gần", "xung quanh"],
+    "example": "User: find pipes near element 12345 within 2m\nAssistant:\n<tool_call>\n{\"name\": \"find_elements_near\", \"arguments\": {\"reference_element_id\": 12345, \"radius_mm\": 2000, \"category\": \"Pipes\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["wall", "layer", "compound", "cấu tạo", "lớp"],
+    "example": "User: xem cấu tạo tường\nAssistant:\n<tool_call>\n{\"name\": \"get_wall_layers\", \"arguments\": {\"element_ids\": []}}\n</tool_call>"
+  },
+  {
+    "keywords": ["view", "range", "cut", "plane", "view range"],
+    "example": "User: set view range cut plane to 1200mm\nAssistant:\n<tool_call>\n{\"name\": \"set_view_range\", \"arguments\": {\"cut_plane_mm\": 1200}}\n</tool_call>"
+  },
+  {
+    "keywords": ["screenshot", "export", "image", "hình ảnh", "chụp"],
+    "example": "User: export view as image\nAssistant:\n<tool_call>\n{\"name\": \"screenshot_view\", \"arguments\": {\"format\": \"png\", \"resolution\": \"high\"}}\n</tool_call>"
   }
 ]

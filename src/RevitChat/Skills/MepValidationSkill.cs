@@ -19,7 +19,7 @@ namespace RevitChat.Skills
             "check_disconnected_elements", "check_missing_parameters",
             "check_elevation_conflicts", "check_oversized_elements", "get_warnings_mep",
             "check_pipe_slope", "check_slope_continuity", "get_penetration_schedule",
-            "check_fire_dampers"
+            "check_fire_dampers", "check_insulation_coverage", "check_velocity"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -152,6 +152,36 @@ namespace RevitChat.Skills
                     },
                     "required": []
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("check_insulation_coverage",
+                "Find pipes/ducts that should have insulation but don't. Reports uninsulated elements by system.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "category": { "type": "string", "enum": ["Pipes", "Ducts", "all"], "description": "Category to check (default: all)" },
+                        "system_name": { "type": "string", "description": "Filter by system name (optional)" },
+                        "level": { "type": "string", "description": "Filter by level name (optional)" },
+                        "limit": { "type": "integer", "description": "Max results (default 200)" }
+                    },
+                    "required": []
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("check_velocity",
+                "Check flow velocity in pipes/ducts. Flag elements exceeding the specified maximum velocity.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "category": { "type": "string", "enum": ["Pipes", "Ducts"], "description": "Category to check" },
+                        "max_velocity_ms": { "type": "number", "description": "Max velocity in m/s (default: 2.5 for pipes, 8 for ducts)" },
+                        "system_name": { "type": "string", "description": "Filter by system name (optional)" },
+                        "limit": { "type": "integer", "description": "Max results (default 100)" }
+                    },
+                    "required": ["category"]
+                }
                 """))
         };
 
@@ -168,6 +198,8 @@ namespace RevitChat.Skills
                 "check_slope_continuity" => CheckSlopeContinuity(doc, args),
                 "get_penetration_schedule" => GetPenetrationSchedule(doc, args),
                 "check_fire_dampers" => CheckFireDampers(doc, args),
+                "check_insulation_coverage" => CheckInsulationCoverage(uidoc, doc, args),
+                "check_velocity" => CheckVelocity(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -820,6 +852,202 @@ namespace RevitChat.Skills
                 disconnected = disconnectedCount,
                 dampers
             }, JsonOpts);
+        }
+
+        private string CheckInsulationCoverage(UIDocument uidoc, Document doc, Dictionary<string, object> args)
+        {
+            var category = (GetArg<string>(args, "category") ?? "all").ToLower();
+            var systemFilter = GetArg<string>(args, "system_name");
+            var levelFilter = GetArg<string>(args, "level");
+            int limit = GetArg(args, "limit", 200);
+
+            var categories = new List<BuiltInCategory>();
+            if (category is "all" or "pipes") categories.Add(BuiltInCategory.OST_PipeCurves);
+            if (category is "all" or "ducts") categories.Add(BuiltInCategory.OST_DuctCurves);
+
+            var uninsulated = new List<object>();
+            int totalChecked = 0, insulated = 0;
+
+            foreach (var bic in categories)
+            {
+                var collector = new FilteredElementCollector(doc)
+                    .OfCategory(bic)
+                    .WhereElementIsNotElementType();
+
+                foreach (var elem in collector)
+                {
+                    totalChecked++;
+
+                    if (!string.IsNullOrEmpty(systemFilter))
+                    {
+                        var sysParam = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM);
+                        if (sysParam == null || !(sysParam.AsString()?.Contains(systemFilter, StringComparison.OrdinalIgnoreCase) == true))
+                            continue;
+                    }
+
+                    if (!string.IsNullOrEmpty(levelFilter))
+                    {
+                        var lvlParam = elem.get_Parameter(BuiltInParameter.RBS_START_LEVEL_PARAM)
+                            ?? elem.get_Parameter(BuiltInParameter.FAMILY_LEVEL_PARAM);
+                        if (lvlParam != null)
+                        {
+                            var lvl = doc.GetElement(lvlParam.AsElementId());
+                            if (lvl != null && !lvl.Name.Contains(levelFilter, StringComparison.OrdinalIgnoreCase))
+                                continue;
+                        }
+                    }
+
+                    ICollection<ElementId> insIds = null;
+                    try { insIds = InsulationLiningBase.GetInsulationIds(doc, elem.Id); } catch { }
+                    if (insIds != null && insIds.Count > 0)
+                    {
+                        insulated++;
+                        continue;
+                    }
+
+                    if (uninsulated.Count >= limit) continue;
+
+                    var sysName = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "-";
+                    var size = GetMepSizeString(elem);
+
+                    uninsulated.Add(new
+                    {
+                        id = elem.Id.Value,
+                        category = elem.Category?.Name ?? "-",
+                        system_name = sysName,
+                        size = size ?? "-",
+                        name = elem.Name
+                    });
+                }
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                total_checked = totalChecked,
+                insulated_count = insulated,
+                uninsulated_count = uninsulated.Count,
+                coverage_pct = totalChecked > 0 ? Math.Round((double)insulated / totalChecked * 100, 1) : 0,
+                uninsulated
+            }, JsonOpts);
+        }
+
+        private string CheckVelocity(Document doc, Dictionary<string, object> args)
+        {
+            var category = GetArg<string>(args, "category")?.ToLower();
+            double maxVelocityMs = GetArg(args, "max_velocity_ms", 0);
+            var systemFilter = GetArg<string>(args, "system_name");
+            int limit = GetArg(args, "limit", 100);
+
+            if (string.IsNullOrEmpty(category) || (category != "pipes" && category != "ducts"))
+                return JsonError("category must be 'Pipes' or 'Ducts'.");
+
+            if (maxVelocityMs <= 0) maxVelocityMs = category == "pipes" ? 2.5 : 8.0;
+
+            var bic = category == "pipes" ? BuiltInCategory.OST_PipeCurves : BuiltInCategory.OST_DuctCurves;
+            var collector = new FilteredElementCollector(doc)
+                .OfCategory(bic)
+                .WhereElementIsNotElementType();
+
+            var issues = new List<object>();
+
+            foreach (var elem in collector)
+            {
+                if (!string.IsNullOrEmpty(systemFilter))
+                {
+                    var sys = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "";
+                    if (!sys.Contains(systemFilter, StringComparison.OrdinalIgnoreCase)) continue;
+                }
+
+                double velocityMs = 0;
+                if (category == "pipes")
+                {
+                    var velParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_VELOCITY_PARAM);
+                    if (velParam != null && velParam.HasValue)
+                    {
+                        try { velocityMs = velParam.AsDouble() * 0.3048; } catch { }
+                    }
+                    else
+                    {
+                        var flowParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_FLOW_PARAM);
+                        var diamParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM);
+                        if (flowParam != null && flowParam.HasValue && diamParam != null && diamParam.HasValue)
+                        {
+                            try
+                            {
+                                var flow = flowParam.AsDouble();
+                                var diamFt = diamParam.AsDouble();
+                                if (diamFt > 1e-6)
+                                {
+                                    var areaFt2 = Math.PI * (diamFt / 2) * (diamFt / 2);
+                                    var velFtS = flow > 0 ? flow / areaFt2 : 0;
+                                    velocityMs = velFtS * 0.3048;
+                                }
+                            }
+                            catch { }
+                        }
+                    }
+                }
+                else
+                {
+                    var flowParam = elem.get_Parameter(BuiltInParameter.RBS_DUCT_FLOW_PARAM);
+                    if (flowParam != null && flowParam.HasValue)
+                    {
+                        try
+                        {
+                            var flow = flowParam.AsDouble();
+                            var w = elem.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM)?.AsDouble() ?? 0;
+                            var h = elem.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM)?.AsDouble() ?? 0;
+                            var d = elem.get_Parameter(BuiltInParameter.RBS_CURVE_DIAMETER_PARAM)?.AsDouble() ?? 0;
+                            double areaFt2 = 0;
+                            if (d > 1e-6) areaFt2 = Math.PI * (d / 2) * (d / 2);
+                            else if (w > 1e-6 && h > 1e-6) areaFt2 = w * h;
+                            if (areaFt2 > 1e-6) velocityMs = (flow / 60.0 / areaFt2) * 0.3048;
+                        }
+                        catch { }
+                    }
+                }
+
+                if (velocityMs > maxVelocityMs)
+                {
+                    issues.Add(new
+                    {
+                        id = elem.Id.Value,
+                        category = elem.Category?.Name ?? "-",
+                        type = GetElementTypeName(doc, elem),
+                        system = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "-",
+                        size = GetMepSizeString(elem) ?? "-",
+                        velocity_ms = Math.Round(velocityMs, 2),
+                        max_velocity_ms = maxVelocityMs
+                    });
+                    if (issues.Count >= limit) break;
+                }
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                category = category == "pipes" ? "Pipes" : "Ducts",
+                max_velocity_ms = maxVelocityMs,
+                issues_found = issues.Count,
+                issues
+            }, JsonOpts);
+        }
+
+        private static string GetMepSizeString(Element e)
+        {
+            var diam = e.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)
+                    ?? e.get_Parameter(BuiltInParameter.RBS_CURVE_DIAMETER_PARAM)
+                    ?? e.get_Parameter(BuiltInParameter.RBS_CONDUIT_DIAMETER_PARAM);
+            if (diam != null && diam.HasValue)
+                return $"DN{Math.Round(diam.AsDouble() * 304.8)}";
+
+            var w = e.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM)
+                 ?? e.get_Parameter(BuiltInParameter.RBS_CABLETRAY_WIDTH_PARAM);
+            var h = e.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM)
+                 ?? e.get_Parameter(BuiltInParameter.RBS_CABLETRAY_HEIGHT_PARAM);
+            if (w != null && h != null && w.HasValue && h.HasValue)
+                return $"{Math.Round(w.AsDouble() * 304.8)}x{Math.Round(h.AsDouble() * 304.8)}";
+
+            return null;
         }
 
         private static (double slopeRatio, string source) GetPipeSlope(Element elem)

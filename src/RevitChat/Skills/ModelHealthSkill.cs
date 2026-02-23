@@ -17,7 +17,8 @@ namespace RevitChat.Skills
         protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_model_warnings", "get_warning_elements", "get_model_statistics",
-            "find_imported_cad", "find_inplace_families", "find_unused_families"
+            "find_imported_cad", "find_inplace_families", "find_unused_families",
+            "audit_model_standards"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -87,6 +88,18 @@ namespace RevitChat.Skills
                     },
                     "required": []
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("audit_model_standards",
+                "Comprehensive model health audit: warnings count, unused families, imported CAD, in-place families, naming issues. Returns a health score 0-100.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "include": { "type": "array", "items": { "type": "string" }, "description": "Sections to include: warnings, families, cad, naming. Default: all." }
+                    },
+                    "required": []
+                }
                 """))
         };
 
@@ -100,6 +113,7 @@ namespace RevitChat.Skills
                 "find_imported_cad" => FindImportedCad(doc),
                 "find_inplace_families" => FindInPlaceFamilies(doc),
                 "find_unused_families" => FindUnusedFamilies(doc, args),
+                "audit_model_standards" => AuditModelStandards(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -357,6 +371,66 @@ namespace RevitChat.Skills
                 unused_count = unused.Count,
                 message = unused.Count > 0 ? "These families can be purged to reduce model size." : "All families are in use.",
                 unused_families = unused
+            }, JsonOpts);
+        }
+
+        private string AuditModelStandards(Document doc, Dictionary<string, object> args)
+        {
+            var sections = GetArgStringArray(args, "include") ?? new List<string>();
+            bool all = sections.Count == 0;
+
+            int totalScore = 0;
+            int checkCount = 0;
+            var report = new Dictionary<string, object>();
+
+            if (all || sections.Contains("warnings", StringComparer.OrdinalIgnoreCase))
+            {
+                var warnings = doc.GetWarnings();
+                int warnCount = warnings?.Count ?? 0;
+                int warnScore = warnCount == 0 ? 100 : warnCount < 10 ? 80 : warnCount < 50 ? 60 : warnCount < 200 ? 40 : 20;
+                report["warnings"] = new { count = warnCount, score = warnScore, status = warnScore >= 60 ? "OK" : "NEEDS_ATTENTION" };
+                totalScore += warnScore;
+                checkCount++;
+            }
+
+            if (all || sections.Contains("families", StringComparer.OrdinalIgnoreCase))
+            {
+                var allFamilies = new FilteredElementCollector(doc).OfClass(typeof(Family)).Cast<Family>().ToList();
+                int inPlace = allFamilies.Count(f => f.IsInPlace);
+                int famScore = inPlace == 0 ? 100 : inPlace < 5 ? 70 : inPlace < 20 ? 40 : 20;
+                report["families"] = new { total = allFamilies.Count, in_place = inPlace, score = famScore };
+                totalScore += famScore;
+                checkCount++;
+            }
+
+            if (all || sections.Contains("cad", StringComparer.OrdinalIgnoreCase))
+            {
+                int imports = new FilteredElementCollector(doc).OfClass(typeof(ImportInstance)).GetElementCount();
+                int cadScore = imports == 0 ? 100 : imports < 5 ? 70 : imports < 20 ? 40 : 20;
+                report["imported_cad"] = new { count = imports, score = cadScore, status = cadScore >= 70 ? "OK" : "NEEDS_ATTENTION" };
+                totalScore += cadScore;
+                checkCount++;
+            }
+
+            if (all || sections.Contains("naming", StringComparer.OrdinalIgnoreCase))
+            {
+                var views = new FilteredElementCollector(doc).OfClass(typeof(View))
+                    .Cast<View>().Where(v => !v.IsTemplate).ToList();
+                int copyOfCount = views.Count(v => v.Name.StartsWith("Copy of") || v.Name.Contains("- Copy"));
+                int namingScore = copyOfCount == 0 ? 100 : copyOfCount < 5 ? 70 : 40;
+                report["naming"] = new { total_views = views.Count, copy_of_views = copyOfCount, score = namingScore };
+                totalScore += namingScore;
+                checkCount++;
+            }
+
+            int overallScore = checkCount > 0 ? totalScore / checkCount : 0;
+            string grade = overallScore >= 90 ? "A" : overallScore >= 75 ? "B" : overallScore >= 60 ? "C" : overallScore >= 40 ? "D" : "F";
+
+            return JsonSerializer.Serialize(new
+            {
+                overall_score = overallScore,
+                grade,
+                checks = report
             }, JsonOpts);
         }
     }
