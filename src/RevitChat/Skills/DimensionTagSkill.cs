@@ -9,19 +9,17 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class DimensionTagSkill : IRevitSkill
+    public class DimensionTagSkill : BaseRevitSkill
     {
-        public string Name => "DimensionTag";
-        public string Description => "Tag elements, find untagged elements, add text notes";
+        protected override string SkillName => "DimensionTag";
+        protected override string SkillDescription => "Tag elements, find untagged elements, add text notes";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "tag_elements", "get_untagged_elements", "tag_all_in_view", "add_text_note"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("tag_elements",
                 "Tag specific elements with IndependentTag in the active view. Confirm with user first.",
@@ -83,7 +81,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

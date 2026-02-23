@@ -4,24 +4,25 @@
 
 ```mermaid
 graph TD
-  OCS["OllamaChatService.cs\n2,199 lines\n42% static data"] --> SK["32 Skill Files\n~155 tools"]
-  OCS --> VM["BaseChatViewModel.cs\n485 lines\n8+ responsibilities"]
+  OCS["OllamaChatService.cs\n2,199 lines\n47% static data"] --> SK["32 Skill Files\n~155 tools"]
+  OCS --> VM["BaseChatViewModel.cs\n623 lines\n14 responsibilities"]
   SK --> RH["RevitHelpers.cs\n195 lines shared"]
   SK --> SR["SkillRegistry.cs\n121 lines"]
 
   subgraph dataInline [Hardcoded Data in OCS]
-    FS["228 FewShot examples\n~614 lines"]
-    KG["33 KeywordGroups\n~200 lines"]
-    TSH["174 ToolSchemaHints\n~180 lines"]
+    FS["228 FewShot examples\n~553 lines"]
+    KG["33 KeywordGroups\n~203 lines"]
+    TSH["174 ToolSchemaHints\n~225 lines"]
   end
   OCS --> dataInline
 ```
 
 **Vấn đề chính:**
 
-- `OllamaChatService.cs`: 2,199 dòng, 42% là data cứng (FewShot, Keywords, Hints)
-- 32 skills lặp boilerplate: null check, transaction, element resolution
-- `BaseChatViewModel`: quá nhiều trách nhiệm (chat flow + tool exec + context + memory + UI + feedback + risk)
+- `OllamaChatService.cs`: 2,199 dòng, 47% là data cứng (FewShot, Keywords, Hints)
+- 32 skills lặp boilerplate: null check, transaction, element resolution (58 transaction blocks)
+- `BaseChatViewModel`: 623 dòng, 14 trách nhiệm (chat flow + tool exec + context + memory + UI + feedback + risk + cancel + settings + diagnostics)
+- `TruncateToolResults` (lines 315–331) là dead code — `CompressAndTruncate` được dùng thay thế
 - Mọi config tool đều hardcoded trong C# — thêm/sửa tool phải rebuild
 
 ---
@@ -40,7 +41,7 @@ graph TD
 
 **Ưu điểm:**
 
-- OllamaChatService giảm ~935 dòng (42%) -> ~1,264 dòng logic thuần
+- OllamaChatService giảm ~1,038 dòng (47%) -> ~1,161 dòng logic thuần
 - Thêm/sửa FewShot, Keywords không cần rebuild DLL
 - Non-developer (Digital Lead) có thể edit JSON trực tiếp
 - Có thể deploy JSON riêng, hot-reload khi cần
@@ -64,18 +65,22 @@ graph TD
 **Làm gì:**
 
 - Tạo `BaseSkill` abstract class:
-  - `Execute()` wrapper tự check `uidoc` null + route tool
+  - `Execute(string functionName, UIApplication app, Dictionary<string, object> args)` wrapper tự check `uidoc` null + route tool
   - `ExecuteInTransaction(doc, name, action)` helper tự try/catch/rollback
   - `ResolveElements(doc, args)` helper tự parse + validate element IDs
   - `GetRequiredArg<T>()` tự throw nếu missing
-- Mỗi skill chỉ cần override `ExecuteTool(string tool, UIDocument uidoc, JsonElement args)`
+- Mỗi skill chỉ cần override `ExecuteTool(string tool, UIDocument uidoc, Document doc, Dictionary<string, object> args)`
 - Loại bỏ boilerplate lặp trong 32 files
+
+> **Lưu ý:** Signature thực tế dùng `UIApplication` + `Dictionary<string, object>`, KHÔNG phải `UIDocument` + `JsonElement`.
+> `UIDocument` được lấy qua `app.ActiveUIDocument` bên trong `Execute()`.
 
 **Before:**
 
 ```csharp
-public string Execute(string functionName, UIDocument uidoc, JsonElement args)
+public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
 {
+    var uidoc = app.ActiveUIDocument;
     if (uidoc == null) return JsonError("No active document.");
     var doc = uidoc.Document;
     return functionName switch
@@ -85,7 +90,7 @@ public string Execute(string functionName, UIDocument uidoc, JsonElement args)
     };
 }
 
-private string DoToolA(Document doc, JsonElement args)
+private string DoToolA(Document doc, Dictionary<string, object> args)
 {
     using var trans = new Transaction(doc, "AI: Tool A");
     try
@@ -106,16 +111,18 @@ private string DoToolA(Document doc, JsonElement args)
 **After:**
 
 ```csharp
-protected override string ExecuteTool(string tool, UIDocument uidoc, JsonElement args)
+protected override string ExecuteTool(
+    string tool, UIDocument uidoc, Document doc,
+    Dictionary<string, object> args)
 {
     return tool switch
     {
-        "tool_a" => DoToolA(uidoc.Document, args),
+        "tool_a" => DoToolA(doc, args),
         _ => UnknownTool(tool)
     };
 }
 
-private string DoToolA(Document doc, JsonElement args)
+private string DoToolA(Document doc, Dictionary<string, object> args)
 {
     return ExecuteInTransaction(doc, "Tool A", () =>
     {
@@ -152,7 +159,7 @@ private string DoToolA(Document doc, JsonElement args)
 - Extract `ToolExecutionService` — chứa `ExecuteToolCallsAsync`, timeout, `TaskCompletionSource`
 - Extract `RiskAssessmentService` — chứa `IsRiskyToolCall`, `RequiresConfirmation`, hardcoded risky tools set
 - Extract `ContextCollector` — chứa `CollectContextAsync`, keyword-based context selection
-- Split `SendAsync` (~180 dòng) thành:
+- Split `SendAsync` (~186 dòng, lines 102–287) thành:
   - `HandleConfirmationFlow()`
   - `ExecuteToolLoop()`
   - `ProcessToolResults()`
@@ -209,15 +216,15 @@ graph TD
 
 | Section | Line Range | Lines | Type |
 |---------|-----------|-------|------|
-| CoreTools (24 tool names) | 44–53 | 10 | Data |
+| CoreTools (24 tool names) | 45–53 | 9 | Data |
 | KeywordGroups (33 groups) | 56–258 | 203 | Data |
 | NormalizationMap (25 entries) | 260–286 | 27 | Data |
 | ActionKeywords (75 entries) | 288–300 | 13 | Data |
 | ToolSchemaHints (174 entries) | 302–526 | 225 | Data |
-| FewShotExamples (228 entries) | 532–1085 | 554 | Data |
-| ChitchatPatterns (21 entries) | 1251–1257 | 7 | Data |
-| **Tổng data** | | **~1,039** | **47%** |
-| **Logic (methods)** | | **~1,160** | **53%** |
+| FewShotExamples (228 entries) | 532–1084 | 553 | Data |
+| ChitchatPatterns (21 entries) | 1251–1258 | 8 | Data |
+| **Tổng data** | | **~1,038** | **47.2%** |
+| **Logic (methods)** | | **~1,161** | **52.8%** |
 
 **Tách ra 4 JSON files:**
 
@@ -272,7 +279,7 @@ private static T LoadJson<T>(string fileName)
 }
 ```
 
-**Kết quả:** OllamaChatService giảm từ 2,199 → ~1,160 dòng.
+**Kết quả:** OllamaChatService giảm từ 2,199 → ~1,161 dòng.
 
 ---
 
@@ -295,7 +302,7 @@ public string Execute(string functionName, UIApplication app, Dictionary<string,
 }
 ```
 
-Transaction pattern xuất hiện **~55 lần** qua 32 files:
+Transaction pattern xuất hiện **58 lần** qua 32 files:
 ```csharp
 using (var trans = new Transaction(doc, "AI: ..."))
 {
@@ -418,35 +425,47 @@ public class GroupSkill : BaseSkill
 ```
 
 **Impact trên 32 files:**
-- ~55 transaction blocks giảm 8-10 dòng mỗi block → tiết kiệm ~440-550 dòng
+- 58 transaction blocks giảm 8-10 dòng mỗi block → tiết kiệm ~464-580 dòng
 - 32 Execute() wrappers giảm 5-7 dòng mỗi file → tiết kiệm ~160-224 dòng
-- **Tổng giảm: ~600-774 dòng** qua 32 files
+- **Tổng giảm: ~624-804 dòng** qua 32 files
 
-**Thứ tự refactor (theo risk):**
-1. Skills không có transaction (0 risk): QuerySkill, ExportSkill, MepSpaceSkill, ProjectInfoSkill — 4 files
-2. Skills có 1-3 transactions (low risk): GroupSkill, ClashDetectionSkill, etc. — 15 files
-3. Skills có nhiều transactions (medium risk): ModifySkill (9), ViewControlSkill (19) — 2 files
-4. Còn lại — 11 files
+**Thứ tự refactor (theo risk, dựa trên số transaction thực tế):**
+1. Skills không có transaction (0 risk) — **16 files:**
+   ClashDetectionSkill, CoordinationReportSkill, ExportSkill, MepEquipmentSkill,
+   MepQuantityTakeoffSkill, MepSpaceSkill, MepSystemAnalysisSkill, MepValidationSkill,
+   ModelHealthSkill, NamingAuditSkill, ProjectInfoSkill, PurgeAuditSkill,
+   QuerySkill, RoomAreaSkill, SelectionFilterSkill, RevitLinkSkill
+2. Skills có 1-3 transactions (low risk) — **12 files:**
+   DimensionTagSkill(3), FamilyPlacementSkill(2), FilterTemplateSkill(2),
+   GroupSkill(3), MaterialSkill(1), MepConnectivitySkill(1),
+   RevisionMarkupSkill(1), ScheduleSkill(2), SharedParameterSkill(1),
+   SheetManagementSkill(3), WorksetPhaseSkill(2)
+3. Skills có 5+ transactions (medium-high risk) — **4 files:**
+   MepModelerSkill(5), GridLevelSkill(5), ModifySkill(8), ViewControlSkill(18)
 
 ---
 
 ### D3. Tách BaseChatViewModel (= Phương Án C)
 
-**Hiện trạng: BaseChatViewModel.cs — 623 dòng, 8+ trách nhiệm:**
+**Hiện trạng: BaseChatViewModel.cs — 623 dòng, 14 trách nhiệm:**
 
 ```mermaid
 graph LR
   subgraph current [BaseChatViewModel — 623 lines]
-    SF["SendAsync\n187 lines"]
-    TE["ToolExecution\n22 lines"]
-    CTX["ContextCollect\n40 lines"]
-    RISK["Risk/Confirm\n35 lines"]
-    MEM["Memory/Compress\n40 lines"]
-    FB["Feedback\n42 lines"]
+    SF["SendAsync\n186 lines (102–287)"]
+    TE["ToolExecution\n22 lines (292–313)"]
+    CTX["ContextCollect\n38 lines (487–524)"]
+    RISK["Risk/Confirm\n44 lines (403–447)"]
+    MEM["Memory/Compress\n19 lines (467–485)"]
+    FB["Feedback\n40 lines (557–597)"]
     UI["UI State\n30 lines"]
     CMD["Commands\n30 lines"]
+    DEAD["TruncateToolResults\n17 lines (315–331)\nDEAD CODE"]
   end
 ```
+
+> **Lưu ý:** `TruncateToolResults` (lines 315–331) được định nghĩa nhưng không bao giờ được gọi.
+> `CompressAndTruncate` (lines 467–485) được dùng thay thế. Nên xóa dead code này.
 
 **Tách thành:**
 
@@ -476,9 +495,9 @@ public interface IToolExecutionService
 public class ToolExecutionService : IToolExecutionService
 {
     // Di chuyển từ BaseChatViewModel:
-    // - ExecuteToolCallsAsync (lines 291–312)
-    // - HandleToolCallsCompleted (lines 332–335)
-    // - HandleHandlerError (lines 337–341)
+    // - ExecuteToolCallsAsync (lines 292–313)
+    // - HandleToolCallsCompleted (lines 334–337)
+    // - HandleHandlerError (lines 339–342)
     // - InvokeOnDispatcher (lines 343–352)
 }
 ```
@@ -495,8 +514,8 @@ public interface IConfirmationPolicy
 public class ConfirmationPolicy : IConfirmationPolicy
 {
     // Di chuyển từ BaseChatViewModel:
-    // - RequiresConfirmation (lines 400–411)
-    // - IsRiskyToolCall (lines 416–421) — risky tools set configurable
+    // - RequiresConfirmation (lines 403–414)
+    // - IsRiskyToolCall (lines 416–447) — risky tools set configurable
     // - IsConfirmMessage (lines 383–390)
     // - IsCancelMessage (lines 392–398)
 }
@@ -514,7 +533,7 @@ public interface IContextCollector
 public class ContextCollector : IContextCollector
 {
     // Di chuyển từ BaseChatViewModel:
-    // - CollectContextAsync (lines 460–428)
+    // - CollectContextAsync (lines 487–524)
     // - Keyword → tool mapping configurable
 }
 ```
@@ -532,13 +551,13 @@ public interface IResultCompressor
 public class ResultCompressor : IResultCompressor
 {
     // Di chuyển từ BaseChatViewModel:
-    // - CompressAndTruncate (lines 442–458)
-    // - TruncateToolResults (lines 314–330)
+    // - CompressAndTruncate (lines 467–485)
+    // - TruncateToolResults (lines 315–331) — dead code, cần xóa hoặc tích hợp
     // - GetTotalChars (lines 424–431)
 }
 ```
 
-**SendAsync sau refactor (~100 dòng thay vì 187):**
+**SendAsync sau refactor (~100 dòng thay vì 186):**
 ```csharp
 protected async Task SendAsync(string text)
 {
@@ -595,12 +614,13 @@ gantt
 
 | Metric | Before | After | Change |
 |--------|--------|-------|--------|
-| OllamaChatService.cs | 2,199 lines | ~1,160 lines | **-47%** |
+| OllamaChatService.cs | 2,199 lines | ~1,161 lines | **-47%** |
 | BaseChatViewModel.cs | 623 lines | ~250 lines | **-60%** |
-| Total skill boilerplate | ~774 lines | 0 | **-100%** |
+| Total skill boilerplate | ~804 lines | 0 | **-100%** |
+| Dead code removed | TruncateToolResults (17 lines) | 0 | clean |
 | Files changed/created | — | 38 changed, 9 created | — |
-| External config files | 1 (openai_config) | 5 | +4 |
-| Largest file | 2,199 lines | ~1,160 lines | — |
+| External config files | 1 (ollama_config) | 5 | +4 |
+| Largest file | 2,199 lines | ~1,161 lines | — |
 
 **Ưu điểm:**
 
@@ -627,9 +647,9 @@ gantt
 
 | Tiêu chí | A (JSON) | B (BaseSkill) | C (ViewModel) | D (Full) |
 |----------|----------|---------------|----------------|----------|
-| Impact | OllamaChatService -42% | 32 skills -boilerplate | ViewModel clean | All |
+| Impact | OllamaChatService -47% | 32 skills -boilerplate (58 trans) | ViewModel 623→250 lines | All |
 | Risk | Thấp | Trung bình | Trung bình | Cao |
-| Effort | 2-3h | 4-6h | 3-4h | 8-12h |
+| Effort | 2-3h | 4-6h | 3-4h | 9-13h |
 | ROI ngay | Cao (edit JSON) | Trung bình | Thấp | Cao (long-term) |
 | Priority | **1st** | **2nd** | 3rd | Combo |
 

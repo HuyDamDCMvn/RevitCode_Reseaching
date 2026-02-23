@@ -10,20 +10,18 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class NamingAuditSkill : IRevitSkill
+    public class NamingAuditSkill : BaseRevitSkill
     {
-        public string Name => "NamingAudit";
-        public string Description => "Audit naming conventions for views, sheets, levels, families, and worksets";
+        protected override string SkillName => "NamingAudit";
+        protected override string SkillDescription => "Audit naming conventions for views, sheets, levels, families, and worksets";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "audit_view_names", "audit_sheet_numbers", "audit_level_names",
             "audit_family_names", "audit_workset_names"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("audit_view_names",
                 "Audit view names against a regex naming convention pattern. Returns compliant and non-compliant views.",
@@ -91,7 +89,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

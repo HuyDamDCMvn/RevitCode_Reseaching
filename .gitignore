@@ -44,6 +44,9 @@ HD.extension/lib/net8/Microsoft.Xaml.Behaviors.dll
 # OpenAI API key config (never commit secrets)
 HD.extension/lib/net8/Data/Config/openai_config.json
 
+# NuGet local cache
+packages/
+
 # Local workspace artifacts
 SampleDrawing/
 .cursor/worktrees.json

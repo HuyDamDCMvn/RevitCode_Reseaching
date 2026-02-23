@@ -10,20 +10,18 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class ProjectInfoSkill : IRevitSkill
+    public class ProjectInfoSkill : BaseRevitSkill
     {
-        public string Name => "ProjectInfo";
-        public string Description => "Project info, levels, categories, views, rooms, schedules";
+        protected override string SkillName => "ProjectInfo";
+        protected override string SkillDescription => "Project info, levels, categories, views, rooms, schedules";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_project_info", "get_levels", "get_categories",
             "get_current_view", "get_rooms", "get_schedule_data"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("get_project_info",
                 "Get project-level information including name, number, address, client, and status.",
@@ -66,7 +64,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

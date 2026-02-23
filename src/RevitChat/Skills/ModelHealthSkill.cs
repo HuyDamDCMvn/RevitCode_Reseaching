@@ -9,20 +9,18 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class ModelHealthSkill : IRevitSkill
+    public class ModelHealthSkill : BaseRevitSkill
     {
-        public string Name => "ModelHealth";
-        public string Description => "Check model health: warnings, statistics, imported CAD, in-place families, unused families";
+        protected override string SkillName => "ModelHealth";
+        protected override string SkillDescription => "Check model health: warnings, statistics, imported CAD, in-place families, unused families";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_model_warnings", "get_warning_elements", "get_model_statistics",
             "find_imported_cad", "find_inplace_families", "find_unused_families"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("get_model_warnings",
                 "Get all warnings in the model grouped by description/severity.",
@@ -92,7 +90,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

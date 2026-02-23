@@ -9,20 +9,18 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class MepEquipmentSkill : IRevitSkill
+    public class MepEquipmentSkill : BaseRevitSkill
     {
-        public string Name => "MepEquipment";
-        public string Description => "Query MEP equipment, fixtures, and fittings";
+        protected override string SkillName => "MepEquipment";
+        protected override string SkillDescription => "Query MEP equipment, fixtures, and fittings";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_mechanical_equipment", "get_plumbing_fixtures",
             "get_electrical_equipment", "get_fire_protection_equipment", "get_fittings"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("get_mechanical_equipment",
                 "List mechanical equipment (FCU, AHU, chiller, pump, fan...) with family, type, system, level. Includes key parameters like airflow, capacity.",
@@ -90,7 +88,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

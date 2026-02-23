@@ -11,14 +11,14 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class ExportSkill : IRevitSkill
+    public class ExportSkill : BaseRevitSkill
     {
-        public string Name => "Export";
-        public string Description => "Export Revit element data to CSV files";
+        protected override string SkillName => "Export";
+        protected override string SkillDescription => "Export Revit element data to CSV files";
 
-        public bool CanHandle(string functionName) => functionName == "export_to_csv";
+        protected override HashSet<string> HandledFunctions { get; } = new() { "export_to_csv" };
 
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("export_to_csv",
                 "Export element data to a CSV file. Query elements first, then export.",
@@ -36,7 +36,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

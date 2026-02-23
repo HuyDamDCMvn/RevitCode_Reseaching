@@ -9,20 +9,18 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class FilterTemplateSkill : IRevitSkill
+    public class FilterTemplateSkill : BaseRevitSkill
     {
-        public string Name => "FilterTemplate";
-        public string Description => "Manage view filters, view templates, and parameter filter rules";
+        protected override string SkillName => "FilterTemplate";
+        protected override string SkillDescription => "Manage view filters, view templates, and parameter filter rules";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_view_filters", "get_view_templates", "apply_view_template",
             "create_parameter_filter", "get_filter_rules"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("get_view_filters",
                 "List all ParameterFilterElements in the document, with their rules and applied views.",
@@ -94,7 +92,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

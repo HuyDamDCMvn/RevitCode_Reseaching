@@ -10,19 +10,17 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class FamilyPlacementSkill : IRevitSkill
+    public class FamilyPlacementSkill : BaseRevitSkill
     {
-        public string Name => "FamilyPlacement";
-        public string Description => "Place family instances, swap types, list available types, load families";
+        protected override string SkillName => "FamilyPlacement";
+        protected override string SkillDescription => "Place family instances, swap types, list available types, load families";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "place_family_instance", "swap_family_type", "get_family_types", "load_family"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("get_family_types",
                 "List all loaded family types (symbols) in the model, optionally filtered by category or family name.",
@@ -84,7 +82,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

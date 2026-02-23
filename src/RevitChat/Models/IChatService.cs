@@ -11,11 +11,17 @@ namespace RevitChat.Models
         void RepairHistoryAfterCancel();
 
         event System.Action<string> DebugMessage;
+        event System.Action<string> TokenReceived;
 
         Task<(string assistantMessage, List<ToolCallRequest> toolCalls)> SendMessageAsync(
             string userMessage, CancellationToken ct = default);
 
         Task<(string assistantMessage, List<ToolCallRequest> toolCalls)> ContinueWithToolResultsAsync(
             Dictionary<string, string> toolResults, CancellationToken ct = default);
+
+        List<string> ValidateToolCalls(List<ToolCallRequest> toolCalls);
+
+        Task<(string assistantMessage, List<ToolCallRequest> toolCalls)> RetryWithValidationErrorAsync(
+            List<string> errors, CancellationToken ct = default);
     }
 }

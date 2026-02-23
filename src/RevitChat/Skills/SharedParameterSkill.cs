@@ -10,20 +10,18 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class SharedParameterSkill : IRevitSkill
+    public class SharedParameterSkill : BaseRevitSkill
     {
-        public string Name => "SharedParameter";
-        public string Description => "Manage shared and project parameters, check bindings and missing values";
+        protected override string SkillName => "SharedParameter";
+        protected override string SkillDescription => "Manage shared and project parameters, check bindings and missing values";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_shared_parameters", "get_project_parameters", "check_parameter_values",
             "add_project_parameter", "get_parameter_bindings"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("get_shared_parameters",
                 "List all shared parameters currently used in the document.",
@@ -94,7 +92,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

@@ -9,19 +9,17 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class GroupSkill : IRevitSkill
+    public class GroupSkill : BaseRevitSkill
     {
-        public string Name => "Group";
-        public string Description => "Create, list, ungroup, and place groups and their members";
+        protected override string SkillName => "Group";
+        protected override string SkillDescription => "Create, list, ungroup, and place groups and their members";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_groups", "create_group", "ungroup", "get_group_members", "place_group_instance"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("get_groups",
                 "List all model and detail groups in the document.",
@@ -92,7 +90,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

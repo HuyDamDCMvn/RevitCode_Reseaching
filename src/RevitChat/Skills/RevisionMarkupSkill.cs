@@ -9,20 +9,18 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class RevisionMarkupSkill : IRevitSkill
+    public class RevisionMarkupSkill : BaseRevitSkill
     {
-        public string Name => "RevisionMarkup";
-        public string Description => "Manage revisions, revision clouds, and revision schedules";
+        protected override string SkillName => "RevisionMarkup";
+        protected override string SkillDescription => "Manage revisions, revision clouds, and revision schedules";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_revisions", "get_revision_clouds", "add_revision",
             "get_sheets_by_revision", "get_revision_schedule"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("get_revisions",
                 "List all revisions in the document with date, description, and numbering.",
@@ -89,7 +87,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

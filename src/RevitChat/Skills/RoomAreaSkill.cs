@@ -10,20 +10,18 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class RoomAreaSkill : IRevitSkill
+    public class RoomAreaSkill : BaseRevitSkill
     {
-        public string Name => "RoomArea";
-        public string Description => "Query rooms, room boundaries, finishes, area schemes, and find unplaced/redundant rooms";
+        protected override string SkillName => "RoomArea";
+        protected override string SkillDescription => "Query rooms, room boundaries, finishes, area schemes, and find unplaced/redundant rooms";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_rooms_detailed", "get_room_boundaries", "get_room_finishes",
             "get_area_schemes", "get_unplaced_rooms", "get_redundant_rooms"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("get_rooms_detailed",
                 "List rooms with detailed info: area, volume, level, department, number, name, phase.",
@@ -96,7 +94,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

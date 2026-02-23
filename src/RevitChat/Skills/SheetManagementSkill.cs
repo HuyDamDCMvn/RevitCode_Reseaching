@@ -9,20 +9,18 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class SheetManagementSkill : IRevitSkill
+    public class SheetManagementSkill : BaseRevitSkill
     {
-        public string Name => "SheetManagement";
-        public string Description => "Create sheets, place views on sheets, manage viewports";
+        protected override string SkillName => "SheetManagement";
+        protected override string SkillDescription => "Create sheets, place views on sheets, manage viewports";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_sheets_summary", "create_sheet", "place_view_on_sheet",
             "get_sheet_viewports", "remove_viewport"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("get_sheets_summary",
                 "Get a summary of all sheets with their viewports and revision status.",
@@ -94,7 +92,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

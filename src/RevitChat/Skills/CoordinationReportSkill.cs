@@ -9,20 +9,18 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class CoordinationReportSkill : IRevitSkill
+    public class CoordinationReportSkill : BaseRevitSkill
     {
-        public string Name => "CoordinationReport";
-        public string Description => "Generate clash reports, compare element counts, check link status, scope box summary";
+        protected override string SkillName => "CoordinationReport";
+        protected override string SkillDescription => "Generate clash reports, compare element counts, check link status, scope box summary";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "generate_clash_report", "compare_element_counts",
             "get_link_coordination_status", "get_scope_box_summary"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("generate_clash_report",
                 "Generate a comprehensive clash report between multiple category pairs for coordination review.",
@@ -84,7 +82,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

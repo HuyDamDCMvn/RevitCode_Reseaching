@@ -10,21 +10,19 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class ModifySkill : IRevitSkill
+    public class ModifySkill : BaseRevitSkill
     {
-        public string Name => "Modify";
-        public string Description => "Modify, copy, move, mirror, rename, duplicate elements and views in Revit";
+        protected override string SkillName => "Modify";
+        protected override string SkillDescription => "Modify, copy, move, mirror, rename, duplicate elements and views in Revit";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "set_parameter_value", "delete_elements", "select_elements",
             "rename_elements", "copy_elements", "move_elements",
             "mirror_elements", "duplicate_views", "duplicate_sheets"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("set_parameter_value",
                 "Set a parameter value on one or more elements. IMPORTANT: Always confirm with the user before calling this.",
@@ -159,7 +157,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

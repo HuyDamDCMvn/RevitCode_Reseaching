@@ -9,12 +9,12 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class ViewControlSkill : IRevitSkill
+    public class ViewControlSkill : BaseRevitSkill
     {
-        public string Name => "ViewControl";
-        public string Description => "Control element visibility, color overrides, transparency, zoom, and selection in the active view";
+        protected override string SkillName => "ViewControl";
+        protected override string SkillDescription => "Control element visibility, color overrides, transparency, zoom, and selection in the active view";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "hide_elements", "unhide_elements",
             "isolate_elements", "isolate_category",
@@ -27,8 +27,6 @@ namespace RevitChat.Skills
             "isolate_by_filter", "override_color_by_filter",
             "create_3d_view", "create_3d_view_by_system"
         };
-
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
 
         private static readonly Dictionary<string, (byte R, byte G, byte B)> NamedColors = new(StringComparer.OrdinalIgnoreCase)
         {
@@ -55,7 +53,7 @@ namespace RevitChat.Skills
             ["gold"] = (255, 215, 0),
         };
 
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("hide_elements",
                 "Hide specific elements in the active view. Elements remain in the model but become invisible.",
@@ -340,7 +338,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

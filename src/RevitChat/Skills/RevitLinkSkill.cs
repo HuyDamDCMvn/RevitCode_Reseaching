@@ -9,20 +9,18 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class RevitLinkSkill : IRevitSkill
+    public class RevitLinkSkill : BaseRevitSkill
     {
-        public string Name => "RevitLink";
-        public string Description => "Query Revit linked models: list links, get/count/search elements in linked documents";
+        protected override string SkillName => "RevitLink";
+        protected override string SkillDescription => "Query Revit linked models: list links, get/count/search elements in linked documents";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_linked_models", "get_linked_elements", "count_linked_elements",
             "get_linked_element_parameters", "search_linked_elements", "get_link_types"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("get_linked_models",
                 "List all Revit Link instances in the current model with name, path, loaded status, and position info.",
@@ -104,7 +102,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

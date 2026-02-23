@@ -9,19 +9,17 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class QuerySkill : IRevitSkill
+    public class QuerySkill : BaseRevitSkill
     {
-        public string Name => "Query";
-        public string Description => "Query and search elements in the Revit model";
+        protected override string SkillName => "Query";
+        protected override string SkillDescription => "Query and search elements in the Revit model";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_elements", "count_elements", "get_element_parameters", "search_elements"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool(
                 functionName: "get_elements",
@@ -85,7 +83,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

@@ -1,41 +1,79 @@
 # ============================================================================
 # HD Extension - Build & Package Release Script
 # ============================================================================
-# Builds ALL projects (including AI Chatbot) and creates a distributable
+# Builds ALL projects via solution file (parallel) and creates a distributable
 # package WITHOUT source code - only compiled DLLs and launcher scripts.
+# ============================================================================
+#
+# Optimized for: Ryzen 7 5800X (16 threads), 64 GB RAM, SSD
+# Uses: dotnet build -m:16 for max parallel compilation
+#
+# Usage:
+#   .\build-release.ps1                       # Default build
+#   .\build-release.ps1 -Clean -Version 1.2.0 # Clean + version
+#   .\build-release.ps1 -Quick                # Dev build (skip release copy)
 # ============================================================================
 
 param(
     [string]$Configuration = "Release",
     [string]$Version = "1.0.0",
-    [switch]$Clean
+    [switch]$Clean,
+    [switch]$Quick
 )
 
 $ErrorActionPreference = "Stop"
+$sw = [System.Diagnostics.Stopwatch]::StartNew()
 
-# Paths
+# ── Paths ─────────────────────────────────────────────────────────────────
 $RootDir = $PSScriptRoot
 $SrcDir = Join-Path $RootDir "src"
+$SolutionFile = Join-Path $SrcDir "HDExtension.sln"
 $ReleaseDir = Join-Path $RootDir "release"
 $ExtensionDir = Join-Path $ReleaseDir "HD.extension"
 $LibNet8Dir = Join-Path $ExtensionDir "lib\net8"
 $DevExtensionDir = Join-Path $RootDir "HD.extension"
+$MaxCpuCount = [Environment]::ProcessorCount
 
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host "  HD Extension - Build Release v$Version" -ForegroundColor Cyan
+Write-Host "  CPU threads: $MaxCpuCount | Config: $Configuration" -ForegroundColor DarkCyan
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 
-# ── Step 1: Clean ──────────────────────────────────────────────────────────
+# ── Step 1: Clean ─────────────────────────────────────────────────────────
 if ($Clean) {
-    Write-Host "[1/6] Cleaning release folder..." -ForegroundColor Yellow
-    if (Test-Path $ReleaseDir) {
-        Remove-Item $ReleaseDir -Recurse -Force
-    }
+    Write-Host "[1/6] Cleaning..." -ForegroundColor Yellow
+    if (Test-Path $ReleaseDir) { Remove-Item $ReleaseDir -Recurse -Force }
+    dotnet clean $SolutionFile -c $Configuration --nologo -v q 2>$null
+    Write-Host "   Done." -ForegroundColor Green
+} else {
+    Write-Host "[1/6] Skip clean (use -Clean to force)" -ForegroundColor Gray
 }
 
-# ── Step 2: Create directory structure ─────────────────────────────────────
-Write-Host "[2/6] Creating release structure..." -ForegroundColor Yellow
+# ── Step 2: NuGet restore ────────────────────────────────────────────────
+Write-Host "[2/6] Restoring packages..." -ForegroundColor Yellow
+dotnet restore $SolutionFile --nologo -v q
+if ($LASTEXITCODE -ne 0) { throw "NuGet restore failed" }
+Write-Host "   Done." -ForegroundColor Green
+
+# ── Step 3: Build all projects (PARALLEL via solution) ───────────────────
+Write-Host "[3/6] Building solution (parallel, $MaxCpuCount threads)..." -ForegroundColor Yellow
+dotnet build $SolutionFile -c $Configuration --nologo --no-restore -m:$MaxCpuCount -v q
+if ($LASTEXITCODE -ne 0) { throw "Build failed" }
+Write-Host "   Done." -ForegroundColor Green
+
+if ($Quick) {
+    $sw.Stop()
+    Write-Host ""
+    Write-Host "============================================" -ForegroundColor Cyan
+    Write-Host "  QUICK BUILD COMPLETE ($("{0:N1}" -f $sw.Elapsed.TotalSeconds)s)" -ForegroundColor Green
+    Write-Host "============================================" -ForegroundColor Cyan
+    Write-Host "  DLLs deployed to: HD.extension\lib\net8\" -ForegroundColor White
+    exit 0
+}
+
+# ── Step 4: Create release directory structure ───────────────────────────
+Write-Host "[4/6] Creating release structure..." -ForegroundColor Yellow
 $dirs = @(
     "$ExtensionDir\lib\net8",
     "$ExtensionDir\lib\net8\Data\Config",
@@ -53,37 +91,15 @@ foreach ($dir in $dirs) {
 }
 Write-Host "   Done." -ForegroundColor Green
 
-# ── Step 3: Build all projects ─────────────────────────────────────────────
-Write-Host "[3/6] Building projects..." -ForegroundColor Yellow
-
-$projects = @(
-    @{ Name = "HD.Core";        Path = "$SrcDir\HD.Core\HD.Core.csproj" },
-    @{ Name = "CommonFeature";  Path = "$SrcDir\CommonFeature\CommonFeature.csproj" },
-    @{ Name = "CheckCode";      Path = "$SrcDir\CheckCode\CheckCode.csproj" },
-    @{ Name = "SmartTag";       Path = "$SrcDir\SmartTag\SmartTag.csproj" },
-    @{ Name = "RevitChat";      Path = "$SrcDir\RevitChat\RevitChat.csproj" },
-    @{ Name = "RevitChatLocal"; Path = "$SrcDir\RevitChatLocal\RevitChatLocal.csproj" }
-)
-
-foreach ($proj in $projects) {
-    Write-Host "   Building $($proj.Name)..." -ForegroundColor Gray
-    dotnet build $proj.Path -c $Configuration --nologo -v q
-    if ($LASTEXITCODE -ne 0) { throw "$($proj.Name) build failed" }
-}
-Write-Host "   Done." -ForegroundColor Green
-
-# ── Step 4: Copy DLLs (NO PDB, NO source code) ───────────────────────────
-Write-Host "[4/6] Copying DLLs..." -ForegroundColor Yellow
+# ── Step 5: Copy DLLs (NO PDB, NO source) ───────────────────────────────
+Write-Host "[5/6] Copying DLLs..." -ForegroundColor Yellow
 
 $dlls = @(
-    # Core
     "HD.Core.dll",
     "CommonFeature.dll",
     "CheckCode.dll",
     "SmartTag.dll",
-    # Shared
     "CommunityToolkit.Mvvm.dll",
-    # AI Chatbot
     "RevitChat.dll",
     "RevitChatLocal.dll",
     "OpenAI.dll",
@@ -99,24 +115,23 @@ foreach ($dll in $dlls) {
     $srcPath = Join-Path "$DevExtensionDir\lib\net8" $dll
     if (Test-Path $srcPath) {
         Copy-Item $srcPath $LibNet8Dir -Force
-        Write-Host "   Copied: $dll" -ForegroundColor Gray
         $copied++
     } else {
-        Write-Host "   WARNING: $dll not found in lib/net8" -ForegroundColor Yellow
+        Write-Host "   WARNING: $dll not found" -ForegroundColor Yellow
     }
 }
 Write-Host "   $copied DLLs copied." -ForegroundColor Green
 
-# SmartTag Data folder (Rules, Patterns, Training)
+# SmartTag Data folder
 $smartTagDataSrc = Join-Path $SrcDir "SmartTag\Data"
 $smartTagDataDest = Join-Path $LibNet8Dir "Data"
 if (Test-Path $smartTagDataSrc) {
     if (Test-Path $smartTagDataDest) { Remove-Item $smartTagDataDest -Recurse -Force }
     Copy-Item $smartTagDataSrc $smartTagDataDest -Recurse -Force
-    Write-Host "   Copied: SmartTag Data (Rules, Patterns, Training)" -ForegroundColor Gray
+    Write-Host "   Copied: SmartTag Data" -ForegroundColor Gray
 }
 
-# Default Ollama config (no secrets)
+# Default Ollama config
 $configDir = Join-Path $LibNet8Dir "Data\Config"
 if (-not (Test-Path $configDir)) {
     New-Item -ItemType Directory -Path $configDir -Force | Out-Null
@@ -131,14 +146,11 @@ if (-not (Test-Path $configDir)) {
   "EnabledSkillPacks": ["Core", "ViewControl", "MEP", "Modeler", "BIMCoordinator", "LinkedModels"]
 }
 "@ | Out-File (Join-Path $configDir "ollama_config.json") -Encoding UTF8
-Write-Host "   Created: default ollama_config.json" -ForegroundColor Gray
-
 Write-Host "   Done." -ForegroundColor Green
 
-# ── Step 5: Copy launcher scripts ─────────────────────────────────────────
-Write-Host "[5/6] Copying launcher scripts..." -ForegroundColor Yellow
+# ── Step 6: Copy launcher scripts + release info ────────────────────────
+Write-Host "[6/6] Copying launchers & creating release info..." -ForegroundColor Yellow
 
-# launcher_base.py
 Copy-Item "$DevExtensionDir\lib\launcher_base.py" "$ExtensionDir\lib\" -Force
 
 $pushbuttons = @(
@@ -151,20 +163,13 @@ $pushbuttons = @(
     @{ Src = "HD.tab\General.panel\Extension.pushbutton";     Files = @("script.py", "icon.png") },
     @{ Src = "HD.tab\General.panel\Setting.pushbutton";       Files = @("script.py", "icon.png") }
 )
-
 foreach ($pb in $pushbuttons) {
     foreach ($file in $pb.Files) {
         $srcPath = Join-Path $DevExtensionDir "$($pb.Src)\$file"
         $destPath = Join-Path $ExtensionDir "$($pb.Src)\$file"
-        if (Test-Path $srcPath) {
-            Copy-Item $srcPath $destPath -Force
-        }
+        if (Test-Path $srcPath) { Copy-Item $srcPath $destPath -Force }
     }
 }
-Write-Host "   Done." -ForegroundColor Green
-
-# ── Step 6: Create version file, README, install.bat ──────────────────────
-Write-Host "[6/6] Creating release info..." -ForegroundColor Yellow
 
 # VERSION.txt
 @"
@@ -186,7 +191,7 @@ Framework: .NET 8.0
 3. Reload pyRevit or restart Revit
 
 ### Option B: Manual
-1. Copy the entire ``HD.extension`` folder to your pyRevit extensions folder:
+1. Copy ``HD.extension`` folder to your pyRevit extensions folder:
    - Default: ``%APPDATA%\pyRevit-Master\extensions\``
    - Or custom location configured in pyRevit settings
 2. Reload pyRevit or restart Revit
@@ -212,8 +217,7 @@ ollama pull qwen2.5:7b
 
 ### 3. Use in Revit
 - Open Revit > **HD tab** > **AI panel** > **RevitChatLocal**
-- The chat window opens - type your question in English or Vietnamese
-- Example: "How many walls in the model?" or "dem so luong tuong"
+- Type your question in English or Vietnamese
 
 ### Recommended Models
 
@@ -223,24 +227,13 @@ ollama pull qwen2.5:7b
 | qwen3:8b | ~5 GB | Fast | Better |
 | qwen2.5:14b | ~9 GB | Medium | Best |
 
-### Settings
-Click the **Settings** button in the chat window to:
-- Change Ollama endpoint URL (default: localhost:11434)
-- Switch AI model
-- Enable/disable skill packs (MEP, Modeler, BIM Coordinator, etc.)
-
 ## Tools Included
 
-- **RevitChatLocal** (AI): Query, modify, export Revit data via natural language (Ollama)
+- **RevitChatLocal** (AI): Query, modify, export via natural language (Ollama)
 - **RevitChat** (AI): Same features, uses OpenAI API (requires API key)
 - **SmartTag** (Labeling): Auto tag, preview/confirm/undo, export training data
 - **CommonFeature**: Element information, isolate, section box
 - **CheckCode**: Code checking utilities
-
-## Support
-
-Contact: [Your contact info]
-Version: $Version
 
 ---
 (c) $(Get-Date -Format "yyyy") - All rights reserved
@@ -248,16 +241,15 @@ Version: $Version
 
 # install.bat
 $InstallBat = Join-Path $RootDir "install.bat"
-if (Test-Path $InstallBat) {
-    Copy-Item $InstallBat $ReleaseDir -Force
-    Write-Host "   Copied: install.bat" -ForegroundColor Gray
-}
+if (Test-Path $InstallBat) { Copy-Item $InstallBat $ReleaseDir -Force }
+
 Write-Host "   Done." -ForegroundColor Green
 
-# ── Summary ────────────────────────────────────────────────────────────────
+# ── Summary ──────────────────────────────────────────────────────────────
+$sw.Stop()
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Cyan
-Write-Host "  BUILD COMPLETE" -ForegroundColor Green
+Write-Host "  BUILD COMPLETE ($("{0:N1}" -f $sw.Elapsed.TotalSeconds)s)" -ForegroundColor Green
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Release folder: $ReleaseDir" -ForegroundColor White

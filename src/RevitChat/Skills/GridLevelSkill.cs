@@ -9,12 +9,12 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class GridLevelSkill : IRevitSkill
+    public class GridLevelSkill : BaseRevitSkill
     {
-        public string Name => "GridLevel";
-        public string Description => "Manage grids and levels: list, create, rename, delete, duplicate with offset, check alignment/consistency";
+        protected override string SkillName => "GridLevel";
+        protected override string SkillDescription => "Manage grids and levels: list, create, rename, delete, duplicate with offset, check alignment/consistency";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_grids", "check_grid_alignment", "get_levels_detailed",
             "check_level_consistency", "find_off_axis_elements",
@@ -22,9 +22,7 @@ namespace RevitChat.Skills
             "create_grid"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("get_grids",
                 "List all grids with their name, direction, start/end points, and length.",
@@ -159,7 +157,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

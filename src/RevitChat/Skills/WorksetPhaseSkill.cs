@@ -9,19 +9,17 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class WorksetPhaseSkill : IRevitSkill
+    public class WorksetPhaseSkill : BaseRevitSkill
     {
-        public string Name => "WorksetPhase";
-        public string Description => "Manage worksets, phases, and phase filters";
+        protected override string SkillName => "WorksetPhase";
+        protected override string SkillDescription => "Manage worksets, phases, and phase filters";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_worksets", "move_to_workset", "get_phases", "get_elements_by_phase", "set_phase"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("get_worksets",
                 "List all user worksets in the document with element counts.",
@@ -90,7 +88,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

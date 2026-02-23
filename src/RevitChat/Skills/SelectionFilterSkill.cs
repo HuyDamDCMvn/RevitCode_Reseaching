@@ -9,20 +9,18 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class SelectionFilterSkill : IRevitSkill
+    public class SelectionFilterSkill : BaseRevitSkill
     {
-        public string Name => "SelectionFilter";
-        public string Description => "Advanced selection: select by parameter value, bounding box, view, and summarize selection";
+        protected override string SkillName => "SelectionFilter";
+        protected override string SkillDescription => "Advanced selection: select by parameter value, bounding box, view, and summarize selection";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "select_by_parameter_value", "select_by_bounding_box",
             "select_elements_in_view", "get_selection_summary"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("select_by_parameter_value",
                 "Select (highlight) elements matching a parameter value in Revit.",
@@ -81,7 +79,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

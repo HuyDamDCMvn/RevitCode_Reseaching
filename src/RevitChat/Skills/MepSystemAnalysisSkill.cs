@@ -9,12 +9,12 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class MepSystemAnalysisSkill : IRevitSkill
+    public class MepSystemAnalysisSkill : BaseRevitSkill
     {
-        public string Name => "MepSystemAnalysis";
-        public string Description => "Analyze MEP systems: ducts, pipes, conduits, cable trays";
+        protected override string SkillName => "MepSystemAnalysis";
+        protected override string SkillDescription => "Analyze MEP systems: ducts, pipes, conduits, cable trays";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_mep_systems", "get_system_elements",
             "get_duct_summary", "get_pipe_summary",
@@ -22,9 +22,7 @@ namespace RevitChat.Skills
             "calculate_system_totals"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("get_mep_systems",
                 "List all MEP systems in the model (duct systems, piping systems). Returns system name, classification, element count, total length.",
@@ -115,7 +113,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

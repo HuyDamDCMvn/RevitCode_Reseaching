@@ -9,20 +9,18 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class PurgeAuditSkill : IRevitSkill
+    public class PurgeAuditSkill : BaseRevitSkill
     {
-        public string Name => "PurgeAudit";
-        public string Description => "Find purgeable elements, duplicate types, unresolved references, design options";
+        protected override string SkillName => "PurgeAudit";
+        protected override string SkillDescription => "Find purgeable elements, duplicate types, unresolved references, design options";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_purgeable_elements", "find_duplicate_types", "find_unresolved_references",
             "get_design_options", "audit_detail_levels"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("get_purgeable_elements",
                 "Find element types (family symbols) with no instances -- candidates for purging.",
@@ -83,7 +81,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

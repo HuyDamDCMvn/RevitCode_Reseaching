@@ -9,19 +9,17 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class ClashDetectionSkill : IRevitSkill
+    public class ClashDetectionSkill : BaseRevitSkill
     {
-        public string Name => "ClashDetection";
-        public string Description => "Detect element intersections, clearance issues, and overlapping geometry";
+        protected override string SkillName => "ClashDetection";
+        protected override string SkillDescription => "Detect element intersections, clearance issues, and overlapping geometry";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "check_clashes", "check_clearance", "find_overlapping", "get_clash_summary"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("check_clashes",
                 "Find geometric intersections between two categories (e.g. Ducts vs Structural Framing).",
@@ -77,7 +75,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

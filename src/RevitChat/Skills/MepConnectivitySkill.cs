@@ -9,20 +9,18 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class MepConnectivitySkill : IRevitSkill
+    public class MepConnectivitySkill : BaseRevitSkill
     {
-        public string Name => "MepConnectivity";
-        public string Description => "Inspect MEP connectors and trace connectivity paths between elements";
+        protected override string SkillName => "MepConnectivity";
+        protected override string SkillDescription => "Inspect MEP connectors and trace connectivity paths between elements";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_connector_info", "get_system_connectivity",
             "get_mep_routing_path", "connect_mep_elements"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("get_connector_info",
                 "Get connector details (shape, size, connected elements) for a single MEP element.",
@@ -79,7 +77,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

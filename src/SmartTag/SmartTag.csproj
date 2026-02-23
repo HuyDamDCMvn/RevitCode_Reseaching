@@ -1,76 +1,29 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <LangVersion>latest</LangVersion>
-    <Nullable>disable</Nullable>
-    <ImplicitUsings>disable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
     <RootNamespace>SmartTag</RootNamespace>
     <AssemblyName>SmartTag</AssemblyName>
     <Description>Smart Annotation - AI-powered auto tagging and dimensioning for Revit 2025+</Description>
   </PropertyGroup>
 
-  <!-- Project Reference -->
   <ItemGroup>
     <ProjectReference Include="..\HD.Core\HD.Core.csproj" />
   </ItemGroup>
 
-  <!-- Revit API References -->
-  <ItemGroup>
-    <Reference Include="RevitAPI">
-      <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPI.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="RevitAPIUI">
-      <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPIUI.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-  </ItemGroup>
-  
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <!-- Copy dependencies to output folder -->
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-  </PropertyGroup>
-
-  <!-- Post-build: Copy DLLs + dependencies to pyRevit lib folder -->
-  <Target Name="CopyToExtension" AfterTargets="Build">
-    <PropertyGroup>
-      <ExtLibNet8>$(ProjectDir)..\..\HD.extension\lib\net8\</ExtLibNet8>
-    </PropertyGroup>
-    
-    <MakeDir Directories="$(ExtLibNet8)" />
-    
-    <!-- Copy main DLL -->
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ExtLibNet8)" />
-    
-    <!-- Copy PDB for debugging -->
-    <Copy 
-      SourceFiles="$(OutputPath)$(AssemblyName).pdb" 
-      DestinationFolder="$(ExtLibNet8)" 
-      Condition="Exists('$(OutputPath)$(AssemblyName).pdb')" />
-    
-    <!-- Copy HD.Core dependency -->
-    <Copy 
-      SourceFiles="$(OutputPath)HD.Core.dll" 
-      DestinationFolder="$(ExtLibNet8)" 
-      Condition="Exists('$(OutputPath)HD.Core.dll')" />
-    <Copy 
-      SourceFiles="$(OutputPath)HD.Core.pdb" 
-      DestinationFolder="$(ExtLibNet8)" 
-      Condition="Exists('$(OutputPath)HD.Core.pdb')" />
-    
-    <!-- Copy CommunityToolkit.Mvvm dependency -->
-    <Copy 
-      SourceFiles="$(OutputPath)CommunityToolkit.Mvvm.dll" 
-      DestinationFolder="$(ExtLibNet8)" 
-      Condition="Exists('$(OutputPath)CommunityToolkit.Mvvm.dll')" />
-    
-    <Message Text="Copied SmartTag.dll + dependencies to $(ExtLibNet8)" Importance="high" />
+  <!-- Post-build: Copy dependencies + PDB for debugging -->
+  <Target Name="CopyDepsToExtension" AfterTargets="CopyMainDllToExtension">
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).pdb" DestinationFolder="$(ExtLibNet8)"
+          Condition="Exists('$(OutputPath)$(AssemblyName).pdb')" />
+    <Copy SourceFiles="$(OutputPath)HD.Core.dll" DestinationFolder="$(ExtLibNet8)"
+          Condition="Exists('$(OutputPath)HD.Core.dll')" />
+    <Copy SourceFiles="$(OutputPath)HD.Core.pdb" DestinationFolder="$(ExtLibNet8)"
+          Condition="Exists('$(OutputPath)HD.Core.pdb')" />
+    <Copy SourceFiles="$(OutputPath)CommunityToolkit.Mvvm.dll" DestinationFolder="$(ExtLibNet8)"
+          Condition="Exists('$(OutputPath)CommunityToolkit.Mvvm.dll')" />
   </Target>
 
 </Project>

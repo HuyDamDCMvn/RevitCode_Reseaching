@@ -11,20 +11,18 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class MepQuantityTakeoffSkill : IRevitSkill
+    public class MepQuantityTakeoffSkill : BaseRevitSkill
     {
-        public string Name => "MepQuantityTakeoff";
-        public string Description => "MEP quantity takeoff, insulation quantities, hanger estimates, BOQ export";
+        protected override string SkillName => "MepQuantityTakeoff";
+        protected override string SkillDescription => "MEP quantity takeoff, insulation quantities, hanger estimates, BOQ export";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "mep_quantity_takeoff", "get_insulation_quantities",
             "get_hanger_quantities", "export_mep_boq"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("mep_quantity_takeoff",
                 "Aggregate MEP quantities by category (duct/pipe/conduit/cable tray), grouped by size and level. Returns total length and count.",
@@ -83,7 +81,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

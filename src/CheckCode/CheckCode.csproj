@@ -1,41 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- Only build for Revit 2025+ since Revit 2024 is not installed -->
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <LangVersion>latest</LangVersion>
-    <Nullable>disable</Nullable>
-    <ImplicitUsings>disable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
     <RootNamespace>CheckCode</RootNamespace>
     <AssemblyName>CheckCode</AssemblyName>
     <Description>CheckCode tool for Revit 2025+</Description>
-    <RevitVersion>2025</RevitVersion>
     <DefineConstants>$(DefineConstants);REVIT2025</DefineConstants>
   </PropertyGroup>
-
-  <!-- Revit API References -->
-  <ItemGroup>
-    <Reference Include="RevitAPI">
-      <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPI.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="RevitAPIUI">
-      <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPIUI.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-  </ItemGroup>
-
-  <!-- Post-build: Copy to pyRevit lib folder -->
-  <Target Name="CopyToExtension" AfterTargets="Build">
-    <PropertyGroup>
-      <ExtLibNet8>$(ProjectDir)..\..\HD.extension\lib\net8\</ExtLibNet8>
-    </PropertyGroup>
-    
-    <MakeDir Directories="$(ExtLibNet8)" />
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ExtLibNet8)" />
-    
-    <Message Text="Copied $(TargetFileName) to $(ExtLibNet8)" Importance="high" />
-  </Target>
 
 </Project>

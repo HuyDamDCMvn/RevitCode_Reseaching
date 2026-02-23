@@ -9,19 +9,17 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class ScheduleSkill : IRevitSkill
+    public class ScheduleSkill : BaseRevitSkill
     {
-        public string Name => "Schedule";
-        public string Description => "Create schedules from categories with selected fields";
+        protected override string SkillName => "Schedule";
+        protected override string SkillDescription => "Create schedules from categories with selected fields";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "create_schedule", "get_schedule_fields"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("create_schedule",
                 "Create a schedule view for a category with selected fields. Confirm with user first.",
@@ -52,7 +50,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

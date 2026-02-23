@@ -1,8 +1,8 @@
 {
   "EndpointUrl": "http://localhost:11434",
   "Model": "qwen2.5:7b",
-  "MaxTokens": 4096,
-  "MaxConversationMessages": 40,
+  "MaxTokens": 8192,
+  "MaxConversationMessages": 60,
   "ToolSelectionMode": "smart",
   "EnabledSkillPacks": [
     "Core",

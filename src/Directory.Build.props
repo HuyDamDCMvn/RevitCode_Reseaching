@@ -1,0 +1,44 @@
+<Project>
+
+  <!-- ================================================================== -->
+  <!-- HD Extension - Shared Build Properties                              -->
+  <!-- All projects inherit these settings automatically.                  -->
+  <!-- Override per-project by setting the property in the .csproj file.   -->
+  <!-- ================================================================== -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <NoWarn>$(NoWarn);MSB3277</NoWarn>
+  </PropertyGroup>
+
+  <!-- Revit 2025 API - shared across all projects -->
+  <PropertyGroup>
+    <RevitVersion>2025</RevitVersion>
+    <RevitInstallDir>C:\Program Files\Autodesk\Revit $(RevitVersion)</RevitInstallDir>
+    <ExtLibNet8>$(MSBuildThisFileDirectory)..\HD.extension\lib\net8\</ExtLibNet8>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="RevitAPI">
+      <HintPath>$(RevitInstallDir)\RevitAPI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="RevitAPIUI">
+      <HintPath>$(RevitInstallDir)\RevitAPIUI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Post-build: Copy main DLL to pyRevit lib folder -->
+  <Target Name="CopyMainDllToExtension" AfterTargets="Build">
+    <MakeDir Directories="$(ExtLibNet8)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ExtLibNet8)" />
+    <Message Text="→ $(AssemblyName).dll → lib/net8/" Importance="high" />
+  </Target>
+
+</Project>

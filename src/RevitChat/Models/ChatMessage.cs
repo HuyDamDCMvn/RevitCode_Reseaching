@@ -23,7 +23,14 @@ namespace RevitChat.Models
     public class ChatMessage : INotifyPropertyChanged
     {
         public ChatRole Role { get; set; }
-        public string Content { get; set; }
+
+        private string _content;
+        public string Content
+        {
+            get => _content;
+            set { _content = value; OnPropertyChanged(); }
+        }
+
         public DateTime Timestamp { get; set; } = DateTime.Now;
         public bool IsToolCall { get; set; }
         public string ToolName { get; set; }
@@ -51,9 +58,6 @@ namespace RevitChat.Models
 
         public static ChatMessage FromAssistant(string content) =>
             new() { Role = ChatRole.Assistant, Content = content };
-
-        public static ChatMessage Thinking() =>
-            new() { Role = ChatRole.Assistant, Content = "...", IsToolCall = true };
 
         public static ChatMessage ToolProgress(string toolName) =>
             new() { Role = ChatRole.Tool, Content = $"Calling {toolName}...", IsToolCall = true, ToolName = toolName };

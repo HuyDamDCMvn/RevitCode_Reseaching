@@ -1,0 +1,306 @@
+{
+  "core_tools": [
+    "get_elements",
+    "count_elements",
+    "get_element_parameters",
+    "search_elements",
+    "get_project_info",
+    "get_levels",
+    "get_categories",
+    "get_current_view",
+    "get_rooms",
+    "set_parameter_value",
+    "delete_elements",
+    "select_elements",
+    "rename_elements",
+    "hide_elements",
+    "unhide_elements",
+    "isolate_elements",
+    "reset_view_isolation",
+    "override_element_color",
+    "override_category_color",
+    "get_current_selection",
+    "zoom_to_elements",
+    "isolate_by_level",
+    "override_color_by_filter",
+    "get_levels_detailed",
+    "get_hidden_elements"
+  ],
+  "action_keywords": [
+    "count",
+    "how many",
+    "list",
+    "show",
+    "get",
+    "export",
+    "rename",
+    "delete",
+    "move",
+    "copy",
+    "mirror",
+    "create",
+    "update",
+    "set",
+    "override",
+    "change",
+    "modify",
+    "hide",
+    "unhide",
+    "isolate",
+    "select",
+    "zoom",
+    "place",
+    "check",
+    "audit",
+    "report",
+    "compare",
+    "trace",
+    "connect",
+    "slope",
+    "resize",
+    "schedule",
+    "fields",
+    "columns",
+    "preview",
+    "dry run",
+    "summarize",
+    "summary",
+    "find",
+    "search",
+    "filter",
+    "highlight",
+    "remove",
+    "apply",
+    "load",
+    "swap",
+    "duplicate",
+    "tìm",
+    "lọc",
+    "liệt",
+    "đếm",
+    "liệt kê",
+    "hiển thị",
+    "xem",
+    "xuất",
+    "đổi tên",
+    "xóa",
+    "di chuyển",
+    "sao chép",
+    "tạo",
+    "cập nhật",
+    "đặt",
+    "tô màu",
+    "thay đổi",
+    "ẩn",
+    "hiện",
+    "cô lập",
+    "chọn",
+    "xem trước",
+    "phóng to",
+    "kiểm tra",
+    "báo cáo",
+    "so sánh",
+    "độ dốc",
+    "kích thước"
+  ],
+  "groups": [
+    {
+      "name": "Color / Override",
+      "keywords": ["color", "red", "blue", "green", "yellow", "orange", "purple", "pink", "cyan", "override color", "tô màu", "đổi màu"],
+      "tools": ["override_element_color", "override_category_color", "reset_element_overrides", "set_element_transparency", "override_color_by_level", "override_color_by_filter"],
+      "weight": 2
+    },
+    {
+      "name": "Levels",
+      "keywords": ["level", "floor", "story", "elevation", "tầng", "cao độ"],
+      "tools": ["get_levels_detailed", "create_level", "duplicate_levels_offset", "rename_level", "delete_levels", "isolate_by_level", "hide_by_level", "override_color_by_level", "check_level_consistency"],
+      "weight": 1
+    },
+    {
+      "name": "Visibility / Isolate",
+      "keywords": ["hide", "show", "unhide", "isolate", "visible", "visibility", "ẩn", "hiện", "cô lập"],
+      "tools": ["hide_elements", "unhide_elements", "isolate_elements", "isolate_category", "hide_category", "unhide_category", "reset_view_isolation", "get_hidden_elements", "isolate_by_level", "hide_by_level", "isolate_by_filter", "create_3d_view", "create_3d_view_by_system"],
+      "weight": 2
+    },
+    {
+      "name": "MEP",
+      "keywords": ["duct", "pipe", "mep", "hvac", "mechanical", "electrical", "plumbing", "conduit", "cable", "ống", "điện", "fire", "sprinkler", "cháy", "system total", "tổng hệ thống"],
+      "tools": ["get_mep_systems", "get_system_elements", "get_duct_summary", "get_pipe_summary", "get_conduit_summary", "get_cable_tray_summary", "get_mechanical_equipment", "get_plumbing_fixtures", "get_electrical_equipment", "get_fire_protection_equipment", "get_fittings", "check_disconnected_elements", "mep_quantity_takeoff", "get_connector_info", "get_system_connectivity", "calculate_system_totals"],
+      "weight": 1
+    },
+    {
+      "name": "Space / Zone",
+      "keywords": ["space", "zone", "airflow", "không gian", "lưu lượng", "sensor", "cảm biến", "trong space", "in space", "thiết bị trong", "thể tích", "diện tích", "volume", "area", "cbm", "sqm"],
+      "tools": ["get_mep_spaces", "get_hvac_zones", "check_space_airflow", "get_unoccupied_spaces", "get_elements_in_space"],
+      "weight": 1
+    },
+    {
+      "name": "Sheet / Viewport",
+      "keywords": ["sheet", "viewport", "bản vẽ"],
+      "tools": ["get_sheets_summary", "create_sheet", "place_view_on_sheet", "get_sheet_viewports", "remove_viewport"],
+      "weight": 1
+    },
+    {
+      "name": "Copy / Move / Mirror",
+      "keywords": ["copy", "move", "mirror", "duplicate", "di chuyển", "sao chép"],
+      "tools": ["copy_elements", "move_elements", "mirror_elements", "duplicate_views", "duplicate_sheets"],
+      "weight": 1
+    },
+    {
+      "name": "3D View / Create View",
+      "keywords": ["3d", "3d view", "tạo view", "create view", "tạo 3d", "view by system", "đặt tên view", "isometric"],
+      "tools": ["create_3d_view", "create_3d_view_by_system", "duplicate_views"],
+      "weight": 1
+    },
+    {
+      "name": "Export / BOQ",
+      "keywords": ["export", "csv", "boq", "xuất"],
+      "tools": ["export_to_csv", "mep_quantity_takeoff", "export_mep_boq"],
+      "weight": 1
+    },
+    {
+      "name": "Tag / Dimension",
+      "keywords": ["tag", "dimension", "text", "ghi chú", "kích thước"],
+      "tools": ["tag_elements", "get_untagged_elements", "tag_all_in_view", "add_text_note"],
+      "weight": 1
+    },
+    {
+      "name": "Family / Type",
+      "keywords": ["family", "type", "swap", "load", "place", "họ"],
+      "tools": ["get_family_types", "place_family_instance", "swap_family_type", "load_family"],
+      "weight": 1
+    },
+    {
+      "name": "Group",
+      "keywords": ["group", "nhóm"],
+      "tools": ["get_groups", "create_group", "ungroup", "get_group_members", "place_group_instance"],
+      "weight": 1
+    },
+    {
+      "name": "Material",
+      "keywords": ["material", "vật liệu"],
+      "tools": ["get_materials", "get_element_material", "set_element_material", "get_material_quantities"],
+      "weight": 1
+    },
+    {
+      "name": "Filter / Template",
+      "keywords": ["filter", "template", "bộ lọc", "mẫu"],
+      "tools": ["get_view_filters", "get_view_templates", "apply_view_template", "create_parameter_filter", "get_filter_rules"],
+      "weight": 1
+    },
+    {
+      "name": "Workset / Phase",
+      "keywords": ["workset", "phase", "giai đoạn"],
+      "tools": ["get_worksets", "move_to_workset", "get_phases", "get_elements_by_phase", "set_phase"],
+      "weight": 1
+    },
+    {
+      "name": "MEP Validation",
+      "keywords": ["missing", "oversized", "elevation", "validate", "thiếu", "quá cỡ", "slope", "độ dốc", "continuity", "liên tục", "penetration", "xuyên sàn", "fire damper", "van chống cháy"],
+      "tools": ["check_missing_parameters", "check_elevation_conflicts", "check_oversized_elements", "get_warnings_mep", "check_pipe_slope", "check_slope_continuity", "get_penetration_schedule", "check_fire_dampers"],
+      "weight": 1
+    },
+    {
+      "name": "Connectivity / Trace",
+      "keywords": ["connect", "connector", "trace", "path", "route", "routing", "kết nối", "đường đi", "đường ống", "nối ống", "nối"],
+      "tools": ["get_connector_info", "get_system_connectivity", "get_mep_routing_path", "connect_mep_elements"],
+      "weight": 1
+    },
+    {
+      "name": "Size / Resize / Offset",
+      "keywords": ["size", "resize", "diameter", "width", "height", "offset", "đổi size", "kích thước", "đường kính", "cao độ", "system type", "loại hệ thống"],
+      "tools": ["resize_mep_elements", "set_pipe_slope", "change_mep_system_type", "batch_set_offset"],
+      "weight": 1
+    },
+    {
+      "name": "Clash / Clearance",
+      "keywords": ["clash", "clearance", "overlap", "va chạm"],
+      "tools": ["check_clashes", "check_clearance", "find_overlapping", "get_clash_summary"],
+      "weight": 1
+    },
+    {
+      "name": "Health / Purge",
+      "keywords": ["warning", "health", "purge", "unused", "cảnh báo", "không dùng", "detail level", "design option", "unresolved"],
+      "tools": ["get_model_warnings", "get_warning_elements", "get_model_statistics", "find_imported_cad", "find_inplace_families", "find_unused_families", "get_purgeable_elements", "find_duplicate_types", "find_unresolved_references", "get_design_options", "audit_detail_levels"],
+      "weight": 1
+    },
+    {
+      "name": "Parameters",
+      "keywords": ["parameter", "shared", "tham số"],
+      "tools": ["get_shared_parameters", "get_project_parameters", "check_parameter_values", "add_project_parameter", "get_parameter_bindings"],
+      "weight": 1
+    },
+    {
+      "name": "Grid",
+      "keywords": ["grid", "lưới"],
+      "tools": ["get_grids", "check_grid_alignment", "create_grid", "find_off_axis_elements"],
+      "weight": 1
+    },
+    {
+      "name": "Room / Area",
+      "keywords": ["room", "area", "boundary", "finish", "phòng", "diện tích"],
+      "tools": ["get_rooms_detailed", "get_room_boundaries", "get_room_finishes", "get_area_schemes", "get_unplaced_rooms", "get_redundant_rooms"],
+      "weight": 1
+    },
+    {
+      "name": "Revision",
+      "keywords": ["revision", "markup", "cloud", "phát hành"],
+      "tools": ["get_revisions", "get_revision_clouds", "add_revision", "get_sheets_by_revision", "get_revision_schedule"],
+      "weight": 1
+    },
+    {
+      "name": "Links",
+      "keywords": ["link", "linked", "liên kết"],
+      "tools": ["get_linked_models", "get_linked_elements", "count_linked_elements", "get_linked_element_parameters", "search_linked_elements", "get_link_types"],
+      "weight": 1
+    },
+    {
+      "name": "Naming Audit",
+      "keywords": ["naming", "audit", "tên", "kiểm tra tên"],
+      "tools": ["audit_view_names", "audit_sheet_numbers", "audit_level_names", "audit_family_names", "audit_workset_names"],
+      "weight": 1
+    },
+    {
+      "name": "Select / Filter",
+      "keywords": ["select by", "filter by", "chọn theo", "lọc theo", "biến", "nhỏ hơn", "lớn hơn", "bé hơn", "greater", "less", "phân loại", "group by", "nhóm theo"],
+      "tools": ["select_by_parameter_value", "select_by_bounding_box", "select_elements_in_view", "get_selection_summary", "search_elements"],
+      "weight": 1
+    },
+    {
+      "name": "Coordination Report",
+      "keywords": ["coordination", "report", "phối hợp", "báo cáo"],
+      "tools": ["generate_clash_report", "compare_element_counts", "get_link_coordination_status", "get_scope_box_summary"],
+      "weight": 1
+    },
+    {
+      "name": "Insulation / Hanger",
+      "keywords": ["insulation", "hanger", "bảo ôn", "giá đỡ", "cách nhiệt", "insulate"],
+      "tools": ["get_insulation_quantities", "get_hanger_quantities", "add_change_insulation"],
+      "weight": 1
+    },
+    {
+      "name": "Schedule",
+      "keywords": ["schedule", "bảng", "field", "fields", "column", "columns"],
+      "tools": ["get_schedule_data", "create_schedule", "get_schedule_fields"],
+      "weight": 1
+    },
+    {
+      "name": "Transparency",
+      "keywords": ["transparency", "trong suốt"],
+      "tools": ["set_element_transparency"],
+      "weight": 1
+    },
+    {
+      "name": "Zoom",
+      "keywords": ["zoom", "phóng to"],
+      "tools": ["zoom_to_elements"],
+      "weight": 1
+    },
+    {
+      "name": "Selection",
+      "keywords": ["selection", "selected", "đang chọn", "đã chọn", "currently selected"],
+      "tools": ["get_current_selection"],
+      "weight": 1
+    }
+  ]
+}

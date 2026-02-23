@@ -24,6 +24,9 @@ namespace RevitChat.Services
         private readonly SkillRegistry _skillRegistry;
 
         public event Action<string> DebugMessage;
+#pragma warning disable CS0067
+        public event Action<string> TokenReceived;
+#pragma warning restore CS0067
 
         private const string SystemPrompt = @"You are a Revit BIM assistant embedded inside Autodesk Revit.
 You help users query, analyze, modify, and export building model data using the tools provided.
@@ -155,6 +158,13 @@ Rules:
                     _conversationHistory.RemoveAt(0);
             }
         }
+
+        public List<string> ValidateToolCalls(List<Models.ToolCallRequest> toolCalls)
+            => new();
+
+        public Task<(string assistantMessage, List<Models.ToolCallRequest> toolCalls)> RetryWithValidationErrorAsync(
+            List<string> errors, CancellationToken ct = default)
+            => Task.FromResult(("Validation not supported in this mode.", new List<Models.ToolCallRequest>()));
 
         private static Dictionary<string, object> ParseArguments(string json)
         {

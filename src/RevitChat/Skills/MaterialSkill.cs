@@ -9,19 +9,17 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class MaterialSkill : IRevitSkill
+    public class MaterialSkill : BaseRevitSkill
     {
-        public string Name => "Material";
-        public string Description => "Query and manage materials, element materials, and material quantities";
+        protected override string SkillName => "Material";
+        protected override string SkillDescription => "Query and manage materials, element materials, and material quantities";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_materials", "get_element_material", "set_element_material", "get_material_quantities"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("get_materials",
                 "List all materials in the document with their appearance properties.",
@@ -77,7 +75,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

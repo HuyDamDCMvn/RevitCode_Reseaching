@@ -9,12 +9,12 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class MepValidationSkill : IRevitSkill
+    public class MepValidationSkill : BaseRevitSkill
     {
-        public string Name => "MepValidation";
-        public string Description => "Validate MEP model: disconnected elements, missing parameters, warnings";
+        protected override string SkillName => "MepValidation";
+        protected override string SkillDescription => "Validate MEP model: disconnected elements, missing parameters, warnings";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "check_disconnected_elements", "check_missing_parameters",
             "check_elevation_conflicts", "check_oversized_elements", "get_warnings_mep",
@@ -22,9 +22,7 @@ namespace RevitChat.Skills
             "check_fire_dampers"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("check_disconnected_elements",
                 "Find MEP elements (ducts, pipes, conduits, cable trays) that have disconnected connectors (open ends not connected to anything).",
@@ -157,7 +155,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

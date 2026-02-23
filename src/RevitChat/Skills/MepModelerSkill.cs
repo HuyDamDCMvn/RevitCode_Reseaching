@@ -11,20 +11,18 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class MepModelerSkill : IRevitSkill
+    public class MepModelerSkill : BaseRevitSkill
     {
-        public string Name => "MepModeler";
-        public string Description => "Modify MEP elements: resize, set slope, change system type, set offset, add insulation";
+        protected override string SkillName => "MepModeler";
+        protected override string SkillDescription => "Modify MEP elements: resize, set slope, change system type, set offset, add insulation";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "resize_mep_elements", "set_pipe_slope", "change_mep_system_type",
             "batch_set_offset", "add_change_insulation"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("resize_mep_elements",
                 "Resize ducts or pipes by setting width/height/diameter (mm). Confirm with user first.",
@@ -105,7 +103,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");

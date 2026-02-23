@@ -10,20 +10,18 @@ using static RevitChat.Skills.RevitHelpers;
 
 namespace RevitChat.Skills
 {
-    public class MepSpaceSkill : IRevitSkill
+    public class MepSpaceSkill : BaseRevitSkill
     {
-        public string Name => "MepSpace";
-        public string Description => "MEP spaces, HVAC zones, airflow analysis";
+        protected override string SkillName => "MepSpace";
+        protected override string SkillDescription => "MEP spaces, HVAC zones, airflow analysis";
 
-        private static readonly HashSet<string> HandledTools = new()
+        protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_mep_spaces", "get_hvac_zones", "check_space_airflow",
             "get_unoccupied_spaces", "get_elements_in_space"
         };
 
-        public bool CanHandle(string functionName) => HandledTools.Contains(functionName);
-
-        public IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
+        public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
             ChatTool.CreateFunctionTool("get_mep_spaces",
                 "List MEP Spaces with area, volume, loads, airflow. Filter by level, area range (sqm), volume range (m³/CBM).",
@@ -93,7 +91,7 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
         {
             var uidoc = app.ActiveUIDocument;
             if (uidoc == null) return JsonError("No active document.");
