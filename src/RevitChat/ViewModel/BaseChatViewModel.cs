@@ -27,6 +27,7 @@ namespace RevitChat.ViewModel
         private IChatService _diagnosticService;
         private bool _toolExecutedInSession;
         private string _lastUserPrompt;
+        private PromptContext _promptContext;
         private List<string> _lastToolNames = new();
         private List<ToolCallRequest> _lastToolCalls = new();
         private readonly Action _onModelModifiedHandler;
@@ -173,6 +174,7 @@ namespace RevitChat.ViewModel
             try
             {
                 StatusMessage = "Collecting context...";
+                _promptContext = PromptAnalyzer.Analyze(text);
                 var contextText = await _contextService.CollectAsync(text,
                     calls => _toolExec.ExecuteAsync(calls, ToolTimeoutMs, _cts.Token));
                 var llmText = string.IsNullOrWhiteSpace(contextText)
@@ -297,6 +299,8 @@ namespace RevitChat.ViewModel
                     StatusMessage = "Awaiting confirmation";
                     return;
                 }
+
+                ToolCallEnricher.Enrich(toolCalls, _promptContext);
 
                 foreach (var tc in toolCalls)
                     Messages.Add(ChatMessage.ToolProgress(tc.FunctionName));
