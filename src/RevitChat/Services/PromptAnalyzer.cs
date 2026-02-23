@@ -114,31 +114,31 @@ namespace RevitChat.Services
 
         private static readonly (string[] keywords, string canonical, string revitCat)[] CategoryMap =
         {
-            (new[]{"duct","ong gio","ống gió"}, "duct", "Ducts"),
-            (new[]{"pipe","ong nuoc","ống nước"}, "pipe", "Pipes"),
-            (new[]{"conduit","ong dan","ống dẫn"}, "conduit", "Conduits"),
-            (new[]{"cable tray","khay cap","khay cáp","mang cap","máng cáp"}, "cable_tray", "Cable Trays"),
-            (new[]{"wall","tuong","tường"}, "wall", "Walls"),
-            (new[]{"floor","san","sàn"}, "floor", "Floors"),
-            (new[]{"door","cua","cửa"}, "door", "Doors"),
-            (new[]{"window","cua so","cửa sổ"}, "window", "Windows"),
-            (new[]{"room","phong","phòng"}, "room", "Rooms"),
-            (new[]{"column","cot","cột"}, "column", "Columns"),
-            (new[]{"beam","dam","dầm","structural framing"}, "beam", "Structural Framing"),
-            (new[]{"ceiling","tran","trần"}, "ceiling", "Ceilings"),
-            (new[]{"sprinkler","dau phun","đầu phun"}, "sprinkler", "Sprinklers"),
-            (new[]{"air terminal","mieng gio","miệng gió","diffuser","grille","louver"}, "air_terminal", "Air Terminals"),
+            (new[]{"duct","ducts","ong gio","ống gió"}, "duct", "Ducts"),
+            (new[]{"pipe","pipes","ong nuoc","ống nước","ong thoat nuoc","ong cap nuoc"}, "pipe", "Pipes"),
+            (new[]{"conduit","conduits","ong dan","ống dẫn"}, "conduit", "Conduits"),
+            (new[]{"cable tray","cable trays","khay cap","khay cáp","mang cap","máng cáp"}, "cable_tray", "Cable Trays"),
+            (new[]{"wall","walls","tuong","tường"}, "wall", "Walls"),
+            (new[]{"floor","floors","san","sàn"}, "floor", "Floors"),
+            (new[]{"door","doors","cua di","cửa đi"}, "door", "Doors"),
+            (new[]{"window","windows","cua so","cửa sổ"}, "window", "Windows"),
+            (new[]{"room","rooms","phong","phòng"}, "room", "Rooms"),
+            (new[]{"column","columns","cot","cột"}, "column", "Columns"),
+            (new[]{"beam","beams","dam","dầm","structural framing"}, "beam", "Structural Framing"),
+            (new[]{"ceiling","ceilings","tran","trần"}, "ceiling", "Ceilings"),
+            (new[]{"sprinkler","sprinklers","dau phun","đầu phun"}, "sprinkler", "Sprinklers"),
+            (new[]{"air terminal","air terminals","mieng gio","miệng gió","diffuser","grille","louver"}, "air_terminal", "Air Terminals"),
             (new[]{"mechanical equipment","thiet bi co","thiết bị cơ","ahu","fcu","vav"}, "mech_equip", "Mechanical Equipment"),
             (new[]{"electrical equipment","thiet bi dien","thiết bị điện","mdb","tu dien","tủ điện"}, "elec_equip", "Electrical Equipment"),
             (new[]{"plumbing fixture","thiet bi ve sinh","thiết bị vệ sinh"}, "plumb_fix", "Plumbing Fixtures"),
             (new[]{"lighting fixture","den","đèn"}, "light_fix", "Lighting Fixtures"),
-            (new[]{"stair","cau thang","cầu thang"}, "stair", "Stairs"),
-            (new[]{"railing","lan can"}, "railing", "Railings"),
+            (new[]{"stair","stairs","cau thang","cầu thang"}, "stair", "Stairs"),
+            (new[]{"railing","railings","lan can"}, "railing", "Railings"),
             (new[]{"furniture","noi that","nội thất"}, "furniture", "Furniture"),
-            (new[]{"duct fitting","phu kien ong gio"}, "duct_fitting", "Duct Fittings"),
-            (new[]{"pipe fitting","phu kien ong nuoc"}, "pipe_fitting", "Pipe Fittings"),
-            (new[]{"duct accessory","phu kien gio"}, "duct_acc", "Duct Accessories"),
-            (new[]{"pipe accessory","phu kien nuoc"}, "pipe_acc", "Pipe Accessories"),
+            (new[]{"duct fitting","duct fittings","phu kien ong gio"}, "duct_fitting", "Duct Fittings"),
+            (new[]{"pipe fitting","pipe fittings","phu kien ong nuoc"}, "pipe_fitting", "Pipe Fittings"),
+            (new[]{"duct accessory","duct accessories","phu kien gio"}, "duct_acc", "Duct Accessories"),
+            (new[]{"pipe accessory","pipe accessories","phu kien nuoc"}, "pipe_acc", "Pipe Accessories"),
             (new[]{"fire protection","pccc","chua chay","chữa cháy"}, "fire", "Fire Protection"),
         };
 
@@ -162,7 +162,7 @@ namespace RevitChat.Services
 
         private static readonly (string[] keywords, string canonical)[] AbbrSystemMap =
         {
-            (new[]{"sa"}, "Supply Air"), (new[]{"ra"}, "Return Air"),
+            (new[]{"sa"}, "Supply Air"),
             (new[]{"ea"}, "Exhaust Air"), (new[]{"fa","oa"}, "Fresh Air"),
             (new[]{"chw","chws","chwr"}, "Chilled Water"),
             (new[]{"hw","hws","hwr","dhw"}, "Hot Water"),
@@ -440,22 +440,26 @@ namespace RevitChat.Services
 
             if (ctx.PrimaryIntent == PromptIntent.Check)
             {
-                catKey = ctx.DetectedParameter switch
+                string checkSubType = ctx.DetectedParameter switch
                 {
                     "Velocity" => "_velocity",
                     "Slope" => "_slope",
                     "Insulation" => "_insulation",
-                    _ => catKey
+                    _ => null
                 };
-                if (catKey == null)
+
+                if (checkSubType == null)
                 {
                     if (normalizedPrompt.Contains("clash") || normalizedPrompt.Contains("va cham")
                         || normalizedPrompt.Contains("xung dot"))
-                        catKey = "_clash";
-                    else if (normalizedPrompt.Contains("disconnect") || normalizedPrompt.Contains("ngat")
-                             || normalizedPrompt.Contains("ho ") || normalizedPrompt.Contains("khong noi"))
-                        catKey = "_disconnect";
+                        checkSubType = "_clash";
+                    else if (normalizedPrompt.Contains("disconnect") || ContainsWord(normalizedPrompt, "ngat")
+                             || normalizedPrompt.Contains("khong noi") || normalizedPrompt.Contains("bi ho"))
+                        checkSubType = "_disconnect";
                 }
+
+                if (checkSubType != null)
+                    catKey = checkSubType;
             }
 
             if (ctx.PrimaryIntent == PromptIntent.Visual && ctx.DetectedSystem != null)
