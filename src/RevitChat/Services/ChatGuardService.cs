@@ -13,7 +13,11 @@ namespace RevitChat.Services
         {
             "delete_elements", "set_parameter_value", "rename_elements",
             "move_elements", "copy_elements", "mirror_elements",
-            "duplicate_views", "duplicate_sheets", "resize_mep_elements"
+            "duplicate_views", "duplicate_sheets", "resize_mep_elements",
+            "split_mep_elements", "delete_levels", "create_level",
+            "place_family_instance", "load_family",
+            "add_project_parameter", "override_element_color",
+            "override_category_color", "override_color_by_filter"
         };
 
         public static bool IsEchoResponse(string text)
@@ -24,7 +28,7 @@ namespace RevitChat.Services
                 return true;
             if (t.Contains("<tool_call>") || t.Contains("</tool_call>"))
                 return true;
-            if (t.Contains("\"arguments\"") && t.Contains("{"))
+            if (t.Contains("\"arguments\"") && t.Contains("\"name\"") && t.Length < 500)
                 return true;
             if (Regex.IsMatch(t, @"^\s*[\{\};,"":\[\]]+\s*$"))
                 return true;
@@ -73,7 +77,9 @@ namespace RevitChat.Services
             if (call.FunctionName.Equals("resize_mep_elements", StringComparison.OrdinalIgnoreCase)) return true;
             if (call.Arguments == null || call.Arguments.Count == 0) return true;
 
-            if (call.Arguments.ContainsKey("element_id")) return false;
+            if (call.Arguments.ContainsKey("element_id") || call.Arguments.ContainsKey("room_id")
+                || call.Arguments.ContainsKey("view_id") || call.Arguments.ContainsKey("level_id"))
+                return false;
 
             if (call.Arguments.TryGetValue("element_ids", out var idsObj))
             {

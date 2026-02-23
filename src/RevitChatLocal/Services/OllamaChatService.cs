@@ -58,14 +58,15 @@ namespace RevitChatLocal.Services
         private static HashSet<string> ChitchatPatterns;
         private static bool _dataLoaded;
 
-        private static readonly Dictionary<string, Regex> _regexCache = new(StringComparer.OrdinalIgnoreCase);
-        private static readonly Dictionary<string, string> _fewShotCache = new();
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, Regex> _regexCache = new(StringComparer.OrdinalIgnoreCase);
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> _fewShotCache = new();
         private const int FewShotCacheMaxSize = 32;
+        private static readonly object _dataLoadLock = new();
 
         private static void EnsureDataLoaded()
         {
             if (_dataLoaded) return;
-            lock (typeof(OllamaChatService))
+            lock (_dataLoadLock)
             {
                 if (_dataLoaded) return;
                 LoadAllData();
@@ -89,20 +90,29 @@ namespace RevitChatLocal.Services
 
             CoreTools = new HashSet<string>();
             foreach (var item in kgDoc.GetProperty("core_tools").EnumerateArray())
-                CoreTools.Add(item.GetString());
+            {
+                var val = item.GetString();
+                if (val != null) CoreTools.Add(val);
+            }
 
             var groupsList = new List<KeywordGroup>();
             foreach (var g in kgDoc.GetProperty("groups").EnumerateArray())
             {
                 var keywords = new List<string>();
                 foreach (var k in g.GetProperty("keywords").EnumerateArray())
-                    keywords.Add(k.GetString());
+                {
+                    var kv = k.GetString();
+                    if (kv != null) keywords.Add(kv);
+                }
                 var tools = new List<string>();
                 foreach (var t in g.GetProperty("tools").EnumerateArray())
-                    tools.Add(t.GetString());
+                {
+                    var tv = t.GetString();
+                    if (tv != null) tools.Add(tv);
+                }
                 groupsList.Add(new KeywordGroup
                 {
-                    Name = g.GetProperty("name").GetString(),
+                    Name = g.GetProperty("name").GetString() ?? "",
                     Keywords = keywords.ToArray(),
                     Tools = tools.ToArray(),
                     Weight = g.TryGetProperty("weight", out var w) ? w.GetInt32() : 1
@@ -112,7 +122,10 @@ namespace RevitChatLocal.Services
 
             ActionKeywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var item in kgDoc.GetProperty("action_keywords").EnumerateArray())
-                ActionKeywords.Add(item.GetString());
+            {
+                var val = item.GetString();
+                if (val != null) ActionKeywords.Add(val);
+            }
 
             // tool_schema_hints.json
             ToolSchemaHints = LoadJson<Dictionary<string, string>>("tool_schema_hints.json")
@@ -125,8 +138,13 @@ namespace RevitChatLocal.Services
             {
                 var kws = new List<string>();
                 foreach (var k in item.GetProperty("keywords").EnumerateArray())
-                    kws.Add(k.GetString());
-                FewShotExamples.Add((kws.ToArray(), item.GetProperty("example").GetString()));
+                {
+                    var kv = k.GetString();
+                    if (kv != null) kws.Add(kv);
+                }
+                var ex = item.GetProperty("example").GetString();
+                if (kws.Count > 0 && ex != null)
+                    FewShotExamples.Add((kws.ToArray(), ex));
             }
 
             // chat_normalization.json
@@ -216,7 +234,7 @@ namespace RevitChatLocal.Services
         {
             if (_fewShotCache.Count >= FewShotCacheMaxSize)
                 _fewShotCache.Clear();
-            _fewShotCache[key] = value;
+            _fewShotCache.TryAdd(key, value);
         }
 
         #endregion
@@ -270,13 +288,9 @@ namespace RevitChatLocal.Services
 
         private static Regex GetOrCreateRegex(string word)
         {
-            if (!_regexCache.TryGetValue(word, out var regex))
-            {
-                regex = new Regex($@"\b{Regex.Escape(word)}\w*\b",
-                    RegexOptions.Compiled | RegexOptions.IgnoreCase);
-                _regexCache[word] = regex;
-            }
-            return regex;
+            return _regexCache.GetOrAdd(word, k =>
+                new Regex($@"\b{Regex.Escape(k)}\w*\b",
+                    RegexOptions.Compiled | RegexOptions.IgnoreCase));
         }
 
         private static bool MatchesKeyword(string text, string kw)
@@ -767,6 +781,7 @@ Example:
             const int maxToolsInCatalog = 40;
             var ordered = selected
                 .Where(t => toolIndex.ContainsKey(t))
+                .OrderBy(t => t, StringComparer.Ordinal)
                 .Take(maxToolsInCatalog)
                 .ToList();
 

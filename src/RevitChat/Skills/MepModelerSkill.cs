@@ -41,7 +41,7 @@ namespace RevitChat.Skills
                 """)),
 
             ChatTool.CreateFunctionTool("split_mep_elements",
-                "Split duct/pipe/conduit curves into equal-length segments. The last segment may be shorter. Confirm with user first.",
+                "Split duct or pipe curves into equal-length segments. The last segment may be shorter. Only supports ducts and pipes (not flex, conduit, or cable tray). Confirm with user first.",
                 BinaryData.FromString("""
                 {
                     "type": "object",
@@ -249,6 +249,7 @@ namespace RevitChat.Skills
 
             if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
             if (segLenMm <= 0) return JsonError("segment_length_mm must be positive.");
+            if (segLenMm < 10) return JsonError("segment_length_mm must be >= 10mm.");
 
             const double mmToFt = 1.0 / 304.8;
             double segLenFt = segLenMm * mmToFt;
@@ -284,6 +285,21 @@ namespace RevitChat.Skills
                         continue;
                     }
 
+                    var cat = elem.Category?.BuiltInCategory ?? BuiltInCategory.INVALID;
+                    bool isDuct = cat == BuiltInCategory.OST_DuctCurves;
+                    bool isPipe = cat == BuiltInCategory.OST_PipeCurves;
+
+                    if (!isDuct && !isPipe)
+                    {
+                        var reason = cat is BuiltInCategory.OST_FlexDuctCurves or BuiltInCategory.OST_FlexPipeCurves
+                            ? "Flex ducts/pipes cannot be split (BreakCurve not supported)"
+                            : cat is BuiltInCategory.OST_Conduit or BuiltInCategory.OST_CableTray
+                                ? "Conduit/cable tray split not supported by Revit API"
+                                : $"Unsupported category: {elem.Category?.Name ?? "unknown"}";
+                        results.Add(new { id, error = reason });
+                        continue;
+                    }
+
                     int numCuts = (int)Math.Floor(totalLen / segLenFt);
                     if (Math.Abs(totalLen - numCuts * segLenFt) < 1e-6)
                         numCuts--;
@@ -303,18 +319,6 @@ namespace RevitChat.Skills
                         continue;
                     }
 
-                    var cat = elem.Category?.BuiltInCategory ?? BuiltInCategory.INVALID;
-                    bool isDuct = cat is BuiltInCategory.OST_DuctCurves or BuiltInCategory.OST_FlexDuctCurves;
-                    bool isPipe = cat is BuiltInCategory.OST_PipeCurves or BuiltInCategory.OST_FlexPipeCurves;
-                    bool isConduit = cat == BuiltInCategory.OST_Conduit;
-                    bool isCableTray = cat == BuiltInCategory.OST_CableTray;
-
-                    if (!isDuct && !isPipe && !isConduit && !isCableTray)
-                    {
-                        results.Add(new { id, error = $"Unsupported category: {elem.Category?.Name ?? "unknown"}" });
-                        continue;
-                    }
-
                     var breakPoints = new List<XYZ>();
                     for (int i = numCuts; i >= 1; i--)
                     {
@@ -324,26 +328,36 @@ namespace RevitChat.Skills
                     }
 
                     int created = 0;
+                    var errors = new List<string>();
                     var currentId = elem.Id;
                     foreach (var pt in breakPoints)
                     {
                         try
                         {
-                            ElementId newId = ElementId.InvalidElementId;
-                            if (isDuct)
-                                newId = MechanicalUtils.BreakCurve(doc, currentId, pt);
-                            else if (isPipe)
-                                newId = PlumbingUtils.BreakCurve(doc, currentId, pt);
+                            ElementId newId = isDuct
+                                ? MechanicalUtils.BreakCurve(doc, currentId, pt)
+                                : PlumbingUtils.BreakCurve(doc, currentId, pt);
 
-                            if (newId != null && newId != ElementId.InvalidElementId)
+                            if (newId != ElementId.InvalidElementId)
                                 created++;
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            errors.Add(ex.Message);
+                        }
                     }
 
                     totalCreated += created;
-                    results.Add(new { id, total_length_mm = totalMm,
-                        segments_created = created + 1, segment_length_mm = segLenMm });
+                    var result = new Dictionary<string, object>
+                    {
+                        ["id"] = id,
+                        ["total_length_mm"] = totalMm,
+                        ["segments_created"] = created + 1,
+                        ["segment_length_mm"] = segLenMm
+                    };
+                    if (errors.Count > 0)
+                        result["errors"] = errors.Take(5).ToList();
+                    results.Add(result);
                 }
 
                 if (!dryRun)

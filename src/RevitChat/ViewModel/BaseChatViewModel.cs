@@ -178,15 +178,24 @@ namespace RevitChat.ViewModel
 
                 StatusMessage = "Thinking...";
                 BeginStreaming();
-                var (response, toolCalls) = await ChatService.SendMessageAsync(llmText, _cts.Token);
-                EndStreaming();
-                (response, toolCalls) = await ValidateAndRetryIfNeeded(response, toolCalls);
+                try
+                {
+                    var (response, toolCalls) = await ChatService.SendMessageAsync(llmText, _cts.Token);
+                    EndStreaming();
+                    (response, toolCalls) = await ValidateAndRetryIfNeeded(response, toolCalls);
 
-                if (_streamingMessage != null && toolCalls != null && toolCalls.Count > 0)
-                    Messages.Remove(_streamingMessage);
-                _streamingMessage = null;
+                    if (_streamingMessage != null && toolCalls != null && toolCalls.Count > 0)
+                        Messages.Remove(_streamingMessage);
+                    _streamingMessage = null;
 
-                await ProcessToolCallLoopAsync(response, toolCalls);
+                    await ProcessToolCallLoopAsync(response, toolCalls);
+                }
+                catch
+                {
+                    EndStreaming();
+                    _streamingMessage = null;
+                    throw;
+                }
             }
             catch (OperationCanceledException)
             {
@@ -285,13 +294,22 @@ namespace RevitChat.ViewModel
                 StatusMessage = totalChars > AnalyzeThresholdChars ? "Analyzing results..." : "Finalizing...";
 
                 BeginStreaming();
-                (response, toolCalls) = await ChatService.ContinueWithToolResultsAsync(compressed, _cts.Token);
-                EndStreaming();
-                (response, toolCalls) = await ValidateAndRetryIfNeeded(response, toolCalls);
+                try
+                {
+                    (response, toolCalls) = await ChatService.ContinueWithToolResultsAsync(compressed, _cts.Token);
+                    EndStreaming();
+                    (response, toolCalls) = await ValidateAndRetryIfNeeded(response, toolCalls);
 
-                if (_streamingMessage != null && toolCalls != null && toolCalls.Count > 0)
-                    Messages.Remove(_streamingMessage);
-                _streamingMessage = null;
+                    if (_streamingMessage != null && toolCalls != null && toolCalls.Count > 0)
+                        Messages.Remove(_streamingMessage);
+                    _streamingMessage = null;
+                }
+                catch
+                {
+                    EndStreaming();
+                    _streamingMessage = null;
+                    throw;
+                }
             }
 
             if (_streamingMessage != null)

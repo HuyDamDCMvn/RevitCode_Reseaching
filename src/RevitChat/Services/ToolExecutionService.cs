@@ -20,6 +20,7 @@ namespace RevitChat.Services
         private readonly Action<string> _onError;
 
         private TaskCompletionSource<Dictionary<string, string>> _toolResultsTcs;
+        private readonly SemaphoreSlim _execLock = new(1, 1);
 
         public WorkingMemory WorkingMemory => _workingMemory;
 
@@ -40,24 +41,47 @@ namespace RevitChat.Services
         public async Task<Dictionary<string, string>> ExecuteAsync(
             List<ToolCallRequest> toolCalls, int timeoutMs, CancellationToken ct)
         {
-            _toolResultsTcs = new TaskCompletionSource<Dictionary<string, string>>();
+            if (!await _execLock.WaitAsync(0, ct))
+                throw new InvalidOperationException("Another tool execution is already in progress.");
 
-            using var ctReg = ct.Register(() => _toolResultsTcs.TrySetCanceled());
-
-            _queue.Clear();
-            _queue.EnqueueAll(toolCalls);
-            _externalEvent.Raise();
-
-            var timeoutTask = Task.Delay(timeoutMs, ct);
-            var completed = await Task.WhenAny(_toolResultsTcs.Task, timeoutTask);
-
-            if (completed == timeoutTask)
+            try
             {
-                _toolResultsTcs.TrySetCanceled();
-                throw new TimeoutException("Tool execution timed out. Revit may be busy or a modal dialog is open.");
-            }
+                _toolResultsTcs = new TaskCompletionSource<Dictionary<string, string>>();
 
-            return await _toolResultsTcs.Task;
+                using var ctReg = ct.Register(() => _toolResultsTcs.TrySetCanceled());
+
+                _queue.Clear();
+                _queue.EnqueueAll(toolCalls);
+                _externalEvent.Raise();
+
+                using var timeoutCts = new CancellationTokenSource(timeoutMs);
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
+
+                try
+                {
+                    var timeoutTask = Task.Delay(Timeout.Infinite, linkedCts.Token);
+                    var completed = await Task.WhenAny(_toolResultsTcs.Task, timeoutTask);
+
+                    if (completed != _toolResultsTcs.Task)
+                    {
+                        _toolResultsTcs.TrySetCanceled();
+                        if (ct.IsCancellationRequested)
+                            throw new OperationCanceledException("Tool execution was cancelled.", ct);
+                        throw new TimeoutException("Tool execution timed out. Revit may be busy or a modal dialog is open.");
+                    }
+                }
+                catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+                {
+                    _toolResultsTcs.TrySetCanceled();
+                    throw new TimeoutException("Tool execution timed out. Revit may be busy or a modal dialog is open.");
+                }
+
+                return await _toolResultsTcs.Task;
+            }
+            finally
+            {
+                _execLock.Release();
+            }
         }
 
         public void CancelPending()
