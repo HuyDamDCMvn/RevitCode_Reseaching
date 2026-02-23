@@ -182,5 +182,13 @@
   "find_duplicate_values": "element_ids (array), param_name — find elements sharing same parameter value",
   "transfer_parameters": "source_element_id, target_element_ids (array), param_names (array), dry_run?",
   "batch_update_parameters": "updates (array of {element_id, param_name, value}), dry_run?",
-  "create_section_box": "element_ids (array), padding_feet? (default 1.0) — 3D section box around elements"
+  "create_section_box": "element_ids (array), padding_feet? (default 1.0) — 3D section box around elements",
+  "detect_mep_intersections": "mep_element_ids? (array), host_category? (all|walls|floors|roofs), clearance_mm? (50), limit? (100) — find MEP-host intersections",
+  "create_openings": "intersections (array of {mep_id, host_id, width_mm?, height_mm?}), clearance_mm? (50), dry_run? — create openings at intersections",
+  "measure_distance_to_slab": "element_ids (array), direction? (up|down|both), target_category? (floors|ceilings|both), write_parameter? — raycast distance measurement",
+  "create_section_view": "element_ids (array), section_name?, direction? (auto|along_x|along_y), depth_feet? (5), offset_feet? (2), padding_feet? (1)",
+  "batch_rename_pattern": "element_ids (array), pattern? ({n:000}, {name}, {cat}, {lvl}, {id}), find?, replace_with?, use_regex?, start_number? (1), param_name?, dry_run?",
+  "purge_unused_elements": "element_ids? (array), category?, max_delete? (50), dry_run? — delete unused family types",
+  "toggle_grid_bubbles": "grid_ids? (array), end? (start|end|both), action? (show|hide|toggle) — show/hide grid bubbles",
+  "set_grid_mode": "grid_ids? (array), mode (2d|3d) — switch grid display mode in current view"
 }

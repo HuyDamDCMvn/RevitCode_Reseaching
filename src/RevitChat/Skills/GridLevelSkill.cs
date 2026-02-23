@@ -19,7 +19,7 @@ namespace RevitChat.Skills
             "get_grids", "check_grid_alignment", "get_levels_detailed",
             "check_level_consistency", "find_off_axis_elements",
             "create_level", "duplicate_levels_offset", "rename_level", "delete_levels",
-            "create_grid"
+            "create_grid", "toggle_grid_bubbles", "set_grid_mode"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -154,6 +154,33 @@ namespace RevitChat.Skills
                     },
                     "required": ["name", "start_x", "start_y", "end_x", "end_y"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("toggle_grid_bubbles",
+                "Show or hide grid bubbles (head/tail) in the current view.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "grid_ids": { "type": "array", "items": { "type": "integer" }, "description": "Grid IDs. If empty, applies to all grids." },
+                        "end": { "type": "string", "enum": ["start", "end", "both"], "description": "Which end. Default: both" },
+                        "action": { "type": "string", "enum": ["show", "hide", "toggle"], "description": "Action. Default: toggle" }
+                    },
+                    "required": []
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("set_grid_mode",
+                "Switch grids between 2D (view-specific) and 3D (model extent) display mode in the current view.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "grid_ids": { "type": "array", "items": { "type": "integer" }, "description": "Grid IDs. If empty, applies to all grids." },
+                        "mode": { "type": "string", "enum": ["2d", "3d"], "description": "Display mode. 2d=view-specific, 3d=model extent" }
+                    },
+                    "required": ["mode"]
+                }
                 """))
         };
 
@@ -171,6 +198,8 @@ namespace RevitChat.Skills
                 "rename_level" => RenameLevel(doc, args),
                 "delete_levels" => DeleteLevels(doc, args),
                 "create_grid" => CreateGrid(doc, args),
+                "toggle_grid_bubbles" => ToggleGridBubbles(doc, args),
+                "set_grid_mode" => SetGridMode(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -747,6 +776,110 @@ namespace RevitChat.Skills
                 length_ft = Math.Round(line.Length, 4),
                 message = $"Created grid '{grid.Name}'."
             }, JsonOpts);
+        }
+
+        #endregion
+
+        #region Grid Bubbles & Mode
+
+        private string ToggleGridBubbles(Document doc, Dictionary<string, object> args)
+        {
+            var view = doc.ActiveView;
+            if (view == null) return JsonError("No active view.");
+            var gridIds = GetArgLongArray(args, "grid_ids");
+            var end = (GetArg(args, "end", "both") ?? "both").ToLower();
+            var action = (GetArg(args, "action", "toggle") ?? "toggle").ToLower();
+
+            var grids = ResolveGridElements(doc, gridIds);
+            if (grids.Count == 0) return JsonError("No grids found.");
+
+            int changed = 0;
+            using (var trans = new Transaction(doc, "AI: Toggle Grid Bubbles"))
+            {
+                trans.Start();
+                foreach (var grid in grids)
+                {
+                    var ends = new List<DatumEnds>();
+                    if (end is "start" or "both") ends.Add(DatumEnds.End0);
+                    if (end is "end" or "both") ends.Add(DatumEnds.End1);
+
+                    foreach (var e in ends)
+                    {
+                        bool visible = grid.IsBubbleVisibleInView(e, view);
+                        bool shouldShow = action switch
+                        {
+                            "show" => true,
+                            "hide" => false,
+                            _ => !visible
+                        };
+
+                        if (shouldShow && !visible) { grid.ShowBubbleInView(e, view); changed++; }
+                        else if (!shouldShow && visible) { grid.HideBubbleInView(e, view); changed++; }
+                    }
+                }
+                trans.Commit();
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                grids_affected = grids.Count,
+                bubbles_changed = changed,
+                action,
+                end
+            }, JsonOpts);
+        }
+
+        private string SetGridMode(Document doc, Dictionary<string, object> args)
+        {
+            var view = doc.ActiveView;
+            if (view == null) return JsonError("No active view.");
+            var gridIds = GetArgLongArray(args, "grid_ids");
+            var mode = (GetArg(args, "mode", "2d") ?? "2d").ToLower();
+            var targetType = mode == "3d" ? DatumExtentType.Model : DatumExtentType.ViewSpecific;
+
+            var grids = ResolveGridElements(doc, gridIds);
+            if (grids.Count == 0) return JsonError("No grids found.");
+
+            int changed = 0;
+            using (var trans = new Transaction(doc, "AI: Set Grid Mode"))
+            {
+                trans.Start();
+                foreach (var grid in grids)
+                {
+                    try
+                    {
+                        if (grid.GetDatumExtentTypeInView(DatumEnds.End0, view) != targetType)
+                        {
+                            grid.SetDatumExtentType(DatumEnds.End0, view, targetType);
+                            grid.SetDatumExtentType(DatumEnds.End1, view, targetType);
+                            changed++;
+                        }
+                    }
+                    catch { }
+                }
+                trans.Commit();
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                grids_affected = grids.Count,
+                grids_changed = changed,
+                mode = mode == "3d" ? "3D (Model)" : "2D (View-Specific)"
+            }, JsonOpts);
+        }
+
+        private static List<Grid> ResolveGridElements(Document doc, List<long> gridIds)
+        {
+            if (gridIds != null && gridIds.Count > 0)
+                return gridIds
+                    .Select(id => doc.GetElement(new ElementId(id)) as Grid)
+                    .Where(g => g != null)
+                    .ToList();
+
+            return new FilteredElementCollector(doc)
+                .OfClass(typeof(Grid))
+                .Cast<Grid>()
+                .ToList();
         }
 
         #endregion

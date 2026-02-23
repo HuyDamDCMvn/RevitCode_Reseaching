@@ -20,7 +20,7 @@ namespace RevitChat.Skills
         {
             ["Core"] = new[] { "Query", "ProjectInfo", "Modify", "Export" },
             ["ViewControl"] = new[] { "ViewControl", "SelectionFilter" },
-            ["MEP"] = new[] { "MepSystemAnalysis", "MepEquipment", "MepSpace", "MepQuantityTakeoff", "MepValidation", "MepConnectivity", "MepModeler" },
+            ["MEP"] = new[] { "MepSystemAnalysis", "MepEquipment", "MepSpace", "MepQuantityTakeoff", "MepValidation", "MepConnectivity", "MepModeler", "OpeningCreator", "MepDistance" },
             ["Modeler"] = new[] {
                 "FamilyPlacement", "SheetManagement", "FilterTemplate",
                 "DimensionTag", "WorksetPhase", "Group", "Material",
@@ -115,6 +115,8 @@ namespace RevitChat.Skills
             registry.Register(new RevisionMarkupSkill());
             registry.Register(new SelectionFilterSkill());
             registry.Register(new ScheduleSkill());
+            registry.Register(new OpeningCreatorSkill());
+            registry.Register(new MepDistanceSkill());
             return registry;
         }
     }

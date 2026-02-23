@@ -18,7 +18,9 @@ namespace RevitChat.Services
             "apply_parameter_formula", "transfer_parameters", "batch_update_parameters",
             "place_family_instance", "load_family",
             "add_project_parameter", "override_element_color",
-            "override_category_color", "override_color_by_filter"
+            "override_category_color", "override_color_by_filter",
+            "create_openings", "purge_unused_elements", "batch_rename_pattern",
+            "measure_distance_to_slab"
         };
 
         public static bool IsEchoResponse(string text)

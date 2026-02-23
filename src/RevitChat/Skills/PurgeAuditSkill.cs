@@ -17,7 +17,7 @@ namespace RevitChat.Skills
         protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_purgeable_elements", "find_duplicate_types", "find_unresolved_references",
-            "get_design_options", "audit_detail_levels"
+            "get_design_options", "audit_detail_levels", "purge_unused_elements"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -78,6 +78,21 @@ namespace RevitChat.Skills
                     },
                     "required": []
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("purge_unused_elements",
+                "Delete unused family types, views, or sheets that have no instances. DANGEROUS: confirm with user first. Uses get_purgeable_elements data.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "IDs of unused elements to delete" },
+                        "category": { "type": "string", "description": "Optional: auto-detect and purge all unused in this category" },
+                        "max_delete": { "type": "integer", "description": "Safety limit on deletions. Default: 50" },
+                        "dry_run": { "type": "boolean", "description": "Preview only. Default: false" }
+                    },
+                    "required": []
+                }
                 """))
         };
 
@@ -90,6 +105,7 @@ namespace RevitChat.Skills
                 "find_unresolved_references" => FindUnresolvedReferences(doc),
                 "get_design_options" => GetDesignOptions(doc),
                 "audit_detail_levels" => AuditDetailLevels(doc, args),
+                "purge_unused_elements" => PurgeUnusedElements(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -306,6 +322,105 @@ namespace RevitChat.Skills
             {
                 total_views = views.Count,
                 by_detail_level = grouped
+            }, JsonOpts);
+        }
+
+        private string PurgeUnusedElements(Document doc, Dictionary<string, object> args)
+        {
+            var explicitIds = GetArgLongArray(args, "element_ids");
+            var catFilter = GetArg<string>(args, "category");
+            int maxDelete = Math.Max(1, GetArg(args, "max_delete", 50));
+            bool dryRun = GetArg(args, "dry_run", false);
+
+            var toDelete = new List<ElementId>();
+
+            if (explicitIds != null && explicitIds.Count > 0)
+            {
+                foreach (var id in explicitIds)
+                {
+                    var elem = doc.GetElement(new ElementId(id));
+                    if (elem == null) continue;
+                    if (elem is FamilySymbol || elem is ViewFamilyType || elem is GraphicsStyle)
+                        toDelete.Add(new ElementId(id));
+                }
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(catFilter))
+                    return JsonError("Provide element_ids or category to purge.");
+
+                var symbols = new FilteredElementCollector(doc)
+                    .OfClass(typeof(FamilySymbol))
+                    .WhereElementIsElementType()
+                    .ToElements();
+
+                foreach (var sym in symbols)
+                {
+                    if (sym.Category == null ||
+                        !sym.Category.Name.Equals(catFilter, StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    var instances = new FilteredElementCollector(doc)
+                        .WhereElementIsNotElementType()
+                        .WherePasses(new FamilyInstanceFilter(doc, sym.Id))
+                        .GetElementCount();
+
+                    if (instances == 0)
+                        toDelete.Add(sym.Id);
+                }
+            }
+
+            if (toDelete.Count == 0)
+                return JsonError("No purgeable elements found.");
+
+            if (toDelete.Count > maxDelete)
+                toDelete = toDelete.Take(maxDelete).ToList();
+
+            if (dryRun)
+            {
+                var preview = toDelete.Select(id =>
+                {
+                    var e = doc.GetElement(id);
+                    return new { id = id.Value, name = e?.Name ?? "-", category = e?.Category?.Name ?? "-" };
+                });
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    would_delete = toDelete.Count,
+                    elements = preview
+                }, JsonOpts);
+            }
+
+            int deleted = 0;
+            var errors = new List<string>();
+
+            using (var trans = new Transaction(doc, "AI: Purge Unused Elements"))
+            {
+                trans.SetFailureHandlingOptions(trans.GetFailureHandlingOptions()
+                    .SetFailuresPreprocessor(new SilentFailureProcessor()));
+                trans.Start();
+
+                foreach (var id in toDelete)
+                {
+                    try
+                    {
+                        doc.Delete(id);
+                        deleted++;
+                    }
+                    catch (Exception ex)
+                    {
+                        errors.Add($"{id.Value}: {ex.Message}");
+                    }
+                }
+
+                if (deleted > 0) trans.Commit(); else trans.RollBack();
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                deleted,
+                failed = errors.Count,
+                errors = errors.Take(10)
             }, JsonOpts);
         }
     }

@@ -114,10 +114,13 @@ namespace RevitChat.Skills
             return new List<string>();
         }
 
-        protected static string RunInTransaction(Document doc, string transactionName, Action action)
+        protected static string RunInTransaction(Document doc, string transactionName, Action action, bool suppressWarnings = false)
         {
             using (var t = new Transaction(doc, transactionName))
             {
+                if (suppressWarnings)
+                    t.SetFailureHandlingOptions(t.GetFailureHandlingOptions()
+                        .SetFailuresPreprocessor(new SilentFailureProcessor()));
                 t.Start();
                 try
                 {
@@ -133,10 +136,13 @@ namespace RevitChat.Skills
             }
         }
 
-        protected static string RunInTransaction(Document doc, string transactionName, Func<string> action)
+        protected static string RunInTransaction(Document doc, string transactionName, Func<string> action, bool suppressWarnings = false)
         {
             using (var t = new Transaction(doc, transactionName))
             {
+                if (suppressWarnings)
+                    t.SetFailureHandlingOptions(t.GetFailureHandlingOptions()
+                        .SetFailuresPreprocessor(new SilentFailureProcessor()));
                 t.Start();
                 try
                 {
@@ -149,6 +155,31 @@ namespace RevitChat.Skills
                     if (t.HasStarted()) t.RollBack();
                     return $"Error: {ex.Message}";
                 }
+            }
+        }
+
+        internal sealed class SilentFailureProcessor : IFailuresPreprocessor
+        {
+            public FailureProcessingResult PreprocessFailures(FailuresAccessor fa)
+            {
+                foreach (var msg in fa.GetFailureMessages())
+                {
+                    var severity = msg.GetSeverity();
+                    if (severity == FailureSeverity.Warning)
+                    {
+                        fa.DeleteWarning(msg);
+                    }
+                    else
+                    {
+                        try { fa.ResolveFailure(msg); }
+                        catch
+                        {
+                            if (severity == FailureSeverity.Warning)
+                                fa.DeleteWarning(msg);
+                        }
+                    }
+                }
+                return FailureProcessingResult.Continue;
             }
         }
     }

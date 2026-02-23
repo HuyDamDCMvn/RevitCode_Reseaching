@@ -26,7 +26,7 @@ namespace RevitChat.Skills
             "isolate_by_level", "hide_by_level", "override_color_by_level",
             "isolate_by_filter", "override_color_by_filter",
             "create_3d_view", "create_3d_view_by_system",
-            "create_section_box"
+            "create_section_box", "create_section_view"
         };
 
         private static readonly Dictionary<string, (byte R, byte G, byte B)> NamedColors = new(StringComparer.OrdinalIgnoreCase)
@@ -349,6 +349,23 @@ namespace RevitChat.Skills
                     },
                     "required": ["element_ids"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("create_section_view",
+                "Create a 2D section view cutting through specified elements. Orientation can be along element direction or custom.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to frame in the section" },
+                        "section_name": { "type": "string", "description": "Name for the new section view" },
+                        "direction": { "type": "string", "enum": ["auto", "along_x", "along_y"], "description": "Cut direction. 'auto' detects from element orientation. Default: auto" },
+                        "depth_feet": { "type": "number", "description": "View depth in feet. Default: 5.0" },
+                        "offset_feet": { "type": "number", "description": "Offset behind cut plane in feet. Default: 2.0" },
+                        "padding_feet": { "type": "number", "description": "Padding around elements. Default: 1.0" }
+                    },
+                    "required": ["element_ids"]
+                }
                 """))
         };
 
@@ -382,6 +399,7 @@ namespace RevitChat.Skills
                 "create_3d_view" => Create3DView(uidoc, doc, args),
                 "create_3d_view_by_system" => Create3DViewBySystem(uidoc, doc, args),
                 "create_section_box" => CreateSectionBox(uidoc, doc, args),
+                "create_section_view" => CreateSectionView(uidoc, doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -1686,6 +1704,129 @@ namespace RevitChat.Skills
                     max = new { x = Math.Round(combined.Max.X, 2), y = Math.Round(combined.Max.Y, 2), z = Math.Round(combined.Max.Z, 2) }
                 },
                 message = $"Section box created around {found} element(s) in '{targetView.Name}'."
+            }, JsonOpts);
+        }
+
+        #endregion
+
+        #region Section View
+
+        private string CreateSectionView(UIDocument uidoc, Document doc, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "element_ids");
+            if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+
+            var sectionName = GetArg(args, "section_name", $"AI Section {DateTime.Now:HHmmss}");
+            var direction = GetArg(args, "direction", "auto").ToLower();
+            double depthFt = GetArg(args, "depth_feet", 5.0);
+            double offsetFt = GetArg(args, "offset_feet", 2.0);
+            double padFt = GetArg(args, "padding_feet", 1.0);
+
+            XYZ minPt = null, maxPt = null;
+            int found = 0;
+
+            foreach (var id in ids)
+            {
+                var elem = doc.GetElement(new ElementId(id));
+                if (elem == null) continue;
+                var bb = elem.get_BoundingBox(null);
+                if (bb == null) continue;
+                found++;
+                if (minPt == null)
+                {
+                    minPt = bb.Min;
+                    maxPt = bb.Max;
+                }
+                else
+                {
+                    minPt = new XYZ(
+                        Math.Min(minPt.X, bb.Min.X),
+                        Math.Min(minPt.Y, bb.Min.Y),
+                        Math.Min(minPt.Z, bb.Min.Z));
+                    maxPt = new XYZ(
+                        Math.Max(maxPt.X, bb.Max.X),
+                        Math.Max(maxPt.Y, bb.Max.Y),
+                        Math.Max(maxPt.Z, bb.Max.Z));
+                }
+            }
+
+            if (minPt == null) return JsonError("No valid bounding boxes found.");
+
+            var center = new XYZ(
+                (minPt.X + maxPt.X) / 2,
+                (minPt.Y + maxPt.Y) / 2,
+                (minPt.Z + maxPt.Z) / 2);
+
+            double dx = Math.Max(maxPt.X - minPt.X, 0.5);
+            double dy = Math.Max(maxPt.Y - minPt.Y, 0.5);
+            double dz = Math.Max(maxPt.Z - minPt.Z, 0.5);
+            double halfWidth, halfHeight;
+
+            XYZ viewDir, upDir;
+            if (direction == "along_x")
+            {
+                viewDir = XYZ.BasisX;
+                upDir = XYZ.BasisZ;
+                halfWidth = (dy / 2) + padFt;
+                halfHeight = (dz / 2) + padFt;
+            }
+            else if (direction == "along_y")
+            {
+                viewDir = XYZ.BasisY;
+                upDir = XYZ.BasisZ;
+                halfWidth = (dx / 2) + padFt;
+                halfHeight = (dz / 2) + padFt;
+            }
+            else
+            {
+                viewDir = dx >= dy ? XYZ.BasisY : XYZ.BasisX;
+                upDir = XYZ.BasisZ;
+                halfWidth = (Math.Max(dx, dy) / 2) + padFt;
+                halfHeight = (dz / 2) + padFt;
+            }
+
+            var rightDir = viewDir.CrossProduct(upDir).Normalize();
+
+            var sectionBox = new BoundingBoxXYZ();
+            var origin = center - viewDir * offsetFt;
+            var transform = Transform.CreateTranslation(XYZ.Zero);
+            transform.Origin = origin;
+            transform.set_Basis(0, rightDir);
+            transform.set_Basis(1, upDir);
+            transform.set_Basis(2, viewDir);
+            sectionBox.Transform = transform;
+            sectionBox.Min = new XYZ(-halfWidth, -halfHeight, 0);
+            sectionBox.Max = new XYZ(halfWidth, halfHeight, depthFt + offsetFt);
+
+            var sectionTypeId = new FilteredElementCollector(doc)
+                .OfClass(typeof(ViewFamilyType))
+                .Cast<ViewFamilyType>()
+                .FirstOrDefault(vft => vft.ViewFamily == ViewFamily.Section)?.Id;
+
+            if (sectionTypeId == null)
+                return JsonError("No Section view family type found.");
+
+            ViewSection sectionView;
+            using (var trans = new Transaction(doc, "AI: Create Section View"))
+            {
+                trans.Start();
+                sectionView = ViewSection.CreateSection(doc, sectionTypeId, sectionBox);
+                try { sectionView.Name = sectionName; } catch { }
+                trans.Commit();
+            }
+
+            try { uidoc.ActiveView = sectionView; } catch { }
+
+            string resolvedDir = direction != "auto" ? direction
+                : (viewDir.IsAlmostEqualTo(XYZ.BasisX) ? "along_x" : "along_y");
+
+            return JsonSerializer.Serialize(new
+            {
+                view_id = sectionView.Id.Value,
+                view_name = sectionView.Name,
+                elements_framed = found,
+                direction = resolvedDir,
+                message = $"Section view '{sectionView.Name}' created through {found} element(s)."
             }, JsonOpts);
         }
 

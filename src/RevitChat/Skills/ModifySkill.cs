@@ -21,7 +21,8 @@ namespace RevitChat.Skills
             "set_parameter_value", "delete_elements", "select_elements",
             "rename_elements", "copy_elements", "move_elements",
             "mirror_elements", "duplicate_views", "duplicate_sheets",
-            "apply_parameter_formula", "transfer_parameters", "batch_update_parameters"
+            "apply_parameter_formula", "transfer_parameters", "batch_update_parameters",
+            "batch_rename_pattern"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -211,6 +212,25 @@ namespace RevitChat.Skills
                     },
                     "required": ["updates"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("batch_rename_pattern",
+                "Rename multiple elements using patterns: numbering, prefix/suffix, find-replace, regex. Confirm with user first.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Elements to rename" },
+                        "pattern": { "type": "string", "description": "Name pattern. Use {n} for number, {name} for current name, {cat} for category, {lvl} for level. Example: 'DUCT-{n:000}'" },
+                        "find": { "type": "string", "description": "Text to find (for find-replace mode)" },
+                        "replace_with": { "type": "string", "description": "Replacement text (for find-replace mode)" },
+                        "use_regex": { "type": "boolean", "description": "Treat 'find' as regex. Default: false" },
+                        "start_number": { "type": "integer", "description": "Starting number for {n}. Default: 1" },
+                        "param_name": { "type": "string", "description": "Parameter to rename. Default: element Name if writable, else 'Mark'" },
+                        "dry_run": { "type": "boolean", "description": "Preview only. Default: false" }
+                    },
+                    "required": ["element_ids"]
+                }
                 """))
         };
 
@@ -230,6 +250,7 @@ namespace RevitChat.Skills
                 "apply_parameter_formula" => ApplyParameterFormula(doc, args),
                 "transfer_parameters" => TransferParameters(doc, args),
                 "batch_update_parameters" => BatchUpdateParameters(doc, args),
+                "batch_rename_pattern" => BatchRenamePattern(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -1025,6 +1046,123 @@ namespace RevitChat.Skills
                 }
             }
             catch { return false; }
+        }
+
+        private string BatchRenamePattern(Document doc, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "element_ids");
+            if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+
+            var pattern = GetArg<string>(args, "pattern");
+            var find = GetArg<string>(args, "find");
+            var replaceWith = GetArg(args, "replace_with", "");
+            bool useRegex = GetArg(args, "use_regex", false);
+            int startNum = GetArg(args, "start_number", 1);
+            var paramName = GetArg<string>(args, "param_name");
+            bool dryRun = GetArg(args, "dry_run", false);
+
+            bool isFindReplace = !string.IsNullOrEmpty(find);
+            bool isPattern = !string.IsNullOrEmpty(pattern);
+            if (!isFindReplace && !isPattern)
+                return JsonError("Provide 'pattern' for pattern-based rename OR 'find'+'replace_with' for find-replace.");
+
+            var results = new List<object>();
+            int counter = startNum;
+
+            if (dryRun)
+            {
+                foreach (var id in ids)
+                {
+                    var elem = doc.GetElement(new ElementId(id));
+                    if (elem == null) continue;
+                    string current = GetWritableName(elem, paramName);
+                    string newName = ComputeNewName(elem, doc, current, pattern, find, replaceWith, useRegex, counter++);
+                    results.Add(new { id, current_name = current, new_name = newName });
+                }
+                return JsonSerializer.Serialize(new { dry_run = true, count = results.Count, results }, JsonOpts);
+            }
+
+            var errors = new List<string>();
+            using (var trans = new Transaction(doc, "AI: Batch Rename"))
+            {
+                trans.Start();
+                foreach (var id in ids)
+                {
+                    try
+                    {
+                        var elem = doc.GetElement(new ElementId(id));
+                        if (elem == null) { errors.Add($"{id}: not found"); continue; }
+
+                        string current = GetWritableName(elem, paramName);
+                        string newName = ComputeNewName(elem, doc, current, pattern, find, replaceWith, useRegex, counter++);
+
+                        if (!SetWritableName(elem, paramName, newName))
+                            errors.Add($"{id}: could not set name");
+                        else
+                            results.Add(new { id, old_name = current, new_name = newName });
+                    }
+                    catch (Exception ex) { errors.Add($"{id}: {ex.Message}"); }
+                }
+                if (results.Count > 0) trans.Commit(); else trans.RollBack();
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                renamed = results.Count,
+                failed = errors.Count,
+                results = results.Take(20),
+                errors = errors.Take(10)
+            }, JsonOpts);
+        }
+
+        private static string ComputeNewName(Element elem, Document doc, string current, string pattern,
+            string find, string replaceWith, bool useRegex, int counter)
+        {
+            if (!string.IsNullOrEmpty(find))
+            {
+                return useRegex
+                    ? Regex.Replace(current ?? "", find, replaceWith ?? "")
+                    : (current ?? "").Replace(find, replaceWith ?? "");
+            }
+
+            var name = pattern;
+            name = Regex.Replace(name, @"\{n(?::([^}]+))?\}", m =>
+            {
+                var fmt = m.Groups[1].Success ? m.Groups[1].Value : "0";
+                try { return counter.ToString(fmt); }
+                catch { return counter.ToString(); }
+            });
+            name = name.Replace("{name}", current ?? "");
+            name = name.Replace("{cat}", elem.Category?.Name ?? "");
+            name = name.Replace("{lvl}", GetElementLevel(doc, elem));
+            name = name.Replace("{id}", elem.Id.Value.ToString());
+            return name;
+        }
+
+        private static string GetWritableName(Element elem, string paramName)
+        {
+            if (!string.IsNullOrEmpty(paramName))
+            {
+                var p = elem.LookupParameter(paramName);
+                if (p != null) return p.AsString() ?? p.AsValueString() ?? "";
+            }
+            try { return elem.Name ?? ""; } catch { return ""; }
+        }
+
+        private static bool SetWritableName(Element elem, string paramName, string value)
+        {
+            if (!string.IsNullOrEmpty(paramName))
+            {
+                var p = elem.LookupParameter(paramName);
+                if (p != null && !p.IsReadOnly && p.StorageType == StorageType.String)
+                { p.Set(value); return true; }
+            }
+
+            try { elem.Name = value; return true; } catch { }
+
+            var mark = elem.get_Parameter(BuiltInParameter.ALL_MODEL_MARK);
+            if (mark != null && !mark.IsReadOnly) { mark.Set(value); return true; }
+            return false;
         }
     }
 }

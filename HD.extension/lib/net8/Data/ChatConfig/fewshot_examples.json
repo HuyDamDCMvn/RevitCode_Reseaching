@@ -1979,5 +1979,77 @@
   {
     "keywords": ["section box", "zoom", "3d", "focus"],
     "example": "User: create section box around elements 500,600 with 2 feet padding\nAssistant:\n<tool_call>\n{\"name\": \"create_section_box\", \"arguments\": {\"element_ids\": [500, 600], \"padding_feet\": 2.0}}\n</tool_call>"
+  },
+  {
+    "keywords": ["opening", "lỗ", "xuyên", "penetration", "intersection"],
+    "example": "User: tìm các ống xuyên tường\nAssistant:\n<tool_call>\n{\"name\": \"detect_mep_intersections\", \"arguments\": {\"host_category\": \"walls\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["opening", "create", "tạo lỗ", "lỗ mở"],
+    "example": "User: tạo lỗ mở cho các chỗ ống xuyên tường với clearance 75mm\nAssistant: Tôi sẽ tìm các điểm giao cắt trước.\n<tool_call>\n{\"name\": \"detect_mep_intersections\", \"arguments\": {\"host_category\": \"walls\", \"clearance_mm\": 75}}\n</tool_call>"
+  },
+  {
+    "keywords": ["opening", "duct", "floor", "xuyên sàn"],
+    "example": "User: detect duct penetrations through floors\nAssistant:\n<tool_call>\n{\"name\": \"detect_mep_intersections\", \"arguments\": {\"host_category\": \"floors\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["create opening", "tạo lỗ", "opening result"],
+    "example": "User: tạo lỗ mở cho các điểm giao cắt vừa tìm được\nAssistant:\n<tool_call>\n{\"name\": \"create_openings\", \"arguments\": {\"intersections\": [{\"mep_id\": 100, \"host_id\": 200, \"width_mm\": 300, \"height_mm\": 300}], \"dry_run\": true}}\n</tool_call>"
+  },
+  {
+    "keywords": ["distance", "slab", "khoảng cách", "sàn", "floor"],
+    "example": "User: đo khoảng cách từ ống 100,200,300 đến sàn phía dưới\nAssistant:\n<tool_call>\n{\"name\": \"measure_distance_to_slab\", \"arguments\": {\"element_ids\": [100, 200, 300], \"direction\": \"down\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["distance", "ceiling", "trần", "above"],
+    "example": "User: measure distance from ducts 500,600 to ceiling above\nAssistant:\n<tool_call>\n{\"name\": \"measure_distance_to_slab\", \"arguments\": {\"element_ids\": [500, 600], \"direction\": \"up\", \"target_category\": \"ceilings\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["distance", "write", "ghi", "parameter"],
+    "example": "User: đo khoảng cách đến sàn và ghi vào parameter 'Bottom Distance'\nAssistant:\n<tool_call>\n{\"name\": \"measure_distance_to_slab\", \"arguments\": {\"element_ids\": [100, 200], \"direction\": \"down\", \"write_parameter\": \"Bottom Distance\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["section view", "mặt cắt", "create section"],
+    "example": "User: tạo mặt cắt qua element 100, 200\nAssistant:\n<tool_call>\n{\"name\": \"create_section_view\", \"arguments\": {\"element_ids\": [100, 200], \"section_name\": \"Section - Elements\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["section", "along", "direction"],
+    "example": "User: create section view along Y axis through elements 300,400\nAssistant:\n<tool_call>\n{\"name\": \"create_section_view\", \"arguments\": {\"element_ids\": [300, 400], \"direction\": \"along_y\", \"depth_feet\": 5}}\n</tool_call>"
+  },
+  {
+    "keywords": ["rename", "pattern", "đánh số", "numbering"],
+    "example": "User: đánh số lại các duct 100,200,300 theo mẫu DUCT-001, DUCT-002...\nAssistant:\n<tool_call>\n{\"name\": \"batch_rename_pattern\", \"arguments\": {\"element_ids\": [100, 200, 300], \"pattern\": \"DUCT-{n:000}\", \"param_name\": \"Mark\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["rename", "find replace", "tìm thay"],
+    "example": "User: replace 'OLD' with 'NEW' in names of elements 100,200,300\nAssistant:\n<tool_call>\n{\"name\": \"batch_rename_pattern\", \"arguments\": {\"element_ids\": [100, 200, 300], \"find\": \"OLD\", \"replace_with\": \"NEW\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["rename", "prefix", "suffix", "regex"],
+    "example": "User: đổi tên các view 100,200 theo mẫu Level-{lvl}-{name}\nAssistant:\n<tool_call>\n{\"name\": \"batch_rename_pattern\", \"arguments\": {\"element_ids\": [100, 200], \"pattern\": \"Level-{lvl}-{name}\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["purge", "delete unused", "xóa không dùng", "dọn dẹp"],
+    "example": "User: xóa tất cả family types không dùng trong category Ducts\nAssistant:\n<tool_call>\n{\"name\": \"purge_unused_elements\", \"arguments\": {\"category\": \"Ducts\", \"dry_run\": true}}\n</tool_call>"
+  },
+  {
+    "keywords": ["purge", "unused", "clean"],
+    "example": "User: purge unused elements with IDs 100,200,300\nAssistant:\n<tool_call>\n{\"name\": \"purge_unused_elements\", \"arguments\": {\"element_ids\": [100, 200, 300]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["grid", "bubble", "đầu grid", "show hide"],
+    "example": "User: ẩn đầu grid ở đầu start cho tất cả grid\nAssistant:\n<tool_call>\n{\"name\": \"toggle_grid_bubbles\", \"arguments\": {\"end\": \"start\", \"action\": \"hide\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["grid", "2d", "3d", "mode", "extent"],
+    "example": "User: chuyển tất cả grid sang 2D mode\nAssistant:\n<tool_call>\n{\"name\": \"set_grid_mode\", \"arguments\": {\"mode\": \"2d\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["grid", "bubble", "toggle"],
+    "example": "User: toggle grid bubbles for grids 100,200 at both ends\nAssistant:\n<tool_call>\n{\"name\": \"toggle_grid_bubbles\", \"arguments\": {\"grid_ids\": [100, 200], \"end\": \"both\", \"action\": \"toggle\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["grid", "3d", "model extent"],
+    "example": "User: switch grids 100,200 to 3D model extent\nAssistant:\n<tool_call>\n{\"name\": \"set_grid_mode\", \"arguments\": {\"grid_ids\": [100, 200], \"mode\": \"3d\"}}\n</tool_call>"
   }
 ]

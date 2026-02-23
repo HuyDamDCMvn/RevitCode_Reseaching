@@ -123,7 +123,23 @@
     "empty",
     "trống",
     "trùng",
-    "duplicate value"
+    "duplicate value",
+    "opening",
+    "lỗ",
+    "xuyên",
+    "penetration",
+    "distance",
+    "khoảng cách",
+    "slab",
+    "sàn",
+    "section view",
+    "mặt cắt",
+    "rename pattern",
+    "đánh số",
+    "purge",
+    "dọn dẹp",
+    "grid bubble",
+    "đầu grid"
   ],
   "groups": [
     {
@@ -170,8 +186,8 @@
     },
     {
       "name": "3D View / Create View",
-      "keywords": ["3d", "3d view", "tạo view", "create view", "tạo 3d", "view by system", "đặt tên view", "isometric", "section box", "hộp cắt"],
-      "tools": ["create_3d_view", "create_3d_view_by_system", "duplicate_views", "create_section_box"],
+      "keywords": ["3d", "3d view", "tạo view", "create view", "tạo 3d", "view by system", "đặt tên view", "isometric", "section box", "hộp cắt", "section view", "mặt cắt"],
+      "tools": ["create_3d_view", "create_3d_view_by_system", "duplicate_views", "create_section_box", "create_section_view"],
       "weight": 1
     },
     {
@@ -242,8 +258,8 @@
     },
     {
       "name": "Health / Purge",
-      "keywords": ["warning", "health", "purge", "unused", "cảnh báo", "không dùng", "detail level", "design option", "unresolved"],
-      "tools": ["get_model_warnings", "get_warning_elements", "get_model_statistics", "find_imported_cad", "find_inplace_families", "find_unused_families", "get_purgeable_elements", "find_duplicate_types", "find_unresolved_references", "get_design_options", "audit_detail_levels"],
+      "keywords": ["warning", "health", "purge", "unused", "cảnh báo", "không dùng", "detail level", "design option", "unresolved", "dọn dẹp", "xóa không dùng"],
+      "tools": ["get_model_warnings", "get_warning_elements", "get_model_statistics", "find_imported_cad", "find_inplace_families", "find_unused_families", "get_purgeable_elements", "find_duplicate_types", "find_unresolved_references", "get_design_options", "audit_detail_levels", "purge_unused_elements"],
       "weight": 1
     },
     {
@@ -254,8 +270,8 @@
     },
     {
       "name": "Grid",
-      "keywords": ["grid", "lưới"],
-      "tools": ["get_grids", "check_grid_alignment", "create_grid", "find_off_axis_elements"],
+      "keywords": ["grid", "lưới", "grid bubble", "đầu grid", "grid 2d", "grid 3d"],
+      "tools": ["get_grids", "check_grid_alignment", "create_grid", "find_off_axis_elements", "toggle_grid_bubbles", "set_grid_mode"],
       "weight": 1
     },
     {
@@ -322,6 +338,24 @@
       "name": "Selection",
       "keywords": ["selection", "selected", "đang chọn", "đã chọn", "currently selected"],
       "tools": ["get_current_selection"],
+      "weight": 1
+    },
+    {
+      "name": "Opening / Penetration",
+      "keywords": ["opening", "penetration", "xuyên", "lỗ mở", "lỗ xuyên", "tạo lỗ", "mở lỗ", "qua tường", "qua sàn"],
+      "tools": ["detect_mep_intersections", "create_openings"],
+      "weight": 2
+    },
+    {
+      "name": "MEP Distance / Slab",
+      "keywords": ["distance", "slab", "floor distance", "khoảng cách", "khoảng cách sàn", "cách sàn", "dưới sàn", "trên sàn", "bottom slab", "raycast"],
+      "tools": ["measure_distance_to_slab"],
+      "weight": 1
+    },
+    {
+      "name": "Batch Rename",
+      "keywords": ["rename pattern", "đánh số", "batch rename", "đổi tên hàng loạt", "numbering", "prefix", "suffix", "regex rename"],
+      "tools": ["batch_rename_pattern"],
       "weight": 1
     }
   ]
