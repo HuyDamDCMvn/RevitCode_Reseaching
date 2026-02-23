@@ -1919,5 +1919,65 @@
   {
     "keywords": ["tag", "all", "view", "tag type", "format"],
     "example": "User: tag all pipes in view with DN format\nAssistant:\nI'll first check what tag types are available for pipes.\n<tool_call>\n{\"name\": \"get_available_tag_types\", \"arguments\": {\"category\": \"Pipes\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["formula", "công thức", "multiply", "nhân", "*2"],
+    "example": "User: nhân đôi giá trị Mark của các element 100, 200\nAssistant:\n<tool_call>\n{\"name\": \"apply_parameter_formula\", \"arguments\": {\"element_ids\": [100, 200], \"param_name\": \"Mark\", \"formula\": \"*2\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["formula", "prefix", "thêm tiền tố"],
+    "example": "User: add prefix 'MEP_' to Comments of elements 100,200,300\nAssistant:\n<tool_call>\n{\"name\": \"apply_parameter_formula\", \"arguments\": {\"element_ids\": [100, 200, 300], \"param_name\": \"Comments\", \"formula\": \"MEP_\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["formula", "upper", "uppercase", "viết hoa"],
+    "example": "User: viết hoa tất cả giá trị Mark của elements 100,200\nAssistant:\n<tool_call>\n{\"name\": \"apply_parameter_formula\", \"arguments\": {\"element_ids\": [100, 200], \"param_name\": \"Mark\", \"formula\": \"{UPPER}\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["formula", "round", "làm tròn"],
+    "example": "User: round Length parameter to 2 decimal places for elements 100,200\nAssistant:\n<tool_call>\n{\"name\": \"apply_parameter_formula\", \"arguments\": {\"element_ids\": [100, 200], \"param_name\": \"Length\", \"formula\": \"{ROUND:2}\", \"dry_run\": true}}\n</tool_call>"
+  },
+  {
+    "keywords": ["compare", "so sánh", "parameter", "tham số", "two", "hai"],
+    "example": "User: so sánh tham số giữa element 100 và 200\nAssistant:\n<tool_call>\n{\"name\": \"compare_element_parameters\", \"arguments\": {\"element_id_1\": 100, \"element_id_2\": 200}}\n</tool_call>"
+  },
+  {
+    "keywords": ["compare", "parameter", "element"],
+    "example": "User: compare parameters of element 5000 and element 6000\nAssistant:\n<tool_call>\n{\"name\": \"compare_element_parameters\", \"arguments\": {\"element_id_1\": 5000, \"element_id_2\": 6000}}\n</tool_call>"
+  },
+  {
+    "keywords": ["empty", "trống", "missing", "thiếu", "parameter"],
+    "example": "User: tìm element nào thiếu Mark và Comments trong danh sách 100,200,300,400\nAssistant:\n<tool_call>\n{\"name\": \"find_empty_parameters\", \"arguments\": {\"element_ids\": [100, 200, 300, 400], \"param_names\": [\"Mark\", \"Comments\"]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["empty", "parameter", "check"],
+    "example": "User: which elements have empty Mark parameter among 100-105?\nAssistant:\n<tool_call>\n{\"name\": \"find_empty_parameters\", \"arguments\": {\"element_ids\": [100, 101, 102, 103, 104, 105], \"param_names\": [\"Mark\"]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["duplicate", "trùng", "same value", "giống"],
+    "example": "User: tìm các pipe có Mark trùng nhau trong danh sách 100,200,300,400,500\nAssistant:\n<tool_call>\n{\"name\": \"find_duplicate_values\", \"arguments\": {\"element_ids\": [100, 200, 300, 400, 500], \"param_name\": \"Mark\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["duplicate", "value", "parameter"],
+    "example": "User: find elements with duplicate Comments among 100,200,300\nAssistant:\n<tool_call>\n{\"name\": \"find_duplicate_values\", \"arguments\": {\"element_ids\": [100, 200, 300], \"param_name\": \"Comments\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["transfer", "copy", "chuyển", "tham số", "parameter"],
+    "example": "User: copy Mark and Comments from element 100 to elements 200, 300\nAssistant:\n<tool_call>\n{\"name\": \"transfer_parameters\", \"arguments\": {\"source_element_id\": 100, \"target_element_ids\": [200, 300], \"param_names\": [\"Mark\", \"Comments\"]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["transfer", "parameter", "chuyển tham số"],
+    "example": "User: chuyển tham số Mark, Comments từ element 999 sang 100,200\nAssistant:\n<tool_call>\n{\"name\": \"transfer_parameters\", \"arguments\": {\"source_element_id\": 999, \"target_element_ids\": [100, 200], \"param_names\": [\"Mark\", \"Comments\"]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["batch", "update", "nhiều giá trị"],
+    "example": "User: set Mark=A for element 100, Mark=B for element 200, Mark=C for element 300\nAssistant:\n<tool_call>\n{\"name\": \"batch_update_parameters\", \"arguments\": {\"updates\": [{\"element_id\": 100, \"param_name\": \"Mark\", \"value\": \"A\"}, {\"element_id\": 200, \"param_name\": \"Mark\", \"value\": \"B\"}, {\"element_id\": 300, \"param_name\": \"Mark\", \"value\": \"C\"}]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["section box", "hộp cắt", "frame", "khoanh vùng"],
+    "example": "User: tạo section box quanh element 100, 200, 300\nAssistant:\n<tool_call>\n{\"name\": \"create_section_box\", \"arguments\": {\"element_ids\": [100, 200, 300]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["section box", "zoom", "3d", "focus"],
+    "example": "User: create section box around elements 500,600 with 2 feet padding\nAssistant:\n<tool_call>\n{\"name\": \"create_section_box\", \"arguments\": {\"element_ids\": [500, 600], \"padding_feet\": 2.0}}\n</tool_call>"
   }
 ]

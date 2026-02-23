@@ -15,6 +15,7 @@ namespace RevitChat.Services
             "move_elements", "copy_elements", "mirror_elements",
             "duplicate_views", "duplicate_sheets", "resize_mep_elements",
             "split_mep_elements", "delete_levels", "create_level",
+            "apply_parameter_formula", "transfer_parameters", "batch_update_parameters",
             "place_family_instance", "load_family",
             "add_project_parameter", "override_element_color",
             "override_category_color", "override_color_by_filter"

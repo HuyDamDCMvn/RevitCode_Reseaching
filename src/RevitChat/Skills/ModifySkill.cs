@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using OpenAI.Chat;
@@ -19,7 +20,8 @@ namespace RevitChat.Skills
         {
             "set_parameter_value", "delete_elements", "select_elements",
             "rename_elements", "copy_elements", "move_elements",
-            "mirror_elements", "duplicate_views", "duplicate_sheets"
+            "mirror_elements", "duplicate_views", "duplicate_sheets",
+            "apply_parameter_formula", "transfer_parameters", "batch_update_parameters"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -154,6 +156,61 @@ namespace RevitChat.Skills
                     },
                     "required": ["sheet_ids"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("apply_parameter_formula",
+                "Apply a formula to modify parameter values on elements. Supports: +10, -5, *2, /1.5, {ROUND:2}, prefix_, _suffix, {UPPER}, {LOWER}, {TRIM}, {REPLACE:old:new}, {REGEX:pattern:replacement}, {SUB:start:length}. Confirm with user first.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to update" },
+                        "param_name": { "type": "string", "description": "Parameter name" },
+                        "formula": { "type": "string", "description": "Formula: +10, -5, *2, /1.5, {ROUND:2}, prefix_, _suffix, {UPPER}, {LOWER}, {REPLACE:old:new}" },
+                        "dry_run": { "type": "boolean", "description": "Preview only. Default false." }
+                    },
+                    "required": ["element_ids", "param_name", "formula"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("transfer_parameters",
+                "Copy parameter values from a source element to target elements. Confirm with user first.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "source_element_id": { "type": "integer", "description": "Element to copy values FROM" },
+                        "target_element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Elements to copy values TO" },
+                        "param_names": { "type": "array", "items": { "type": "string" }, "description": "Parameter names to copy" },
+                        "dry_run": { "type": "boolean", "description": "Preview only. Default false." }
+                    },
+                    "required": ["source_element_id", "target_element_ids", "param_names"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("batch_update_parameters",
+                "Update different parameter values on different elements in one transaction. Confirm with user first.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "updates": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "element_id": { "type": "integer" },
+                                    "param_name": { "type": "string" },
+                                    "value": { "type": "string" }
+                                },
+                                "required": ["element_id", "param_name", "value"]
+                            },
+                            "description": "List of per-element parameter updates"
+                        },
+                        "dry_run": { "type": "boolean", "description": "Preview only. Default false." }
+                    },
+                    "required": ["updates"]
+                }
                 """))
         };
 
@@ -170,6 +227,9 @@ namespace RevitChat.Skills
                 "mirror_elements" => MirrorElements(doc, args),
                 "duplicate_views" => DuplicateViews(doc, args),
                 "duplicate_sheets" => DuplicateSheets(doc, args),
+                "apply_parameter_formula" => ApplyParameterFormula(doc, args),
+                "transfer_parameters" => TransferParameters(doc, args),
+                "batch_update_parameters" => BatchUpdateParameters(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -713,6 +773,227 @@ namespace RevitChat.Skills
 
             return JsonSerializer.Serialize(new { duplicated = success, sheets = results, errors = errors.Take(10) }, JsonOpts);
         }
+
+        #region apply_parameter_formula
+
+        private string ApplyParameterFormula(Document doc, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "element_ids");
+            var paramName = GetArg<string>(args, "param_name");
+            var formula = GetArg<string>(args, "formula");
+            bool dryRun = GetArg(args, "dry_run", false);
+
+            if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+            if (string.IsNullOrEmpty(paramName)) return JsonError("param_name required.");
+            if (string.IsNullOrEmpty(formula)) return JsonError("formula required.");
+
+            if (dryRun)
+            {
+                var preview = new List<object>();
+                int wouldChange = 0;
+                foreach (var id in ids.Take(30))
+                {
+                    var elem = doc.GetElement(new ElementId(id));
+                    if (elem == null) continue;
+                    var param = elem.LookupParameter(paramName);
+                    if (param == null || param.IsReadOnly) continue;
+                    var current = GetParameterValueAsString(doc, param);
+                    var storageType = param.StorageType == StorageType.Double ? "Double"
+                        : param.StorageType == StorageType.Integer ? "Integer" : "String";
+                    var newVal = ApplyFormula(formula, current, storageType);
+                    if (newVal != current) wouldChange++;
+                    preview.Add(new { id, from = current, to = newVal });
+                }
+                return JsonSerializer.Serialize(new { dry_run = true, formula, would_change = wouldChange, preview }, JsonOpts);
+            }
+
+            int success = 0;
+            var errors = new List<string>();
+            using (var trans = new Transaction(doc, "AI: Apply Formula"))
+            {
+                trans.Start();
+                foreach (var id in ids)
+                {
+                    var elem = doc.GetElement(new ElementId(id));
+                    if (elem == null) { errors.Add($"Element {id} not found"); continue; }
+                    var param = elem.LookupParameter(paramName);
+                    if (param == null) { errors.Add($"Param '{paramName}' not found on {id}"); continue; }
+                    if (param.IsReadOnly) { errors.Add($"Param '{paramName}' read-only on {id}"); continue; }
+                    var current = GetParameterValueAsString(doc, param);
+                    var storageType = param.StorageType == StorageType.Double ? "Double"
+                        : param.StorageType == StorageType.Integer ? "Integer" : "String";
+                    var newVal = ApplyFormula(formula, current, storageType);
+                    if (SetParamValue(param, newVal)) success++;
+                    else errors.Add($"Failed on {id}");
+                }
+                if (success > 0) trans.Commit(); else trans.RollBack();
+            }
+            return JsonSerializer.Serialize(new { success, formula, errors = errors.Take(10) }, JsonOpts);
+        }
+
+        private static string ApplyFormula(string formula, string currentValue, string storageType)
+        {
+            if (string.IsNullOrEmpty(formula)) return currentValue;
+            formula = formula.Trim();
+            bool isNumeric = storageType is "Double" or "Integer";
+
+            if (isNumeric && double.TryParse(currentValue, NumberStyles.Any, CultureInfo.InvariantCulture, out double numValue))
+            {
+                if (Regex.IsMatch(formula, @"^\+\d+(\.\d+)?$"))
+                    return FormatNum(numValue + double.Parse(formula[1..], CultureInfo.InvariantCulture), storageType);
+                if (Regex.IsMatch(formula, @"^-\d+(\.\d+)?$"))
+                    return FormatNum(numValue - double.Parse(formula[1..], CultureInfo.InvariantCulture), storageType);
+                if (Regex.IsMatch(formula, @"^\*\d+(\.\d+)?$"))
+                    return FormatNum(numValue * double.Parse(formula[1..], CultureInfo.InvariantCulture), storageType);
+                if (Regex.IsMatch(formula, @"^/\d+(\.\d+)?$"))
+                {
+                    double d = double.Parse(formula[1..], CultureInfo.InvariantCulture);
+                    return d == 0 ? currentValue : FormatNum(numValue / d, storageType);
+                }
+                var roundMatch = Regex.Match(formula, @"^\{ROUND:(\d+)\}$", RegexOptions.IgnoreCase);
+                if (roundMatch.Success)
+                    return Math.Round(numValue, int.Parse(roundMatch.Groups[1].Value)).ToString(CultureInfo.InvariantCulture);
+            }
+
+            string strValue = currentValue ?? "";
+            if (formula.EndsWith("_") && !formula.StartsWith("_")) return formula.TrimEnd('_') + strValue;
+            if (formula.StartsWith("_") && !formula.EndsWith("_")) return strValue + formula.TrimStart('_');
+            if (formula.Equals("{UPPER}", StringComparison.OrdinalIgnoreCase)) return strValue.ToUpperInvariant();
+            if (formula.Equals("{LOWER}", StringComparison.OrdinalIgnoreCase)) return strValue.ToLowerInvariant();
+            if (formula.Equals("{TRIM}", StringComparison.OrdinalIgnoreCase)) return strValue.Trim();
+
+            var replaceMatch = Regex.Match(formula, @"^\{REPLACE:(.+?):(.+?)\}$", RegexOptions.IgnoreCase);
+            if (replaceMatch.Success) return strValue.Replace(replaceMatch.Groups[1].Value, replaceMatch.Groups[2].Value);
+
+            var subMatch = Regex.Match(formula, @"^\{SUB:(\d+):(\d+)\}$", RegexOptions.IgnoreCase);
+            if (subMatch.Success)
+            {
+                int start = int.Parse(subMatch.Groups[1].Value), len = int.Parse(subMatch.Groups[2].Value);
+                return start < strValue.Length ? strValue.Substring(start, Math.Min(len, strValue.Length - start)) : "";
+            }
+
+            return formula;
+        }
+
+        private static string FormatNum(double val, string storageType)
+            => storageType == "Integer" ? ((int)val).ToString() : val.ToString(CultureInfo.InvariantCulture);
+
+        #endregion
+
+        #region transfer_parameters
+
+        private string TransferParameters(Document doc, Dictionary<string, object> args)
+        {
+            long sourceId = GetArg<long>(args, "source_element_id");
+            var targetIds = GetArgLongArray(args, "target_element_ids");
+            var paramNames = GetArgStringArray(args, "param_names");
+            bool dryRun = GetArg(args, "dry_run", false);
+
+            if (sourceId <= 0) return JsonError("source_element_id required.");
+            if (targetIds == null || targetIds.Count == 0) return JsonError("target_element_ids required.");
+            if (paramNames == null || paramNames.Count == 0) return JsonError("param_names required.");
+
+            var source = doc.GetElement(new ElementId(sourceId));
+            if (source == null) return JsonError($"Source element {sourceId} not found.");
+
+            var sourceValues = new Dictionary<string, string>();
+            foreach (var pn in paramNames)
+            {
+                var p = source.LookupParameter(pn);
+                sourceValues[pn] = p != null ? GetParameterValueAsString(doc, p) : null;
+            }
+
+            if (dryRun)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    dry_run = true,
+                    source_id = sourceId,
+                    target_count = targetIds.Count,
+                    source_values = sourceValues
+                }, JsonOpts);
+            }
+
+            int success = 0, skipped = 0;
+            var errors = new List<string>();
+            using (var trans = new Transaction(doc, "AI: Transfer Parameters"))
+            {
+                trans.Start();
+                foreach (var tid in targetIds)
+                {
+                    var target = doc.GetElement(new ElementId(tid));
+                    if (target == null) { errors.Add($"Target {tid} not found"); continue; }
+                    int paramSuccess = 0;
+                    foreach (var pn in paramNames)
+                    {
+                        if (sourceValues[pn] == null) continue;
+                        var tp = target.LookupParameter(pn);
+                        if (tp == null || tp.IsReadOnly) continue;
+                        if (SetParamValue(tp, sourceValues[pn])) paramSuccess++;
+                    }
+                    if (paramSuccess > 0) success++; else skipped++;
+                }
+                if (success > 0) trans.Commit(); else trans.RollBack();
+            }
+            return JsonSerializer.Serialize(new { updated = success, skipped, errors = errors.Take(10) }, JsonOpts);
+        }
+
+        #endregion
+
+        #region batch_update_parameters
+
+        private string BatchUpdateParameters(Document doc, Dictionary<string, object> args)
+        {
+            bool dryRun = GetArg(args, "dry_run", false);
+            if (!args.TryGetValue("updates", out var updatesObj))
+                return JsonError("updates array required.");
+
+            var updates = new List<(long id, string param, string value)>();
+            if (updatesObj is JsonElement je && je.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var item in je.EnumerateArray())
+                {
+                    long id = item.TryGetProperty("element_id", out var idProp) ? idProp.GetInt64() : 0;
+                    string pn = item.TryGetProperty("param_name", out var pnProp) ? pnProp.GetString() : null;
+                    string val = item.TryGetProperty("value", out var valProp) ? valProp.GetString() : null;
+                    if (id > 0 && pn != null) updates.Add((id, pn, val ?? ""));
+                }
+            }
+
+            if (updates.Count == 0) return JsonError("No valid updates provided.");
+
+            if (dryRun)
+            {
+                var preview = updates.Take(30).Select(u =>
+                {
+                    var elem = doc.GetElement(new ElementId(u.id));
+                    var param = elem?.LookupParameter(u.param);
+                    return new { u.id, param_name = u.param, new_value = u.value,
+                        current = param != null ? GetParameterValueAsString(doc, param) : "(not found)" };
+                }).ToList();
+                return JsonSerializer.Serialize(new { dry_run = true, update_count = updates.Count, preview }, JsonOpts);
+            }
+
+            int success = 0;
+            var errors = new List<string>();
+            using (var trans = new Transaction(doc, "AI: Batch Update Parameters"))
+            {
+                trans.Start();
+                foreach (var (id, paramName, value) in updates)
+                {
+                    var elem = doc.GetElement(new ElementId(id));
+                    if (elem == null) { errors.Add($"Element {id} not found"); continue; }
+                    var param = elem.LookupParameter(paramName);
+                    if (param == null || param.IsReadOnly) { errors.Add($"Param '{paramName}' not writable on {id}"); continue; }
+                    if (SetParamValue(param, value)) success++;
+                    else errors.Add($"Failed on {id}.{paramName}");
+                }
+                if (success > 0) trans.Commit(); else trans.RollBack();
+            }
+            return JsonSerializer.Serialize(new { success, total = updates.Count, errors = errors.Take(10) }, JsonOpts);
+        }
+
+        #endregion
 
         private static bool SetParamValue(Parameter param, string value)
         {

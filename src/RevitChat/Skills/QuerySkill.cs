@@ -16,7 +16,8 @@ namespace RevitChat.Skills
 
         protected override HashSet<string> HandledFunctions { get; } = new()
         {
-            "get_elements", "count_elements", "get_element_parameters", "search_elements"
+            "get_elements", "count_elements", "get_element_parameters", "search_elements",
+            "compare_element_parameters", "find_empty_parameters", "find_duplicate_values"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -80,6 +81,48 @@ namespace RevitChat.Skills
                     },
                     "required": ["param_name", "param_value"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool(
+                functionName: "compare_element_parameters",
+                functionDescription: "Compare all parameters between two elements side-by-side. Returns matching, different, and unique parameters for each element.",
+                functionParameters: BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_id_1": { "type": "integer", "description": "First element ID" },
+                        "element_id_2": { "type": "integer", "description": "Second element ID" }
+                    },
+                    "required": ["element_id_1", "element_id_2"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool(
+                functionName: "find_empty_parameters",
+                functionDescription: "Find elements that have empty or missing values for specified parameters. Useful for QA checks.",
+                functionParameters: BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to check" },
+                        "param_names": { "type": "array", "items": { "type": "string" }, "description": "Parameter names to check for empty values" }
+                    },
+                    "required": ["element_ids", "param_names"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool(
+                functionName: "find_duplicate_values",
+                functionDescription: "Find elements that share duplicate values for a parameter. Groups elements by their parameter value. Useful for QA duplicate detection.",
+                functionParameters: BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to check" },
+                        "param_name": { "type": "string", "description": "Parameter name to check for duplicates" }
+                    },
+                    "required": ["element_ids", "param_name"]
+                }
                 """))
         };
 
@@ -91,6 +134,9 @@ namespace RevitChat.Skills
                 "count_elements" => CountElements(doc, args),
                 "get_element_parameters" => GetElementParameters(doc, args),
                 "search_elements" => SearchElements(doc, args),
+                "compare_element_parameters" => CompareElementParameters(doc, args),
+                "find_empty_parameters" => FindEmptyParameters(doc, args),
+                "find_duplicate_values" => FindDuplicateValues(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -283,6 +329,183 @@ namespace RevitChat.Skills
 
             return JsonSerializer.Serialize(new { count = elements.Count, elements }, JsonOpts);
         }
+
+        #region compare_element_parameters
+
+        private string CompareElementParameters(Document doc, Dictionary<string, object> args)
+        {
+            long id1 = GetArg<long>(args, "element_id_1");
+            long id2 = GetArg<long>(args, "element_id_2");
+            if (id1 <= 0 || id2 <= 0) return JsonError("Both element_id_1 and element_id_2 are required.");
+
+            var elem1 = doc.GetElement(new ElementId(id1));
+            var elem2 = doc.GetElement(new ElementId(id2));
+            if (elem1 == null) return JsonError($"Element {id1} not found.");
+            if (elem2 == null) return JsonError($"Element {id2} not found.");
+
+            var params1 = GetAllParamValues(doc, elem1);
+            var params2 = GetAllParamValues(doc, elem2);
+            var allKeys = new HashSet<string>(params1.Keys, StringComparer.OrdinalIgnoreCase);
+            allKeys.UnionWith(params2.Keys);
+
+            var matching = new List<object>();
+            var different = new List<object>();
+            var onlyIn1 = new List<object>();
+            var onlyIn2 = new List<object>();
+
+            foreach (var key in allKeys.OrderBy(k => k))
+            {
+                bool has1 = params1.TryGetValue(key, out var v1);
+                bool has2 = params2.TryGetValue(key, out var v2);
+                if (has1 && has2)
+                {
+                    if (string.Equals(v1, v2, StringComparison.Ordinal))
+                        matching.Add(new { parameter = key, value = v1 });
+                    else
+                        different.Add(new { parameter = key, element_1 = v1, element_2 = v2 });
+                }
+                else if (has1) onlyIn1.Add(new { parameter = key, value = v1 });
+                else onlyIn2.Add(new { parameter = key, value = v2 });
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                element_1 = new { id = id1, category = elem1.Category?.Name, name = elem1.Name },
+                element_2 = new { id = id2, category = elem2.Category?.Name, name = elem2.Name },
+                matching_count = matching.Count,
+                different_count = different.Count,
+                matching = matching.Take(50),
+                different = different.Take(50),
+                only_in_element_1 = onlyIn1.Take(20),
+                only_in_element_2 = onlyIn2.Take(20)
+            }, JsonOpts);
+        }
+
+        private static Dictionary<string, string> GetAllParamValues(Document doc, Element elem)
+        {
+            var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (Parameter param in elem.Parameters)
+            {
+                if (param.Definition == null) continue;
+                var name = param.Definition.Name;
+                if (string.IsNullOrEmpty(name) || name.StartsWith("INVALID")) continue;
+                result[name] = GetParameterValueAsString(doc, param);
+            }
+            var typeId = elem.GetTypeId();
+            if (typeId != ElementId.InvalidElementId)
+            {
+                var elemType = doc.GetElement(typeId);
+                if (elemType != null)
+                {
+                    foreach (Parameter param in elemType.Parameters)
+                    {
+                        if (param.Definition == null) continue;
+                        var name = param.Definition.Name;
+                        if (string.IsNullOrEmpty(name) || name.StartsWith("INVALID")) continue;
+                        var key = $"[Type] {name}";
+                        if (!result.ContainsKey(key))
+                            result[key] = GetParameterValueAsString(doc, param);
+                    }
+                }
+            }
+            return result;
+        }
+
+        #endregion
+
+        #region find_empty_parameters
+
+        private string FindEmptyParameters(Document doc, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "element_ids");
+            var paramNames = GetArgStringArray(args, "param_names");
+            if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+            if (paramNames == null || paramNames.Count == 0) return JsonError("param_names required.");
+
+            var emptyResults = new List<object>();
+            foreach (var id in ids)
+            {
+                var elem = doc.GetElement(new ElementId(id));
+                if (elem == null) continue;
+                var emptyParams = new List<string>();
+                foreach (var pn in paramNames)
+                {
+                    var p = elem.LookupParameter(pn);
+                    if (p == null || IsEmptyValue(GetParameterValueAsString(doc, p)))
+                        emptyParams.Add(pn);
+                }
+                if (emptyParams.Count > 0)
+                {
+                    emptyResults.Add(new
+                    {
+                        id,
+                        category = elem.Category?.Name ?? "-",
+                        name = elem.Name ?? "-",
+                        empty_params = emptyParams
+                    });
+                }
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                checked_count = ids.Count,
+                elements_with_empty = emptyResults.Count,
+                results = emptyResults.Take(100)
+            }, JsonOpts);
+        }
+
+        private static bool IsEmptyValue(string value)
+            => string.IsNullOrWhiteSpace(value) || value == "-" || value == "0" || value == "<none>";
+
+        #endregion
+
+        #region find_duplicate_values
+
+        private string FindDuplicateValues(Document doc, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "element_ids");
+            var paramName = GetArg<string>(args, "param_name");
+            if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+            if (string.IsNullOrEmpty(paramName)) return JsonError("param_name required.");
+
+            var valueGroups = new Dictionary<string, List<long>>(StringComparer.OrdinalIgnoreCase);
+            int noParam = 0;
+
+            foreach (var id in ids)
+            {
+                var elem = doc.GetElement(new ElementId(id));
+                if (elem == null) continue;
+                var p = elem.LookupParameter(paramName);
+                if (p == null) { noParam++; continue; }
+                var val = GetParameterValueAsString(doc, p);
+                if (IsEmptyValue(val)) continue;
+                if (!valueGroups.TryGetValue(val, out var list))
+                {
+                    list = new List<long>();
+                    valueGroups[val] = list;
+                }
+                list.Add(id);
+            }
+
+            var duplicates = valueGroups
+                .Where(kv => kv.Value.Count > 1)
+                .OrderByDescending(kv => kv.Value.Count)
+                .Select(kv => new { value = kv.Key, count = kv.Value.Count, element_ids = kv.Value.Take(20) })
+                .Take(50)
+                .ToList();
+
+            return JsonSerializer.Serialize(new
+            {
+                checked_count = ids.Count,
+                param_name = paramName,
+                duplicate_groups = duplicates.Count,
+                total_duplicated = duplicates.Sum(d => d.count),
+                duplicates,
+                elements_without_param = noParam
+            }, JsonOpts);
+        }
+
+        #endregion
 
         private static readonly string[] ValidGroupFields = { "level", "family", "type" };
 

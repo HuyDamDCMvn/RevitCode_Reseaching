@@ -175,5 +175,12 @@
   "audit_sheet_numbers": "pattern?, limit?",
   "audit_level_names": "pattern?, limit?",
   "audit_family_names": "pattern?, limit?",
-  "audit_workset_names": "pattern?, limit?"
+  "audit_workset_names": "pattern?, limit?",
+  "apply_parameter_formula": "element_ids (array), param_name, formula (+10, -5, *2, /1.5, {ROUND:2}, prefix_, _suffix, {UPPER}, {LOWER}, {REPLACE:old:new}), dry_run?",
+  "compare_element_parameters": "element_id_1, element_id_2 — side-by-side parameter comparison",
+  "find_empty_parameters": "element_ids (array), param_names (array) — find elements with empty/missing values",
+  "find_duplicate_values": "element_ids (array), param_name — find elements sharing same parameter value",
+  "transfer_parameters": "source_element_id, target_element_ids (array), param_names (array), dry_run?",
+  "batch_update_parameters": "updates (array of {element_id, param_name, value}), dry_run?",
+  "create_section_box": "element_ids (array), padding_feet? (default 1.0) — 3D section box around elements"
 }

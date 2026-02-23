@@ -113,7 +113,17 @@
     "cắt",
     "split",
     "tách",
-    "divide"
+    "divide",
+    "formula",
+    "công thức",
+    "transfer",
+    "chuyển",
+    "batch",
+    "section box",
+    "empty",
+    "trống",
+    "trùng",
+    "duplicate value"
   ],
   "groups": [
     {
@@ -160,8 +170,8 @@
     },
     {
       "name": "3D View / Create View",
-      "keywords": ["3d", "3d view", "tạo view", "create view", "tạo 3d", "view by system", "đặt tên view", "isometric"],
-      "tools": ["create_3d_view", "create_3d_view_by_system", "duplicate_views"],
+      "keywords": ["3d", "3d view", "tạo view", "create view", "tạo 3d", "view by system", "đặt tên view", "isometric", "section box", "hộp cắt"],
+      "tools": ["create_3d_view", "create_3d_view_by_system", "duplicate_views", "create_section_box"],
       "weight": 1
     },
     {
@@ -238,8 +248,8 @@
     },
     {
       "name": "Parameters",
-      "keywords": ["parameter", "shared", "tham số"],
-      "tools": ["get_shared_parameters", "get_project_parameters", "check_parameter_values", "add_project_parameter", "get_parameter_bindings"],
+      "keywords": ["parameter", "shared", "tham số", "formula", "công thức", "transfer", "chuyển tham số", "compare parameter", "so sánh tham số", "empty", "trống", "duplicate value", "trùng giá trị", "batch update"],
+      "tools": ["get_shared_parameters", "get_project_parameters", "check_parameter_values", "add_project_parameter", "get_parameter_bindings", "apply_parameter_formula", "compare_element_parameters", "find_empty_parameters", "find_duplicate_values", "transfer_parameters", "batch_update_parameters"],
       "weight": 1
     },
     {

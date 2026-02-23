@@ -25,7 +25,8 @@ namespace RevitChat.Skills
             "zoom_to_elements", "get_current_selection",
             "isolate_by_level", "hide_by_level", "override_color_by_level",
             "isolate_by_filter", "override_color_by_filter",
-            "create_3d_view", "create_3d_view_by_system"
+            "create_3d_view", "create_3d_view_by_system",
+            "create_section_box"
         };
 
         private static readonly Dictionary<string, (byte R, byte G, byte B)> NamedColors = new(StringComparer.OrdinalIgnoreCase)
@@ -335,6 +336,19 @@ namespace RevitChat.Skills
                     },
                     "required": ["system_name", "view_name"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("create_section_box",
+                "Create or adjust a 3D section box around specified elements. Opens/activates a 3D view with the section box framing those elements with padding.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs to frame inside the section box" },
+                        "padding_feet": { "type": "number", "description": "Padding around elements in feet. Default 1.0" }
+                    },
+                    "required": ["element_ids"]
+                }
                 """))
         };
 
@@ -367,6 +381,7 @@ namespace RevitChat.Skills
                 "override_color_by_filter" => OverrideColorByFilter(doc, view, args),
                 "create_3d_view" => Create3DView(uidoc, doc, args),
                 "create_3d_view_by_system" => Create3DViewBySystem(uidoc, doc, args),
+                "create_section_box" => CreateSectionBox(uidoc, doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -1580,6 +1595,98 @@ namespace RevitChat.Skills
                     valid.Add(elemId);
             }
             return valid;
+        }
+
+        #endregion
+
+        #region Section Box
+
+        private string CreateSectionBox(UIDocument uidoc, Document doc, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "element_ids");
+            if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+            double padding = GetArg(args, "padding_feet", 1.0);
+
+            BoundingBoxXYZ combined = null;
+            int found = 0;
+            foreach (var id in ids)
+            {
+                var elem = doc.GetElement(new ElementId(id));
+                if (elem == null) continue;
+                var bb = elem.get_BoundingBox(null);
+                if (bb == null) continue;
+                found++;
+                if (combined == null)
+                {
+                    combined = new BoundingBoxXYZ
+                    {
+                        Min = new XYZ(bb.Min.X, bb.Min.Y, bb.Min.Z),
+                        Max = new XYZ(bb.Max.X, bb.Max.Y, bb.Max.Z)
+                    };
+                }
+                else
+                {
+                    combined.Min = new XYZ(
+                        Math.Min(combined.Min.X, bb.Min.X),
+                        Math.Min(combined.Min.Y, bb.Min.Y),
+                        Math.Min(combined.Min.Z, bb.Min.Z));
+                    combined.Max = new XYZ(
+                        Math.Max(combined.Max.X, bb.Max.X),
+                        Math.Max(combined.Max.Y, bb.Max.Y),
+                        Math.Max(combined.Max.Z, bb.Max.Z));
+                }
+            }
+
+            if (combined == null) return JsonError("No valid bounding boxes found for the given elements.");
+
+            combined.Min = new XYZ(combined.Min.X - padding, combined.Min.Y - padding, combined.Min.Z - padding);
+            combined.Max = new XYZ(combined.Max.X + padding, combined.Max.Y + padding, combined.Max.Z + padding);
+
+            View3D targetView = null;
+
+            using (var trans = new Transaction(doc, "AI: Section Box"))
+            {
+                trans.Start();
+
+                if (doc.ActiveView is View3D existing3d)
+                {
+                    targetView = existing3d;
+                }
+                else
+                {
+                    var vft = new FilteredElementCollector(doc)
+                        .OfClass(typeof(ViewFamilyType))
+                        .Cast<ViewFamilyType>()
+                        .FirstOrDefault(v => v.ViewFamily == ViewFamily.ThreeDimensional);
+
+                    if (vft == null)
+                    {
+                        trans.RollBack();
+                        return JsonError("No 3D view family type found in the document.");
+                    }
+                    targetView = View3D.CreateIsometric(doc, vft.Id);
+                    try { targetView.Name = "AI Section Box"; } catch { }
+                }
+
+                targetView.IsSectionBoxActive = true;
+                targetView.SetSectionBox(combined);
+                trans.Commit();
+            }
+
+            uidoc.ActiveView = targetView;
+
+            return JsonSerializer.Serialize(new
+            {
+                view_id = targetView.Id.Value,
+                view_name = targetView.Name,
+                elements_framed = found,
+                box = new
+                {
+                    min = new { x = Math.Round(combined.Min.X, 2), y = Math.Round(combined.Min.Y, 2), z = Math.Round(combined.Min.Z, 2) },
+                    max = new { x = Math.Round(combined.Max.X, 2), y = Math.Round(combined.Max.Y, 2), z = Math.Round(combined.Max.Z, 2) }
+                },
+                message = $"Section box created around {found} element(s) in '{targetView.Name}'."
+            }, JsonOpts);
         }
 
         #endregion
