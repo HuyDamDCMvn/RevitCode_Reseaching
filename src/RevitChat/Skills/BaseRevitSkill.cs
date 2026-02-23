@@ -19,7 +19,19 @@ namespace RevitChat.Skills
         public bool CanHandle(string functionName) => HandledFunctions.Contains(functionName);
 
         public abstract IReadOnlyList<ChatTool> GetToolDefinitions();
-        public abstract string Execute(string functionName, UIApplication app, Dictionary<string, object> args);
+
+        public string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        {
+            var uidoc = app?.ActiveUIDocument;
+            if (uidoc == null)
+                return RevitHelpers.JsonError("No active document.");
+            return ExecuteTool(functionName, uidoc, uidoc.Document, args);
+        }
+
+        protected abstract string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args);
+
+        protected string UnknownTool(string tool)
+            => RevitHelpers.JsonError($"{SkillName}: unknown tool '{tool}'");
 
         protected static string GetString(Dictionary<string, object> args, string key, string defaultValue = null)
         {

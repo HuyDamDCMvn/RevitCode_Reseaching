@@ -338,11 +338,8 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
             var view = doc.ActiveView;
 
             if (view == null) return JsonError("No active view.");
@@ -370,7 +367,7 @@ namespace RevitChat.Skills
                 "override_color_by_filter" => OverrideColorByFilter(doc, view, args),
                 "create_3d_view" => Create3DView(uidoc, doc, args),
                 "create_3d_view_by_system" => Create3DViewBySystem(uidoc, doc, args),
-                _ => JsonError($"ViewControlSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

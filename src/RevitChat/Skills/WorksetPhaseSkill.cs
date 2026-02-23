@@ -88,12 +88,8 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
-
             return functionName switch
             {
                 "get_worksets" => GetWorksets(doc, args),
@@ -101,7 +97,7 @@ namespace RevitChat.Skills
                 "get_phases" => GetPhases(doc),
                 "get_elements_by_phase" => GetElementsByPhase(doc, args),
                 "set_phase" => SetPhase(doc, args),
-                _ => JsonError($"WorksetPhaseSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

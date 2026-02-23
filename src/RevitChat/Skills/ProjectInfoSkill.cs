@@ -64,11 +64,8 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
             return functionName switch
             {
                 "get_project_info" => GetProjectInfo(doc),
@@ -77,7 +74,7 @@ namespace RevitChat.Skills
                 "get_current_view" => GetCurrentView(uidoc),
                 "get_rooms" => GetRooms(doc, args),
                 "get_schedule_data" => GetScheduleData(doc, args),
-                _ => JsonError($"ProjectInfoSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

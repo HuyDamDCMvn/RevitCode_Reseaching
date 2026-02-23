@@ -58,6 +58,10 @@ namespace RevitChatLocal.Services
         private static HashSet<string> ChitchatPatterns;
         private static bool _dataLoaded;
 
+        private static readonly Dictionary<string, Regex> _regexCache = new(StringComparer.OrdinalIgnoreCase);
+        private static readonly Dictionary<string, string> _fewShotCache = new();
+        private const int FewShotCacheMaxSize = 32;
+
         private static void EnsureDataLoaded()
         {
             if (_dataLoaded) return;
@@ -149,6 +153,10 @@ namespace RevitChatLocal.Services
             if (string.IsNullOrWhiteSpace(userMessage)) return "";
 
             var lower = userMessage.ToLowerInvariant();
+
+            if (_fewShotCache.TryGetValue(lower, out var cached))
+                return cached;
+
             var normalized = NormalizeForMatching(userMessage);
             var scored = new List<(int score, string example)>();
 
@@ -182,7 +190,11 @@ namespace RevitChatLocal.Services
             }
             catch { }
 
-            if (scored.Count == 0) return "";
+            if (scored.Count == 0)
+            {
+                CacheFewShotResult(lower, "");
+                return "";
+            }
 
             var selected = scored
                 .OrderByDescending(s => s.score)
@@ -195,7 +207,16 @@ namespace RevitChatLocal.Services
                 sb.AppendLine(ex);
                 sb.AppendLine();
             }
-            return sb.ToString();
+            var result = sb.ToString();
+            CacheFewShotResult(lower, result);
+            return result;
+        }
+
+        private static void CacheFewShotResult(string key, string value)
+        {
+            if (_fewShotCache.Count >= FewShotCacheMaxSize)
+                _fewShotCache.Clear();
+            _fewShotCache[key] = value;
         }
 
         #endregion
@@ -247,14 +268,25 @@ namespace RevitChatLocal.Services
             return separators.Any(s => text.Contains(s));
         }
 
+        private static Regex GetOrCreateRegex(string word)
+        {
+            if (!_regexCache.TryGetValue(word, out var regex))
+            {
+                regex = new Regex($@"\b{Regex.Escape(word)}\w*\b",
+                    RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                _regexCache[word] = regex;
+            }
+            return regex;
+        }
+
         private static bool MatchesKeyword(string text, string kw)
         {
             if (kw.Contains(' '))
             {
                 var parts = kw.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                return parts.All(p => Regex.IsMatch(text, $@"\b{Regex.Escape(p)}\w*\b"));
+                return parts.All(p => GetOrCreateRegex(p).IsMatch(text));
             }
-            return Regex.IsMatch(text, $@"\b{Regex.Escape(kw)}\w*\b");
+            return GetOrCreateRegex(kw).IsMatch(text);
         }
 
         private static List<(KeywordGroup group, int score)> GetMatchedGroups(string normalizedText)

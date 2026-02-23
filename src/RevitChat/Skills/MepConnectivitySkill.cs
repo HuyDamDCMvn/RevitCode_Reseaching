@@ -77,19 +77,15 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
-
             return functionName switch
             {
                 "get_connector_info" => GetConnectorInfo(doc, args),
                 "get_system_connectivity" => GetSystemConnectivity(doc, args),
                 "get_mep_routing_path" => GetMepRoutingPath(doc, args),
                 "connect_mep_elements" => ConnectMepElements(doc, args),
-                _ => JsonError($"MepConnectivitySkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

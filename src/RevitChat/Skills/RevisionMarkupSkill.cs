@@ -87,12 +87,8 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
-
             return functionName switch
             {
                 "get_revisions" => GetRevisions(doc),
@@ -100,7 +96,7 @@ namespace RevitChat.Skills
                 "add_revision" => AddRevision(doc, args),
                 "get_sheets_by_revision" => GetSheetsByRevision(doc, args),
                 "get_revision_schedule" => GetRevisionSchedule(doc, args),
-                _ => JsonError($"RevisionMarkupSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

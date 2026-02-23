@@ -89,12 +89,8 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
-
             return functionName switch
             {
                 "audit_view_names" => AuditViewNames(doc, args),
@@ -102,7 +98,7 @@ namespace RevitChat.Skills
                 "audit_level_names" => AuditLevelNames(doc, args),
                 "audit_family_names" => AuditFamilyNames(doc, args),
                 "audit_workset_names" => AuditWorksetNames(doc, args),
-                _ => JsonError($"NamingAuditSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

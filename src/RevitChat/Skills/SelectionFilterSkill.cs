@@ -79,19 +79,15 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
-
             return functionName switch
             {
                 "select_by_parameter_value" => SelectByParameterValue(uidoc, doc, args),
                 "select_by_bounding_box" => SelectByBoundingBox(uidoc, doc, args),
                 "select_elements_in_view" => SelectElementsInView(uidoc, doc, args),
                 "get_selection_summary" => GetSelectionSummary(uidoc, doc),
-                _ => JsonError($"SelectionFilterSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

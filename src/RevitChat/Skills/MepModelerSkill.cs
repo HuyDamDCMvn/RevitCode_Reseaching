@@ -103,12 +103,8 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
-
             return functionName switch
             {
                 "resize_mep_elements" => ResizeMepElements(doc, args),
@@ -116,7 +112,7 @@ namespace RevitChat.Skills
                 "change_mep_system_type" => ChangeMepSystemType(doc, args),
                 "batch_set_offset" => BatchSetOffset(doc, args),
                 "add_change_insulation" => AddChangeInsulation(doc, args),
-                _ => JsonError($"MepModelerSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

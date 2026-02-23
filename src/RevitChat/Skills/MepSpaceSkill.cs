@@ -91,11 +91,8 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
             return functionName switch
             {
                 "get_mep_spaces" => GetMepSpaces(doc, args),
@@ -103,7 +100,7 @@ namespace RevitChat.Skills
                 "check_space_airflow" => CheckSpaceAirflow(doc, args),
                 "get_unoccupied_spaces" => GetUnoccupiedSpaces(doc, args),
                 "get_elements_in_space" => GetElementsInSpace(doc, args),
-                _ => JsonError($"MepSpaceSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

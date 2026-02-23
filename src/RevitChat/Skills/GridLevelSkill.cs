@@ -157,12 +157,8 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
-
             return functionName switch
             {
                 "get_grids" => GetGrids(doc),
@@ -175,7 +171,7 @@ namespace RevitChat.Skills
                 "rename_level" => RenameLevel(doc, args),
                 "delete_levels" => DeleteLevels(doc, args),
                 "create_grid" => CreateGrid(doc, args),
-                _ => JsonError($"GridLevelSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

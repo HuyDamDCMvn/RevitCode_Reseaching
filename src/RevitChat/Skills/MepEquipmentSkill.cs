@@ -88,11 +88,8 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
             return functionName switch
             {
                 "get_mechanical_equipment" => GetEquipmentByCategory(doc, args, BuiltInCategory.OST_MechanicalEquipment, "Mechanical Equipment"),
@@ -100,7 +97,7 @@ namespace RevitChat.Skills
                 "get_electrical_equipment" => GetEquipmentByCategory(doc, args, BuiltInCategory.OST_ElectricalEquipment, "Electrical Equipment"),
                 "get_fire_protection_equipment" => GetFireProtection(doc, args),
                 "get_fittings" => GetFittings(doc, args),
-                _ => JsonError($"MepEquipmentSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

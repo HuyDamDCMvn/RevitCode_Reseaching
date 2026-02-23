@@ -113,11 +113,8 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
             return functionName switch
             {
                 "get_mep_systems" => GetMepSystems(doc, args),
@@ -127,7 +124,7 @@ namespace RevitChat.Skills
                 "get_conduit_summary" => GetMepCurveSummary(doc, args, BuiltInCategory.OST_Conduit, "Conduits"),
                 "get_cable_tray_summary" => GetMepCurveSummary(doc, args, BuiltInCategory.OST_CableTray, "Cable Trays"),
                 "calculate_system_totals" => CalculateSystemTotals(doc, args),
-                _ => JsonError($"MepSystemAnalysisSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

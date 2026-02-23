@@ -82,19 +82,15 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
-
             return functionName switch
             {
                 "generate_clash_report" => GenerateClashReport(doc, args),
                 "compare_element_counts" => CompareElementCounts(doc, args),
                 "get_link_coordination_status" => GetLinkCoordinationStatus(doc),
                 "get_scope_box_summary" => GetScopeBoxSummary(doc),
-                _ => JsonError($"CoordinationReportSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

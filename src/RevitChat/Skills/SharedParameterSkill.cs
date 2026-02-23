@@ -92,12 +92,8 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
-
             return functionName switch
             {
                 "get_shared_parameters" => GetSharedParameters(doc, args),
@@ -105,7 +101,7 @@ namespace RevitChat.Skills
                 "check_parameter_values" => CheckParameterValues(doc, args),
                 "add_project_parameter" => AddProjectParameter(doc, args),
                 "get_parameter_bindings" => GetParameterBindings(doc, args),
-                _ => JsonError($"SharedParameterSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

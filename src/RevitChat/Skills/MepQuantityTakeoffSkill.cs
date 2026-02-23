@@ -81,18 +81,15 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
             return functionName switch
             {
                 "mep_quantity_takeoff" => MepQuantityTakeoff(doc, args),
                 "get_insulation_quantities" => GetInsulationQuantities(doc, args),
                 "get_hanger_quantities" => GetHangerQuantities(doc, args),
                 "export_mep_boq" => ExportMepBoq(doc, args),
-                _ => JsonError($"MepQuantityTakeoffSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

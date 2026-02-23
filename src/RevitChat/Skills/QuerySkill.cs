@@ -83,18 +83,15 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
             return functionName switch
             {
                 "get_elements" => GetElements(doc, args),
                 "count_elements" => CountElements(doc, args),
                 "get_element_parameters" => GetElementParameters(doc, args),
                 "search_elements" => SearchElements(doc, args),
-                _ => JsonError($"QuerySkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

@@ -81,12 +81,8 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
-
             return functionName switch
             {
                 "get_purgeable_elements" => GetPurgeableElements(doc, args),
@@ -94,7 +90,7 @@ namespace RevitChat.Skills
                 "find_unresolved_references" => FindUnresolvedReferences(doc),
                 "get_design_options" => GetDesignOptions(doc),
                 "audit_detail_levels" => AuditDetailLevels(doc, args),
-                _ => JsonError($"PurgeAuditSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

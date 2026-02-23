@@ -81,11 +81,8 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
             var view = doc.ActiveView;
             if (view == null) return JsonError("No active view.");
 
@@ -95,7 +92,7 @@ namespace RevitChat.Skills
                 "get_untagged_elements" => GetUntaggedElements(doc, view, args),
                 "tag_all_in_view" => TagAllInView(doc, view, args),
                 "add_text_note" => AddTextNote(doc, view, args),
-                _ => JsonError($"DimensionTagSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

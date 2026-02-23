@@ -75,19 +75,15 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
-
             return functionName switch
             {
                 "check_clashes" => CheckClashes(doc, args),
                 "check_clearance" => CheckClearance(doc, args),
                 "find_overlapping" => FindOverlapping(doc, args),
                 "get_clash_summary" => GetClashSummary(doc),
-                _ => JsonError($"ClashDetectionSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

@@ -90,12 +90,8 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
-
             return functionName switch
             {
                 "get_groups" => GetGroups(doc, args),
@@ -103,7 +99,7 @@ namespace RevitChat.Skills
                 "ungroup" => Ungroup(doc, args),
                 "get_group_members" => GetGroupMembers(doc, args),
                 "place_group_instance" => PlaceGroupInstance(doc, args),
-                _ => JsonError($"GroupSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

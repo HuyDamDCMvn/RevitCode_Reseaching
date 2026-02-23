@@ -82,19 +82,15 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
-
             return functionName switch
             {
                 "get_family_types" => GetFamilyTypes(doc, args),
                 "place_family_instance" => PlaceFamilyInstance(doc, args),
                 "swap_family_type" => SwapFamilyType(doc, args),
                 "load_family" => LoadFamily(doc, args),
-                _ => JsonError($"FamilyPlacementSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

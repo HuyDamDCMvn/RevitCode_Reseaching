@@ -94,12 +94,8 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
-
             return functionName switch
             {
                 "get_rooms_detailed" => GetRoomsDetailed(doc, args),
@@ -108,7 +104,7 @@ namespace RevitChat.Skills
                 "get_area_schemes" => GetAreaSchemes(doc),
                 "get_unplaced_rooms" => GetUnplacedRooms(doc),
                 "get_redundant_rooms" => GetRedundantRooms(doc),
-                _ => JsonError($"RoomAreaSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

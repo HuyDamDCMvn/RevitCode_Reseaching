@@ -92,12 +92,8 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
-
             return functionName switch
             {
                 "get_view_filters" => GetViewFilters(doc, args),
@@ -105,7 +101,7 @@ namespace RevitChat.Skills
                 "apply_view_template" => ApplyViewTemplate(doc, args),
                 "create_parameter_filter" => CreateParameterFilter(doc, args),
                 "get_filter_rules" => GetFilterRules(doc, args),
-                _ => JsonError($"FilterTemplateSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 

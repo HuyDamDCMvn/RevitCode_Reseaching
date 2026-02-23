@@ -92,12 +92,8 @@ namespace RevitChat.Skills
                 """))
         };
 
-        public override string Execute(string functionName, UIApplication app, Dictionary<string, object> args)
+        protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
-            var uidoc = app.ActiveUIDocument;
-            if (uidoc == null) return JsonError("No active document.");
-            var doc = uidoc.Document;
-
             return functionName switch
             {
                 "get_sheets_summary" => GetSheetsSummary(doc, args),
@@ -105,7 +101,7 @@ namespace RevitChat.Skills
                 "place_view_on_sheet" => PlaceViewOnSheet(doc, args),
                 "get_sheet_viewports" => GetSheetViewports(doc, args),
                 "remove_viewport" => RemoveViewport(doc, args),
-                _ => JsonError($"SheetManagementSkill: unknown tool '{functionName}'")
+                _ => UnknownTool(functionName)
             };
         }
 
