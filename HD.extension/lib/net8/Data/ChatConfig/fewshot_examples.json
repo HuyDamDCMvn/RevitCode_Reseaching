@@ -1895,5 +1895,29 @@
       "override"
     ],
     "example": "User: count all pipes then change them to blue\nAssistant:\nI'll count the pipes first.\n<tool_call>\n{\"name\": \"count_elements\", \"arguments\": {\"category\": \"Pipes\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["tag rules", "tag format", "định dạng tag", "pipe", "quy tắc tag"],
+    "example": "User: show tag rules for pipes\nAssistant:\n<tool_call>\n{\"name\": \"get_tag_rules\", \"arguments\": {\"category\": \"Pipes\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["tag rules", "duct", "ducts", "hvac"],
+    "example": "User: what tag format should I use for ducts?\nAssistant:\n<tool_call>\n{\"name\": \"get_tag_rules\", \"arguments\": {\"category\": \"Ducts\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["tag rules", "system", "sanitary", "SW"],
+    "example": "User: tag format for sanitary waste pipes\nAssistant:\n<tool_call>\n{\"name\": \"get_tag_rules\", \"arguments\": {\"category\": \"Pipes\", \"system_name\": \"SW\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["tag type", "available", "loại tag", "tag family"],
+    "example": "User: list available tag types for ducts\nAssistant:\n<tool_call>\n{\"name\": \"get_available_tag_types\", \"arguments\": {\"category\": \"Ducts\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["tag type", "pipe", "pipes", "loại tag"],
+    "example": "User: loại tag nào có thể dùng cho pipes?\nAssistant:\n<tool_call>\n{\"name\": \"get_available_tag_types\", \"arguments\": {\"category\": \"Pipes\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["tag", "all", "view", "tag type", "format"],
+    "example": "User: tag all pipes in view with DN format\nAssistant:\nI'll first check what tag types are available for pipes.\n<tool_call>\n{\"name\": \"get_available_tag_types\", \"arguments\": {\"category\": \"Pipes\"}}\n</tool_call>"
   }
 ]

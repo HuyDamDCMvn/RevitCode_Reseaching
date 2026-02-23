@@ -56,6 +56,7 @@ namespace RevitChatLocal.Services
         private static Dictionary<string, string> ToolSchemaHints;
         private static List<(string[] keywords, string example)> FewShotExamples;
         private static HashSet<string> ChitchatPatterns;
+        private static string SmartTagKnowledgeSummary;
         private static bool _dataLoaded;
 
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, Regex> _regexCache = new(StringComparer.OrdinalIgnoreCase);
@@ -157,6 +158,39 @@ namespace RevitChatLocal.Services
             ChitchatPatterns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var item in cnDoc.GetProperty("chitchat_patterns").EnumerateArray())
                 ChitchatPatterns.Add(item.GetString());
+
+            // smarttag_knowledge.json — build a compact summary for system prompt injection
+            SmartTagKnowledgeSummary = "";
+            try
+            {
+                var stPath = System.IO.Path.Combine(_chatConfigDir, "smarttag_knowledge.json");
+                if (System.IO.File.Exists(stPath))
+                {
+                    var stDoc = System.Text.Json.JsonDocument.Parse(System.IO.File.ReadAllText(stPath));
+                    var root = stDoc.RootElement;
+                    var sb = new System.Text.StringBuilder();
+                    sb.AppendLine("[Tagging Knowledge from SmartTag]");
+                    if (root.TryGetProperty("tag_format_patterns", out var patterns))
+                    {
+                        sb.AppendLine("Tag format patterns:");
+                        foreach (var p in patterns.EnumerateArray())
+                        {
+                            var pat = p.TryGetProperty("pattern", out var pv) ? pv.GetString() : "";
+                            var use = p.TryGetProperty("use_for", out var uv) ? uv.GetString() : "";
+                            sb.AppendLine($"  - {pat} ({use})");
+                        }
+                    }
+                    if (root.TryGetProperty("tagging_guidance", out var guidance)
+                        && guidance.TryGetProperty("general_rules", out var rules))
+                    {
+                        sb.AppendLine("Tagging rules:");
+                        foreach (var r in rules.EnumerateArray())
+                            sb.AppendLine($"  - {r.GetString()}");
+                    }
+                    SmartTagKnowledgeSummary = sb.ToString().Trim();
+                }
+            }
+            catch { }
         }
 
         #endregion
@@ -1288,6 +1322,17 @@ Example:
             var catalog = BuildToolCatalogForMessage(userMsg, forcedTools);
             var dynamicExamples = BuildDynamicExamples(userMsg);
 
+            var tagKnowledgeSection = "";
+            if (!string.IsNullOrEmpty(SmartTagKnowledgeSummary))
+            {
+                var lowerMsg = (userMsg ?? "").ToLowerInvariant();
+                if (lowerMsg.Contains("tag") || lowerMsg.Contains("ghi chú") || lowerMsg.Contains("annotation")
+                    || lowerMsg.Contains("chú thích") || lowerMsg.Contains("untagged") || lowerMsg.Contains("chưa tag"))
+                {
+                    tagKnowledgeSection = $"\n\n{SmartTagKnowledgeSummary}\n";
+                }
+            }
+
             var examplesSection = !string.IsNullOrEmpty(dynamicExamples)
                 ? $"## EXAMPLES (follow these patterns)\n\n{dynamicExamples}"
                 : @"## EXAMPLES
@@ -1346,7 +1391,8 @@ To call a tool, output EXACTLY this (no code fences, no extra text after it):
 {{""name"": ""count_elements"", ""arguments"": {{""category"": ""Walls""}}}}
 </tool_call>
 
-{examplesSection}";
+{examplesSection}
+{tagKnowledgeSection}";
         }
 
         private List<OaiMessage> BuildMessages(List<string> forcedTools = null)

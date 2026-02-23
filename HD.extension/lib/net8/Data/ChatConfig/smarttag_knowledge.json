@@ -1,0 +1,123 @@
+{
+  "category_tag_mappings": {
+    "OST_Walls": "OST_WallTags",
+    "OST_Doors": "OST_DoorTags",
+    "OST_Windows": "OST_WindowTags",
+    "OST_Rooms": "OST_RoomTags",
+    "OST_Areas": "OST_AreaTags",
+    "OST_Floors": "OST_FloorTags",
+    "OST_Ceilings": "OST_CeilingTags",
+    "OST_Roofs": "OST_RoofTags",
+    "OST_Columns": "OST_ColumnTags",
+    "OST_StructuralColumns": "OST_StructuralColumnTags",
+    "OST_StructuralFraming": "OST_StructuralFramingTags",
+    "OST_StructuralFoundation": "OST_StructuralFoundationTags",
+    "OST_Furniture": "OST_FurnitureTags",
+    "OST_GenericModel": "OST_GenericModelTags",
+    "OST_MechanicalEquipment": "OST_MechanicalEquipmentTags",
+    "OST_ElectricalEquipment": "OST_ElectricalEquipmentTags",
+    "OST_ElectricalFixtures": "OST_ElectricalFixtureTags",
+    "OST_LightingFixtures": "OST_LightingFixtureTags",
+    "OST_PlumbingFixtures": "OST_PlumbingFixtureTags",
+    "OST_DuctCurves": "OST_DuctTags",
+    "OST_PipeCurves": "OST_PipeTags",
+    "OST_DuctAccessory": "OST_DuctAccessoryTags",
+    "OST_DuctFitting": "OST_DuctFittingTags",
+    "OST_DuctTerminal": "OST_DuctTerminalTags",
+    "OST_PipeAccessory": "OST_PipeAccessoryTags",
+    "OST_PipeFitting": "OST_PipeFittingTags",
+    "OST_Sprinklers": "OST_SprinklerTags",
+    "OST_CableTray": "OST_CableTrayTags",
+    "OST_Conduit": "OST_ConduitTags",
+    "OST_SpecialityEquipment": "OST_SpecialityEquipmentTags"
+  },
+  "taggable_categories": [
+    "OST_PipeCurves", "OST_DuctCurves", "OST_FlexPipeCurves", "OST_FlexDuctCurves",
+    "OST_PipeFitting", "OST_DuctFitting", "OST_PipeAccessory", "OST_DuctAccessory",
+    "OST_MechanicalEquipment", "OST_PlumbingFixtures", "OST_Sprinklers",
+    "OST_CableTray", "OST_CableTrayFitting", "OST_Conduit", "OST_ConduitFitting",
+    "OST_ElectricalEquipment", "OST_ElectricalFixtures", "OST_LightingFixtures",
+    "OST_FireAlarmDevices", "OST_DataDevices", "OST_CommunicationDevices",
+    "OST_SecurityDevices", "OST_DuctTerminal", "OST_GenericModel"
+  ],
+  "system_classifications": {
+    "pipe": {
+      "DomesticColdWater": "Cold water supply (KW/TWK)",
+      "DomesticHotWater": "Hot water supply (WW/TWW)",
+      "SanitaryWaste": "Waste drainage (SW)",
+      "Vent": "Vent pipes (SWE)",
+      "Storm": "Rain water drainage (RW)",
+      "Hydronic": "Hydronic heating/cooling",
+      "HydronicSupply": "Hydronic supply (VL)",
+      "HydronicReturn": "Hydronic return (RL)",
+      "Condensate": "Condensate drain (COND)",
+      "FireProtection": "Fire protection (FP/SPR)",
+      "Other": "Other piping"
+    },
+    "duct": {
+      "SupplyAir": "Supply air (ZUL)",
+      "ReturnAir": "Return air (ABL)",
+      "ExhaustAir": "Exhaust air (FOL)",
+      "OtherAir": "Other air"
+    }
+  },
+  "tag_format_patterns": [
+    { "pattern": "[System]_DN[Size]", "use_for": "Sanitary pipes, water supply", "examples": ["SW_DN100", "KW_DN50", "WW_DN32"] },
+    { "pattern": "[SystemCode]-DN[Size]", "use_for": "HVAC piping (CHW, LTHW)", "examples": ["CHWF-DN150", "CHWR-DN150", "LTHWF-DN80"] },
+    { "pattern": "L_[AirType]-[System]_[Size]", "use_for": "HVAC ductwork", "examples": ["L_ZUL-RLT20_DN125", "L_ABL-RLT40_450x350"] },
+    { "pattern": "[Width]x[Height]", "use_for": "Rectangular ducts/cable trays", "examples": ["400x300", "600x200"] },
+    { "pattern": "DN[Size]", "use_for": "Round ducts/conduits", "examples": ["DN125", "DN200", "DN315"] },
+    { "pattern": "RS = [value] m (bez. ±0.00)", "use_for": "Drainage pipe elevation (invert)", "examples": ["RS = -0.94 m (bez. ±0.00)"] },
+    { "pattern": "RA = [value] m UKRD", "use_for": "Duct elevation (centerline)", "examples": ["RA = -0.15 m UKRD"] }
+  ],
+  "mep_parameters": {
+    "pipe": {
+      "diameter": "RBS_PIPE_DIAMETER_PARAM",
+      "elevation": "RBS_OFFSET_PARAM",
+      "slope": "RBS_PIPE_SLOPE",
+      "system_name": "RBS_SYSTEM_NAME_PARAM",
+      "size_format": "DN{diameter_mm}"
+    },
+    "duct": {
+      "diameter_round": "RBS_CURVE_DIAMETER_PARAM",
+      "width": "RBS_CURVE_WIDTH_PARAM",
+      "height": "RBS_CURVE_HEIGHT_PARAM",
+      "elevation": "RBS_OFFSET_PARAM",
+      "system_name": "RBS_SYSTEM_NAME_PARAM",
+      "size_format_round": "DN{diameter_mm}",
+      "size_format_rect": "{width_mm}x{height_mm}"
+    },
+    "cable_tray": {
+      "width": "RBS_CABLETRAY_WIDTH_PARAM",
+      "height": "RBS_CABLETRAY_HEIGHT_PARAM",
+      "system_name": "RBS_SYSTEM_NAME_PARAM",
+      "size_format": "{width_mm}x{height_mm}"
+    },
+    "conduit": {
+      "diameter": "RBS_CONDUIT_DIAMETER_PARAM",
+      "size_format": "DN{diameter_mm}"
+    }
+  },
+  "placeholders": [
+    { "key": "[System]", "description": "System abbreviation (e.g. SW, KW, WW, ZUL, ABL)" },
+    { "key": "[SystemCode]", "description": "System code (e.g. CHWF, CHWR, LTHWF)" },
+    { "key": "[Size]", "description": "Nominal diameter in mm" },
+    { "key": "[DN]", "description": "Same as [Size] — nominal diameter" },
+    { "key": "[Width]", "description": "Width in mm (rectangular)" },
+    { "key": "[Height]", "description": "Height in mm (rectangular)" },
+    { "key": "[Length]", "description": "Length in mm" },
+    { "key": "[Elevation]", "description": "Elevation in meters" },
+    { "key": "[Type]", "description": "Family type name" },
+    { "key": "[Family]", "description": "Family name" }
+  ],
+  "tagging_guidance": {
+    "position_preferences": ["TopCenter", "Center", "BottomCenter", "TopRight", "TopLeft"],
+    "general_rules": [
+      "Use get_tag_rules to find the correct format for a category/system before tagging",
+      "Use get_available_tag_types to list available tag types in the document",
+      "Drainage pipes use RS (invert) elevation, not RA (centerline)",
+      "Rectangular ducts show WxH, round ducts show DN",
+      "Always confirm with user before batch tagging"
+    ]
+  }
+}

@@ -22,11 +22,14 @@ namespace RevitChat.Services
                 || lower.Contains("đang chọn") || lower.Contains("được chọn");
             var needsLevels = lower.Contains("level") || lower.Contains("tầng")
                 || lower.Contains("cao độ") || lower.Contains("floor");
+            var needsTagInfo = lower.Contains("tag") || lower.Contains("ghi chú")
+                || lower.Contains("annotation") || lower.Contains("chú thích")
+                || lower.Contains("chưa tag") || lower.Contains("untagged");
 
-            if (!needsView && !needsSelection && !needsLevels) return "";
+            if (!needsView && !needsSelection && !needsLevels && !needsTagInfo) return "";
 
             var calls = new List<ToolCallRequest>();
-            if (needsView)
+            if (needsView || needsTagInfo)
                 calls.Add(MakeCall("get_current_view"));
             if (needsSelection)
                 calls.Add(MakeCall("get_current_selection"));
@@ -47,6 +50,9 @@ namespace RevitChat.Services
 
             if (needsLevels && results.Keys.Any(k => k.Contains("get_levels_detailed")))
                 sb.AppendLine("IMPORTANT: Use the EXACT level names from the list above when calling tools. Do NOT use the user's approximate name.");
+
+            if (needsTagInfo)
+                sb.AppendLine("HINT: Use get_tag_rules to find tag format patterns, and get_available_tag_types to list available tag families before tagging.");
 
             return sb.ToString().Trim();
         }

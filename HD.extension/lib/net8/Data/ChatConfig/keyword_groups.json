@@ -172,8 +172,8 @@
     },
     {
       "name": "Tag / Dimension",
-      "keywords": ["tag", "dimension", "text", "ghi chú", "kích thước", "untagged", "chưa tag", "chưa được tag", "chưa ghi"],
-      "tools": ["tag_elements", "get_untagged_elements", "tag_all_in_view", "add_text_note"],
+      "keywords": ["tag", "dimension", "text", "ghi chú", "kích thước", "untagged", "chưa tag", "chưa được tag", "chưa ghi", "tag type", "tag family", "tag format", "loại tag", "định dạng tag", "tag rule", "annotation"],
+      "tools": ["tag_elements", "get_untagged_elements", "tag_all_in_view", "add_text_note", "get_tag_rules", "get_available_tag_types"],
       "weight": 1
     },
     {
