@@ -556,7 +556,8 @@ namespace RevitChat.Skills
             if (string.IsNullOrWhiteSpace(systemFilter)) return true;
             var sys = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "";
             if (string.IsNullOrWhiteSpace(sys)) return allowEmpty;
-            return sys.IndexOf(systemFilter, StringComparison.OrdinalIgnoreCase) >= 0;
+            var scl = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_CLASSIFICATION_PARAM)?.AsString() ?? "";
+            return MatchesSystem(sys, scl, systemFilter);
         }
 
         private static object MapElement(Document doc, Element elem)

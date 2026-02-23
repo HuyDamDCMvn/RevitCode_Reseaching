@@ -180,7 +180,33 @@
     },
     {
       "name": "MEP",
-      "keywords": ["duct", "pipe", "mep", "hvac", "mechanical", "electrical", "plumbing", "conduit", "cable", "ống", "điện", "fire", "sprinkler", "cháy", "system total", "tổng hệ thống", "thống kê", "theo system", "split", "chia đoạn", "cắt đoạn", "ống gió", "ống nước", "cơ điện", "phụ kiện", "thoát nước", "cấp nước", "thông gió", "điều hòa", "pccc", "phòng cháy", "bơm", "quạt", "van", "damper", "chiller"],
+      "keywords": [
+        "duct", "pipe", "mep", "hvac", "mechanical", "electrical", "plumbing", "conduit", "cable",
+        "ống", "điện", "fire", "sprinkler", "cháy",
+        "system total", "tổng hệ thống", "thống kê", "theo system",
+        "split", "chia đoạn", "cắt đoạn",
+        "ống gió", "ống nước", "ống dẫn", "cơ điện", "phụ kiện",
+        "thoát nước", "cấp nước", "thông gió", "điều hòa",
+        "pccc", "phòng cháy", "chữa cháy",
+        "bơm", "quạt", "van", "damper", "chiller", "boiler",
+        "supply air", "return air", "exhaust", "outside air", "fresh air", "mixed air",
+        "cấp gió", "hồi gió", "hút gió", "gió tươi", "gió ngoài", "gió hòa",
+        "nước thải", "nước lạnh", "nước nóng", "nước mưa", "nước cấp",
+        "hot water", "chilled water", "cold water", "domestic water", "rain water", "waste water",
+        "summary", "tóm tắt", "phân loại",
+        "AHU", "FCU", "VAV", "RTU", "VRF", "VRV", "ERV", "MAU", "PAU", "DOAS",
+        "SA", "RA", "EA", "OA", "FA", "HW", "CHW", "CW", "HWS", "HWR", "CHWS", "CHWR",
+        "FP", "FPS", "FHC", "FDC", "SW", "SV", "SD",
+        "MDB", "SMDB", "DB", "MCC", "UPS", "ATS",
+        "diffuser", "grille", "louver", "air terminal",
+        "máy lạnh", "nồi hơi", "tháp giải nhiệt", "cooling tower",
+        "bình giãn nở", "expansion tank", "bình tích áp", "pressure tank",
+        "giá đỡ", "hanger", "bảo ôn", "insulation",
+        "đầu phun", "ổ cắm", "công tắc", "tủ điện", "máng cáp",
+        "thiết bị cơ", "thiết bị điện", "thiết bị vệ sinh",
+        "nối ống", "co nối", "tee", "reducer", "elbow",
+        "PRV", "TMV", "valve", "pressure reducing"
+      ],
       "tools": ["get_mep_systems", "get_system_elements", "get_duct_summary", "get_pipe_summary", "get_conduit_summary", "get_cable_tray_summary", "get_mechanical_equipment", "get_plumbing_fixtures", "get_electrical_equipment", "get_fire_protection_equipment", "get_fittings", "check_disconnected_elements", "mep_quantity_takeoff", "get_connector_info", "get_system_connectivity", "calculate_system_totals", "split_mep_elements"],
       "weight": 1
     },
@@ -210,7 +236,7 @@
     },
     {
       "name": "Export / BOQ",
-      "keywords": ["export", "csv", "boq", "xuất", "khối lượng", "bóc khối lượng", "xuất file", "xuất dữ liệu"],
+      "keywords": ["export", "csv", "boq", "xuất", "khối lượng", "bóc khối lượng", "xuất file", "xuất dữ liệu", "báo giá", "dự toán", "bảng khối lượng", "tổng hợp khối lượng", "takeoff", "quantity", "bill of quantity", "chiều dài", "diện tích", "bề mặt", "length", "area", "surface"],
       "tools": ["export_to_csv", "mep_quantity_takeoff", "export_mep_boq"],
       "weight": 1
     },
@@ -252,7 +278,17 @@
     },
     {
       "name": "MEP Validation",
-      "keywords": ["missing", "oversized", "elevation", "validate", "thiếu", "quá cỡ", "slope", "độ dốc", "continuity", "liên tục", "penetration", "xuyên sàn", "fire damper", "van chống cháy", "insulation", "bảo ôn", "cách nhiệt", "velocity", "tốc độ", "vận tốc"],
+      "keywords": [
+        "missing", "oversized", "elevation", "validate", "thiếu", "quá cỡ",
+        "slope", "độ dốc", "do doc", "continuity", "liên tục",
+        "penetration", "xuyên sàn", "xuyên tường",
+        "fire damper", "van chống cháy", "van ngan chay", "FD", "FSD",
+        "insulation", "bảo ôn", "cách nhiệt", "bao on", "cach nhiet",
+        "velocity", "tốc độ", "vận tốc", "van toc",
+        "disconnect", "ngắt", "hở", "không nối", "khong noi",
+        "condensate", "nước ngưng", "nuoc ngung",
+        "kiểm tra", "kiem tra", "check"
+      ],
       "tools": ["check_missing_parameters", "check_elevation_conflicts", "check_oversized_elements", "get_warnings_mep", "check_pipe_slope", "check_slope_continuity", "get_penetration_schedule", "check_fire_dampers", "check_insulation_coverage", "check_velocity"],
       "weight": 1
     },

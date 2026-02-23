@@ -188,8 +188,10 @@ namespace RevitChat.ViewModel
                     (response, toolCalls) = await ValidateAndRetryIfNeeded(response, toolCalls);
 
                     if (_streamingMessage != null && toolCalls != null && toolCalls.Count > 0)
+                    {
                         Messages.Remove(_streamingMessage);
-                    _streamingMessage = null;
+                        _streamingMessage = null;
+                    }
 
                     await ProcessToolCallLoopAsync(response, toolCalls);
                 }
@@ -319,8 +321,10 @@ namespace RevitChat.ViewModel
                     (response, toolCalls) = await ValidateAndRetryIfNeeded(response, toolCalls);
 
                     if (_streamingMessage != null && toolCalls != null && toolCalls.Count > 0)
+                    {
                         Messages.Remove(_streamingMessage);
-                    _streamingMessage = null;
+                        _streamingMessage = null;
+                    }
                 }
                 catch
                 {

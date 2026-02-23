@@ -163,7 +163,7 @@ namespace RevitChat.Skills
                 if (elem.Category == null) continue;
 
                 if (needsCategoryFallback &&
-                    !elem.Category.Name.Equals(category, StringComparison.OrdinalIgnoreCase))
+                    !MatchesCategoryName(elem.Category.Name, category))
                     continue;
 
                 if (!string.IsNullOrEmpty(level) &&
@@ -211,7 +211,7 @@ namespace RevitChat.Skills
             foreach (var elem in collector)
             {
                 if (elem.Category == null) continue;
-                if (needsCategoryFallback && !elem.Category.Name.Equals(category, StringComparison.OrdinalIgnoreCase)) continue;
+                if (needsCategoryFallback && !MatchesCategoryName(elem.Category.Name, category)) continue;
                 if (!string.IsNullOrEmpty(level) && !GetElementLevel(doc, elem).Equals(level, StringComparison.OrdinalIgnoreCase)) continue;
 
                 var row = new List<string> { elem.Id.Value.ToString() };
@@ -265,7 +265,7 @@ namespace RevitChat.Skills
             foreach (var elem in collector)
             {
                 if (elem.Category == null) continue;
-                if (needsCategoryFallback && !elem.Category.Name.Equals(category, StringComparison.OrdinalIgnoreCase)) continue;
+                if (needsCategoryFallback && !MatchesCategoryName(elem.Category.Name, category)) continue;
                 if (!string.IsNullOrEmpty(level) && !GetElementLevel(doc, elem).Equals(level, StringComparison.OrdinalIgnoreCase)) continue;
 
                 var obj = new Dictionary<string, object> { ["ElementId"] = elem.Id.Value };
@@ -452,7 +452,7 @@ namespace RevitChat.Skills
             {
                 if (cat == null || cat.Id.Value < 0) continue;
                 if (!string.IsNullOrEmpty(categoryFilter) &&
-                    !cat.Name.Equals(categoryFilter, StringComparison.OrdinalIgnoreCase)) continue;
+                    !MatchesCategoryName(cat.Name, categoryFilter)) continue;
 
                 try
                 {

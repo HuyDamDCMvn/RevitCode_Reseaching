@@ -574,12 +574,10 @@ namespace RevitChat.Skills
 
             if (!string.IsNullOrEmpty(systemFilter))
             {
-                query = query.Where(e =>
-                {
-                    var sysParam = e.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM);
-                    return sysParam != null && sysParam.HasValue &&
-                        string.Equals(sysParam.AsString(), systemFilter, StringComparison.OrdinalIgnoreCase);
-                });
+                query = query.Where(e => MatchesSystem(
+                    e.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "",
+                    e.get_Parameter(BuiltInParameter.RBS_SYSTEM_CLASSIFICATION_PARAM)?.AsString() ?? "",
+                    systemFilter));
             }
 
             if (!string.IsNullOrEmpty(levelFilter))

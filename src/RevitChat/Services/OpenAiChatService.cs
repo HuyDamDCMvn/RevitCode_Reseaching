@@ -25,6 +25,7 @@ namespace RevitChat.Services
         private readonly List<OaiMessage> _conversationHistory = new();
         private readonly SkillRegistry _skillRegistry;
         private string _lastUserMessage = "";
+        private PromptContext _lastPromptContext;
 
         public event Action<string> DebugMessage;
         public event Action<string> TokenReceived;
@@ -56,9 +57,27 @@ Rules:
                      "system", "hệ thống", "network", "traverse", "boq", "khối lượng",
                      "hanger", "giá đỡ", "size", "kích cỡ",
                      "ống gió", "ống nước", "cơ điện", "phụ kiện", "thoát nước", "cấp nước",
-                     "thông gió", "điều hòa", "sprinkler", "pccc", "phòng cháy",
-                     "bơm", "quạt", "van", "damper", "chiller", "ống dẫn", "khay cáp",
-                     "co nối", "đấu nối", "nối ống", "cảm biến", "sensor" },
+                     "thông gió", "điều hòa", "sprinkler", "pccc", "phòng cháy", "chữa cháy",
+                     "bơm", "quạt", "van", "damper", "chiller", "boiler", "ống dẫn", "khay cáp",
+                     "co nối", "đấu nối", "nối ống", "cảm biến", "sensor",
+                     "báo giá", "dự toán", "bảng khối lượng", "thống kê", "tổng hợp",
+                     "supply air", "return air", "exhaust", "outside air", "mixed air",
+                     "cấp gió", "hồi gió", "hút gió", "gió tươi", "gió ngoài", "gió hòa",
+                     "fresh air", "nước thải", "nước lạnh", "nước nóng", "nước mưa", "nước cấp",
+                     "hot water", "chilled water", "cold water", "domestic water", "rain water", "waste water",
+                     "chiều dài", "diện tích", "bề mặt", "length", "area", "surface",
+                     "summary", "tóm tắt", "phân loại", "classify",
+                     "AHU", "FCU", "VAV", "RTU", "VRF", "VRV", "ERV", "MAU", "PAU", "DOAS",
+                     "SA", "RA", "EA", "OA", "FA", "HW", "CHW", "CW", "HWS", "HWR", "CHWS", "CHWR",
+                     "FP", "FPS", "FHC", "FDC", "SW", "SV", "SD",
+                     "MDB", "SMDB", "DB", "MCC", "UPS", "ATS",
+                     "diffuser", "grille", "louver", "air terminal", "miệng gió",
+                     "máy lạnh", "nồi hơi", "tháp giải nhiệt", "cooling tower",
+                     "bình giãn nở", "bình tích áp", "expansion tank", "pressure tank",
+                     "đầu phun", "ổ cắm", "công tắc", "tủ điện", "máng cáp",
+                     "thiết bị cơ", "thiết bị điện", "thiết bị vệ sinh",
+                     "PRV", "TMV", "valve", "pressure reducing",
+                     "sanitary", "drainage", "storm", "vent" },
              new[] { "MEP" }),
             (new[] { "sheet", "schedule", "bản vẽ", "bảng", "dimension", "kích thước", "tag", "ghi chú",
                      "annotation", "revision", "phát hành", "family", "load family", "place",
@@ -262,6 +281,9 @@ Rules:
                 }
             }
 
+            _lastPromptContext = PromptAnalyzer.Analyze(userMessage);
+            InferPacksFromContext(_lastPromptContext, matchedPacks);
+
             if (matchedPacks.Count <= 1)
                 return _skillRegistry.GetAllToolDefinitions();
 
@@ -270,6 +292,27 @@ Rules:
                 return tools.Take(MaxSmartTools).ToList();
 
             return tools;
+        }
+
+        private static void InferPacksFromContext(PromptContext ctx, HashSet<string> packs)
+        {
+            var cat = ctx.DetectedCategory ?? "";
+            bool isMep = cat.Contains("Duct") || cat.Contains("Pipe") || cat.Contains("Conduit")
+                         || cat.Contains("Cable") || cat.Contains("Mechanical") || cat.Contains("Electrical")
+                         || cat.Contains("Plumbing") || cat.Contains("Sprinkler") || cat.Contains("Air Terminal")
+                         || cat.Contains("Fire") || cat.Contains("Lighting");
+
+            if (isMep || ctx.DetectedSystem != null)
+                packs.Add("MEP");
+
+            if (ctx.PrimaryIntent == PromptIntent.Visual || ctx.PrimaryIntent == PromptIntent.Navigate)
+                packs.Add("ViewControl");
+
+            if (ctx.PrimaryIntent == PromptIntent.Check)
+                packs.Add("BIMCoordinator");
+
+            if (ctx.PrimaryIntent == PromptIntent.Tag)
+                packs.Add("Modeler");
         }
 
         private static string StripVietnameseDiacritics(string text)
@@ -294,6 +337,11 @@ Rules:
             {
                 new SystemChatMessage(SystemPrompt)
             };
+
+            var hint = _lastPromptContext?.ContextHint;
+            if (!string.IsNullOrEmpty(hint))
+                messages.Add(new SystemChatMessage(hint));
+
             messages.AddRange(_conversationHistory);
             return messages;
         }

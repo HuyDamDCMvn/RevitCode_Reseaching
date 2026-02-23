@@ -117,7 +117,7 @@ namespace RevitChat.Skills
             var bIndex = new List<(Element Elem, BoundingBoxXYZ BB)>();
             foreach (var b in elemsB)
             {
-                if (systemB != null && !MatchesSystem(b, systemB)) continue;
+                if (systemB != null && !MatchesElemSystem(b, systemB)) continue;
                 BoundingBoxXYZ bb;
                 try { bb = b.get_BoundingBox(null); } catch { continue; }
                 if (bb != null) bIndex.Add((b, bb));
@@ -135,7 +135,7 @@ namespace RevitChat.Skills
             foreach (var a in elemsA)
             {
                 if (clashes.Count >= limit) { totalEstimate = -1; break; }
-                if (systemA != null && !MatchesSystem(a, systemA)) continue;
+                if (systemA != null && !MatchesElemSystem(a, systemA)) continue;
 
                 BoundingBoxXYZ bbA;
                 try { bbA = a.get_BoundingBox(null); } catch { continue; }
@@ -177,13 +177,16 @@ namespace RevitChat.Skills
             }, JsonOpts);
         }
 
-        private static bool MatchesSystem(Element elem, string systemName)
+        private static bool MatchesElemSystem(Element elem, string systemName)
         {
-            var sysParam = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)
-                        ?? elem.get_Parameter(BuiltInParameter.RBS_PIPING_SYSTEM_TYPE_PARAM);
-            if (sysParam == null) return false;
-            var val = sysParam.AsString() ?? sysParam.AsValueString() ?? "";
-            return val.IndexOf(systemName, StringComparison.OrdinalIgnoreCase) >= 0;
+            var sn = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "";
+            var sc = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_CLASSIFICATION_PARAM)?.AsString() ?? "";
+            if (string.IsNullOrEmpty(sn))
+            {
+                var altParam = elem.get_Parameter(BuiltInParameter.RBS_PIPING_SYSTEM_TYPE_PARAM);
+                sn = altParam?.AsString() ?? altParam?.AsValueString() ?? "";
+            }
+            return MatchesSystem(sn, sc, systemName);
         }
 
         private string CheckClearance(Document doc, Dictionary<string, object> args)

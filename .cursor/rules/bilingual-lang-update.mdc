@@ -1,0 +1,42 @@
+---
+description: After any feature/fix, always update bilingual language support (EN, VI, mixed)
+alwaysApply: true
+---
+
+# Bilingual Language Update — Post-Change Checklist
+
+After **every** code change (new feature, bug fix, refactor) that touches tool logic, category matching, or system filtering, **you MUST also update** the following bilingual resources:
+
+## 1. Keyword Maps (Smart Tool Selection)
+
+- **OpenAI**: `KeywordPackMap` in `OpenAiChatService.cs` — add EN + VI + no-diacritics terms
+- **Ollama**: `HD.extension/lib/net8/Data/ChatConfig/keyword_groups.json` — mirror the same keywords
+
+## 2. Normalization Rules
+
+- `HD.extension/lib/net8/Data/ChatConfig/chat_normalization.json` — add no-diacritics Vietnamese → English mappings (e.g. `"ong gio"` → `"duct"`, `"cap gio"` → `"supply air"`)
+
+## 3. Few-Shot Examples
+
+- `HD.extension/lib/net8/Data/ChatConfig/fewshot_examples.json` — add examples in 3 forms:
+  - Pure English: `"create BOQ for duct"`
+  - Pure Vietnamese: `"tạo bảng khối lượng cho ống gió"`
+  - Mixed: `"thống kê cho supply air"`
+
+## 4. Alias Dictionaries (C# Code)
+
+- `RevitHelpers.CategoryAliases` — add VI aliases (e.g. `"tuong"` → Walls, `"san"` → Floors)
+- `MepQuantityTakeoffSkill.MepShortNames` / any tool-specific maps — keep in sync
+
+## What Counts as EN/VI/Mixed
+
+| Type | Example |
+|------|---------|
+| English | `"create BOQ for duct"` |
+| Vietnamese | `"tạo bảng khối lượng cho ống gió"` |
+| No-diacritics VI | `"tao bang khoi luong cho ong gio"` |
+| Mixed | `"thống kê cho supply air"`, `"find duct trên tầng 1"` |
+
+## Hard Rule
+
+**Never** ship a tool change without updating at least keyword_groups + fewshot_examples + normalization for the affected domain.

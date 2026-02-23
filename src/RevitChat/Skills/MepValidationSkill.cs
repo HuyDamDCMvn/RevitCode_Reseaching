@@ -608,8 +608,8 @@ namespace RevitChat.Skills
             foreach (var elem in collector)
             {
                 var sys = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "";
-                if (!string.IsNullOrEmpty(systemFilter) &&
-                    sys.IndexOf(systemFilter, StringComparison.OrdinalIgnoreCase) < 0)
+                var sysC = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_CLASSIFICATION_PARAM)?.AsString() ?? "";
+                if (!MatchesSystem(sys, sysC, systemFilter))
                     continue;
 
                 var slopeInfo = GetPipeSlope(elem);
@@ -665,8 +665,10 @@ namespace RevitChat.Skills
             if (!string.IsNullOrEmpty(levelFilter))
                 pipes = pipes.Where(p => GetElementLevel(doc, p).Equals(levelFilter, StringComparison.OrdinalIgnoreCase)).ToList();
             if (!string.IsNullOrEmpty(systemFilter))
-                pipes = pipes.Where(p => (p.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "")
-                    .IndexOf(systemFilter, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+                pipes = pipes.Where(p => MatchesSystem(
+                    p.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "",
+                    p.get_Parameter(BuiltInParameter.RBS_SYSTEM_CLASSIFICATION_PARAM)?.AsString() ?? "",
+                    systemFilter)).ToList();
 
             if (startId > 0)
             {
@@ -1078,10 +1080,10 @@ namespace RevitChat.Skills
 
             foreach (var elem in elements)
             {
-                if (!string.IsNullOrEmpty(systemName))
                 {
-                    var sp = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM);
-                    if (sp == null || (sp.AsString() ?? "").IndexOf(systemName, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                    var sp = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "";
+                    var scl = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_CLASSIFICATION_PARAM)?.AsString() ?? "";
+                    if (!MatchesSystem(sp, scl, systemName)) continue;
                 }
 
                 var flowParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_FLOW_PARAM)

@@ -1323,7 +1323,7 @@
       "takeoff",
       "khối lượng"
     ],
-    "example": "User: tạo BOQ cho duct\nAssistant:\n<tool_call>\n{\"name\": \"mep_quantity_takeoff\", \"arguments\": {\"categories\": [\"Ducts\"]}}\n</tool_call>"
+    "example": "User: tạo BOQ cho duct\nAssistant:\n<tool_call>\n{\"name\": \"mep_quantity_takeoff\", \"arguments\": {\"categories\": [\"duct\"]}}\n</tool_call>"
   },
   {
     "keywords": [
@@ -1347,7 +1347,7 @@
       "boq",
       "mep"
     ],
-    "example": "User: export MEP BOQ for ducts and pipes\nAssistant:\n<tool_call>\n{\"name\": \"export_mep_boq\", \"arguments\": {\"categories\": [\"Ducts\", \"Pipes\"], \"file_path\": \"C:\\\\temp\\\\mep_boq.csv\"}}\n</tool_call>"
+    "example": "User: export MEP BOQ for ducts and pipes\nAssistant:\n<tool_call>\n{\"name\": \"export_mep_boq\", \"arguments\": {}}\n</tool_call>"
   },
   {
     "keywords": [
@@ -2194,6 +2194,168 @@
   },
   {
     "keywords": ["boq", "duct", "surface", "diện tích"],
-    "example": "User: tạo BOQ cho duct theo chiều dài và diện tích bề mặt\nAssistant:\n<tool_call>\n{\"name\": \"mep_quantity_takeoff\", \"arguments\": {\"categories\": [\"Ducts\"]}}\n</tool_call>"
+    "example": "User: tạo BOQ cho duct theo chiều dài và diện tích bề mặt\nAssistant:\n<tool_call>\n{\"name\": \"mep_quantity_takeoff\", \"arguments\": {\"categories\": [\"duct\"]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["boq", "duct", "create", "tạo"],
+    "example": "User: create the BOQ for duct\nAssistant:\n<tool_call>\n{\"name\": \"mep_quantity_takeoff\", \"arguments\": {\"categories\": [\"duct\"]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["boq", "pipe", "ong nuoc", "báo giá"],
+    "example": "User: tao bao gia cho ong nuoc\nAssistant:\n<tool_call>\n{\"name\": \"mep_quantity_takeoff\", \"arguments\": {\"categories\": [\"pipe\"]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["thống kê", "supply", "air", "cấp gió"],
+    "example": "User: thống kê cho supply air\nAssistant:\n<tool_call>\n{\"name\": \"get_duct_summary\", \"arguments\": {\"system_name\": \"Supply Air\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["thong ke", "supply", "cap gio"],
+    "example": "User: thong ke cap gio\nAssistant:\n<tool_call>\n{\"name\": \"get_duct_summary\", \"arguments\": {\"system_name\": \"Supply Air\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["thống kê", "duct", "pipe", "system", "level", "size"],
+    "example": "User: có bao nhiêu ống gió và ống nước, thống kê theo system, level, size\nAssistant:\n<tool_call>\n{\"name\": \"mep_quantity_takeoff\", \"arguments\": {\"categories\": [\"duct\", \"pipe\"]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["export", "boq", "xuất", "khối lượng", "duct", "pipe"],
+    "example": "User: xuất BOQ cho duct và pipe ra CSV\nAssistant:\n<tool_call>\n{\"name\": \"export_mep_boq\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["summary", "exhaust", "return", "hồi gió", "hút gió"],
+    "example": "User: summarize exhaust air ducts\nAssistant:\n<tool_call>\n{\"name\": \"get_duct_summary\", \"arguments\": {\"system_name\": \"Exhaust\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["count", "duct", "pipe", "model", "bao nhiêu"],
+    "example": "User: co bao nhieu ong gio va ong nuoc trong mo hinh\nAssistant:\n<tool_call>\n{\"name\": \"mep_quantity_takeoff\", \"arguments\": {\"categories\": [\"duct\", \"pipe\"]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["AHU", "FCU", "VAV", "equipment", "thiết bị"],
+    "example": "User: list all AHU and FCU\nAssistant:\n<tool_call>\n{\"name\": \"get_mechanical_equipment\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["CHW", "chilled water", "nước lạnh", "summary"],
+    "example": "User: summarize chilled water pipes\nAssistant:\n<tool_call>\n{\"name\": \"get_pipe_summary\", \"arguments\": {\"system_name\": \"Chilled Water\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["HWS", "HWR", "hot water", "nước nóng"],
+    "example": "User: thong ke ong nuoc nong\nAssistant:\n<tool_call>\n{\"name\": \"get_pipe_summary\", \"arguments\": {\"system_name\": \"Hot Water\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["FP", "fire", "sprinkler", "pccc", "đầu phun"],
+    "example": "User: liet ke dau phun pccc\nAssistant:\n<tool_call>\n{\"name\": \"get_fire_protection_equipment\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["MDB", "DB", "tủ điện", "distribution board"],
+    "example": "User: liet ke tu dien trong model\nAssistant:\n<tool_call>\n{\"name\": \"get_electrical_equipment\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["cable tray", "CT", "máng cáp", "conduit"],
+    "example": "User: thong ke mang cap va ong dan dien\nAssistant:\n<tool_call>\n{\"name\": \"mep_quantity_takeoff\", \"arguments\": {\"categories\": [\"cable_tray\", \"conduit\"]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["diffuser", "grille", "air terminal", "miệng gió"],
+    "example": "User: list all diffusers and grilles\nAssistant:\n<tool_call>\n{\"name\": \"get_elements\", \"arguments\": {\"category\": \"Air Terminals\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["boq", "all", "mep", "tất cả", "toàn bộ"],
+    "example": "User: tao BOQ cho tat ca he thong MEP\nAssistant:\n<tool_call>\n{\"name\": \"mep_quantity_takeoff\", \"arguments\": {\"categories\": [\"duct\", \"pipe\", \"conduit\", \"cable_tray\"]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["SW", "sanitary", "thoát nước", "waste"],
+    "example": "User: thong ke he thong thoat nuoc\nAssistant:\n<tool_call>\n{\"name\": \"get_pipe_summary\", \"arguments\": {\"system_name\": \"Sanitary\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["3d", "view", "CHW", "chilled", "nước lạnh"],
+    "example": "User: tao 3d view cho he thong nuoc lanh\nAssistant:\n<tool_call>\n{\"name\": \"create_3d_view_by_system\", \"arguments\": {\"system_name\": \"Chilled Water\", \"view_name\": \"3D_CHW\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["check", "velocity", "van toc", "tốc độ", "duct"],
+    "example": "User: kiem tra van toc gio trong ong\nAssistant:\n<tool_call>\n{\"name\": \"check_velocity\", \"arguments\": {\"category\": \"Ducts\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["insulation", "bao on", "cách nhiệt", "check"],
+    "example": "User: kiem tra bao on cho ong nuoc lanh\nAssistant:\n<tool_call>\n{\"name\": \"check_insulation_coverage\", \"arguments\": {\"category\": \"Pipes\", \"system_name\": \"Chilled Water\"}}\n</tool_call>"
+  },
+
+  {
+    "keywords": ["FCU", "dàn lạnh", "fan coil", "dan lanh"],
+    "example": "User: liet ke tat ca dan lanh trong mo hinh\nAssistant:\n<tool_call>\n{\"name\": \"get_mechanical_equipment\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["fire damper", "FD", "van ngăn cháy", "van ngan chay"],
+    "example": "User: kiem tra van ngan chay tren tang 2\nAssistant:\n<tool_call>\n{\"name\": \"check_fire_dampers\", \"arguments\": {\"level\": \"Level 2\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["condensate", "nước ngưng", "nuoc ngung", "drain"],
+    "example": "User: kiem tra ong nuoc ngung\nAssistant:\n<tool_call>\n{\"name\": \"get_pipe_summary\", \"arguments\": {\"system_name\": \"Condensate\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["disconnect", "ngắt", "hở", "không nối"],
+    "example": "User: tim ong gio bi ngat ket noi\nAssistant:\n<tool_call>\n{\"name\": \"check_disconnected_elements\", \"arguments\": {\"category\": \"Ducts\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["slope", "độ dốc", "do doc", "sanitary", "thoát nước"],
+    "example": "User: kiem tra do doc ong thoat nuoc\nAssistant:\n<tool_call>\n{\"name\": \"check_pipe_slope\", \"arguments\": {\"system_name\": \"Sanitary\", \"min_slope_pct\": 1.0}}\n</tool_call>"
+  },
+  {
+    "keywords": ["missing", "thiếu", "thieu", "parameter", "chưa điền"],
+    "example": "User: tim ong nao thieu thong so Mark\nAssistant:\n<tool_call>\n{\"name\": \"check_missing_parameters\", \"arguments\": {\"category\": \"Pipes\", \"parameters\": [\"Mark\"]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["VFD", "biến tần", "bien tan", "speed"],
+    "example": "User: tim thiet bi co bien tan\nAssistant:\n<tool_call>\n{\"name\": \"search_elements\", \"arguments\": {\"category\": \"Mechanical Equipment\", \"param_name\": \"Comments\", \"param_value\": \"VFD\", \"match_type\": \"contains\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["miệng gió", "mieng gio", "diffuser", "grille", "cửa gió"],
+    "example": "User: dem mieng gio tren tang 1\nAssistant:\n<tool_call>\n{\"name\": \"count_elements\", \"arguments\": {\"category\": \"Air Terminals\", \"level\": \"Level 1\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["smoke", "khói", "khoi", "exhaust", "sự cố"],
+    "example": "User: thong ke quat hut khoi\nAssistant:\n<tool_call>\n{\"name\": \"get_mechanical_equipment\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["kiểm tra", "kiem tra", "ống", "duct", "toàn bộ", "tổng quan"],
+    "example": "User: kiem tra tong quan he thong ong gio\nAssistant:\n<tool_call>\n{\"name\": \"get_duct_summary\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["đâu", "ở đâu", "where", "nào", "which"],
+    "example": "User: ong gio nao bi ngat ket noi\nAssistant:\n<tool_call>\n{\"name\": \"check_disconnected_elements\", \"arguments\": {\"category\": \"Ducts\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["so sánh", "so sanh", "compare", "khác nhau", "giống nhau"],
+    "example": "User: so sanh 2 element 100 va 200\nAssistant:\n<tool_call>\n{\"name\": \"compare_element_parameters\", \"arguments\": {\"element_id_1\": 100, \"element_id_2\": 200}}\n</tool_call>"
+  },
+
+  {
+    "keywords": ["tong", "ong", "pipe", "duct", "bao nhieu", "tat ca"],
+    "example": "User: tong co bao nhieu ong gio va ong nuoc trong mo hinh\nAssistant:\n<tool_call>\n{\"name\": \"mep_quantity_takeoff\", \"arguments\": {\"categories\": [\"duct\", \"pipe\"]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["cap gio", "supply", "tang", "level", "thong ke"],
+    "example": "User: thong ke cap gio tang 1\nAssistant:\n<tool_call>\n{\"name\": \"get_duct_summary\", \"arguments\": {\"system_name\": \"Supply Air\", \"level\": \"Level 1\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["nuoc lanh", "chilled", "pipe", "ong", "kiem tra"],
+    "example": "User: kiem tra ong nuoc lanh co bi ngat khong\nAssistant:\n<tool_call>\n{\"name\": \"check_disconnected_elements\", \"arguments\": {\"category\": \"Pipes\", \"system_name\": \"Chilled Water\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["to mau", "color", "he thong", "system", "ong gio"],
+    "example": "User: to mau ong gio theo he thong\nAssistant:\n<tool_call>\n{\"name\": \"override_color_by_system\", \"arguments\": {\"category\": \"Ducts\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["co bao nhieu", "count", "dau phun", "sprinkler", "tang"],
+    "example": "User: co bao nhieu dau phun tren tang 2\nAssistant:\n<tool_call>\n{\"name\": \"count_elements\", \"arguments\": {\"category\": \"Sprinklers\", \"level\": \"Level 2\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["xuat", "export", "khoi luong", "boq", "csv", "tat ca"],
+    "example": "User: xuat khoi luong tat ca ong gio ong nuoc ra csv\nAssistant:\n<tool_call>\n{\"name\": \"export_mep_boq\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["kiem tra", "do doc", "slope", "thoat nuoc", "sanitary"],
+    "example": "User: kiem tra do doc ong thoat nuoc toi thieu 1 phan tram\nAssistant:\n<tool_call>\n{\"name\": \"check_pipe_slope\", \"arguments\": {\"system_name\": \"Sanitary\", \"min_slope_pct\": 1.0}}\n</tool_call>"
+  },
+  {
+    "keywords": ["liet ke", "list", "thiet bi", "equipment", "tang"],
+    "example": "User: liet ke thiet bi co dien tang 3\nAssistant:\n<tool_call>\n{\"name\": \"get_mechanical_equipment\", \"arguments\": {\"level\": \"Level 3\"}}\n</tool_call>"
   }
 ]

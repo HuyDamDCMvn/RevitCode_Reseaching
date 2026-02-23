@@ -272,7 +272,9 @@ namespace RevitChat.Skills
                 foreach (var elem in elems)
                 {
                     var sn = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "";
-                    if (!sn.Equals(systemName, StringComparison.OrdinalIgnoreCase)) continue;
+                    var sc = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_CLASSIFICATION_PARAM)?.AsString() ?? "";
+                    if (!MatchesSystem(sn, sc, systemName))
+                        continue;
 
                     results.Add(new
                     {
@@ -281,7 +283,8 @@ namespace RevitChat.Skills
                         family = GetFamilyName(doc, elem),
                         type = GetElementTypeName(doc, elem),
                         size = elem.get_Parameter(BuiltInParameter.RBS_CALCULATED_SIZE)?.AsString() ?? "-",
-                        level = GetElementLevel(doc, elem)
+                        level = GetElementLevel(doc, elem),
+                        system = sn
                     });
 
                     if (results.Count >= limit) break;
@@ -315,8 +318,8 @@ namespace RevitChat.Skills
                     continue;
 
                 var sysName = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "";
-                if (!string.IsNullOrEmpty(systemFilter) &&
-                    !sysName.Equals(systemFilter, StringComparison.OrdinalIgnoreCase))
+                var sysClass = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_CLASSIFICATION_PARAM)?.AsString() ?? "";
+                if (!MatchesSystem(sysName, sysClass, systemFilter))
                     continue;
 
                 var length = elem.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH)?.AsDouble() ?? 0;
@@ -423,9 +426,8 @@ namespace RevitChat.Skills
                         continue;
 
                     var sysName = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "(Unassigned)";
-
-                    if (!string.IsNullOrEmpty(systemFilter) &&
-                        sysName.IndexOf(systemFilter, StringComparison.OrdinalIgnoreCase) < 0)
+                    var sysClass = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_CLASSIFICATION_PARAM)?.AsString() ?? "";
+                    if (!MatchesSystem(sysName, sysClass, systemFilter))
                         continue;
 
                     if (!systemTotals.TryGetValue(sysName, out var totals))
@@ -476,10 +478,11 @@ namespace RevitChat.Skills
             bool includeSegments = GetArg(args, "include_segments", false);
             if (string.IsNullOrEmpty(systemName)) return JsonError("system_name required.");
 
+            var normSys = NormalizeArg(systemName);
             var systems = new FilteredElementCollector(doc)
                 .OfClass(typeof(Autodesk.Revit.DB.Mechanical.MechanicalSystem))
                 .Cast<Autodesk.Revit.DB.Mechanical.MechanicalSystem>()
-                .Where(s => s.Name.IndexOf(systemName, StringComparison.OrdinalIgnoreCase) >= 0)
+                .Where(s => MatchesSystem(s.Name, s.SystemType.ToString(), normSys))
                 .ToList();
 
             if (systems.Count == 0)
@@ -487,7 +490,7 @@ namespace RevitChat.Skills
                 var pipeSystems = new FilteredElementCollector(doc)
                     .OfClass(typeof(Autodesk.Revit.DB.Plumbing.PipingSystem))
                     .Cast<Autodesk.Revit.DB.Plumbing.PipingSystem>()
-                    .Where(s => s.Name.IndexOf(systemName, StringComparison.OrdinalIgnoreCase) >= 0)
+                    .Where(s => MatchesSystem(s.Name, s.SystemType.ToString(), normSys))
                     .ToList();
 
                 if (pipeSystems.Count == 0) return JsonError($"System '{systemName}' not found.");
@@ -560,8 +563,9 @@ namespace RevitChat.Skills
                 .WhereElementIsNotElementType()
                 .Where(e =>
                 {
-                    var sp = e.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM);
-                    return sp != null && (sp.AsString() ?? "").IndexOf(systemName, StringComparison.OrdinalIgnoreCase) >= 0;
+                    var sn = e.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "";
+                    var sc = e.get_Parameter(BuiltInParameter.RBS_SYSTEM_CLASSIFICATION_PARAM)?.AsString() ?? "";
+                    return MatchesSystem(sn, sc, systemName);
                 })
                 .ToList();
 
@@ -618,8 +622,9 @@ namespace RevitChat.Skills
                 .WhereElementIsNotElementType()
                 .Where(e =>
                 {
-                    var sp = e.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM);
-                    return sp != null && (sp.AsString() ?? "").IndexOf(systemName, StringComparison.OrdinalIgnoreCase) >= 0;
+                    var sn = e.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "";
+                    var sc = e.get_Parameter(BuiltInParameter.RBS_SYSTEM_CLASSIFICATION_PARAM)?.AsString() ?? "";
+                    return MatchesSystem(sn, sc, systemName);
                 })
                 .ToList();
 

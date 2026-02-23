@@ -204,7 +204,7 @@ namespace RevitChat.Skills
             if (!string.IsNullOrEmpty(category) && !bic.HasValue)
             {
                 elements = elements.Where(e =>
-                    e.Category?.Name?.IndexOf(category, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+                    MatchesCategoryName(e.Category?.Name ?? "", category)).ToList();
             }
 
             if (!string.IsNullOrEmpty(typeName))
@@ -262,7 +262,7 @@ namespace RevitChat.Skills
             if (!string.IsNullOrEmpty(category) && !bic.HasValue)
             {
                 elements = elements.Where(e =>
-                    e.Category?.Name?.IndexOf(category, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+                    MatchesCategoryName(e.Category?.Name ?? "", category)).ToList();
             }
 
             if (groupBy == "type")

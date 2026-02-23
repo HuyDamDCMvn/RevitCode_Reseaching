@@ -232,7 +232,7 @@ namespace RevitChat.Skills
                 if (elem.Category == null) continue;
 
                 if (needsCategoryFallback &&
-                    !elem.Category.Name.Equals(category, StringComparison.OrdinalIgnoreCase))
+                    !MatchesCategoryName(elem.Category.Name, category))
                     continue;
 
                 string elemLevel = null;
@@ -315,7 +315,7 @@ namespace RevitChat.Skills
                 if (elem.Category == null) continue;
 
                 if (needsCategoryFallback &&
-                    !elem.Category.Name.Equals(category, StringComparison.OrdinalIgnoreCase))
+                    !MatchesCategoryName(elem.Category.Name, category))
                     continue;
 
                 if (!string.IsNullOrEmpty(level) &&
@@ -405,7 +405,7 @@ namespace RevitChat.Skills
                 if (elem.Category == null) continue;
 
                 if (needsCategoryFallback &&
-                    !elem.Category.Name.Equals(category, StringComparison.OrdinalIgnoreCase))
+                    !MatchesCategoryName(elem.Category.Name, category))
                     continue;
 
                 var param = elem.LookupParameter(paramName);

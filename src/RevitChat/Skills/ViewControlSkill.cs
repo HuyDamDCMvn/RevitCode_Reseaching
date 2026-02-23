@@ -1929,14 +1929,9 @@ namespace RevitChat.Skills
                 foreach (var elem in new FilteredElementCollector(doc)
                     .OfCategory(cat).WhereElementIsNotElementType())
                 {
-                    var sn = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString();
-                    if (string.IsNullOrEmpty(sn)) continue;
-
-                    bool match = matchType == "equals"
-                        ? sn.Equals(systemName, StringComparison.OrdinalIgnoreCase)
-                        : sn.IndexOf(systemName, StringComparison.OrdinalIgnoreCase) >= 0;
-
-                    if (!match) continue;
+                    var sn = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "";
+                    var scl = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_CLASSIFICATION_PARAM)?.AsString() ?? "";
+                    if (!MatchesSystem(sn, scl, systemName)) continue;
 
                     systemElemIds.Add(elem.Id);
                     matchedSystems.Add(sn);

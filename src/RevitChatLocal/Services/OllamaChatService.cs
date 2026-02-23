@@ -859,7 +859,7 @@ Example:
             }
             else
             {
-                // Smart mode: CoreTools + keyword match
+                // Smart mode: CoreTools + keyword match + PromptAnalyzer
                 selected = new HashSet<string>(CoreTools);
                 var combined = string.IsNullOrWhiteSpace(_lastUserMessage) || _lastUserMessage == userMessage
                     ? userMessage
@@ -870,6 +870,13 @@ Example:
                 {
                     foreach (var toolName in match.group.Tools)
                         selected.Add(toolName);
+                }
+
+                var ctx = RevitChat.Services.PromptAnalyzer.Analyze(combined);
+                foreach (var suggestedTool in ctx.SuggestedTools)
+                {
+                    if (toolIndex.ContainsKey(suggestedTool))
+                        selected.Add(suggestedTool);
                 }
             }
 
@@ -1464,6 +1471,10 @@ Assistant:
 
 {examplesSection}
 {tagKnowledgeSection}";
+
+            var ctx = RevitChat.Services.PromptAnalyzer.Analyze(userMsg);
+            if (!string.IsNullOrEmpty(ctx.ContextHint))
+                prompt += $"\n\n{ctx.ContextHint}";
 
             if (forcedTools == null)
             {

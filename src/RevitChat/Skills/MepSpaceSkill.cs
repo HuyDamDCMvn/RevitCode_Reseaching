@@ -391,8 +391,7 @@ namespace RevitChat.Skills
 
                 if (!string.IsNullOrEmpty(categoryFilter) && !bicFilter.HasValue)
                 {
-                    var catName = elem.Category.Name ?? "";
-                    if (!catName.Contains(categoryFilter, StringComparison.OrdinalIgnoreCase))
+                    if (!MatchesCategoryName(elem.Category.Name ?? "", categoryFilter))
                         continue;
                 }
 

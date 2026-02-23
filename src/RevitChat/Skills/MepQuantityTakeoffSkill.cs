@@ -93,7 +93,14 @@ namespace RevitChat.Skills
             };
         }
 
-        private static readonly Dictionary<string, BuiltInCategory> CatMap = new()
+        private static readonly BuiltInCategory[] MepCurveCategories =
+        {
+            BuiltInCategory.OST_DuctCurves, BuiltInCategory.OST_PipeCurves,
+            BuiltInCategory.OST_Conduit, BuiltInCategory.OST_CableTray,
+            BuiltInCategory.OST_FlexDuctCurves, BuiltInCategory.OST_FlexPipeCurves
+        };
+
+        private static readonly Dictionary<string, BuiltInCategory> MepShortNames = new(StringComparer.OrdinalIgnoreCase)
         {
             ["duct"] = BuiltInCategory.OST_DuctCurves,
             ["pipe"] = BuiltInCategory.OST_PipeCurves,
@@ -109,8 +116,10 @@ namespace RevitChat.Skills
             var levelFilter = GetArg<string>(args, "level");
 
             var selectedCats = (cats != null && cats.Count > 0)
-                ? cats.Where(c => CatMap.ContainsKey(c.ToLower())).Select(c => CatMap[c.ToLower()]).ToList()
-                : CatMap.Values.ToList();
+                ? cats.Select(c => ResolveMepCurveCategory(doc, c))
+                      .Where(b => b.HasValue).Select(b => b.Value)
+                      .Distinct().ToList()
+                : MepCurveCategories.ToList();
 
             if (selectedCats.Count == 0)
                 return new List<MepLineItem>();
@@ -385,6 +394,27 @@ namespace RevitChat.Skills
                 return Math.PI * d * lengthFt;
 
             return 0;
+        }
+
+        private static BuiltInCategory? ResolveMepCurveCategory(Document doc, string input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return null;
+            var trimmed = input.Trim();
+
+            if (MepShortNames.TryGetValue(trimmed, out var exact)) return exact;
+
+            var norm = NormalizeArg(trimmed);
+            if (MepShortNames.TryGetValue(norm, out var normMatch)) return normMatch;
+            if (norm.EndsWith("s") && MepShortNames.TryGetValue(norm.TrimEnd('s'), out var singular))
+                return singular;
+            var noSpace = norm.Replace(" ", "_");
+            if (MepShortNames.TryGetValue(noSpace, out var spaced)) return spaced;
+
+            var bic = ResolveCategoryFilter(doc, trimmed);
+            if (bic.HasValue && MepCurveCategories.Contains(bic.Value))
+                return bic;
+
+            return null;
         }
 
         private static string Esc(string v) => EscapeCsv(v);
