@@ -126,6 +126,10 @@ namespace RevitChat.Skills
                     }
                 }
 
+                var origin = conn.Origin;
+                var dir = conn.CoordinateSystem.BasisZ;
+                string orientation = Math.Abs(dir.Z) > 0.9 ? (dir.Z > 0 ? "up" : "down") : "horizontal";
+
                 connectors.Add(new
                 {
                     index,
@@ -133,6 +137,11 @@ namespace RevitChat.Skills
                     domain = conn.Domain.ToString(),
                     shape = conn.Shape.ToString(),
                     size = BuildConnectorSize(conn),
+                    position = new { x = Math.Round(origin.X * 304.8, 1), y = Math.Round(origin.Y * 304.8, 1), z = Math.Round(origin.Z * 304.8, 1) },
+                    direction = new { x = Math.Round(dir.X, 3), y = Math.Round(dir.Y, 3), z = Math.Round(dir.Z, 3) },
+                    orientation,
+                    flow = GetFlowDirection(conn),
+                    system_name = GetConnectorSystemName(conn),
                     is_connected = conn.IsConnected,
                     connected_to = connectedTo
                 });
@@ -333,8 +342,10 @@ namespace RevitChat.Skills
                 return JsonError($"Element {id2} has no connectors.");
 
             const double toleranceFt = 10.0 / 304.8;
-            Connector bestC1 = null, bestC2 = null;
-            double bestDist = double.MaxValue;
+            Connector bestAlignedC1 = null, bestAlignedC2 = null;
+            double bestAlignedDist = double.MaxValue;
+            Connector bestAnyC1 = null, bestAnyC2 = null;
+            double bestAnyDist = double.MaxValue;
 
             foreach (Connector c1 in cm1.Connectors)
             {
@@ -345,14 +356,29 @@ namespace RevitChat.Skills
                     if (c1.Domain != c2.Domain) continue;
 
                     double dist = c1.Origin.DistanceTo(c2.Origin);
-                    if (dist < bestDist)
+
+                    if (dist < bestAnyDist)
                     {
-                        bestDist = dist;
-                        bestC1 = c1;
-                        bestC2 = c2;
+                        bestAnyDist = dist;
+                        bestAnyC1 = c1;
+                        bestAnyC2 = c2;
+                    }
+
+                    double dot = c1.CoordinateSystem.BasisZ.DotProduct(c2.CoordinateSystem.BasisZ);
+                    bool aligned = dot < -0.5;
+                    if (aligned && dist < bestAlignedDist)
+                    {
+                        bestAlignedDist = dist;
+                        bestAlignedC1 = c1;
+                        bestAlignedC2 = c2;
                     }
                 }
             }
+
+            var bestC1 = bestAlignedC1 ?? bestAnyC1;
+            var bestC2 = bestAlignedC2 ?? bestAnyC2;
+            double bestDist = bestAlignedC1 != null ? bestAlignedDist : bestAnyDist;
+            bool isAligned = bestAlignedC1 != null;
 
             if (bestC1 == null || bestC2 == null)
                 return JsonError("No compatible unconnected connector pair found.");
@@ -365,6 +391,7 @@ namespace RevitChat.Skills
                 {
                     status = "too_far",
                     distance_mm = distMm,
+                    aligned = isAligned,
                     message = $"Closest connectors are {distMm}mm apart (tolerance: 10mm). Move elements closer first.",
                     connector_1 = new { element_id = id1, domain = bestC1.Domain.ToString(), shape = bestC1.Shape.ToString() },
                     connector_2 = new { element_id = id2, domain = bestC2.Domain.ToString(), shape = bestC2.Shape.ToString() }
@@ -378,6 +405,7 @@ namespace RevitChat.Skills
                     dry_run = true,
                     status = "can_connect",
                     distance_mm = distMm,
+                    aligned = isAligned,
                     connector_1 = new { element_id = id1, domain = bestC1.Domain.ToString(), shape = bestC1.Shape.ToString() },
                     connector_2 = new { element_id = id2, domain = bestC2.Domain.ToString(), shape = bestC2.Shape.ToString() }
                 }, JsonOpts);
@@ -449,6 +477,18 @@ namespace RevitChat.Skills
         private static string BuildEdgeKey(long a, long b)
         {
             return a < b ? $"{a}-{b}" : $"{b}-{a}";
+        }
+
+        private static string GetFlowDirection(Connector conn)
+        {
+            try { return conn.Direction.ToString(); }
+            catch { return "-"; }
+        }
+
+        private static string GetConnectorSystemName(Connector conn)
+        {
+            try { return conn.MEPSystem?.Name ?? "-"; }
+            catch { return "-"; }
         }
 
         private static object BuildConnectorSize(Connector conn)

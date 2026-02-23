@@ -191,5 +191,86 @@ namespace RevitChat.Skills
         }
 
         #endregion
+
+        #region MEP Connector Utilities
+
+        /// <summary>
+        /// Computes recommended extension length from a connector, based on its size.
+        /// Round connectors: 4 * Radius (min 1 ft).
+        /// Rectangular: 2 * Max(Width, Height) (min 1 ft).
+        /// From DCMvn connector patterns.
+        /// </summary>
+        internal static double GetExtensionLengthFt(Connector conn)
+        {
+            if (conn.Shape == ConnectorProfileType.Round)
+                return Math.Max(conn.Radius * 4, 1.0);
+            return Math.Max(Math.Max(conn.Width, conn.Height) * 2, 1.0);
+        }
+
+        /// <summary>
+        /// Checks if two connectors are properly aligned (facing each other).
+        /// Uses BasisZ DotProduct: value &lt; -0.5 means connectors face each other.
+        /// </summary>
+        internal static bool AreConnectorsAligned(Connector c1, Connector c2)
+        {
+            return c1.CoordinateSystem.BasisZ.DotProduct(c2.CoordinateSystem.BasisZ) < -0.5;
+        }
+
+        /// <summary>
+        /// Checks if connector direction is pointing up (vertical, Z > 0).
+        /// </summary>
+        internal static bool IsConnectorPointingUp(Connector conn)
+        {
+            var dir = conn.CoordinateSystem.BasisZ;
+            return Math.Abs(dir.X) < 0.001 && Math.Abs(dir.Y) < 0.001 && dir.Z > 0;
+        }
+
+        /// <summary>
+        /// Checks if connector direction is pointing down (vertical, Z &lt; 0).
+        /// </summary>
+        internal static bool IsConnectorPointingDown(Connector conn)
+        {
+            var dir = conn.CoordinateSystem.BasisZ;
+            return Math.Abs(dir.X) < 0.001 && Math.Abs(dir.Y) < 0.001 && dir.Z < 0;
+        }
+
+        private static readonly string[][] DuctTypeKeywords = new[]
+        {
+            new[] { "round", "rund", "круглый", "원형", "redondo", "圆形", "丸形", "okrągły", "kulatý" },
+            new[] { "rectangular", "rechteckig", "прямоугольный", "직사각형", "rectangular", "矩形", "長方形", "prostokątny", "obdélníkový" },
+            new[] { "oval", "овальный", "타원형", "ovalado", "椭圆", "楕円", "owalny", "oválný" }
+        };
+
+        /// <summary>
+        /// Resolves DuctType ID for a given shape, supporting multilingual family names.
+        /// Searches through all DuctTypes and classifies by family name keywords in
+        /// EN, DE, RU, KR, ES, ZH, JP, PL, CZ.
+        /// </summary>
+        internal static ElementId GetDuctTypeForShape(Document doc, ConnectorProfileType shape)
+        {
+            var ductTypes = new FilteredElementCollector(doc)
+                .OfClass(typeof(Autodesk.Revit.DB.Mechanical.DuctType))
+                .ToElements();
+
+            int targetIndex = shape switch
+            {
+                ConnectorProfileType.Round => 0,
+                ConnectorProfileType.Rectangular => 1,
+                ConnectorProfileType.Oval => 2,
+                _ => 0
+            };
+
+            foreach (var dt in ductTypes)
+            {
+                var famName = dt.get_Parameter(BuiltInParameter.SYMBOL_FAMILY_NAME_PARAM)?.AsString() ?? "";
+                var lower = famName.ToLowerInvariant();
+                if (DuctTypeKeywords[targetIndex].Any(kw => lower.Contains(kw)))
+                    return dt.Id;
+            }
+
+            return ductTypes.FirstOrDefault()?.Id ?? ElementId.InvalidElementId;
+        }
+
+        #endregion
     }
 }

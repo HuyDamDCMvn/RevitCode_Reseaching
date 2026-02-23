@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Mechanical;
+using Autodesk.Revit.DB.Plumbing;
 using Autodesk.Revit.UI;
 using OpenAI.Chat;
 using static RevitChat.Skills.RevitHelpers;
@@ -90,20 +92,15 @@ namespace RevitChat.Skills
                     var elem = doc.GetElement(new ElementId(id));
                     if (elem == null) { errors.Add($"Element {id} not found"); continue; }
 
-                    var bb = elem.get_BoundingBox(null);
-                    if (bb == null) { errors.Add($"No bounding box for {id}"); continue; }
-
-                    double centerX = (bb.Min.X + bb.Max.X) / 2;
-                    double centerY = (bb.Min.Y + bb.Max.Y) / 2;
-                    double topZ = bb.Max.Z;
-                    double bottomZ = bb.Min.Z;
+                    var rayOrigins = GetMepRayOrigins(elem);
+                    if (rayOrigins == null) { errors.Add($"No geometry for {id}"); continue; }
 
                     double? distUp = null, distDown = null;
                     string hitUpName = null, hitDownName = null;
 
                     if (direction is "up" or "both")
                     {
-                        var rayStart = new XYZ(centerX, centerY, topZ);
+                        var rayStart = new XYZ(rayOrigins.Value.centerX, rayOrigins.Value.centerY, rayOrigins.Value.topZ);
                         var hit = intersector.FindNearest(rayStart, XYZ.BasisZ);
                         if (hit != null)
                         {
@@ -115,7 +112,7 @@ namespace RevitChat.Skills
 
                     if (direction is "down" or "both")
                     {
-                        var rayStart = new XYZ(centerX, centerY, bottomZ);
+                        var rayStart = new XYZ(rayOrigins.Value.centerX, rayOrigins.Value.centerY, rayOrigins.Value.bottomZ);
                         var hit = intersector.FindNearest(rayStart, -XYZ.BasisZ);
                         if (hit != null)
                         {
@@ -173,6 +170,68 @@ namespace RevitChat.Skills
                 results,
                 errors = errors.Take(10)
             }, JsonOpts);
+        }
+
+        /// <summary>
+        /// Computes accurate ray origin points for MEP elements.
+        /// For rectangular ducts: tessellates centerline and offsets by Height/2 (DCMvn technique).
+        /// For round pipes/ducts: tessellates and offsets by Radius.
+        /// For flex elements: uses bounding box of solid geometry.
+        /// Fallback: element bounding box.
+        /// </summary>
+        private static (double centerX, double centerY, double topZ, double bottomZ)? GetMepRayOrigins(Element elem)
+        {
+            if (elem.Location is LocationCurve lc && lc.Curve != null)
+            {
+                var curve = lc.Curve;
+                var pts = curve.Tessellate();
+                if (pts != null && pts.Count > 0)
+                {
+                    var ordered = pts.OrderBy(p => p.Z).ToList();
+                    double lowZ = ordered.First().Z;
+                    double highZ = ordered.Last().Z;
+                    var mid = curve.Evaluate(0.5, true);
+
+                    double halfHeight = GetMepHalfHeight(elem);
+                    return (mid.X, mid.Y, highZ + halfHeight, lowZ - halfHeight);
+                }
+            }
+
+            var bb = elem.get_BoundingBox(null);
+            if (bb == null) return null;
+            return ((bb.Min.X + bb.Max.X) / 2, (bb.Min.Y + bb.Max.Y) / 2, bb.Max.Z, bb.Min.Z);
+        }
+
+        private static double GetMepHalfHeight(Element elem)
+        {
+            if (elem is Duct duct)
+            {
+                var shape = duct.DuctType?.Shape ?? ConnectorProfileType.Round;
+                if (shape == ConnectorProfileType.Round)
+                {
+                    var diam = duct.get_Parameter(BuiltInParameter.RBS_CURVE_DIAMETER_PARAM);
+                    return diam != null ? diam.AsDouble() / 2 : 0;
+                }
+                var h = duct.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM);
+                return h != null ? h.AsDouble() / 2 : 0;
+            }
+
+            if (elem is Pipe pipe)
+            {
+                var diam = pipe.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM);
+                return diam != null ? diam.AsDouble() / 2 : 0;
+            }
+
+            if (elem is MEPCurve mep && mep.ConnectorManager != null)
+            {
+                foreach (Connector c in mep.ConnectorManager.Connectors)
+                {
+                    if (c.Shape == ConnectorProfileType.Round) return c.Radius;
+                    return Math.Max(c.Width, c.Height) / 2;
+                }
+            }
+
+            return 0;
         }
 
         private static View3D Get3DView(Document doc)

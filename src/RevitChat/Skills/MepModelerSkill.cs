@@ -41,7 +41,7 @@ namespace RevitChat.Skills
                 """)),
 
             ChatTool.CreateFunctionTool("split_mep_elements",
-                "Split duct or pipe curves into equal-length segments. The last segment may be shorter. Only supports ducts and pipes (not flex, conduit, or cable tray). Confirm with user first.",
+                "Split ducts, pipes, conduits, or cable trays into equal-length segments. The last segment may be shorter. Does not support flex elements. Confirm with user first.",
                 BinaryData.FromString("""
                 {
                     "type": "object",
@@ -288,14 +288,14 @@ namespace RevitChat.Skills
                     var cat = elem.Category?.BuiltInCategory ?? BuiltInCategory.INVALID;
                     bool isDuct = cat == BuiltInCategory.OST_DuctCurves;
                     bool isPipe = cat == BuiltInCategory.OST_PipeCurves;
+                    bool isConduit = cat == BuiltInCategory.OST_Conduit;
+                    bool isCableTray = cat == BuiltInCategory.OST_CableTray;
 
-                    if (!isDuct && !isPipe)
+                    if (!isDuct && !isPipe && !isConduit && !isCableTray)
                     {
                         var reason = cat is BuiltInCategory.OST_FlexDuctCurves or BuiltInCategory.OST_FlexPipeCurves
                             ? "Flex ducts/pipes cannot be split (BreakCurve not supported)"
-                            : cat is BuiltInCategory.OST_Conduit or BuiltInCategory.OST_CableTray
-                                ? "Conduit/cable tray split not supported by Revit API"
-                                : $"Unsupported category: {elem.Category?.Name ?? "unknown"}";
+                            : $"Unsupported category: {elem.Category?.Name ?? "unknown"}";
                         results.Add(new { id, error = reason });
                         continue;
                     }
@@ -334,9 +334,13 @@ namespace RevitChat.Skills
                     {
                         try
                         {
-                            ElementId newId = isDuct
-                                ? MechanicalUtils.BreakCurve(doc, currentId, pt)
-                                : PlumbingUtils.BreakCurve(doc, currentId, pt);
+                            ElementId newId;
+                            if (isDuct)
+                                newId = MechanicalUtils.BreakCurve(doc, currentId, pt);
+                            else if (isPipe)
+                                newId = PlumbingUtils.BreakCurve(doc, currentId, pt);
+                            else
+                                newId = BreakCurveGeneric(doc, currentId, pt);
 
                             if (newId != ElementId.InvalidElementId)
                                 created++;
@@ -754,6 +758,43 @@ namespace RevitChat.Skills
             if (param == null) { error = "Parameter not found."; return false; }
             if (param.IsReadOnly) { error = "Parameter is read-only."; return false; }
             return true;
+        }
+
+        #endregion
+
+        #region Generic Break
+
+        /// <summary>
+        /// Generic BreakCurve for Conduit/CableTray using LocationCurve manipulation.
+        /// Creates a copy and adjusts both curves' endpoints at the break point.
+        /// </summary>
+        private static ElementId BreakCurveGeneric(Document doc, ElementId elemId, XYZ breakPoint)
+        {
+            var elem = doc.GetElement(elemId);
+            if (elem?.Location is not LocationCurve lc) return ElementId.InvalidElementId;
+
+            var curve = lc.Curve;
+            var start = curve.GetEndPoint(0);
+            var end = curve.GetEndPoint(1);
+
+            var copiedIds = ElementTransformUtils.CopyElement(doc, elemId, XYZ.Zero);
+            if (copiedIds == null || copiedIds.Count == 0) return ElementId.InvalidElementId;
+
+            var newId = copiedIds.First();
+            var newElem = doc.GetElement(newId);
+            if (newElem?.Location is not LocationCurve newLc) return ElementId.InvalidElementId;
+
+            try
+            {
+                lc.Curve = Line.CreateBound(start, breakPoint);
+                newLc.Curve = Line.CreateBound(breakPoint, end);
+                return newId;
+            }
+            catch
+            {
+                try { doc.Delete(newId); } catch { }
+                return ElementId.InvalidElementId;
+            }
         }
 
         #endregion
