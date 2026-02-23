@@ -100,13 +100,14 @@ namespace RevitChat.Skills
                 """)),
 
             ChatTool.CreateFunctionTool("calculate_system_totals",
-                "Calculate per-system totals: total length, element count broken down by type (curves, fittings, accessories, equipment, terminals).",
+                "Calculate per-system totals: total length, element count broken down by type (curves, fittings, accessories, equipment, terminals). Can filter by MEP category.",
                 BinaryData.FromString("""
                 {
                     "type": "object",
                     "properties": {
                         "system_name": { "type": "string", "description": "System name (exact or partial match). If not provided, shows all systems." },
-                        "level": { "type": "string", "description": "Optional level filter" }
+                        "level": { "type": "string", "description": "Optional level filter" },
+                        "category": { "type": "string", "enum": ["all", "duct", "pipe", "conduit", "cable_tray"], "description": "MEP category filter. Default: all" }
                     },
                     "required": []
                 }
@@ -314,8 +315,9 @@ namespace RevitChat.Skills
         {
             var systemFilter = GetArg<string>(args, "system_name");
             var levelFilter = GetArg<string>(args, "level");
+            var categoryFilter = GetArg<string>(args, "category")?.ToLower() ?? "all";
 
-            var mepCategories = new Dictionary<BuiltInCategory, string>
+            var allCategories = new Dictionary<BuiltInCategory, string>
             {
                 [BuiltInCategory.OST_DuctCurves] = "curves",
                 [BuiltInCategory.OST_PipeCurves] = "curves",
@@ -331,6 +333,23 @@ namespace RevitChat.Skills
                 [BuiltInCategory.OST_Sprinklers] = "sprinklers",
                 [BuiltInCategory.OST_Conduit] = "curves",
                 [BuiltInCategory.OST_CableTray] = "curves"
+            };
+
+            var mepCategories = categoryFilter switch
+            {
+                "duct" => allCategories.Where(kv =>
+                    kv.Key is BuiltInCategory.OST_DuctCurves or BuiltInCategory.OST_FlexDuctCurves
+                        or BuiltInCategory.OST_DuctFitting or BuiltInCategory.OST_DuctAccessory
+                        or BuiltInCategory.OST_DuctTerminal).ToDictionary(kv => kv.Key, kv => kv.Value),
+                "pipe" => allCategories.Where(kv =>
+                    kv.Key is BuiltInCategory.OST_PipeCurves or BuiltInCategory.OST_FlexPipeCurves
+                        or BuiltInCategory.OST_PipeFitting or BuiltInCategory.OST_PipeAccessory
+                        or BuiltInCategory.OST_PlumbingFixtures or BuiltInCategory.OST_Sprinklers).ToDictionary(kv => kv.Key, kv => kv.Value),
+                "conduit" => allCategories.Where(kv =>
+                    kv.Key is BuiltInCategory.OST_Conduit).ToDictionary(kv => kv.Key, kv => kv.Value),
+                "cable_tray" => allCategories.Where(kv =>
+                    kv.Key is BuiltInCategory.OST_CableTray).ToDictionary(kv => kv.Key, kv => kv.Value),
+                _ => allCategories
             };
 
             var systemTotals = new Dictionary<string, SystemTotals>(StringComparer.OrdinalIgnoreCase);

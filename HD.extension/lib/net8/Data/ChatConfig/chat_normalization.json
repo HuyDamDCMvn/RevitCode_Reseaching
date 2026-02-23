@@ -1,5 +1,10 @@
 {
   "normalization_map": [
+    { "from": "thống kế", "to": "thống kê" },
+    { "from": "elment", "to": "element" },
+    { "from": "elemnt", "to": "element" },
+    { "from": "elemet", "to": "element" },
+    { "from": "systm", "to": "system" },
     { "from": "thiết bị vệ sinh", "to": "plumbing fixtures" },
     { "from": "máy điều hòa", "to": "air conditioning" },
     { "from": "bình nóng lạnh", "to": "water heaters" },

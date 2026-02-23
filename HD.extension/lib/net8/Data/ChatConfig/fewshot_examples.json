@@ -1069,6 +1069,42 @@
   },
   {
     "keywords": [
+      "thống kê",
+      "duct",
+      "system",
+      "theo system"
+    ],
+    "example": "User: thống kê các duct element theo system\nAssistant:\n<tool_call>\n{\"name\": \"calculate_system_totals\", \"arguments\": {\"category\": \"duct\"}}\n</tool_call>"
+  },
+  {
+    "keywords": [
+      "thống kê",
+      "pipe",
+      "system",
+      "theo system"
+    ],
+    "example": "User: thống kê pipe theo system\nAssistant:\n<tool_call>\n{\"name\": \"calculate_system_totals\", \"arguments\": {\"category\": \"pipe\"}}\n</tool_call>"
+  },
+  {
+    "keywords": [
+      "thống kê",
+      "element",
+      "system",
+      "tổng hợp"
+    ],
+    "example": "User: thống kê tất cả element theo system\nAssistant:\n<tool_call>\n{\"name\": \"calculate_system_totals\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": [
+      "duct",
+      "system",
+      "count",
+      "đếm"
+    ],
+    "example": "User: đếm duct theo từng system\nAssistant:\n<tool_call>\n{\"name\": \"calculate_system_totals\", \"arguments\": {\"category\": \"duct\"}}\n</tool_call>"
+  },
+  {
+    "keywords": [
       "mechanical",
       "equipment",
       "thiết bị cơ"

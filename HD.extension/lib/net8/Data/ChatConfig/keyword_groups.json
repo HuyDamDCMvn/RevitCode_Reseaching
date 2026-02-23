@@ -101,7 +101,10 @@
     "báo cáo",
     "so sánh",
     "độ dốc",
-    "kích thước"
+    "kích thước",
+    "thống kê",
+    "statistics",
+    "tổng hợp"
   ],
   "groups": [
     {
@@ -124,7 +127,7 @@
     },
     {
       "name": "MEP",
-      "keywords": ["duct", "pipe", "mep", "hvac", "mechanical", "electrical", "plumbing", "conduit", "cable", "ống", "điện", "fire", "sprinkler", "cháy", "system total", "tổng hệ thống"],
+      "keywords": ["duct", "pipe", "mep", "hvac", "mechanical", "electrical", "plumbing", "conduit", "cable", "ống", "điện", "fire", "sprinkler", "cháy", "system total", "tổng hệ thống", "thống kê", "theo system"],
       "tools": ["get_mep_systems", "get_system_elements", "get_duct_summary", "get_pipe_summary", "get_conduit_summary", "get_cable_tray_summary", "get_mechanical_equipment", "get_plumbing_fixtures", "get_electrical_equipment", "get_fire_protection_equipment", "get_fittings", "check_disconnected_elements", "mep_quantity_takeoff", "get_connector_info", "get_system_connectivity", "calculate_system_totals"],
       "weight": 1
     },
