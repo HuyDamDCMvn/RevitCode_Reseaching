@@ -745,6 +745,32 @@
   },
   {
     "keywords": [
+      "bao nhiêu",
+      "chưa được tag",
+      "chưa tag",
+      "category",
+      "view"
+    ],
+    "example": "User: trong view hiện tại có bao nhiêu element thuộc category Ducts chưa được tag\nAssistant:\n<tool_call>\n{\"name\": \"get_untagged_elements\", \"arguments\": {\"category\": \"Ducts\"}}\n</tool_call>"
+  },
+  {
+    "keywords": [
+      "chưa tag",
+      "untagged",
+      "chưa được tag"
+    ],
+    "example": "User: liệt kê các element chưa tag trong view hiện tại category Walls\nAssistant:\n<tool_call>\n{\"name\": \"get_untagged_elements\", \"arguments\": {\"category\": \"Walls\"}}\n</tool_call>"
+  },
+  {
+    "keywords": [
+      "bao nhiêu",
+      "chưa tag",
+      "pipe"
+    ],
+    "example": "User: bao nhiêu pipe chưa được tag\nAssistant:\n<tool_call>\n{\"name\": \"get_untagged_elements\", \"arguments\": {\"category\": \"Pipes\"}}\n</tool_call>"
+  },
+  {
+    "keywords": [
       "tag",
       "elements"
     ],

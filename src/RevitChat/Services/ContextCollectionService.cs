@@ -15,7 +15,9 @@ namespace RevitChat.Services
         {
             var lower = userText?.ToLowerInvariant() ?? "";
             var needsView = lower.Contains("current view") || lower.Contains("active view")
-                || lower.Contains("view hiện tại") || lower.Contains("view đang mở");
+                || lower.Contains("view hiện tại") || lower.Contains("view hiên tại")
+                || lower.Contains("view đang mở") || lower.Contains("trong view")
+                || lower.Contains("in view") || lower.Contains("on view");
             var needsSelection = lower.Contains("selected") || lower.Contains("selection")
                 || lower.Contains("đang chọn") || lower.Contains("được chọn");
             var needsLevels = lower.Contains("level") || lower.Contains("tầng")

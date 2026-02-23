@@ -104,7 +104,11 @@
     "kích thước",
     "thống kê",
     "statistics",
-    "tổng hợp"
+    "tổng hợp",
+    "bao nhiêu",
+    "chưa được",
+    "chưa tag",
+    "chưa có"
   ],
   "groups": [
     {
@@ -163,7 +167,7 @@
     },
     {
       "name": "Tag / Dimension",
-      "keywords": ["tag", "dimension", "text", "ghi chú", "kích thước"],
+      "keywords": ["tag", "dimension", "text", "ghi chú", "kích thước", "untagged", "chưa tag", "chưa được tag", "chưa ghi"],
       "tools": ["tag_elements", "get_untagged_elements", "tag_all_in_view", "add_text_note"],
       "weight": 1
     },
