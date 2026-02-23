@@ -53,6 +53,7 @@
   "get_mep_routing_path": "element_id, max_elements?",
   "connect_mep_elements": "element_id_1, element_id_2, dry_run?",
   "calculate_system_totals": "system_name?, level?, category?(all|duct|pipe|conduit|cable_tray)",
+  "split_mep_elements": "element_ids (array), segment_length_mm, dry_run?",
   "create_schedule": "category, field_names (array), schedule_name?, if_exists?, dry_run?",
   "get_schedule_fields": "category",
   "apply_view_template": "view_ids (array), template_id, dry_run?",

@@ -1537,6 +1537,53 @@
   },
   {
     "keywords": [
+      "split",
+      "chia",
+      "duct",
+      "đoạn",
+      "segment"
+    ],
+    "example": "User: chia các đoạn ống duct thành nhiều đoạn, mỗi đoạn 1350mm\nAssistant:\nTôi cần biết element IDs của các duct cần chia. Bạn muốn chia tất cả duct trong view hiện tại hay chỉ một số element cụ thể?"
+  },
+  {
+    "keywords": [
+      "split",
+      "chia",
+      "duct",
+      "segment",
+      "element_ids"
+    ],
+    "example": "User: split duct 100, 200, 300 into 1350mm segments\nAssistant:\n<tool_call>\n{\"name\": \"split_mep_elements\", \"arguments\": {\"element_ids\": [100, 200, 300], \"segment_length_mm\": 1350}}\n</tool_call>"
+  },
+  {
+    "keywords": [
+      "split",
+      "chia",
+      "pipe",
+      "ống"
+    ],
+    "example": "User: chia pipe 500, 600 thành đoạn 2000mm\nAssistant:\n<tool_call>\n{\"name\": \"split_mep_elements\", \"arguments\": {\"element_ids\": [500, 600], \"segment_length_mm\": 2000}}\n</tool_call>"
+  },
+  {
+    "keywords": [
+      "split",
+      "preview",
+      "dry run",
+      "xem trước"
+    ],
+    "example": "User: preview split duct 100 into 1500mm segments\nAssistant:\n<tool_call>\n{\"name\": \"split_mep_elements\", \"arguments\": {\"element_ids\": [100], \"segment_length_mm\": 1500, \"dry_run\": true}}\n</tool_call>"
+  },
+  {
+    "keywords": [
+      "cắt",
+      "tách",
+      "duct",
+      "đoạn"
+    ],
+    "example": "User: cắt duct 100, 200 thành các đoạn 1000mm\nAssistant:\n<tool_call>\n{\"name\": \"split_mep_elements\", \"arguments\": {\"element_ids\": [100, 200], \"segment_length_mm\": 1000}}\n</tool_call>"
+  },
+  {
+    "keywords": [
       "set slope",
       "đặt dốc"
     ],

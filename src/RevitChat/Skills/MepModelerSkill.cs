@@ -14,12 +14,12 @@ namespace RevitChat.Skills
     public class MepModelerSkill : BaseRevitSkill
     {
         protected override string SkillName => "MepModeler";
-        protected override string SkillDescription => "Modify MEP elements: resize, set slope, change system type, set offset, add insulation";
+        protected override string SkillDescription => "Modify MEP elements: resize, split, set slope, change system type, set offset, add insulation";
 
         protected override HashSet<string> HandledFunctions { get; } = new()
         {
-            "resize_mep_elements", "set_pipe_slope", "change_mep_system_type",
-            "batch_set_offset", "add_change_insulation"
+            "resize_mep_elements", "split_mep_elements", "set_pipe_slope",
+            "change_mep_system_type", "batch_set_offset", "add_change_insulation"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -37,6 +37,20 @@ namespace RevitChat.Skills
                         "dry_run": { "type": "boolean", "description": "Preview changes only (no transaction). Default false." }
                     },
                     "required": ["element_ids"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("split_mep_elements",
+                "Split duct/pipe/conduit curves into equal-length segments. The last segment may be shorter. Confirm with user first.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs of ducts/pipes/conduits to split" },
+                        "segment_length_mm": { "type": "number", "description": "Target length per segment in mm (e.g. 1350)" },
+                        "dry_run": { "type": "boolean", "description": "Preview only (no transaction). Default false." }
+                    },
+                    "required": ["element_ids", "segment_length_mm"]
                 }
                 """)),
 
@@ -108,6 +122,7 @@ namespace RevitChat.Skills
             return functionName switch
             {
                 "resize_mep_elements" => ResizeMepElements(doc, args),
+                "split_mep_elements" => SplitMepElements(doc, args),
                 "set_pipe_slope" => SetPipeSlope(doc, args),
                 "change_mep_system_type" => ChangeMepSystemType(doc, args),
                 "batch_set_offset" => BatchSetOffset(doc, args),
@@ -219,6 +234,135 @@ namespace RevitChat.Skills
             {
                 dry_run = dryRun, success, failed, skipped,
                 changes = changes.Take(100), errors = errors.Take(10)
+            }, JsonOpts);
+        }
+
+        #endregion
+
+        #region split_mep_elements
+
+        private string SplitMepElements(Document doc, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "element_ids");
+            double segLenMm = GetArg(args, "segment_length_mm", 0.0);
+            bool dryRun = GetArg(args, "dry_run", false);
+
+            if (ids == null || ids.Count == 0) return JsonError("element_ids required.");
+            if (segLenMm <= 0) return JsonError("segment_length_mm must be positive.");
+
+            const double mmToFt = 1.0 / 304.8;
+            double segLenFt = segLenMm * mmToFt;
+
+            var results = new List<object>();
+            int totalCreated = 0;
+
+            using var trans = dryRun ? null : new Transaction(doc, "AI: Split MEP Elements");
+            try
+            {
+                if (!dryRun) trans.Start();
+
+                foreach (var id in ids)
+                {
+                    var elem = doc.GetElement(new ElementId(id));
+                    if (elem == null) { results.Add(new { id, error = "Element not found" }); continue; }
+
+                    var locCurve = elem.Location as LocationCurve;
+                    if (locCurve == null)
+                    {
+                        results.Add(new { id, error = "Not a linear MEP element (no curve)" });
+                        continue;
+                    }
+
+                    var curve = locCurve.Curve;
+                    double totalLen = curve.Length;
+                    double totalMm = Math.Round(totalLen / mmToFt, 1);
+
+                    if (totalLen <= segLenFt)
+                    {
+                        results.Add(new { id, total_length_mm = totalMm, status = "skipped",
+                            reason = $"Length ({totalMm}mm) <= segment ({segLenMm}mm)" });
+                        continue;
+                    }
+
+                    int numCuts = (int)Math.Floor(totalLen / segLenFt);
+                    if (Math.Abs(totalLen - numCuts * segLenFt) < 1e-6)
+                        numCuts--;
+
+                    if (dryRun)
+                    {
+                        int segCount = numCuts + 1;
+                        double lastMm = Math.Round((totalLen - numCuts * segLenFt) / mmToFt, 1);
+                        var segs = new List<object>();
+                        for (int i = 0; i < segCount; i++)
+                        {
+                            double len = i < numCuts ? segLenMm : lastMm;
+                            segs.Add(new { index = i + 1, length_mm = len });
+                        }
+                        results.Add(new { id, total_length_mm = totalMm,
+                            segment_count = segCount, segments = segs });
+                        continue;
+                    }
+
+                    var cat = elem.Category?.BuiltInCategory ?? BuiltInCategory.INVALID;
+                    bool isDuct = cat is BuiltInCategory.OST_DuctCurves or BuiltInCategory.OST_FlexDuctCurves;
+                    bool isPipe = cat is BuiltInCategory.OST_PipeCurves or BuiltInCategory.OST_FlexPipeCurves;
+                    bool isConduit = cat == BuiltInCategory.OST_Conduit;
+                    bool isCableTray = cat == BuiltInCategory.OST_CableTray;
+
+                    if (!isDuct && !isPipe && !isConduit && !isCableTray)
+                    {
+                        results.Add(new { id, error = $"Unsupported category: {elem.Category?.Name ?? "unknown"}" });
+                        continue;
+                    }
+
+                    var breakPoints = new List<XYZ>();
+                    for (int i = numCuts; i >= 1; i--)
+                    {
+                        double dist = i * segLenFt;
+                        double param = dist / totalLen;
+                        breakPoints.Add(curve.Evaluate(param, true));
+                    }
+
+                    int created = 0;
+                    var currentId = elem.Id;
+                    foreach (var pt in breakPoints)
+                    {
+                        try
+                        {
+                            ElementId newId = ElementId.InvalidElementId;
+                            if (isDuct)
+                                newId = MechanicalUtils.BreakCurve(doc, currentId, pt);
+                            else if (isPipe)
+                                newId = PlumbingUtils.BreakCurve(doc, currentId, pt);
+
+                            if (newId != null && newId != ElementId.InvalidElementId)
+                                created++;
+                        }
+                        catch { }
+                    }
+
+                    totalCreated += created;
+                    results.Add(new { id, total_length_mm = totalMm,
+                        segments_created = created + 1, segment_length_mm = segLenMm });
+                }
+
+                if (!dryRun)
+                {
+                    if (totalCreated > 0) trans.Commit();
+                    else trans.RollBack();
+                }
+            }
+            catch
+            {
+                if (trans?.GetStatus() == TransactionStatus.Started) trans.RollBack();
+                throw;
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                dry_run = dryRun, segment_length_mm = segLenMm,
+                total_new_elements = totalCreated,
+                results = results.Take(50)
             }, JsonOpts);
         }
 
