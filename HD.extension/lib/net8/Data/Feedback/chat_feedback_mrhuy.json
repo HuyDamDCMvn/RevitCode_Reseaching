@@ -49,6 +49,40 @@
       ],
       "timestamp": "2026-02-22T17:33:19.9810952Z",
       "useCount": 1
+    },
+    {
+      "prompt": "kiem tra ong nuoc lanh co bi ngat khong",
+      "tools": [
+        {
+          "name": "check_disconnected_elements",
+          "args": {
+            "category": "Pipes",
+            "system_name": "Chilled Water",
+            "limit": 10
+          }
+        }
+      ],
+      "timestamp": "2026-02-23T17:23:36.8964363Z",
+      "useCount": 1
+    },
+    {
+      "prompt": "xuat khoi luong ong gio ra csv",
+      "tools": [
+        {
+          "name": "export_to_csv",
+          "args": {
+            "category": "Ducts",
+            "param_names": [
+              "Tag",
+              "Type Name",
+              "Length"
+            ],
+            "file_path": "C:\\temp\\ducts.csv"
+          }
+        }
+      ],
+      "timestamp": "2026-02-23T17:23:39.3830501Z",
+      "useCount": 1
     }
   ],
   "corrections": []

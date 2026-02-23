@@ -612,7 +612,9 @@ namespace RevitChatLocal.Services
             if (totalChars > 6000)
                 sb.AppendLine("Data is large. Summarize for user. Don't repeat raw data.");
 
-            sb.AppendLine("Answer the user. If more steps needed, output ONE <tool_call>. If done, no <tool_call>.");
+            sb.AppendLine("Now answer the user in natural language based on the results above.");
+            sb.AppendLine("Do NOT output (tool call) or any tool syntax. Write a clear human-readable answer.");
+            sb.AppendLine("If more steps are needed, output exactly ONE <tool_call> block instead.");
 
             _conversationHistory.Add(new UserChatMessage(sb.ToString()));
 
@@ -937,8 +939,11 @@ Example:
         {
             if (toolCalls.Count > 0)
             {
-                _conversationHistory.Add(new AssistantChatMessage(
-                    !string.IsNullOrEmpty(cleanText) ? cleanText : "(tool call)"));
+                var toolNames = string.Join(", ", toolCalls.Select(t => t.FunctionName));
+                var historyText = !string.IsNullOrEmpty(cleanText)
+                    ? cleanText
+                    : $"[Calling tool: {toolNames}]";
+                _conversationHistory.Add(new AssistantChatMessage(historyText));
             }
             else
             {

@@ -336,9 +336,19 @@ namespace RevitChat.ViewModel
 
             if (_streamingMessage != null)
             {
-                _streamingMessage.AssociatedPrompt = _lastUserPrompt;
-                _streamingMessage.AssociatedToolNames = _lastToolNames.Count > 0 ? new List<string>(_lastToolNames) : null;
-                _streamingMessage.AssociatedToolCalls = _lastToolCalls.Count > 0 ? new List<ToolCallRequest>(_lastToolCalls) : null;
+                if (IsGarbageResponse(_streamingMessage.Content))
+                {
+                    Messages.Remove(_streamingMessage);
+                    _streamingMessage = null;
+                    if (_toolExecutedInSession)
+                        AddAssistantMessage("Done. The action was completed.");
+                }
+                else
+                {
+                    _streamingMessage.AssociatedPrompt = _lastUserPrompt;
+                    _streamingMessage.AssociatedToolNames = _lastToolNames.Count > 0 ? new List<string>(_lastToolNames) : null;
+                    _streamingMessage.AssociatedToolCalls = _lastToolCalls.Count > 0 ? new List<ToolCallRequest>(_lastToolCalls) : null;
+                }
             }
             else if (!string.IsNullOrEmpty(response) && !ChatGuardService.IsEchoResponse(response))
                 AddAssistantMessage(response);
@@ -377,6 +387,17 @@ namespace RevitChat.ViewModel
                 if (Messages[i].IsToolCall)
                     Messages.RemoveAt(i);
             }
+        }
+
+        private static bool IsGarbageResponse(string content)
+        {
+            if (string.IsNullOrWhiteSpace(content)) return true;
+            var trimmed = content.Trim().ToLowerInvariant();
+            if (trimmed.Length < 5) return true;
+            if (trimmed.Contains("tool_call") || trimmed.Contains("tool call")) return true;
+            if (trimmed.StartsWith("[calling") || trimmed.StartsWith("(calling")) return true;
+            if (trimmed == "null" || trimmed == "none" || trimmed == "n/a") return true;
+            return false;
         }
 
         private void HandleChatDebug(string message)
