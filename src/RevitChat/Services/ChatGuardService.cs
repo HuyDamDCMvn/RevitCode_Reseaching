@@ -20,7 +20,10 @@ namespace RevitChat.Services
             "add_project_parameter", "override_element_color",
             "override_category_color", "override_color_by_filter",
             "create_openings", "purge_unused_elements", "batch_rename_pattern",
-            "measure_distance_to_slab"
+            "measure_distance_to_slab",
+            "disconnect_mep_elements", "delete_mep_system", "auto_connect_mep",
+            "flip_mep_elements", "create_elbow", "create_tap_connection",
+            "bloom_connectors", "insert_coupling"
         };
 
         public static bool IsEchoResponse(string text)

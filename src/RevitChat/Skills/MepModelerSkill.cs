@@ -19,7 +19,8 @@ namespace RevitChat.Skills
         protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "resize_mep_elements", "split_mep_elements", "set_pipe_slope",
-            "change_mep_system_type", "batch_set_offset", "add_change_insulation"
+            "change_mep_system_type", "batch_set_offset", "add_change_insulation",
+            "flip_mep_elements"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -114,6 +115,20 @@ namespace RevitChat.Skills
                     },
                     "required": []
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("flip_mep_elements",
+                "Flip MEP family instances (valves, fittings, equipment). Supports flip_facing, flip_hand, and flip_workplane.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Family instance element IDs to flip" },
+                        "flip_type": { "type": "string", "enum": ["facing", "hand", "workplane"], "description": "Type of flip: 'facing' (flow direction), 'hand' (mirror), 'workplane' (vertical). Default 'facing'." },
+                        "dry_run": { "type": "boolean", "description": "Preview only. Default false." }
+                    },
+                    "required": ["element_ids"]
+                }
                 """))
         };
 
@@ -127,6 +142,7 @@ namespace RevitChat.Skills
                 "change_mep_system_type" => ChangeMepSystemType(doc, args),
                 "batch_set_offset" => BatchSetOffset(doc, args),
                 "add_change_insulation" => AddChangeInsulation(doc, args),
+                "flip_mep_elements" => FlipMepElements(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -795,6 +811,82 @@ namespace RevitChat.Skills
                 try { doc.Delete(newId); } catch { }
                 return ElementId.InvalidElementId;
             }
+        }
+
+        #endregion
+
+        #region flip_mep_elements
+
+        private string FlipMepElements(Document doc, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "element_ids");
+            if (ids == null || ids.Count == 0)
+                return JsonError("element_ids required.");
+
+            string flipType = (GetArg<string>(args, "flip_type") ?? "facing").ToLower();
+            bool dryRun = GetArg(args, "dry_run", false);
+
+            var results = new List<object>();
+            int flipped = 0, skipped = 0;
+
+            foreach (var id in ids)
+            {
+                var elem = doc.GetElement(new ElementId(id));
+                if (elem is not FamilyInstance fi)
+                {
+                    results.Add(new { id, status = "skipped", reason = "not a FamilyInstance" });
+                    skipped++;
+                    continue;
+                }
+
+                bool canFlip = flipType switch
+                {
+                    "facing" => fi.CanFlipFacing,
+                    "hand" => fi.CanFlipHand,
+                    "workplane" => fi.CanFlipWorkPlane,
+                    _ => false
+                };
+
+                if (!canFlip)
+                {
+                    results.Add(new { id, flip_type = flipType, status = "skipped", reason = $"cannot flip {flipType}" });
+                    skipped++;
+                    continue;
+                }
+
+                if (dryRun)
+                {
+                    results.Add(new { id, flip_type = flipType, status = "can_flip" });
+                    flipped++;
+                    continue;
+                }
+
+                results.Add(new { id, flip_type = flipType, status = "flipped" });
+                flipped++;
+            }
+
+            if (dryRun)
+                return JsonSerializer.Serialize(new { dry_run = true, would_flip = flipped, skipped, details = results }, JsonOpts);
+
+            var err = RunInTransaction(doc, "Flip MEP Elements", () =>
+            {
+                foreach (var id in ids)
+                {
+                    var elem = doc.GetElement(new ElementId(id));
+                    if (elem is not FamilyInstance fi) continue;
+
+                    switch (flipType)
+                    {
+                        case "facing" when fi.CanFlipFacing: fi.flipFacing(); break;
+                        case "hand" when fi.CanFlipHand: fi.flipHand(); break;
+                        case "workplane" when fi.CanFlipWorkPlane: fi.IsWorkPlaneFlipped = !fi.IsWorkPlaneFlipped; break;
+                    }
+                }
+            });
+
+            return err != null
+                ? JsonError(err)
+                : JsonSerializer.Serialize(new { status = "ok", flipped, skipped, details = results }, JsonOpts);
         }
 
         #endregion

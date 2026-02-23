@@ -2051,5 +2051,49 @@
   {
     "keywords": ["grid", "3d", "model extent"],
     "example": "User: switch grids 100,200 to 3D model extent\nAssistant:\n<tool_call>\n{\"name\": \"set_grid_mode\", \"arguments\": {\"grid_ids\": [100, 200], \"mode\": \"3d\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["disconnect", "ngắt kết nối", "MEP"],
+    "example": "User: ngắt kết nối giữa element 100 và 200\nAssistant:\n<tool_call>\n{\"name\": \"disconnect_mep_elements\", \"arguments\": {\"element_id_1\": 100, \"element_id_2\": 200}}\n</tool_call>"
+  },
+  {
+    "keywords": ["delete", "system", "xóa system"],
+    "example": "User: xóa MEP system của element 100,200,300\nAssistant:\n<tool_call>\n{\"name\": \"delete_mep_system\", \"arguments\": {\"element_ids\": [100, 200, 300], \"dry_run\": true}}\n</tool_call>"
+  },
+  {
+    "keywords": ["flip", "lật", "đảo chiều", "facing"],
+    "example": "User: lật van 100 theo hướng facing\nAssistant:\n<tool_call>\n{\"name\": \"flip_mep_elements\", \"arguments\": {\"element_ids\": [100], \"flip_type\": \"facing\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["flip", "hand", "mirror"],
+    "example": "User: flip hand cho các fitting 100,200\nAssistant:\n<tool_call>\n{\"name\": \"flip_mep_elements\", \"arguments\": {\"element_ids\": [100, 200], \"flip_type\": \"hand\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["auto", "connect", "tự nối", "snap"],
+    "example": "User: tự động nối element 100 vào element 200\nAssistant:\n<tool_call>\n{\"name\": \"auto_connect_mep\", \"arguments\": {\"source_id\": 100, \"target_id\": 200}}\n</tool_call>"
+  },
+  {
+    "keywords": ["auto", "connect", "move only"],
+    "example": "User: di chuyển element 100 khớp với 200 nhưng không nối\nAssistant:\n<tool_call>\n{\"name\": \"auto_connect_mep\", \"arguments\": {\"source_id\": 100, \"target_id\": 200, \"connect\": false}}\n</tool_call>"
+  },
+  {
+    "keywords": ["elbow", "co nối", "fitting"],
+    "example": "User: tạo co nối giữa ống 100 và 200\nAssistant:\n<tool_call>\n{\"name\": \"create_elbow\", \"arguments\": {\"element_id_1\": 100, \"element_id_2\": 200}}\n</tool_call>"
+  },
+  {
+    "keywords": ["tap", "takeoff", "đấu nối", "branch"],
+    "example": "User: tạo tap từ ống nhánh 200 vào ống chính 100\nAssistant:\n<tool_call>\n{\"name\": \"create_tap_connection\", \"arguments\": {\"main_id\": 100, \"branch_id\": 200}}\n</tool_call>"
+  },
+  {
+    "keywords": ["bloom", "extend", "mở rộng", "unused connector"],
+    "example": "User: mở rộng các connector chưa nối trên element 100,200\nAssistant:\n<tool_call>\n{\"name\": \"bloom_connectors\", \"arguments\": {\"element_ids\": [100, 200]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["bloom", "extend", "custom length"],
+    "example": "User: bloom connectors with 500mm extensions for elements 100,200\nAssistant:\n<tool_call>\n{\"name\": \"bloom_connectors\", \"arguments\": {\"element_ids\": [100, 200], \"extension_mm\": 500}}\n</tool_call>"
+  },
+  {
+    "keywords": ["coupling", "union", "nối ống"],
+    "example": "User: chèn coupling giữa pipe 100 và pipe 200\nAssistant:\n<tool_call>\n{\"name\": \"insert_coupling\", \"arguments\": {\"element_id_1\": 100, \"element_id_2\": 200}}\n</tool_call>"
   }
 ]

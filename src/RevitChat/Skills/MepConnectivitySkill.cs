@@ -17,7 +17,8 @@ namespace RevitChat.Skills
         protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_connector_info", "get_system_connectivity",
-            "get_mep_routing_path", "connect_mep_elements"
+            "get_mep_routing_path", "connect_mep_elements",
+            "disconnect_mep_elements", "delete_mep_system", "auto_connect_mep"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
@@ -74,6 +75,46 @@ namespace RevitChat.Skills
                     },
                     "required": ["element_id_1", "element_id_2"]
                 }
+                """)),
+
+            ChatTool.CreateFunctionTool("disconnect_mep_elements",
+                "Disconnect two connected MEP elements, breaking their connector link.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_id_1": { "type": "integer", "description": "First element ID" },
+                        "element_id_2": { "type": "integer", "description": "Second element ID" }
+                    },
+                    "required": ["element_id_1", "element_id_2"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("delete_mep_system",
+                "Delete the MEP system(s) associated with specified elements. Removes MEPSystem objects but keeps the elements.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "element_ids": { "type": "array", "items": { "type": "integer" }, "description": "Element IDs whose systems to delete" },
+                        "dry_run": { "type": "boolean", "description": "Preview only. Default false." }
+                    },
+                    "required": ["element_ids"]
+                }
+                """)),
+
+            ChatTool.CreateFunctionTool("auto_connect_mep",
+                "Automatically move one MEP element so its closest unused connector aligns and connects to another element's unused connector. Useful for snapping elements together.",
+                BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "source_id": { "type": "integer", "description": "Element to move" },
+                        "target_id": { "type": "integer", "description": "Stationary target element" },
+                        "connect": { "type": "boolean", "description": "Also connect after moving. Default true." }
+                    },
+                    "required": ["source_id", "target_id"]
+                }
                 """))
         };
 
@@ -85,6 +126,9 @@ namespace RevitChat.Skills
                 "get_system_connectivity" => GetSystemConnectivity(doc, args),
                 "get_mep_routing_path" => GetMepRoutingPath(doc, args),
                 "connect_mep_elements" => ConnectMepElements(doc, args),
+                "disconnect_mep_elements" => DisconnectMepElements(doc, args),
+                "delete_mep_system" => DeleteMepSystem(doc, args),
+                "auto_connect_mep" => AutoConnectMep(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
@@ -517,5 +561,177 @@ namespace RevitChat.Skills
                     return null;
             }
         }
+
+        #region Tool 1: disconnect_mep_elements
+
+        private string DisconnectMepElements(Document doc, Dictionary<string, object> args)
+        {
+            var id1 = GetArg<long>(args, "element_id_1");
+            var id2 = GetArg<long>(args, "element_id_2");
+            var elem1 = doc.GetElement(new ElementId(id1));
+            var elem2 = doc.GetElement(new ElementId(id2));
+            if (elem1 == null || elem2 == null)
+                return JsonError("One or both elements not found.");
+
+            if (!TryGetConnectorManager(elem1, out var cm1) || !TryGetConnectorManager(elem2, out var cm2))
+                return JsonError("One or both elements do not expose connectors.");
+
+            Connector connA = null, connB = null;
+            foreach (Connector c1 in cm1.Connectors)
+            {
+                if (!c1.IsConnected) continue;
+                foreach (Connector c2 in c1.AllRefs)
+                {
+                    if (c2?.Owner != null && c2.Owner.Id.Value == id2)
+                    {
+                        connA = c1;
+                        connB = c2;
+                        break;
+                    }
+                }
+                if (connA != null) break;
+            }
+
+            if (connA == null || connB == null)
+                return JsonError($"Elements {id1} and {id2} are not directly connected.");
+
+            var err = RunInTransaction(doc, "Disconnect MEP", () =>
+            {
+                connA.DisconnectFrom(connB);
+            });
+            return err != null ? JsonError(err)
+                : JsonSerializer.Serialize(new { status = "ok", disconnected = new[] { id1, id2 } }, JsonOpts);
+        }
+
+        #endregion
+
+        #region Tool 2: delete_mep_system
+
+        private string DeleteMepSystem(Document doc, Dictionary<string, object> args)
+        {
+            var ids = GetArgLongArray(args, "element_ids");
+            if (ids == null || ids.Count == 0)
+                return JsonError("element_ids is required.");
+
+            bool dryRun = GetArg<bool>(args, "dry_run", false);
+
+            var systemIds = new HashSet<long>();
+            var details = new List<object>();
+
+            foreach (var id in ids)
+            {
+                var elem = doc.GetElement(new ElementId(id));
+                if (elem == null) continue;
+                if (!TryGetConnectorManager(elem, out var cm)) continue;
+
+                foreach (Connector c in cm.Connectors)
+                {
+                    try
+                    {
+                        if (c.MEPSystem != null)
+                            systemIds.Add(c.MEPSystem.Id.Value);
+                    }
+                    catch { /* some connectors don't support MEPSystem */ }
+                }
+            }
+
+            if (systemIds.Count == 0)
+                return JsonSerializer.Serialize(new { message = "No MEP systems found on specified elements.", systems_deleted = 0 }, JsonOpts);
+
+            foreach (var sid in systemIds)
+            {
+                var sysElem = doc.GetElement(new ElementId(sid));
+                details.Add(new { system_id = sid, name = sysElem?.Name ?? "-" });
+            }
+
+            if (dryRun)
+                return JsonSerializer.Serialize(new { dry_run = true, systems_to_delete = details }, JsonOpts);
+
+            var err = RunInTransaction(doc, "Delete MEP Systems", () =>
+            {
+                foreach (var sid in systemIds)
+                    doc.Delete(new ElementId(sid));
+            });
+            return err != null ? JsonError(err)
+                : JsonSerializer.Serialize(new { status = "ok", systems_deleted = systemIds.Count, details }, JsonOpts);
+        }
+
+        #endregion
+
+        #region Tool 4: auto_connect_mep
+
+        private string AutoConnectMep(Document doc, Dictionary<string, object> args)
+        {
+            var sourceId = GetArg<long>(args, "source_id");
+            var targetId = GetArg<long>(args, "target_id");
+            bool doConnect = GetArg<bool>(args, "connect", true);
+
+            var srcElem = doc.GetElement(new ElementId(sourceId));
+            var tgtElem = doc.GetElement(new ElementId(targetId));
+            if (srcElem == null || tgtElem == null)
+                return JsonError("Source or target element not found.");
+
+            if (!TryGetConnectorManager(srcElem, out var srcCm) || !TryGetConnectorManager(tgtElem, out var tgtCm))
+                return JsonError("One or both elements do not expose connectors.");
+
+            // Find the closest pair of unused connectors
+            Connector bestSrc = null, bestTgt = null;
+            double bestDist = double.MaxValue;
+
+            foreach (Connector cs in srcCm.Connectors)
+            {
+                if (cs.IsConnected) continue;
+                foreach (Connector ct in tgtCm.Connectors)
+                {
+                    if (ct.IsConnected) continue;
+                    // Prefer aligned connectors (facing each other)
+                    double dist = cs.Origin.DistanceTo(ct.Origin);
+                    bool aligned = AreConnectorsAligned(cs, ct);
+                    double score = aligned ? dist * 0.5 : dist;
+                    if (score < bestDist)
+                    {
+                        bestDist = score;
+                        bestSrc = cs;
+                        bestTgt = ct;
+                    }
+                }
+            }
+
+            if (bestSrc == null || bestTgt == null)
+                return JsonError("No unused connector pair found between source and target.");
+
+            XYZ delta = bestTgt.Origin - bestSrc.Origin;
+            const double ftToMm = 304.8;
+
+            var err = RunInTransaction(doc, "Auto-Connect MEP", () =>
+            {
+                ElementTransformUtils.MoveElement(doc, srcElem.Id, delta);
+
+                if (doConnect && TryGetConnectorManager(doc.GetElement(srcElem.Id), out var freshCm))
+                {
+                    Connector freshSrc = null;
+                    double closest = double.MaxValue;
+                    foreach (Connector c in freshCm.Connectors)
+                    {
+                        if (c.IsConnected) continue;
+                        double d = c.Origin.DistanceTo(bestTgt.Origin);
+                        if (d < closest) { closest = d; freshSrc = c; }
+                    }
+                    freshSrc?.ConnectTo(bestTgt);
+                }
+            });
+            return err != null
+                ? JsonError(err)
+                : JsonSerializer.Serialize(new
+                {
+                    status = "ok",
+                    moved = sourceId,
+                    delta_mm = new { x = Math.Round(delta.X * ftToMm, 1), y = Math.Round(delta.Y * ftToMm, 1), z = Math.Round(delta.Z * ftToMm, 1) },
+                    connected = doConnect,
+                    aligned = AreConnectorsAligned(bestSrc, bestTgt)
+                }, JsonOpts);
+        }
+
+        #endregion
     }
 }

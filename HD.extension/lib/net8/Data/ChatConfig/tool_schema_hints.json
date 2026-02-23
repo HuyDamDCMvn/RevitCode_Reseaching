@@ -190,5 +190,13 @@
   "batch_rename_pattern": "element_ids (array), pattern? ({n:000}, {name}, {cat}, {lvl}, {id}), find?, replace_with?, use_regex?, start_number? (1), param_name?, dry_run?",
   "purge_unused_elements": "element_ids? (array), category?, max_delete? (50), dry_run? — delete unused family types",
   "toggle_grid_bubbles": "grid_ids? (array), end? (start|end|both), action? (show|hide|toggle) — show/hide grid bubbles",
-  "set_grid_mode": "grid_ids? (array), mode (2d|3d) — switch grid display mode in current view"
+  "set_grid_mode": "grid_ids? (array), mode (2d|3d) — switch grid display mode in current view",
+  "disconnect_mep_elements": "element_id_1, element_id_2 — break connector link between two MEP elements",
+  "delete_mep_system": "element_ids (array), dry_run? — delete MEP systems associated with elements (keeps elements)",
+  "flip_mep_elements": "element_ids (array), flip_type? (facing|hand|workplane, default facing), dry_run? — flip family instances",
+  "auto_connect_mep": "source_id (element to move), target_id (stationary target), connect? (default true) — auto-move and connect",
+  "create_elbow": "element_id_1, element_id_2 — create elbow fitting between two non-collinear MEP elements",
+  "create_tap_connection": "main_id (duct/pipe to tap), branch_id (branch element) — create tap/takeoff fitting",
+  "bloom_connectors": "element_ids (array), extension_mm? (0=auto), dry_run? — extend unused connectors with new duct/pipe segments",
+  "insert_coupling": "element_id_1, element_id_2 — insert coupling/union fitting between two piping elements"
 }

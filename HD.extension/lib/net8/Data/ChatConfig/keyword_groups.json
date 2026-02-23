@@ -139,7 +139,23 @@
     "purge",
     "dọn dẹp",
     "grid bubble",
-    "đầu grid"
+    "đầu grid",
+    "disconnect",
+    "ngắt kết nối",
+    "flip",
+    "lật",
+    "đảo chiều",
+    "elbow",
+    "co nối",
+    "tap",
+    "takeoff",
+    "đấu nối",
+    "bloom",
+    "mở rộng",
+    "coupling",
+    "nối ống",
+    "auto connect",
+    "tự nối"
   ],
   "groups": [
     {
@@ -240,14 +256,14 @@
     },
     {
       "name": "Connectivity / Trace",
-      "keywords": ["connect", "connector", "trace", "path", "route", "routing", "kết nối", "đường đi", "đường ống", "nối ống", "nối"],
-      "tools": ["get_connector_info", "get_system_connectivity", "get_mep_routing_path", "connect_mep_elements"],
+      "keywords": ["connect", "connector", "trace", "path", "route", "routing", "kết nối", "đường đi", "đường ống", "nối ống", "nối", "disconnect", "ngắt", "auto connect", "tự nối", "system delete", "xóa system"],
+      "tools": ["get_connector_info", "get_system_connectivity", "get_mep_routing_path", "connect_mep_elements", "disconnect_mep_elements", "delete_mep_system", "auto_connect_mep"],
       "weight": 1
     },
     {
-      "name": "Size / Resize / Offset",
-      "keywords": ["size", "resize", "diameter", "width", "height", "offset", "đổi size", "kích thước", "đường kính", "cao độ", "system type", "loại hệ thống"],
-      "tools": ["resize_mep_elements", "split_mep_elements", "set_pipe_slope", "change_mep_system_type", "batch_set_offset"],
+      "name": "Size / Resize / Offset / Flip",
+      "keywords": ["size", "resize", "diameter", "width", "height", "offset", "đổi size", "kích thước", "đường kính", "cao độ", "system type", "loại hệ thống", "flip", "lật", "đảo chiều", "đảo hướng"],
+      "tools": ["resize_mep_elements", "split_mep_elements", "set_pipe_slope", "change_mep_system_type", "batch_set_offset", "flip_mep_elements"],
       "weight": 1
     },
     {
@@ -357,6 +373,12 @@
       "keywords": ["rename pattern", "đánh số", "batch rename", "đổi tên hàng loạt", "numbering", "prefix", "suffix", "regex rename"],
       "tools": ["batch_rename_pattern"],
       "weight": 1
+    },
+    {
+      "name": "MEP Fitting",
+      "keywords": ["elbow", "co nối", "tee", "tap", "takeoff", "đấu nối", "bloom", "extend", "mở rộng", "coupling", "union", "nối ống ghép", "fitting", "phụ kiện"],
+      "tools": ["create_elbow", "create_tap_connection", "bloom_connectors", "insert_coupling"],
+      "weight": 2
     }
   ]
 }
