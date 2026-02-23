@@ -256,6 +256,7 @@ namespace RevitChat.Skills
         {
             var catFilter = GetArg<string>(args, "category")?.ToLower() ?? "all";
             var levelFilter = GetArg<string>(args, "level");
+            var resolvedLevel = ResolveLevelName(doc, levelFilter);
             var limit = GetArg<int>(args, "limit", 100);
 
             var cats = catFilter == "all"
@@ -277,8 +278,7 @@ namespace RevitChat.Skills
                 {
                     if (results.Count >= limit) break;
 
-                    if (!string.IsNullOrEmpty(levelFilter) &&
-                        !GetElementLevel(doc, elem).Equals(levelFilter, StringComparison.OrdinalIgnoreCase))
+                    if (resolvedLevel != null && !GetElementLevel(doc, elem).Equals(resolvedLevel, StringComparison.OrdinalIgnoreCase))
                         continue;
 
                     if (elem is MEPCurve mepCurve)
@@ -322,6 +322,7 @@ namespace RevitChat.Skills
             var category = GetArg<string>(args, "category");
             var paramNames = GetArgStringArray(args, "param_names");
             var levelFilter = GetArg<string>(args, "level");
+            var resolvedLevel = ResolveLevelName(doc, levelFilter);
             var limit = GetArg<int>(args, "limit", 100);
 
             if (paramNames == null || paramNames.Count == 0)
@@ -335,8 +336,7 @@ namespace RevitChat.Skills
                 if (results.Count >= limit) break;
                 if (elem.Category == null) continue;
 
-                if (!string.IsNullOrEmpty(levelFilter) &&
-                    !GetElementLevel(doc, elem).Equals(levelFilter, StringComparison.OrdinalIgnoreCase))
+                if (resolvedLevel != null && !GetElementLevel(doc, elem).Equals(resolvedLevel, StringComparison.OrdinalIgnoreCase))
                     continue;
 
                 var isMep = MepCategories.Any(mc => elem.Category.Id.Value == (long)mc);
@@ -378,6 +378,7 @@ namespace RevitChat.Skills
             var catFilter = GetArg<string>(args, "category")?.ToLower() ?? "all";
             var minHeightM = GetArg<double>(args, "min_height_m", 2.4);
             var levelFilter = GetArg<string>(args, "level");
+            var resolvedLevel = ResolveLevelName(doc, levelFilter);
             var minHeightFt = minHeightM / 0.3048;
 
             var cats = new List<BuiltInCategory>();
@@ -399,8 +400,7 @@ namespace RevitChat.Skills
                 foreach (var elem in elems)
                 {
                     var elemLevelName = GetElementLevel(doc, elem);
-                    if (!string.IsNullOrEmpty(levelFilter) &&
-                        !elemLevelName.Equals(levelFilter, StringComparison.OrdinalIgnoreCase))
+                    if (resolvedLevel != null && !elemLevelName.Equals(resolvedLevel, StringComparison.OrdinalIgnoreCase))
                         continue;
 
                     if (elem.Location is LocationCurve lc)
@@ -454,6 +454,7 @@ namespace RevitChat.Skills
             var maxWidthMm = GetArg<double>(args, "max_width_mm", 1500);
             var maxDiamMm = GetArg<double>(args, "max_diameter_mm", 300);
             var levelFilter = GetArg<string>(args, "level");
+            var resolvedLevel = ResolveLevelName(doc, levelFilter);
 
             var maxWidthFt = maxWidthMm / 304.8;
             var maxDiamFt = maxDiamMm / 304.8;
@@ -466,8 +467,7 @@ namespace RevitChat.Skills
 
             foreach (var elem in elems)
             {
-                if (!string.IsNullOrEmpty(levelFilter) &&
-                    !GetElementLevel(doc, elem).Equals(levelFilter, StringComparison.OrdinalIgnoreCase))
+                if (resolvedLevel != null && !GetElementLevel(doc, elem).Equals(resolvedLevel, StringComparison.OrdinalIgnoreCase))
                     continue;
 
                 bool oversized = false;
@@ -581,6 +581,7 @@ namespace RevitChat.Skills
         {
             var systemFilter = GetArg<string>(args, "system_name");
             var levelFilter = GetArg<string>(args, "level");
+            var resolvedLevel = ResolveLevelName(doc, levelFilter);
             int limit = GetArg(args, "limit", 100);
 
             bool hasMin = args != null && args.ContainsKey("min_slope_pct");
@@ -594,10 +595,11 @@ namespace RevitChat.Skills
 
             if (!string.IsNullOrEmpty(levelFilter))
             {
+                var levelName = resolvedLevel ?? levelFilter;
                 var level = new FilteredElementCollector(doc)
                     .OfClass(typeof(Level))
                     .Cast<Level>()
-                    .FirstOrDefault(l => l.Name.Equals(levelFilter, StringComparison.OrdinalIgnoreCase));
+                    .FirstOrDefault(l => l.Name.Equals(levelName, StringComparison.OrdinalIgnoreCase));
                 if (level == null) return JsonError($"Level '{levelFilter}' not found.");
                 collector = collector.WherePasses(new ElementLevelFilter(level.Id));
             }
@@ -657,13 +659,14 @@ namespace RevitChat.Skills
             var startId = GetArg<long>(args, "element_id");
             var systemFilter = GetArg<string>(args, "system_name");
             var levelFilter = GetArg<string>(args, "level");
+            var resolvedLevel = ResolveLevelName(doc, levelFilter);
 
             var pipes = new FilteredElementCollector(doc)
                 .OfCategory(BuiltInCategory.OST_PipeCurves)
                 .WhereElementIsNotElementType().ToList();
 
-            if (!string.IsNullOrEmpty(levelFilter))
-                pipes = pipes.Where(p => GetElementLevel(doc, p).Equals(levelFilter, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (resolvedLevel != null)
+                pipes = pipes.Where(p => GetElementLevel(doc, p).Equals(resolvedLevel, StringComparison.OrdinalIgnoreCase)).ToList();
             if (!string.IsNullOrEmpty(systemFilter))
                 pipes = pipes.Where(p => MatchesSystem(
                     p.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "",
@@ -818,6 +821,7 @@ namespace RevitChat.Skills
         private string CheckFireDampers(Document doc, Dictionary<string, object> args)
         {
             var levelFilter = GetArg<string>(args, "level");
+            var resolvedLevel = ResolveLevelName(doc, levelFilter);
             var limit = GetArg<int>(args, "limit", 200);
 
             var accessories = new FilteredElementCollector(doc)
@@ -838,8 +842,7 @@ namespace RevitChat.Skills
                                 familyName.Contains("brandschutz");
                 if (!isDamper) continue;
 
-                if (!string.IsNullOrEmpty(levelFilter) &&
-                    !GetElementLevel(doc, elem).Equals(levelFilter, StringComparison.OrdinalIgnoreCase))
+                if (resolvedLevel != null && !GetElementLevel(doc, elem).Equals(resolvedLevel, StringComparison.OrdinalIgnoreCase))
                     continue;
 
                 var connectedDucts = new List<object>();
@@ -892,6 +895,7 @@ namespace RevitChat.Skills
             var category = (GetArg<string>(args, "category") ?? "all").ToLower();
             var systemFilter = GetArg<string>(args, "system_name");
             var levelFilter = GetArg<string>(args, "level");
+            var resolvedLevel = ResolveLevelName(doc, levelFilter);
             int limit = GetArg(args, "limit", 200);
 
             var categories = new List<BuiltInCategory>();
@@ -918,14 +922,14 @@ namespace RevitChat.Skills
                             continue;
                     }
 
-                    if (!string.IsNullOrEmpty(levelFilter))
+                    if (resolvedLevel != null)
                     {
                         var lvlParam = elem.get_Parameter(BuiltInParameter.RBS_START_LEVEL_PARAM)
                             ?? elem.get_Parameter(BuiltInParameter.FAMILY_LEVEL_PARAM);
                         if (lvlParam != null)
                         {
                             var lvl = doc.GetElement(lvlParam.AsElementId());
-                            if (lvl != null && !lvl.Name.Contains(levelFilter, StringComparison.OrdinalIgnoreCase))
+                            if (lvl != null && !lvl.Name.Contains(resolvedLevel, StringComparison.OrdinalIgnoreCase))
                                 continue;
                         }
                     }

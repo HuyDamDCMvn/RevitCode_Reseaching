@@ -105,6 +105,7 @@ namespace RevitChat.Skills
             BuiltInCategory category, string label)
         {
             var levelFilter = GetArg<string>(args, "level");
+            var resolvedLevel = ResolveLevelName(doc, levelFilter);
             var limit = GetArg<int>(args, "limit", 100);
 
             var elems = new FilteredElementCollector(doc)
@@ -118,8 +119,7 @@ namespace RevitChat.Skills
             foreach (var elem in elems)
             {
                 var elemLevel = GetElementLevel(doc, elem);
-                if (!string.IsNullOrEmpty(levelFilter) &&
-                    !elemLevel.Equals(levelFilter, StringComparison.OrdinalIgnoreCase))
+                if (resolvedLevel != null && !elemLevel.Equals(resolvedLevel, StringComparison.OrdinalIgnoreCase))
                     continue;
 
                 var typeName = GetElementTypeName(doc, elem);
@@ -167,6 +167,7 @@ namespace RevitChat.Skills
         private string GetFireProtection(Document doc, Dictionary<string, object> args)
         {
             var levelFilter = GetArg<string>(args, "level");
+            var resolvedLevel = ResolveLevelName(doc, levelFilter);
             var deviceType = GetArg<string>(args, "device_type")?.ToLower() ?? "all";
 
             var categories = new List<BuiltInCategory>();
@@ -188,8 +189,7 @@ namespace RevitChat.Skills
                 foreach (var elem in elems)
                 {
                     var elemLevel = GetElementLevel(doc, elem);
-                    if (!string.IsNullOrEmpty(levelFilter) &&
-                        !elemLevel.Equals(levelFilter, StringComparison.OrdinalIgnoreCase))
+                    if (resolvedLevel != null && !elemLevel.Equals(resolvedLevel, StringComparison.OrdinalIgnoreCase))
                         continue;
 
                     var typeName = $"{elem.Category?.Name}: {GetElementTypeName(doc, elem)}";
@@ -227,6 +227,7 @@ namespace RevitChat.Skills
         {
             var catFilter = GetArg<string>(args, "fitting_category")?.ToLower() ?? "all";
             var levelFilter = GetArg<string>(args, "level");
+            var resolvedLevel = ResolveLevelName(doc, levelFilter);
 
             var catMap = new Dictionary<string, BuiltInCategory>
             {
@@ -253,8 +254,7 @@ namespace RevitChat.Skills
 
                 foreach (var elem in elems)
                 {
-                    if (!string.IsNullOrEmpty(levelFilter) &&
-                        !GetElementLevel(doc, elem).Equals(levelFilter, StringComparison.OrdinalIgnoreCase))
+                    if (resolvedLevel != null && !GetElementLevel(doc, elem).Equals(resolvedLevel, StringComparison.OrdinalIgnoreCase))
                         continue;
 
                     var tn = GetElementTypeName(doc, elem);

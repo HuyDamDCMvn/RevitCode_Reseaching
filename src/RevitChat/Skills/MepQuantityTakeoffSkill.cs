@@ -114,6 +114,7 @@ namespace RevitChat.Skills
         {
             var cats = GetArgStringArray(args, "categories");
             var levelFilter = GetArg<string>(args, "level");
+            var resolvedLevel = ResolveLevelName(doc, levelFilter);
 
             var selectedCats = (cats != null && cats.Count > 0)
                 ? cats.Select(c => ResolveMepCurveCategory(doc, c))
@@ -135,7 +136,7 @@ namespace RevitChat.Skills
                 {
                     var lvl = GetElementLevel(doc, elem);
                     if (!string.IsNullOrEmpty(levelFilter) &&
-                        !lvl.Equals(levelFilter, StringComparison.OrdinalIgnoreCase))
+                        (resolvedLevel != null && !lvl.Equals(resolvedLevel, StringComparison.OrdinalIgnoreCase)))
                         continue;
 
                     double lengthFt = elem.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH)?.AsDouble() ?? 0;
@@ -226,6 +227,7 @@ namespace RevitChat.Skills
         {
             var insFor = GetArg<string>(args, "insulation_for")?.ToLower() ?? "all";
             var levelFilter = GetArg<string>(args, "level");
+            var resolvedLevel = ResolveLevelName(doc, levelFilter);
 
             var categories = new List<BuiltInCategory>();
             if (insFor is "all" or "duct") categories.Add(BuiltInCategory.OST_DuctInsulations);
@@ -242,7 +244,7 @@ namespace RevitChat.Skills
                 {
                     var lvl = GetElementLevel(doc, elem);
                     if (!string.IsNullOrEmpty(levelFilter) &&
-                        !lvl.Equals(levelFilter, StringComparison.OrdinalIgnoreCase))
+                        (resolvedLevel != null && !lvl.Equals(resolvedLevel, StringComparison.OrdinalIgnoreCase)))
                         continue;
 
                     var typeName = GetElementTypeName(doc, elem);

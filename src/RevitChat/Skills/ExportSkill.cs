@@ -128,10 +128,11 @@ namespace RevitChat.Skills
         {
             var category = GetArg<string>(args, "category");
             var paramNames = GetArgStringArray(args, "param_names");
-            var level = GetArg<string>(args, "level");
+            var levelInput = GetArg<string>(args, "level");
             var filePath = GetArg<string>(args, "file_path");
 
             if (string.IsNullOrEmpty(category)) return JsonError("category required.");
+            var level = ResolveLevelName(doc, levelInput);
             if (paramNames == null || paramNames.Count == 0) return JsonError("param_names required.");
             paramNames = paramNames.Where(p => !string.IsNullOrWhiteSpace(p)).ToList();
             if (paramNames.Count == 0) return JsonError("param_names must contain valid parameter names.");
@@ -166,7 +167,7 @@ namespace RevitChat.Skills
                     !MatchesCategoryName(elem.Category.Name, category))
                     continue;
 
-                if (!string.IsNullOrEmpty(level) &&
+                if (level != null &&
                     !GetElementLevel(doc, elem).Equals(level, StringComparison.OrdinalIgnoreCase))
                     continue;
 
@@ -201,6 +202,7 @@ namespace RevitChat.Skills
 
         private string ExportToTxt(Document doc, string category, List<string> paramNames, string level)
         {
+            var resolvedLevel = ResolveLevelName(doc, level);
             var collector = BuildCollector(doc, category);
             bool needsCategoryFallback = !string.IsNullOrEmpty(category) && ResolveCategoryFilter(doc, category) == null;
 
@@ -212,7 +214,7 @@ namespace RevitChat.Skills
             {
                 if (elem.Category == null) continue;
                 if (needsCategoryFallback && !MatchesCategoryName(elem.Category.Name, category)) continue;
-                if (!string.IsNullOrEmpty(level) && !GetElementLevel(doc, elem).Equals(level, StringComparison.OrdinalIgnoreCase)) continue;
+                if (resolvedLevel != null && !GetElementLevel(doc, elem).Equals(resolvedLevel, StringComparison.OrdinalIgnoreCase)) continue;
 
                 var row = new List<string> { elem.Id.Value.ToString() };
                 foreach (var pn in paramNames)
@@ -243,12 +245,14 @@ namespace RevitChat.Skills
         {
             var category = GetArg<string>(args, "category");
             var paramNames = GetArgStringArray(args, "param_names");
-            var level = GetArg<string>(args, "level");
+            var levelInput = GetArg<string>(args, "level");
             var filePath = GetArg<string>(args, "file_path");
             bool prettyPrint = GetArg(args, "pretty_print", true);
 
             if (string.IsNullOrEmpty(category)) return JsonError("category required.");
             if (paramNames == null || paramNames.Count == 0) return JsonError("param_names required.");
+
+            var level = ResolveLevelName(doc, levelInput);
 
             if (string.IsNullOrEmpty(filePath))
                 filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
@@ -266,7 +270,7 @@ namespace RevitChat.Skills
             {
                 if (elem.Category == null) continue;
                 if (needsCategoryFallback && !MatchesCategoryName(elem.Category.Name, category)) continue;
-                if (!string.IsNullOrEmpty(level) && !GetElementLevel(doc, elem).Equals(level, StringComparison.OrdinalIgnoreCase)) continue;
+                if (level != null && !GetElementLevel(doc, elem).Equals(level, StringComparison.OrdinalIgnoreCase)) continue;
 
                 var obj = new Dictionary<string, object> { ["ElementId"] = elem.Id.Value };
                 foreach (var pn in paramNames)

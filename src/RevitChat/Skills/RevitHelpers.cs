@@ -70,6 +70,59 @@ namespace RevitChat.Skills
             return "-";
         }
 
+        /// <summary>
+        /// Resolves a user-provided level string (e.g. "2", "Level 2", "L2", "tang 2")
+        /// to the actual Revit level name. Returns null if no match found.
+        /// </summary>
+        internal static string ResolveLevelName(Document doc, string userLevel)
+        {
+            if (string.IsNullOrWhiteSpace(userLevel)) return null;
+
+            var levels = new FilteredElementCollector(doc)
+                .OfClass(typeof(Level))
+                .Cast<Level>()
+                .Select(l => l.Name)
+                .ToList();
+
+            var input = userLevel.Trim();
+
+            // Exact match (case insensitive)
+            var exact = levels.FirstOrDefault(l => l.Equals(input, StringComparison.OrdinalIgnoreCase));
+            if (exact != null) return exact;
+
+            // Extract numeric/alphanumeric suffix from input: "Level 2" → "2", "tang 3" → "3", "L2" → "2"
+            var inputSuffix = ExtractLevelSuffix(input);
+            if (!string.IsNullOrEmpty(inputSuffix))
+            {
+                // Match level where suffix matches: "L2" suffix is "2", input suffix "2" → match
+                var suffixMatch = levels.FirstOrDefault(l =>
+                    ExtractLevelSuffix(l).Equals(inputSuffix, StringComparison.OrdinalIgnoreCase));
+                if (suffixMatch != null) return suffixMatch;
+
+                // Partial: level name contains the input suffix as word
+                var partialMatch = levels.FirstOrDefault(l =>
+                    l.IndexOf(inputSuffix, StringComparison.OrdinalIgnoreCase) >= 0);
+                if (partialMatch != null) return partialMatch;
+            }
+
+            // Input contained in level name or vice versa
+            var containsMatch = levels.FirstOrDefault(l =>
+                l.IndexOf(input, StringComparison.OrdinalIgnoreCase) >= 0
+                || input.IndexOf(l, StringComparison.OrdinalIgnoreCase) >= 0);
+            return containsMatch;
+        }
+
+        private static string ExtractLevelSuffix(string levelName)
+        {
+            if (string.IsNullOrEmpty(levelName)) return "";
+            // Strip common prefixes: Level, L, tang, tầng, lvl, B(basement)
+            var trimmed = System.Text.RegularExpressions.Regex.Replace(
+                levelName.Trim(),
+                @"^(?:level|lvl|tang|tầng|tâng|l(?=\d))\s*[-:]?\s*",
+                "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            return trimmed.Trim();
+        }
+
         internal static string GetParameterValueAsString(Document doc, Parameter param)
         {
             if (param == null || !param.HasValue) return "-";

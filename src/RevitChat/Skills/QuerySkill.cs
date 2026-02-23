@@ -223,6 +223,7 @@ namespace RevitChat.Skills
             var groupBy = GetArg<string>(args, "group_by");
             if (limit <= 0) limit = 100;
 
+            var resolvedLevel = ResolveLevelName(doc, level);
             var collector = BuildCollector(doc, category);
             bool needsCategoryFallback = !string.IsNullOrEmpty(category) && ResolveCategoryFilter(doc, category) == null;
             var results = new List<object>();
@@ -236,10 +237,10 @@ namespace RevitChat.Skills
                     continue;
 
                 string elemLevel = null;
-                if (!string.IsNullOrEmpty(level))
+                if (resolvedLevel != null)
                 {
                     elemLevel = GetElementLevel(doc, elem);
-                    if (!elemLevel.Equals(level, StringComparison.OrdinalIgnoreCase)) continue;
+                    if (!elemLevel.Equals(resolvedLevel, StringComparison.OrdinalIgnoreCase)) continue;
                 }
 
                 string elemType = null;
@@ -305,6 +306,10 @@ namespace RevitChat.Skills
             var category = GetArg<string>(args, "category");
             var level = GetArg<string>(args, "level");
 
+            string resolvedLevel = ResolveLevelName(doc, level);
+            bool levelFilterActive = !string.IsNullOrEmpty(level);
+            bool levelResolved = resolvedLevel != null;
+
             var collector = BuildCollector(doc, category);
             bool needsCategoryFallback = !string.IsNullOrEmpty(category) && ResolveCategoryFilter(doc, category) == null;
             var typeCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -318,8 +323,8 @@ namespace RevitChat.Skills
                     !MatchesCategoryName(elem.Category.Name, category))
                     continue;
 
-                if (!string.IsNullOrEmpty(level) &&
-                    !GetElementLevel(doc, elem).Equals(level, StringComparison.OrdinalIgnoreCase))
+                if (levelResolved &&
+                    !GetElementLevel(doc, elem).Equals(resolvedLevel, StringComparison.OrdinalIgnoreCase))
                     continue;
 
                 var tn = GetElementTypeName(doc, elem);
@@ -328,12 +333,27 @@ namespace RevitChat.Skills
                 total++;
             }
 
-            return JsonSerializer.Serialize(new
+            var result = new Dictionary<string, object>
             {
-                total,
-                by_type = typeCounts.OrderByDescending(kv => kv.Value)
+                ["total"] = total,
+                ["by_type"] = typeCounts.OrderByDescending(kv => kv.Value)
                     .ToDictionary(kv => kv.Key, kv => kv.Value)
-            }, JsonOpts);
+            };
+
+            if (levelFilterActive)
+            {
+                result["level_filter"] = level;
+                result["level_resolved"] = resolvedLevel ?? "(no matching level found)";
+                if (!levelResolved)
+                {
+                    var available = new FilteredElementCollector(doc).OfClass(typeof(Level))
+                        .Cast<Level>().Select(l => l.Name).OrderBy(n => n).ToList();
+                    result["available_levels"] = available;
+                    result["warning"] = $"Level '{level}' not found. Showing unfiltered results. Available levels: {string.Join(", ", available)}";
+                }
+            }
+
+            return JsonSerializer.Serialize(result, JsonOpts);
         }
 
         private string GetElementParameters(Document doc, Dictionary<string, object> args)

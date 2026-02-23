@@ -298,6 +298,7 @@ namespace RevitChat.Skills
             BuiltInCategory category, string label)
         {
             var levelFilter = GetArg<string>(args, "level");
+            var resolvedLevel = ResolveLevelName(doc, levelFilter);
             var systemFilter = GetArg<string>(args, "system_name");
 
             var elems = new FilteredElementCollector(doc)
@@ -313,8 +314,7 @@ namespace RevitChat.Skills
             foreach (var elem in elems)
             {
                 var elemLevel = GetElementLevel(doc, elem);
-                if (!string.IsNullOrEmpty(levelFilter) &&
-                    !elemLevel.Equals(levelFilter, StringComparison.OrdinalIgnoreCase))
+                if (resolvedLevel != null && !elemLevel.Equals(resolvedLevel, StringComparison.OrdinalIgnoreCase))
                     continue;
 
                 var sysName = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "";
@@ -375,6 +375,7 @@ namespace RevitChat.Skills
         {
             var systemFilter = GetArg<string>(args, "system_name");
             var levelFilter = GetArg<string>(args, "level");
+            var resolvedLevel = ResolveLevelName(doc, levelFilter);
             var categoryFilter = GetArg<string>(args, "category")?.ToLower() ?? "all";
 
             var allCategories = new Dictionary<BuiltInCategory, string>
@@ -421,8 +422,7 @@ namespace RevitChat.Skills
 
                 foreach (var elem in elems)
                 {
-                    if (!string.IsNullOrEmpty(levelFilter) &&
-                        !GetElementLevel(doc, elem).Equals(levelFilter, StringComparison.OrdinalIgnoreCase))
+                    if (resolvedLevel != null && !GetElementLevel(doc, elem).Equals(resolvedLevel, StringComparison.OrdinalIgnoreCase))
                         continue;
 
                     var sysName = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "(Unassigned)";
