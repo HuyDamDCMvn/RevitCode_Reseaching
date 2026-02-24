@@ -73,14 +73,14 @@ namespace RevitChat.Skills
                 {
                     id = s.Id.Value,
                     name = s.Name,
-                    is_internal = s.Definition?.IsInternalKeynoteSchedule ?? false
+                    is_titleblock = s.IsTitleblockRevisionSchedule
                 })
                 .ToList();
 
             return JsonSerializer.Serialize(new
             {
                 count = schedules.Count,
-                schedules,
+                schedules = schedules,
                 note = "These are Revit ViewSchedules (quantity/panel schedules), not building operating schedules. / Đây là bảng thống kê Revit, không phải lịch vận hành công trình."
             }, JsonOpts);
         }
