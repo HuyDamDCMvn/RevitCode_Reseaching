@@ -35,6 +35,7 @@ namespace RevitChat.ViewModel
         private InteractionRecord _currentInteraction;
         private Dictionary<string, string> _lastToolResults;
         private System.Diagnostics.Stopwatch _responseTimer;
+        private bool _sendFailed;
 
         private const int AnalyzeThresholdChars = 1200;
         private ChatMessage _streamingMessage;
@@ -231,26 +232,36 @@ namespace RevitChat.ViewModel
             }
             catch (OperationCanceledException)
             {
-                Messages.Add(ChatMessage.FromAssistant("Request was cancelled."));
-                StatusMessage = "Cancelled";
+                _responseTimer?.Stop();
+                var ts = _responseTimer?.Elapsed.TotalSeconds ?? 0;
+                Messages.Add(ChatMessage.FromAssistant($"Request was cancelled. ({ts:F1}s)"));
+                StatusMessage = $"Cancelled — {ts:F1}s";
                 InteractionLogger.EndInteraction(_currentInteraction, false, "cancelled");
+                _sendFailed = true;
             }
             catch (Exception ex)
             {
+                _responseTimer?.Stop();
+                var ts = _responseTimer?.Elapsed.TotalSeconds ?? 0;
                 Messages.Add(ChatMessage.FromAssistant($"Error: {ex.Message}"));
-                StatusMessage = "Error occurred";
+                StatusMessage = $"Error — {ts:F1}s";
                 InteractionLogger.EndInteraction(_currentInteraction, false, ex.Message);
                 RecordLearningSignals(text, false);
+                _sendFailed = true;
             }
             finally
             {
                 _responseTimer?.Stop();
-                var elapsed = _responseTimer?.Elapsed;
+                if (!_sendFailed)
+                {
+                    var elapsed = _responseTimer?.Elapsed;
+                    StatusMessage = elapsed != null
+                        ? $"Ready — {elapsed.Value.TotalSeconds:F1}s"
+                        : "Ready";
+                }
+                _sendFailed = false;
                 RemoveToolProgressMessages();
                 IsBusy = false;
-                StatusMessage = elapsed != null
-                    ? $"Ready — {elapsed.Value.TotalSeconds:F1}s"
-                    : "Ready";
                 _cts?.Dispose();
                 _cts = null;
             }
@@ -297,24 +308,34 @@ namespace RevitChat.ViewModel
             }
             catch (OperationCanceledException)
             {
-                Messages.Add(ChatMessage.FromAssistant("Request was cancelled."));
-                StatusMessage = "Cancelled";
+                _responseTimer?.Stop();
+                var ts = _responseTimer?.Elapsed.TotalSeconds ?? 0;
+                Messages.Add(ChatMessage.FromAssistant($"Request was cancelled. ({ts:F1}s)"));
+                StatusMessage = $"Cancelled — {ts:F1}s";
+                _sendFailed = true;
             }
             catch (Exception ex)
             {
+                _responseTimer?.Stop();
+                var ts = _responseTimer?.Elapsed.TotalSeconds ?? 0;
                 Messages.Add(ChatMessage.FromAssistant($"Error: {ex.Message}"));
-                StatusMessage = "Error occurred";
+                StatusMessage = $"Error — {ts:F1}s";
                 RecordLearningSignals(text, false);
+                _sendFailed = true;
             }
             finally
             {
                 _responseTimer?.Stop();
-                var elapsed = _responseTimer?.Elapsed;
+                if (!_sendFailed)
+                {
+                    var elapsed = _responseTimer?.Elapsed;
+                    StatusMessage = elapsed != null
+                        ? $"Ready — {elapsed.Value.TotalSeconds:F1}s"
+                        : "Ready";
+                }
+                _sendFailed = false;
                 RemoveToolProgressMessages();
                 IsBusy = false;
-                StatusMessage = elapsed != null
-                    ? $"Ready — {elapsed.Value.TotalSeconds:F1}s"
-                    : "Ready";
                 _cts?.Dispose();
                 _cts = null;
             }

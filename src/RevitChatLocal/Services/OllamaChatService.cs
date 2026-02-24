@@ -570,9 +570,11 @@ namespace RevitChatLocal.Services
         {
             var t = _warmupTask;
             if (t == null || t.IsCompleted) return;
-            using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            var completed = await Task.WhenAny(t, Task.Delay(Timeout.Infinite, linked.Token));
-            if (completed == t) await t;
+            var tcs = new TaskCompletionSource<bool>();
+            using var reg = ct.Register(() => tcs.TrySetCanceled());
+            var completed = await Task.WhenAny(t, tcs.Task);
+            ct.ThrowIfCancellationRequested();
+            await t;
         }
 
         public bool IsWarmedUp => _warmupTask?.IsCompletedSuccessfully == true;
