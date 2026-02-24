@@ -193,7 +193,11 @@
         "cấp gió", "hồi gió", "hút gió", "gió tươi", "gió ngoài", "gió hòa",
         "nước thải", "nước lạnh", "nước nóng", "nước mưa", "nước cấp",
         "hot water", "chilled water", "cold water", "domestic water", "rain water", "waste water",
-        "summary", "tóm tắt", "phân loại",
+        "summary", "tóm tắt", "phân loại", "phan loai", "phân loại theo", "phan loai theo",
+        "theo size", "theo kích thước", "theo kich thuoc", "group by size",
+        "theo level", "theo tầng", "theo tang", "group by level",
+        "theo system", "theo hệ thống", "theo he thong", "group by system",
+        "theo loại", "theo loai", "by type", "by family",
         "AHU", "FCU", "VAV", "RTU", "VRF", "VRV", "ERV", "MAU", "PAU", "DOAS",
         "SA", "RA", "EA", "OA", "FA", "HW", "CHW", "CW", "HWS", "HWR", "CHWS", "CHWR",
         "FP", "FPS", "FHC", "FDC", "SW", "SV", "SD",
@@ -218,13 +222,13 @@
     },
     {
       "name": "Sheet / Viewport",
-      "keywords": ["sheet", "viewport", "bản vẽ"],
+      "keywords": ["sheet", "viewport", "bản vẽ", "ban ve", "trang", "khổ giấy", "kho giay", "in ấn", "in an", "bản in", "ban in"],
       "tools": ["get_sheets_summary", "create_sheet", "place_view_on_sheet", "get_sheet_viewports", "remove_viewport"],
       "weight": 1
     },
     {
       "name": "Copy / Move / Mirror",
-      "keywords": ["copy", "move", "mirror", "duplicate", "di chuyển", "sao chép"],
+      "keywords": ["copy", "move", "mirror", "duplicate", "di chuyển", "di chuyen", "sao chép", "sao chep", "nhân bản", "nhan ban", "đối xứng", "doi xung", "dời", "doi"],
       "tools": ["copy_elements", "move_elements", "mirror_elements", "duplicate_views", "duplicate_sheets"],
       "weight": 1
     },
@@ -248,31 +252,31 @@
     },
     {
       "name": "Family / Type",
-      "keywords": ["family", "type", "swap", "load", "place", "họ"],
+      "keywords": ["family", "type", "swap", "load", "place", "họ", "ho", "loại", "loai", "đổi loại", "doi loai", "tải family", "tai family", "đặt family", "dat family", "gia đình", "instance"],
       "tools": ["get_family_types", "place_family_instance", "swap_family_type", "load_family"],
       "weight": 1
     },
     {
       "name": "Group",
-      "keywords": ["group", "nhóm"],
+      "keywords": ["group", "nhóm", "nhom", "tạo nhóm", "tao nhom", "bỏ nhóm", "bo nhom", "gỡ nhóm", "go nhom", "thành viên nhóm"],
       "tools": ["get_groups", "create_group", "ungroup", "get_group_members", "place_group_instance"],
       "weight": 1
     },
     {
       "name": "Material",
-      "keywords": ["material", "vật liệu"],
+      "keywords": ["material", "vật liệu", "vat lieu", "chất liệu", "chat lieu", "bề mặt", "be mat", "kết cấu vật liệu"],
       "tools": ["get_materials", "get_element_material", "set_element_material", "get_material_quantities"],
       "weight": 1
     },
     {
       "name": "Filter / Template",
-      "keywords": ["filter", "template", "bộ lọc", "mẫu"],
+      "keywords": ["filter", "template", "bộ lọc", "bo loc", "mẫu", "mau", "view template", "áp dụng mẫu", "ap dung mau", "tạo bộ lọc", "tao bo loc"],
       "tools": ["get_view_filters", "get_view_templates", "apply_view_template", "create_parameter_filter", "get_filter_rules"],
       "weight": 1
     },
     {
       "name": "Workset / Phase",
-      "keywords": ["workset", "phase", "giai đoạn"],
+      "keywords": ["workset", "phase", "giai đoạn", "giai doan", "phase hiện hữu", "phase xây mới", "existing", "new construction", "chuyển workset", "chuyen workset"],
       "tools": ["get_worksets", "move_to_workset", "get_phases", "get_elements_by_phase", "set_phase"],
       "weight": 1
     },
@@ -306,7 +310,7 @@
     },
     {
       "name": "Clash / Clearance",
-      "keywords": ["clash", "clearance", "overlap", "va chạm", "xung đột", "chồng chéo", "khoảng cách an toàn"],
+      "keywords": ["clash", "clearance", "overlap", "va chạm", "va cham", "xung đột", "xung dot", "chồng chéo", "chong cheo", "khoảng cách an toàn", "khoang cach an toan", "giao cắt", "giao cat", "đụng", "trùng nhau", "trung nhau"],
       "tools": ["check_clashes", "check_clearance", "find_overlapping", "get_clash_summary"],
       "weight": 1
     },
@@ -317,44 +321,50 @@
       "weight": 1
     },
     {
+      "name": "Model Summary / Overview",
+      "keywords": ["summary", "summarize", "overview", "what is in", "model summary", "element summary", "tóm tắt", "tổng quan", "tong quan", "tom tat", "tổng hợp", "tong hop", "có gì trong", "co gi trong", "in the model", "trong mô hình", "trong mo hinh", "bao nhiêu element", "list all categories", "phân loại", "phan loai"],
+      "tools": ["get_model_statistics", "get_categories"],
+      "weight": 3
+    },
+    {
       "name": "Parameters",
-      "keywords": ["parameter", "shared", "tham số", "formula", "công thức", "transfer", "chuyển tham số", "compare parameter", "so sánh tham số", "empty", "trống", "duplicate value", "trùng giá trị", "batch update"],
+      "keywords": ["parameter", "shared", "tham số", "tham so", "formula", "công thức", "cong thuc", "transfer", "chuyển tham số", "chuyen tham so", "compare parameter", "so sánh tham số", "so sanh tham so", "empty", "trống", "trong", "duplicate value", "trùng giá trị", "trung gia tri", "batch update", "thuộc tính", "thuoc tinh", "giá trị", "gia tri", "biến", "bien"],
       "tools": ["get_shared_parameters", "get_project_parameters", "check_parameter_values", "add_project_parameter", "get_parameter_bindings", "apply_parameter_formula", "compare_element_parameters", "find_empty_parameters", "find_duplicate_values", "transfer_parameters", "batch_update_parameters", "get_wall_layers"],
       "weight": 1
     },
     {
       "name": "Grid",
-      "keywords": ["grid", "lưới", "grid bubble", "đầu grid", "grid 2d", "grid 3d"],
+      "keywords": ["grid", "lưới", "luoi", "grid bubble", "đầu grid", "dau grid", "grid 2d", "grid 3d", "trục", "truc", "hệ trục", "he truc", "lệch trục", "lech truc", "off axis"],
       "tools": ["get_grids", "check_grid_alignment", "create_grid", "find_off_axis_elements", "toggle_grid_bubbles", "set_grid_mode"],
       "weight": 1
     },
     {
       "name": "Room / Area",
-      "keywords": ["room", "area", "boundary", "finish", "phòng", "diện tích", "enclosure", "enclosed", "not enclosed", "bao quanh", "kín"],
+      "keywords": ["room", "area", "boundary", "finish", "phòng", "phong", "diện tích", "dien tich", "enclosure", "enclosed", "not enclosed", "bao quanh", "kín", "kin", "ranh giới", "ranh gioi", "hoàn thiện", "hoan thien", "phòng chưa đặt", "phong chua dat", "phòng thừa", "phong thua", "chưa kín", "chua kin"],
       "tools": ["get_rooms_detailed", "get_room_boundaries", "get_room_finishes", "get_area_schemes", "get_unplaced_rooms", "get_redundant_rooms", "audit_room_enclosure"],
       "weight": 1
     },
     {
       "name": "Revision",
-      "keywords": ["revision", "markup", "cloud", "phát hành"],
+      "keywords": ["revision", "markup", "cloud", "phát hành", "phat hanh", "sửa đổi", "sua doi", "đánh dấu sửa", "phiên bản", "phien ban", "revision cloud", "đám mây sửa đổi"],
       "tools": ["get_revisions", "get_revision_clouds", "add_revision", "get_sheets_by_revision", "get_revision_schedule"],
       "weight": 1
     },
     {
       "name": "Links",
-      "keywords": ["link", "linked", "liên kết", "mô hình liên kết", "xref"],
+      "keywords": ["link", "linked", "liên kết", "lien ket", "mô hình liên kết", "mo hinh lien ket", "xref", "link model", "file liên kết", "file lien ket", "model liên kết"],
       "tools": ["get_linked_models", "get_linked_elements", "count_linked_elements", "get_linked_element_parameters", "search_linked_elements", "get_link_types"],
       "weight": 1
     },
     {
       "name": "Naming Audit",
-      "keywords": ["naming", "audit", "tên", "kiểm tra tên"],
+      "keywords": ["naming", "audit", "tên", "ten", "kiểm tra tên", "kiem tra ten", "quy ước đặt tên", "quy uoc dat ten", "chuẩn tên", "chuan ten"],
       "tools": ["audit_view_names", "audit_sheet_numbers", "audit_level_names", "audit_family_names", "audit_workset_names"],
       "weight": 1
     },
     {
       "name": "Select / Filter",
-      "keywords": ["select by", "filter by", "chọn theo", "lọc theo", "biến", "nhỏ hơn", "lớn hơn", "bé hơn", "greater", "less", "phân loại", "group by", "nhóm theo"],
+      "keywords": ["select by", "filter by", "chọn theo", "chon theo", "lọc theo", "loc theo", "biến", "bien", "nhỏ hơn", "nho hon", "lớn hơn", "lon hon", "bé hơn", "be hon", "greater", "less", "phân loại", "phan loai", "group by", "nhóm theo", "nhom theo", "bằng", "bang", "chứa", "chua", "contains", "equals"],
       "tools": ["select_by_parameter_value", "select_by_bounding_box", "select_elements_in_view", "get_selection_summary", "search_elements"],
       "weight": 1
     },
@@ -372,7 +382,7 @@
     },
     {
       "name": "Schedule",
-      "keywords": ["schedule", "bảng", "field", "fields", "column", "columns"],
+      "keywords": ["schedule", "bảng", "bang", "field", "fields", "column", "columns", "cột", "cot", "bảng thống kê", "bang thong ke", "tạo bảng", "tao bang", "dữ liệu bảng", "du lieu bang", "bảng dữ liệu", "schedule data"],
       "tools": ["get_schedule_data", "create_schedule", "get_schedule_fields"],
       "weight": 1
     },

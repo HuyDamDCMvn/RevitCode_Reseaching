@@ -147,6 +147,32 @@ namespace RevitChat.Skills
             }
         }
 
+        private static readonly HashSet<BuiltInCategory> MetadataCategories = new()
+        {
+            BuiltInCategory.OST_Levels,
+            BuiltInCategory.OST_Views,
+            BuiltInCategory.OST_Sheets,
+            BuiltInCategory.OST_Materials,
+            BuiltInCategory.OST_ProjectInformation,
+            BuiltInCategory.OST_IOSModelGroups,
+            BuiltInCategory.OST_Cameras,
+            BuiltInCategory.OST_RenderRegions,
+            BuiltInCategory.OST_Matchline,
+            BuiltInCategory.OST_VolumeOfInterest,
+            BuiltInCategory.OST_Phases,
+            BuiltInCategory.OST_DesignOptions,
+            BuiltInCategory.OST_DesignOptionSets,
+            BuiltInCategory.OST_SharedBasePoint,
+            BuiltInCategory.OST_ProjectBasePoint,
+            BuiltInCategory.OST_IOS_GeoSite
+        };
+
+        internal static bool IsMetadataCategory(Category cat)
+        {
+            if (cat == null) return true;
+            return MetadataCategories.Contains((BuiltInCategory)cat.Id.Value);
+        }
+
         private static readonly Dictionary<string, BuiltInCategory> CategoryAliases = new(StringComparer.OrdinalIgnoreCase)
         {
             ["duct"] = BuiltInCategory.OST_DuctCurves,
@@ -240,7 +266,51 @@ namespace RevitChat.Skills
             ["tran"] = BuiltInCategory.OST_Ceilings,
             ["mai"] = BuiltInCategory.OST_Roofs,
             ["cau thang"] = BuiltInCategory.OST_Stairs,
-            ["lan can"] = BuiltInCategory.OST_StairsRailing
+            ["lan can"] = BuiltInCategory.OST_StairsRailing,
+
+            // Vietnamese with diacritics
+            ["tường"] = BuiltInCategory.OST_Walls,
+            ["sàn"] = BuiltInCategory.OST_Floors,
+            ["cửa"] = BuiltInCategory.OST_Doors,
+            ["cửa sổ"] = BuiltInCategory.OST_Windows,
+            ["phòng"] = BuiltInCategory.OST_Rooms,
+            ["cột"] = BuiltInCategory.OST_Columns,
+            ["dầm"] = BuiltInCategory.OST_StructuralFraming,
+            ["trần"] = BuiltInCategory.OST_Ceilings,
+            ["mái"] = BuiltInCategory.OST_Roofs,
+            ["cầu thang"] = BuiltInCategory.OST_Stairs,
+            ["lan can"] = BuiltInCategory.OST_StairsRailing,
+            ["nội thất"] = BuiltInCategory.OST_Furniture,
+            ["ống gió"] = BuiltInCategory.OST_DuctCurves,
+            ["ống nước"] = BuiltInCategory.OST_PipeCurves,
+            ["ống dẫn"] = BuiltInCategory.OST_Conduit,
+            ["khay cáp"] = BuiltInCategory.OST_CableTray,
+            ["máng cáp"] = BuiltInCategory.OST_CableTray,
+            ["đầu phun"] = BuiltInCategory.OST_Sprinklers,
+            ["miệng gió"] = BuiltInCategory.OST_DuctTerminal,
+            ["cửa gió"] = BuiltInCategory.OST_DuctTerminal,
+            ["đèn"] = BuiltInCategory.OST_LightingFixtures,
+            ["quạt"] = BuiltInCategory.OST_MechanicalEquipment,
+            ["bơm"] = BuiltInCategory.OST_MechanicalEquipment,
+            ["van"] = BuiltInCategory.OST_PipeAccessory,
+            ["thiết bị cơ"] = BuiltInCategory.OST_MechanicalEquipment,
+            ["thiết bị điện"] = BuiltInCategory.OST_ElectricalEquipment,
+            ["thiết bị vệ sinh"] = BuiltInCategory.OST_PlumbingFixtures,
+            ["ổ cắm"] = BuiltInCategory.OST_ElectricalFixtures,
+            ["công tắc"] = BuiltInCategory.OST_ElectricalFixtures,
+            ["tủ điện"] = BuiltInCategory.OST_ElectricalEquipment,
+            ["phụ kiện ống gió"] = BuiltInCategory.OST_DuctFitting,
+            ["phụ kiện ống nước"] = BuiltInCategory.OST_PipeFitting,
+
+            // Additional no-diacritics Vietnamese
+            ["mieng gio"] = BuiltInCategory.OST_DuctTerminal,
+            ["cua gio"] = BuiltInCategory.OST_DuctTerminal,
+            ["tu dien"] = BuiltInCategory.OST_ElectricalEquipment,
+            ["bom"] = BuiltInCategory.OST_MechanicalEquipment,
+            ["quat"] = BuiltInCategory.OST_MechanicalEquipment,
+            ["phu kien ong gio"] = BuiltInCategory.OST_DuctFitting,
+            ["phu kien ong nuoc"] = BuiltInCategory.OST_PipeFitting,
+            ["phu kien"] = BuiltInCategory.OST_DuctFitting
         };
 
         // ──────────────────────────────────────────────────────────
@@ -613,29 +683,23 @@ namespace RevitChat.Skills
 
         /// <summary>
         /// Build a FilteredElementCollector with optional early category filter.
-        /// When the category cannot be resolved AND a non-empty categoryName was given,
-        /// returns an empty collector to avoid scanning every element in the model.
-        /// Callers that need the "soft fallback" behaviour should use MatchesCategoryName
-        /// on the returned elements.
+        /// Supports view-scoping via <paramref name="viewId"/>.
+        /// "all" category is treated as no-category (physical elements only, metadata excluded by callers).
         /// </summary>
-        internal static FilteredElementCollector BuildCollector(Document doc, string categoryName)
+        internal static FilteredElementCollector BuildCollector(Document doc, string categoryName, ElementId viewId = null)
         {
-            var collector = new FilteredElementCollector(doc)
-                .WhereElementIsNotElementType();
+            var collector = viewId != null && viewId != ElementId.InvalidElementId
+                ? new FilteredElementCollector(doc, viewId).WhereElementIsNotElementType()
+                : new FilteredElementCollector(doc).WhereElementIsNotElementType();
 
-            if (string.IsNullOrWhiteSpace(categoryName))
+            var norm = NormalizeArg(categoryName);
+            if (string.IsNullOrWhiteSpace(norm) || norm == "all" || norm == "tat ca" || norm == "tất cả")
                 return collector;
 
             var bic = ResolveCategoryFilter(doc, categoryName);
             if (bic.HasValue)
                 return collector.OfCategory(bic.Value);
 
-            // Category name was provided but could not be resolved to a BuiltInCategory.
-            // Instead of returning ALL elements (very slow on large models),
-            // we try matching against category display names. If nothing at all matches,
-            // callers use MatchesCategoryName for per-element fallback which is controlled.
-            // Still apply at least one broad filter to avoid full-doc scan.
-            // Return current collector; callers check needsCategoryFallback and filter.
             return collector;
         }
 

@@ -1,0 +1,6444 @@
+[
+  {
+    "intent": "Query",
+    "keyword": "ducts",
+    "success_count": 109,
+    "failure_count": 0,
+    "adjustment": 0.47004803657924166,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.3730573Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "li\u1EC7t",
+    "success_count": 143,
+    "failure_count": 0,
+    "adjustment": 0.4969813299576001,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:15:23.6868934Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "supply",
+    "success_count": 37,
+    "failure_count": 0,
+    "adjustment": 0.3637586159726386,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.3874894Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "hi\u1EC3n",
+    "success_count": 113,
+    "failure_count": 0,
+    "adjustment": 0.4736198448394496,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.0402566Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "rooms",
+    "success_count": 82,
+    "failure_count": 0,
+    "adjustment": 0.44188406077965986,
+    "last_tool": "get_rooms",
+    "last_updated": "2026-02-24T14:13:49.2028270Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "ph\u00F2ng",
+    "success_count": 40,
+    "failure_count": 0,
+    "adjustment": 0.3713572066704308,
+    "last_tool": "get_rooms_detailed",
+    "last_updated": "2026-02-24T14:13:48.0544353Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "mechanical",
+    "success_count": 35,
+    "failure_count": 0,
+    "adjustment": 0.358351893845611,
+    "last_tool": "get_mechanical_equipment",
+    "last_updated": "2026-02-24T14:13:47.0964437Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "thi\u1EBFt",
+    "success_count": 70,
+    "failure_count": 0,
+    "adjustment": 0.42626798770413155,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.0426866Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "cable",
+    "success_count": 28,
+    "failure_count": 0,
+    "adjustment": 0.3367295829986474,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.2907698Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "sprinklers",
+    "success_count": 66,
+    "failure_count": 0,
+    "adjustment": 0.4204692619390966,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.0522305Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "danh",
+    "success_count": 94,
+    "failure_count": 1,
+    "adjustment": 0.44682566505948285,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:48.0330910Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "terminals",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.0703914Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "mi\u1EC7ng",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.2691112Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "plumbing",
+    "success_count": 55,
+    "failure_count": 0,
+    "adjustment": 0.402535169073515,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.3379671Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "conduits",
+    "success_count": 29,
+    "failure_count": 0,
+    "adjustment": 0.34011973816621555,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.2927800Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "lighting",
+    "success_count": 19,
+    "failure_count": 0,
+    "adjustment": 0.2995732273553991,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.9910630Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "fittings",
+    "success_count": 19,
+    "failure_count": 0,
+    "adjustment": 0.2995732273553991,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.7197995Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "ki\u1EC7n",
+    "success_count": 38,
+    "failure_count": 0,
+    "adjustment": 0.36635616461296466,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.5863116Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "accessories",
+    "success_count": 19,
+    "failure_count": 0,
+    "adjustment": 0.2995732273553991,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.5903168Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "level",
+    "success_count": 71,
+    "failure_count": 0,
+    "adjustment": 0.42766661190160554,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.1710622Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "t\u1EA7ng",
+    "success_count": 70,
+    "failure_count": 0,
+    "adjustment": 0.42626798770413155,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:46.6725834Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "columns",
+    "success_count": 28,
+    "failure_count": 0,
+    "adjustment": 0.3367295829986474,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.2185749Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "beams",
+    "success_count": 28,
+    "failure_count": 0,
+    "adjustment": 0.3367295829986474,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.2197966Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "ceilings",
+    "success_count": 17,
+    "failure_count": 0,
+    "adjustment": 0.28903717578961646,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.7551321Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "tr\u1EA7n",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:48.0494378Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "floors",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.3516669Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "doors",
+    "success_count": 19,
+    "failure_count": 0,
+    "adjustment": 0.2995732273553991,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.5020217Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "windows",
+    "success_count": 19,
+    "failure_count": 0,
+    "adjustment": 0.2995732273553991,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.7873663Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "t\u1EA7ng",
+    "success_count": 50,
+    "failure_count": 9,
+    "adjustment": 0.2845222492391629,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:47.4770549Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "furniture",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:48.0839723Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "th\u1EA5t",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:46.9673811Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "th\u1EA5t",
+    "success_count": 0,
+    "failure_count": 13,
+    "adjustment": -0.26390573296152586,
+    "last_updated": "2026-02-24T14:13:46.9689166Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "building",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.7680566Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "thang",
+    "success_count": 25,
+    "failure_count": 0,
+    "adjustment": 0.3258096538021482,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:48.0135139Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "ducts",
+    "success_count": 14,
+    "failure_count": 0,
+    "adjustment": 0.270805020110221,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:46.3308325Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "count",
+    "success_count": 237,
+    "failure_count": 0,
+    "adjustment": 0.5472270673671475,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:49.3948214Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "n\u01B0\u1EDBc",
+    "success_count": 24,
+    "failure_count": 0,
+    "adjustment": 0.3218875824868201,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:46.7923427Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "rooms",
+    "success_count": 28,
+    "failure_count": 0,
+    "adjustment": 0.3367295829986474,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:49.1986207Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "ph\u00F2ng",
+    "success_count": 16,
+    "failure_count": 0,
+    "adjustment": 0.2833213344056216,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:47.6291568Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "l\u01B0\u1EE3ng",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:47.9782326Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "conduits",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:47.2130982Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "khay",
+    "success_count": 33,
+    "failure_count": 0,
+    "adjustment": 0.35263605246161617,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:49.0470997Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "doors",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:47.7088553Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "sprinklers",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:47.2364004Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "phun",
+    "success_count": 28,
+    "failure_count": 0,
+    "adjustment": 0.3367295829986474,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:47.6936570Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "terminals",
+    "success_count": 19,
+    "failure_count": 0,
+    "adjustment": 0.2995732273553991,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:47.4085763Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "mi\u1EC7ng",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:48.1228919Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "summary",
+    "success_count": 99,
+    "failure_count": 0,
+    "adjustment": 0.4605170185988092,
+    "last_tool": "calculate_system_totals",
+    "last_updated": "2026-02-24T14:13:49.2495013Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "th\u1ED1ng",
+    "success_count": 152,
+    "failure_count": 34,
+    "adjustment": 0.33186603053163516,
+    "last_tool": "get_duct_summary",
+    "last_updated": "2026-02-24T14:13:49.2150282Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "quantity",
+    "success_count": 34,
+    "failure_count": 0,
+    "adjustment": 0.3555348061489414,
+    "last_tool": "mep_quantity_takeoff",
+    "last_updated": "2026-02-24T14:13:47.9603840Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "l\u01B0\u1EE3ng",
+    "success_count": 116,
+    "failure_count": 0,
+    "adjustment": 0.47621739347977565,
+    "last_tool": "get_pipe_summary",
+    "last_updated": "2026-02-24T14:13:48.0414192Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "systems",
+    "success_count": 39,
+    "failure_count": 0,
+    "adjustment": 0.36888794541139364,
+    "last_tool": "mep_quantity_takeoff",
+    "last_updated": "2026-02-24T14:13:45.8722582Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "analyze",
+    "success_count": 56,
+    "failure_count": 0,
+    "adjustment": 0.40430512678345504,
+    "last_tool": "calculate_system_totals",
+    "last_updated": "2026-02-24T14:13:49.3960414Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "conduit",
+    "success_count": 40,
+    "failure_count": 0,
+    "adjustment": 0.3713572066704308,
+    "last_tool": "mep_quantity_takeoff",
+    "last_updated": "2026-02-24T14:13:47.6035503Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "takeoff",
+    "success_count": 36,
+    "failure_count": 0,
+    "adjustment": 0.3610917912644225,
+    "last_tool": "get_cable_tray_summary",
+    "last_updated": "2026-02-24T14:13:47.5116204Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "exhaust",
+    "success_count": 46,
+    "failure_count": 0,
+    "adjustment": 0.3850147601710059,
+    "last_tool": "calculate_system_totals",
+    "last_updated": "2026-02-24T14:13:49.3972167Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "t\u1EA7ng",
+    "success_count": 38,
+    "failure_count": 0,
+    "adjustment": 0.36635616461296466,
+    "last_tool": "mep_quantity_takeoff",
+    "last_updated": "2026-02-24T14:13:47.3936338Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "classify",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "calculate_system_totals",
+    "last_updated": "2026-02-24T14:13:47.4242675Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "velocity",
+    "success_count": 180,
+    "failure_count": 0,
+    "adjustment": 0.5198497031265826,
+    "last_tool": "check_velocity",
+    "last_updated": "2026-02-24T14:13:49.3993319Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "ki\u1EC3m",
+    "success_count": 358,
+    "failure_count": 0,
+    "adjustment": 0.5883322388488279,
+    "last_tool": "check_insulation_coverage",
+    "last_updated": "2026-02-24T14:13:49.3315063Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "check",
+    "success_count": 117,
+    "failure_count": 0,
+    "adjustment": 0.47706846244656653,
+    "last_tool": "check_pipe_slope",
+    "last_updated": "2026-02-24T14:13:49.3412945Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "warnings",
+    "success_count": 67,
+    "failure_count": 0,
+    "adjustment": 0.4219507705176107,
+    "last_tool": "get_model_warnings",
+    "last_updated": "2026-02-24T14:13:49.1426330Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "model",
+    "success_count": 100,
+    "failure_count": 0,
+    "adjustment": 0.461512051684126,
+    "last_tool": "audit_model_standards",
+    "last_updated": "2026-02-24T14:13:49.3346555Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "disconnected",
+    "success_count": 27,
+    "failure_count": 0,
+    "adjustment": 0.3332204510175204,
+    "last_tool": "check_disconnected_elements",
+    "last_updated": "2026-02-24T14:13:49.0159440Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "insulation",
+    "success_count": 27,
+    "failure_count": 0,
+    "adjustment": 0.3332204510175204,
+    "last_tool": "check_insulation_coverage",
+    "last_updated": "2026-02-24T14:13:46.0050807Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "detection",
+    "success_count": 51,
+    "failure_count": 0,
+    "adjustment": 0.39512437185814275,
+    "last_tool": "get_clash_summary",
+    "last_updated": "2026-02-24T14:13:49.2169953Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "connections",
+    "success_count": 55,
+    "failure_count": 0,
+    "adjustment": 0.402535169073515,
+    "last_tool": "check_disconnected_elements",
+    "last_updated": "2026-02-24T14:13:49.3472712Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "nh\u1EADn",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "check_disconnected_elements",
+    "last_updated": "2026-02-24T14:13:47.4354775Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "nh\u1EADn",
+    "success_count": 0,
+    "failure_count": 13,
+    "adjustment": -0.26390573296152586,
+    "last_updated": "2026-02-24T14:13:47.4365837Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "validate",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "check_velocity",
+    "last_updated": "2026-02-24T14:13:47.8317073Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "th\u01B0\u1EDBc",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "check_velocity",
+    "last_updated": "2026-02-24T14:13:47.9819549Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "thi\u1EBFu",
+    "success_count": 19,
+    "failure_count": 0,
+    "adjustment": 0.2995732273553991,
+    "last_tool": "check_insulation_coverage",
+    "last_updated": "2026-02-24T14:13:47.9919897Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "health",
+    "success_count": 26,
+    "failure_count": 0,
+    "adjustment": 0.3295836866004329,
+    "last_tool": "audit_model_standards",
+    "last_updated": "2026-02-24T14:13:49.0148815Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "resize",
+    "success_count": 73,
+    "failure_count": 0,
+    "adjustment": 0.430406509320417,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T14:13:49.4096303Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "th\u01B0\u1EDBc",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T14:13:47.3801871Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "slope",
+    "success_count": 35,
+    "failure_count": 0,
+    "adjustment": 0.358351893845611,
+    "last_tool": "set_pipe_slope",
+    "last_updated": "2026-02-24T14:13:49.3423510Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "n\u01B0\u1EDBc",
+    "success_count": 14,
+    "failure_count": 0,
+    "adjustment": 0.270805020110221,
+    "last_tool": "set_pipe_slope",
+    "last_updated": "2026-02-24T14:13:45.4940278Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "1350mm",
+    "success_count": 54,
+    "failure_count": 0,
+    "adjustment": 0.4007333185232471,
+    "last_tool": "split_mep_elements",
+    "last_updated": "2026-02-24T14:13:49.2837902Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "selected",
+    "success_count": 67,
+    "failure_count": 0,
+    "adjustment": 0.4219507705176107,
+    "last_tool": "copy_elements",
+    "last_updated": "2026-02-24T14:13:47.7070597Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "chuy\u1EC3n",
+    "success_count": 29,
+    "failure_count": 0,
+    "adjustment": 0.34011973816621555,
+    "last_tool": "move_elements",
+    "last_updated": "2026-02-24T14:13:47.2917291Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "insulation",
+    "success_count": 40,
+    "failure_count": 0,
+    "adjustment": 0.3713572066704308,
+    "last_tool": "add_change_insulation",
+    "last_updated": "2026-02-24T14:13:49.2826854Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "insulation",
+    "success_count": 0,
+    "failure_count": 20,
+    "adjustment": -0.3044522437723423,
+    "last_updated": "2026-02-24T14:13:49.2835115Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "th\u00EAm",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "add_change_insulation",
+    "last_updated": "2026-02-24T14:13:47.3077488Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "th\u00EAm",
+    "success_count": 0,
+    "failure_count": 15,
+    "adjustment": -0.2772588722239781,
+    "last_updated": "2026-02-24T14:13:47.3087269Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "auto",
+    "success_count": 49,
+    "failure_count": 0,
+    "adjustment": 0.39120230054281463,
+    "last_tool": "auto_size_mep",
+    "last_updated": "2026-02-24T14:13:49.2790550Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "\u0111\u1ED9ng",
+    "success_count": 38,
+    "failure_count": 0,
+    "adjustment": 0.36635616461296466,
+    "last_tool": "auto_size_mep",
+    "last_updated": "2026-02-24T14:13:47.4100358Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "preview",
+    "success_count": 41,
+    "failure_count": 0,
+    "adjustment": 0.37376696182833685,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T14:13:49.2614358Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "500x300",
+    "success_count": 46,
+    "failure_count": 0,
+    "adjustment": 0.3850147601710059,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T14:13:49.3235764Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "rename",
+    "success_count": 38,
+    "failure_count": 0,
+    "adjustment": 0.36635616461296466,
+    "last_tool": "rename_elements",
+    "last_updated": "2026-02-24T14:13:48.0432808Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "th\u00E0nh",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "rename_elements",
+    "last_updated": "2026-02-24T14:13:47.6342365Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "ch\u00E9p",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "copy_elements",
+    "last_updated": "2026-02-24T14:13:47.4038056Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "g\u01B0\u01A1ng",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "mirror_elements",
+    "last_updated": "2026-02-24T14:13:48.0828262Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "g\u01B0\u01A1ng",
+    "success_count": 0,
+    "failure_count": 14,
+    "adjustment": -0.270805020110221,
+    "last_updated": "2026-02-24T14:13:48.0835494Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "direction",
+    "success_count": 16,
+    "failure_count": 0,
+    "adjustment": 0.2833213344056216,
+    "last_tool": "flip_mep_elements",
+    "last_updated": "2026-02-24T14:13:47.3698365Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "chi\u1EC1u",
+    "success_count": 16,
+    "failure_count": 0,
+    "adjustment": 0.2833213344056216,
+    "last_tool": "flip_mep_elements",
+    "last_updated": "2026-02-24T14:13:48.1094516Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "change",
+    "success_count": 40,
+    "failure_count": 0,
+    "adjustment": 0.3713572066704308,
+    "last_tool": "change_mep_system_type",
+    "last_updated": "2026-02-24T14:13:47.8071336Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "th\u1ED1ng",
+    "success_count": 19,
+    "failure_count": 0,
+    "adjustment": 0.2995732273553991,
+    "last_tool": "change_mep_system_type",
+    "last_updated": "2026-02-24T14:13:47.6921555Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "offset",
+    "success_count": 104,
+    "failure_count": 0,
+    "adjustment": 0.46539603501575233,
+    "last_tool": "batch_set_offset",
+    "last_updated": "2026-02-24T14:13:49.2843081Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "action",
+    "success_count": 17,
+    "failure_count": 0,
+    "adjustment": 0.28903717578961646,
+    "last_tool": "undo_last_action",
+    "last_updated": "2026-02-24T14:13:47.3726994Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "ho\u00E0n",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "undo_last_action",
+    "last_updated": "2026-02-24T14:13:47.6916763Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "create",
+    "success_count": 86,
+    "failure_count": 21,
+    "adjustment": 0.28442853248885447,
+    "last_tool": "create_element",
+    "last_updated": "2026-02-24T14:13:49.4038038Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "t\u01B0\u1EDDng",
+    "success_count": 56,
+    "failure_count": 0,
+    "adjustment": 0.40430512678345504,
+    "last_tool": "create_element",
+    "last_updated": "2026-02-24T14:13:48.0905355Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "door",
+    "success_count": 29,
+    "failure_count": 0,
+    "adjustment": 0.34011973816621555,
+    "last_tool": "create_element",
+    "last_updated": "2026-02-24T14:13:49.4048790Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "t\u1EA7ng",
+    "success_count": 15,
+    "failure_count": 0,
+    "adjustment": 0.2772588722239781,
+    "last_tool": "create_element",
+    "last_updated": "2026-02-24T14:13:46.0865178Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "window",
+    "success_count": 28,
+    "failure_count": 0,
+    "adjustment": 0.3367295829986474,
+    "last_tool": "create_element",
+    "last_updated": "2026-02-24T14:13:49.4059347Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "ph\u00F2ng",
+    "success_count": 19,
+    "failure_count": 0,
+    "adjustment": 0.2995732273553991,
+    "last_tool": "create_element",
+    "last_updated": "2026-02-24T14:13:47.6182510Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "selected",
+    "success_count": 17,
+    "failure_count": 0,
+    "adjustment": 0.28903717578961646,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:48.0346323Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "ph\u1EA7n",
+    "success_count": 15,
+    "failure_count": 0,
+    "adjustment": 0.2772588722239781,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:47.6306309Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "families",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:47.4169411Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "family",
+    "success_count": 28,
+    "failure_count": 0,
+    "adjustment": 0.3367295829986474,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:47.8775643Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "accessories",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:47.7903712Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "ki\u1EC7n",
+    "success_count": 19,
+    "failure_count": 0,
+    "adjustment": 0.2995732273553991,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:48.0737452Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "delete",
+    "success_count": 38,
+    "failure_count": 0,
+    "adjustment": 0.36635616461296466,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:49.1827352Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "view",
+    "success_count": 23,
+    "failure_count": 0,
+    "adjustment": 0.3178053830347946,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:47.2228435Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "export",
+    "success_count": 443,
+    "failure_count": 0,
+    "adjustment": 0.6095824562432225,
+    "last_tool": "export_pdf",
+    "last_updated": "2026-02-24T14:13:49.4177167Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "xu\u1EA5t",
+    "success_count": 137,
+    "failure_count": 0,
+    "adjustment": 0.4927253685157205,
+    "last_tool": "export_pdf",
+    "last_updated": "2026-02-24T14:13:49.3775437Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "l\u01B0\u1EE3ng",
+    "success_count": 57,
+    "failure_count": 0,
+    "adjustment": 0.40604430105464195,
+    "last_tool": "export_mep_boq",
+    "last_updated": "2026-02-24T14:13:49.3859483Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "ph\u00F2ng",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "export_to_json",
+    "last_updated": "2026-02-24T14:13:48.0120327Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "equipment",
+    "success_count": 28,
+    "failure_count": 0,
+    "adjustment": 0.3367295829986474,
+    "last_tool": "export_to_csv",
+    "last_updated": "2026-02-24T14:13:49.3824129Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "thi\u1EBFt",
+    "success_count": 15,
+    "failure_count": 0,
+    "adjustment": 0.2772588722239781,
+    "last_tool": "export_to_csv",
+    "last_updated": "2026-02-24T14:13:46.6824893Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "gbxml",
+    "success_count": 54,
+    "failure_count": 0,
+    "adjustment": 0.4007333185232471,
+    "last_tool": "export_gbxml",
+    "last_updated": "2026-02-24T14:13:48.1218113Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "system",
+    "success_count": 82,
+    "failure_count": 0,
+    "adjustment": 0.44188406077965986,
+    "last_tool": "override_color_by_system",
+    "last_updated": "2026-02-24T14:13:49.4015762Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "th\u1ED1ng",
+    "success_count": 38,
+    "failure_count": 0,
+    "adjustment": 0.36635616461296466,
+    "last_tool": "override_color_by_system",
+    "last_updated": "2026-02-24T14:13:49.2270786Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "walls",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "hide_category",
+    "last_updated": "2026-02-24T14:13:47.6688335Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "t\u01B0\u1EDDng",
+    "success_count": 28,
+    "failure_count": 0,
+    "adjustment": 0.3367295829986474,
+    "last_tool": "hide_category",
+    "last_updated": "2026-02-24T14:13:49.2279054Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "isolate",
+    "success_count": 25,
+    "failure_count": 0,
+    "adjustment": 0.3258096538021482,
+    "last_tool": "isolate_by_level",
+    "last_updated": "2026-02-24T14:13:47.9275041Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "n\u01B0\u1EDBc",
+    "success_count": 45,
+    "failure_count": 0,
+    "adjustment": 0.38286413964890953,
+    "last_tool": "override_category_color",
+    "last_updated": "2026-02-24T14:13:49.2309681Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "parameter",
+    "success_count": 26,
+    "failure_count": 0,
+    "adjustment": 0.3295836866004329,
+    "last_tool": "override_color_by_parameter",
+    "last_updated": "2026-02-24T14:13:47.8096634Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "theo",
+    "success_count": 51,
+    "failure_count": 0,
+    "adjustment": 0.39512437185814275,
+    "last_tool": "override_color_by_system",
+    "last_updated": "2026-02-24T14:13:47.4722054Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "transparency",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "override_category_color",
+    "last_updated": "2026-02-24T14:13:47.8752729Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "su\u1ED1t",
+    "success_count": 28,
+    "failure_count": 0,
+    "adjustment": 0.3367295829986474,
+    "last_tool": "override_category_color",
+    "last_updated": "2026-02-24T14:13:49.2313630Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "elements",
+    "success_count": 36,
+    "failure_count": 0,
+    "adjustment": 0.3610917912644225,
+    "last_tool": "isolate_category",
+    "last_updated": "2026-02-24T14:13:49.3098794Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "hi\u1EC7n",
+    "success_count": 29,
+    "failure_count": 0,
+    "adjustment": 0.34011973816621555,
+    "last_tool": "reset_view_isolation",
+    "last_updated": "2026-02-24T14:13:49.2292656Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "ph\u1EA7n",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "isolate_by_level",
+    "last_updated": "2026-02-24T14:13:47.5462212Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "color",
+    "success_count": 38,
+    "failure_count": 0,
+    "adjustment": 0.36635616461296466,
+    "last_tool": "override_color_by_parameter",
+    "last_updated": "2026-02-24T14:13:49.4151269Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "ceiling",
+    "success_count": 29,
+    "failure_count": 0,
+    "adjustment": 0.34011973816621555,
+    "last_tool": "hide_category",
+    "last_updated": "2026-02-24T14:13:49.4162944Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "tr\u1EA7n",
+    "success_count": 29,
+    "failure_count": 0,
+    "adjustment": 0.34011973816621555,
+    "last_tool": "hide_category",
+    "last_updated": "2026-02-24T14:13:49.2289822Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "filter",
+    "success_count": 28,
+    "failure_count": 0,
+    "adjustment": 0.3367295829986474,
+    "last_tool": "override_color_by_system",
+    "last_updated": "2026-02-24T14:13:47.2515551Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "selected",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T14:13:47.6670654Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "\u0111ang",
+    "success_count": 26,
+    "failure_count": 0,
+    "adjustment": 0.3295836866004329,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T14:13:47.9879783Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "elements",
+    "success_count": 13,
+    "failure_count": 0,
+    "adjustment": 0.26390573296152586,
+    "last_tool": "route_mep_between",
+    "last_updated": "2026-02-24T14:13:46.1840522Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "n\u01B0\u1EDBc",
+    "success_count": 24,
+    "failure_count": 0,
+    "adjustment": 0.3218875824868201,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T14:13:49.1076215Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "structural",
+    "success_count": 42,
+    "failure_count": 0,
+    "adjustment": 0.37612001156935626,
+    "last_tool": "route_mep_between",
+    "last_updated": "2026-02-24T14:13:49.1111346Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "ch\u1ECDn,",
+    "success_count": 39,
+    "failure_count": 0,
+    "adjustment": 0.36888794541139364,
+    "last_tool": "route_mep_between",
+    "last_updated": "2026-02-24T14:13:48.0654116Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "route",
+    "success_count": 37,
+    "failure_count": 0,
+    "adjustment": 0.3637586159726386,
+    "last_tool": "route_mep_between",
+    "last_updated": "2026-02-24T14:13:49.1106129Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "ch\u00EDnh",
+    "success_count": 19,
+    "failure_count": 0,
+    "adjustment": 0.2995732273553991,
+    "last_tool": "route_mep_between",
+    "last_updated": "2026-02-24T14:13:48.0607360Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "equipment",
+    "success_count": 26,
+    "failure_count": 0,
+    "adjustment": 0.3295836866004329,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T14:13:49.1142573Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "thi\u1EBFt",
+    "success_count": 19,
+    "failure_count": 0,
+    "adjustment": 0.2995732273553991,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T14:13:47.8892228Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "untagged",
+    "success_count": 103,
+    "failure_count": 0,
+    "adjustment": 0.4644390899141373,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T14:13:49.3556087Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "ch\u01B0a",
+    "success_count": 40,
+    "failure_count": 0,
+    "adjustment": 0.3713572066704308,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T14:13:47.8727483Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "ph\u1EA7n",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "get_untagged_elements",
+    "last_updated": "2026-02-24T14:13:47.6163131Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "ph\u1EA7n",
+    "success_count": 11,
+    "failure_count": 13,
+    "adjustment": -0.026823965207235016,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.9236678Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "pipes",
+    "success_count": 14,
+    "failure_count": 0,
+    "adjustment": 0.270805020110221,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T14:13:46.5318950Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "n\u01B0\u1EDBc",
+    "success_count": 32,
+    "failure_count": 0,
+    "adjustment": 0.34965075614664803,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T14:13:49.3575728Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "equipment",
+    "success_count": 46,
+    "failure_count": 0,
+    "adjustment": 0.3850147601710059,
+    "last_tool": "get_untagged_elements",
+    "last_updated": "2026-02-24T14:13:49.3594217Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "thi\u1EBFt",
+    "success_count": 37,
+    "failure_count": 0,
+    "adjustment": 0.3637586159726386,
+    "last_tool": "get_untagged_elements",
+    "last_updated": "2026-02-24T14:13:47.4918546Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "select",
+    "success_count": 67,
+    "failure_count": 0,
+    "adjustment": 0.4219507705176107,
+    "last_tool": "select_elements",
+    "last_updated": "2026-02-24T14:13:49.3050697Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "ch\u1ECDn",
+    "success_count": 40,
+    "failure_count": 0,
+    "adjustment": 0.3713572066704308,
+    "last_tool": "select_elements",
+    "last_updated": "2026-02-24T14:13:48.0792609Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "element",
+    "success_count": 27,
+    "failure_count": 0,
+    "adjustment": 0.3332204510175204,
+    "last_tool": "zoom_to_elements",
+    "last_updated": "2026-02-24T14:13:49.3047235Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "123456",
+    "success_count": 27,
+    "failure_count": 0,
+    "adjustment": 0.3332204510175204,
+    "last_tool": "zoom_to_elements",
+    "last_updated": "2026-02-24T14:13:47.6891718Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "disconnected",
+    "success_count": 25,
+    "failure_count": 0,
+    "adjustment": 0.3258096538021482,
+    "last_tool": "select_elements",
+    "last_updated": "2026-02-24T14:13:49.3056023Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "\u0111\u00E1nh",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "select_elements",
+    "last_updated": "2026-02-24T14:13:47.9900395Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "\u0111\u00E1nh",
+    "success_count": 0,
+    "failure_count": 14,
+    "adjustment": -0.270805020110221,
+    "last_updated": "2026-02-24T14:13:47.9906627Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "room",
+    "success_count": 29,
+    "failure_count": 0,
+    "adjustment": 0.34011973816621555,
+    "last_tool": "zoom_to_elements",
+    "last_updated": "2026-02-24T14:13:49.3063561Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "ph\u00F2ng",
+    "success_count": 17,
+    "failure_count": 0,
+    "adjustment": 0.28903717578961646,
+    "last_tool": "zoom_to_elements",
+    "last_updated": "2026-02-24T14:13:48.1001603Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "commands",
+    "success_count": 0,
+    "failure_count": 6,
+    "adjustment": -0.19459101490553132,
+    "last_updated": "2026-02-24T14:13:47.1808844Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "schedules",
+    "success_count": 46,
+    "failure_count": 0,
+    "adjustment": 0.3850147601710059,
+    "last_tool": "get_view_schedules",
+    "last_updated": "2026-02-24T14:13:49.2133579Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "panel",
+    "success_count": 33,
+    "failure_count": 0,
+    "adjustment": 0.35263605246161617,
+    "last_tool": "get_panel_schedules",
+    "last_updated": "2026-02-24T14:13:49.0320659Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "capacity",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "check_panel_capacity",
+    "last_updated": "2026-02-24T14:13:47.0901172Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "l\u01B0\u1EE3ng",
+    "success_count": 29,
+    "failure_count": 0,
+    "adjustment": 0.34011973816621555,
+    "last_tool": "check_panel_capacity",
+    "last_updated": "2026-02-24T14:13:49.0325680Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "circuit",
+    "success_count": 17,
+    "failure_count": 0,
+    "adjustment": 0.28903717578961646,
+    "last_tool": "get_circuit_loads",
+    "last_updated": "2026-02-24T14:13:47.4376035Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "m\u1EA1ch",
+    "success_count": 26,
+    "failure_count": 0,
+    "adjustment": 0.3295836866004329,
+    "last_tool": "get_circuit_loads",
+    "last_updated": "2026-02-24T14:13:49.0332663Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "voltage",
+    "success_count": 19,
+    "failure_count": 0,
+    "adjustment": 0.2995732273553991,
+    "last_tool": "get_voltage_drop",
+    "last_updated": "2026-02-24T14:13:47.0079307Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "analysis",
+    "success_count": 17,
+    "failure_count": 0,
+    "adjustment": 0.28903717578961646,
+    "last_tool": "get_phase_balance",
+    "last_updated": "2026-02-24T14:13:47.6712571Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "ph\u00E2n",
+    "success_count": 34,
+    "failure_count": 0,
+    "adjustment": 0.3555348061489414,
+    "last_tool": "get_phase_balance",
+    "last_updated": "2026-02-24T14:13:49.0343089Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "structural",
+    "success_count": 26,
+    "failure_count": 0,
+    "adjustment": 0.3295836866004329,
+    "last_tool": "get_structural_model",
+    "last_updated": "2026-02-24T14:13:49.2138220Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "coverage",
+    "success_count": 32,
+    "failure_count": 0,
+    "adjustment": 0.34965075614664803,
+    "last_tool": "check_rebar_coverage",
+    "last_updated": "2026-02-24T14:13:49.2142674Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "schedule",
+    "success_count": 19,
+    "failure_count": 0,
+    "adjustment": 0.2995732273553991,
+    "last_tool": "get_rebar_schedule",
+    "last_updated": "2026-02-24T14:13:47.5675116Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "th\u1ED1ng",
+    "success_count": 47,
+    "failure_count": 0,
+    "adjustment": 0.38712010109078915,
+    "last_tool": "get_rebar_schedule",
+    "last_updated": "2026-02-24T14:13:49.2148050Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "foundation",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "check_foundation_loads",
+    "last_updated": "2026-02-24T14:13:47.1179133Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "analysis",
+    "success_count": 25,
+    "failure_count": 0,
+    "adjustment": 0.3258096538021482,
+    "last_tool": "export_gbxml",
+    "last_updated": "2026-02-24T14:13:47.5112717Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "energy",
+    "success_count": 28,
+    "failure_count": 0,
+    "adjustment": 0.3367295829986474,
+    "last_tool": "get_space_energy_data",
+    "last_updated": "2026-02-24T14:13:49.2051697Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "l\u01B0\u1EE3ng",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "get_space_energy_data",
+    "last_updated": "2026-02-24T14:13:47.7988011Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "linked",
+    "success_count": 22,
+    "failure_count": 0,
+    "adjustment": 0.313549421592915,
+    "last_tool": "get_linked_elements",
+    "last_updated": "2026-02-24T14:13:47.6244435Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "model",
+    "success_count": 54,
+    "failure_count": 0,
+    "adjustment": 0.4007333185232471,
+    "last_tool": "get_linked_elements",
+    "last_updated": "2026-02-24T14:13:48.1120461Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "elements",
+    "success_count": 32,
+    "failure_count": 0,
+    "adjustment": 0.34965075614664803,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:49.3686121Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "model",
+    "success_count": 26,
+    "failure_count": 0,
+    "adjustment": 0.3295836866004329,
+    "last_tool": "count_linked_elements",
+    "last_updated": "2026-02-24T14:13:47.3543733Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "elements",
+    "success_count": 35,
+    "failure_count": 0,
+    "adjustment": 0.358351893845611,
+    "last_tool": "find_elements_near",
+    "last_updated": "2026-02-24T14:13:46.5681105Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "create",
+    "success_count": 28,
+    "failure_count": 0,
+    "adjustment": 0.3367295829986474,
+    "last_tool": "create_3d_view_by_system",
+    "last_updated": "2026-02-24T14:13:47.5193324Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "view",
+    "success_count": 35,
+    "failure_count": 0,
+    "adjustment": 0.358351893845611,
+    "last_tool": "create_3d_view_by_system",
+    "last_updated": "2026-02-24T14:13:49.2295551Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "view",
+    "success_count": 0,
+    "failure_count": 25,
+    "adjustment": -0.3258096538021482,
+    "last_updated": "2026-02-24T14:13:49.2296155Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "section",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "create_section_view",
+    "last_updated": "2026-02-24T14:13:48.0388910Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "section",
+    "success_count": 0,
+    "failure_count": 13,
+    "adjustment": -0.26390573296152586,
+    "last_updated": "2026-02-24T14:13:48.0394100Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "t\u1EA1o",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "create_section_view",
+    "last_updated": "2026-02-24T14:13:47.4798003Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "t\u1EA1o",
+    "success_count": 5,
+    "failure_count": 15,
+    "adjustment": -0.15222612188617116,
+    "last_tool": "create_element",
+    "last_updated": "2026-02-24T14:13:47.7603522Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "duplicate",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "duplicate_views",
+    "last_updated": "2026-02-24T14:13:47.8551413Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "nh\u00E2n",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "duplicate_views",
+    "last_updated": "2026-02-24T14:13:47.5545884Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "nh\u00E2n",
+    "success_count": 0,
+    "failure_count": 15,
+    "adjustment": -0.2772588722239781,
+    "last_updated": "2026-02-24T14:13:47.5548194Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "screenshot",
+    "success_count": 56,
+    "failure_count": 0,
+    "adjustment": 0.40430512678345504,
+    "last_tool": "screenshot_view",
+    "last_updated": "2026-02-24T14:13:49.4189274Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "ch\u1EE5p",
+    "success_count": 56,
+    "failure_count": 0,
+    "adjustment": 0.40430512678345504,
+    "last_tool": "screenshot_view",
+    "last_updated": "2026-02-24T14:13:49.2346978Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "3000mm",
+    "success_count": 48,
+    "failure_count": 0,
+    "adjustment": 0.38918202981106265,
+    "last_tool": "set_view_range",
+    "last_updated": "2026-02-24T14:13:48.0217681Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "3000mm",
+    "success_count": 0,
+    "failure_count": 15,
+    "adjustment": -0.2772588722239781,
+    "last_updated": "2026-02-24T14:13:47.5064370Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "compare",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "compare_views",
+    "last_updated": "2026-02-24T14:13:47.4546026Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "s\u00E1nh",
+    "success_count": 27,
+    "failure_count": 0,
+    "adjustment": 0.3332204510175204,
+    "last_tool": "compare_views",
+    "last_updated": "2026-02-24T14:13:49.2340942Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "diameter",
+    "success_count": 13,
+    "failure_count": 0,
+    "adjustment": 0.26390573296152586,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T14:13:46.6647767Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "\u0111\u01B0\u1EDDng",
+    "success_count": 19,
+    "failure_count": 0,
+    "adjustment": 0.2995732273553991,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T14:13:47.8215302Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "30mm",
+    "success_count": 23,
+    "failure_count": 0,
+    "adjustment": 0.3178053830347946,
+    "last_tool": "add_change_insulation",
+    "last_updated": "2026-02-24T14:13:47.5653359Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "500mm",
+    "success_count": 24,
+    "failure_count": 0,
+    "adjustment": 0.3218875824868201,
+    "last_tool": "find_elements_near",
+    "last_updated": "2026-02-24T14:13:48.0445705Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "sanitary",
+    "success_count": 19,
+    "failure_count": 0,
+    "adjustment": 0.2995732273553991,
+    "last_tool": "set_pipe_slope",
+    "last_updated": "2026-02-24T14:13:47.4112716Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "tho\u00E1t",
+    "success_count": 19,
+    "failure_count": 0,
+    "adjustment": 0.2995732273553991,
+    "last_tool": "set_pipe_slope",
+    "last_updated": "2026-02-24T14:13:47.7645608Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "split",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "split_mep_elements",
+    "last_updated": "2026-02-24T14:13:47.5876576Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "chia",
+    "success_count": 28,
+    "failure_count": 0,
+    "adjustment": 0.3367295829986474,
+    "last_tool": "split_mep_elements",
+    "last_updated": "2026-02-24T14:13:47.4976611Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "elements",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:49.1795713Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "tr\u01B0\u1EDBc",
+    "success_count": 30,
+    "failure_count": 0,
+    "adjustment": 0.34339872044851466,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:49.3318037Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "simulate",
+    "success_count": 12,
+    "failure_count": 0,
+    "adjustment": 0.2564949357461537,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T14:13:47.9158865Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "ph\u1ECFng",
+    "success_count": 19,
+    "failure_count": 0,
+    "adjustment": 0.2995732273553991,
+    "last_tool": "add_change_insulation",
+    "last_updated": "2026-02-24T14:13:49.3288375Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "thay",
+    "success_count": 11,
+    "failure_count": 0,
+    "adjustment": 0.24849066497880004,
+    "last_tool": "set_pipe_slope",
+    "last_updated": "2026-02-24T14:13:47.9133591Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "tr\u01B0\u1EDBc",
+    "success_count": 59,
+    "failure_count": 0,
+    "adjustment": 0.4094344562222101,
+    "last_tool": "rename_elements",
+    "last_updated": "2026-02-24T14:13:49.3261507Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "largest",
+    "success_count": 12,
+    "failure_count": 0,
+    "adjustment": 0.2564949357461537,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.1403427Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "first",
+    "success_count": 12,
+    "failure_count": 0,
+    "adjustment": 0.2564949357461537,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:48.1043301Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "n\u01B0\u1EDBc",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:45.7374065Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "c\u1EA3nh",
+    "success_count": 11,
+    "failure_count": 0,
+    "adjustment": 0.24849066497880004,
+    "last_tool": "get_model_warnings",
+    "last_updated": "2026-02-24T14:13:47.1489242Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "500mm",
+    "success_count": 32,
+    "failure_count": 0,
+    "adjustment": 0.34965075614664803,
+    "last_tool": "move_elements",
+    "last_updated": "2026-02-24T14:13:49.4084027Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "shift",
+    "success_count": 12,
+    "failure_count": 0,
+    "adjustment": 0.2564949357461537,
+    "last_tool": "move_elements",
+    "last_updated": "2026-02-24T14:13:47.0672356Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "200mm",
+    "success_count": 12,
+    "failure_count": 0,
+    "adjustment": 0.2564949357461537,
+    "last_tool": "move_elements",
+    "last_updated": "2026-02-24T14:13:47.3772937Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "move",
+    "success_count": 12,
+    "failure_count": 0,
+    "adjustment": 0.2564949357461537,
+    "last_tool": "move_elements",
+    "last_updated": "2026-02-24T14:13:48.0971647Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "xu\u1ED1ng",
+    "success_count": 12,
+    "failure_count": 0,
+    "adjustment": 0.2564949357461537,
+    "last_tool": "move_elements",
+    "last_updated": "2026-02-24T14:13:47.7797192Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "tho\u00E1t",
+    "success_count": 12,
+    "failure_count": 0,
+    "adjustment": 0.2564949357461537,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:47.6601766Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "domestic",
+    "success_count": 12,
+    "failure_count": 0,
+    "adjustment": 0.2564949357461537,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:47.2667643Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "\u1ED1ng",
+    "success_count": 21,
+    "failure_count": 0,
+    "adjustment": 0.30910424533583164,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:49.0973441Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "protection",
+    "success_count": 12,
+    "failure_count": 0,
+    "adjustment": 0.2564949357461537,
+    "last_tool": "check_disconnected_elements",
+    "last_updated": "2026-02-24T14:13:46.8297577Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "exhaust",
+    "success_count": 21,
+    "failure_count": 0,
+    "adjustment": 0.30910424533583164,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.3896138Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "condensate",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.3461708Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "pipes",
+    "success_count": 70,
+    "failure_count": 0,
+    "adjustment": 0.42626798770413155,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.3780698Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "dn100",
+    "success_count": 14,
+    "failure_count": 0,
+    "adjustment": 0.270805020110221,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.2589775Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "dn150",
+    "success_count": 10,
+    "failure_count": 0,
+    "adjustment": 0.23978952727983707,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T14:13:47.3570994Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "find",
+    "success_count": 12,
+    "failure_count": 0,
+    "adjustment": 0.2564949357461537,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.4604394Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "\u00F8300",
+    "success_count": 12,
+    "failure_count": 0,
+    "adjustment": 0.2564949357461537,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.9672513Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "600x400mm",
+    "success_count": 22,
+    "failure_count": 0,
+    "adjustment": 0.313549421592915,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T14:13:47.4708992Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "t\u01B0\u01A1ng",
+    "success_count": 21,
+    "failure_count": 0,
+    "adjustment": 0.30910424533583164,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.0957597Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "thing",
+    "success_count": 20,
+    "failure_count": 0,
+    "adjustment": 0.3044522437723423,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.1610466Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "nh\u01B0ng",
+    "success_count": 11,
+    "failure_count": 0,
+    "adjustment": 0.24849066497880004,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.2631233Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "return",
+    "success_count": 19,
+    "failure_count": 0,
+    "adjustment": 0.2995732273553991,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.3917950Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "l\u00E0m",
+    "success_count": 12,
+    "failure_count": 0,
+    "adjustment": 0.2564949357461537,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.6778042Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "veolcity",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "check_velocity",
+    "last_updated": "2026-02-24T10:21:09.1072243Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "\u1EA7tng",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T10:21:09.3396497Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "\u1EA7tng",
+    "success_count": 3,
+    "failure_count": 1,
+    "adjustment": 0.08047189562170502,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:46.7043610Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "hp\u1EA7n",
+    "success_count": 4,
+    "failure_count": 0,
+    "adjustment": 0.16094379124341004,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:45.2782834Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "3m0m",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "add_change_insulation",
+    "last_updated": "2026-02-24T10:21:09.1159501Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "elemetns",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "find_elements_near",
+    "last_updated": "2026-02-24T10:21:09.1170865Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "helath",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "audit_model_standards",
+    "last_updated": "2026-02-24T14:13:45.2894858Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "t\u01B0n\u1EDDg",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "create_element",
+    "last_updated": "2026-02-24T14:13:45.7350128Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "p\u1EA7hn",
+    "success_count": 1,
+    "failure_count": 2,
+    "adjustment": -0.0462098120373297,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:46.2318801Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "warnnigs",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_model_warnings",
+    "last_updated": "2026-02-24T13:40:24.5249493Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "gbmxl",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "export_gbxml",
+    "last_updated": "2026-02-24T10:21:09.1762693Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "dsiconnected",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "select_elements",
+    "last_updated": "2026-02-24T13:40:24.6791926Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "enegry",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_space_energy_data",
+    "last_updated": "2026-02-24T10:21:09.2254459Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "min\u1EC7g",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T13:40:24.6341489Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "sleected",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "move_elements",
+    "last_updated": "2026-02-24T10:21:09.2428808Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "rt\u01B0\u1EDBc",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "auto_size_mep",
+    "last_updated": "2026-02-24T10:21:09.2569132Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "qauntity",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "get_pipe_summary",
+    "last_updated": "2026-02-24T13:40:25.0761939Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "edtection",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "check_clashes",
+    "last_updated": "2026-02-24T13:40:24.4674360Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "plumbnig",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T10:21:09.2659119Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "tsructural",
+    "success_count": 4,
+    "failure_count": 0,
+    "adjustment": 0.16094379124341004,
+    "last_tool": "route_mep_between",
+    "last_updated": "2026-02-24T13:40:24.7810933Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "elemetns",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "route_mep_between",
+    "last_updated": "2026-02-24T10:21:09.2736159Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "erturn",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T10:21:09.2791242Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "velcoity",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "check_velocity",
+    "last_updated": "2026-02-24T10:21:09.2843645Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "takefof",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "mep_quantity_takeoff",
+    "last_updated": "2026-02-24T10:21:09.2862743Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "moedl",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_linked_models",
+    "last_updated": "2026-02-24T10:21:09.2954881Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "sn\u00E1h",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "compare_views",
+    "last_updated": "2026-02-24T10:21:09.2966931Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "icrcuit",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_circuit_loads",
+    "last_updated": "2026-02-24T10:21:09.2990385Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "nih\u00EAu",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:45.4290143Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "eslected",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "mirror_elements",
+    "last_updated": "2026-02-24T14:13:46.7539340Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "paenl",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_panel_schedules",
+    "last_updated": "2026-02-24T13:40:24.4339870Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "paraemter",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "override_color_by_parameter",
+    "last_updated": "2026-02-24T10:21:09.3475430Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "udcts",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T10:21:09.3543008Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "p\u00F2hng",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "zoom_to_elements",
+    "last_updated": "2026-02-24T13:40:24.9882111Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "condenaste",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T10:21:09.3715134Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "phn\u1ECFg",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T10:21:09.3776172Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "eleemnts",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T10:21:09.3807839Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "\u0111n\u1ED9g",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "auto_size_mep",
+    "last_updated": "2026-02-24T10:21:09.3859897Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "600x40m0m",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T10:21:09.3904307Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "nd150",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T10:21:09.3915206Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "tsructural",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_structural_model",
+    "last_updated": "2026-02-24T10:21:09.4031814Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "chyu\u1EC3n",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "move_elements",
+    "last_updated": "2026-02-24T10:21:09.4824645Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "chyu\u1EC3n",
+    "success_count": 0,
+    "failure_count": 1,
+    "adjustment": 0,
+    "last_updated": "2026-02-24T10:21:09.4189737Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "cmomands",
+    "success_count": 0,
+    "failure_count": 1,
+    "adjustment": 0,
+    "last_updated": "2026-02-24T10:21:09.4191670Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "t\u1EA5ht",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T10:21:09.4267799Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "t\u1EA5ht",
+    "success_count": 0,
+    "failure_count": 1,
+    "adjustment": 0,
+    "last_updated": "2026-02-24T10:21:09.4277595Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "n\u1EDB\u01B0c",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "isolate_category",
+    "last_updated": "2026-02-24T14:13:46.5141130Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "lveel",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T10:21:09.4329881Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "wnidows",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T10:21:09.4340181Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "seletced",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:46.5384900Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "cn\u1EA3h",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_model_warnings",
+    "last_updated": "2026-02-24T10:21:09.4414982Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "cn\u1EA3h",
+    "success_count": 0,
+    "failure_count": 1,
+    "adjustment": 0,
+    "last_updated": "2026-02-24T10:21:09.4425224Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "k\u00F4hng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T10:21:09.4427144Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "ppies",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:45.8793891Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "isnulation",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "add_change_insulation",
+    "last_updated": "2026-02-24T10:21:09.4555478Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "trnog",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "find_elements_near",
+    "last_updated": "2026-02-24T14:13:46.6323260Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "accessoreis",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:46.0318539Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "eslected",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T10:21:09.4733055Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "nhn\u01B0g",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T10:21:09.4874259Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "\u0111\u1EBFm",
+    "success_count": 51,
+    "failure_count": 0,
+    "adjustment": 0.39512437185814275,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:49.0835175Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "between",
+    "success_count": 5,
+    "failure_count": 0,
+    "adjustment": 0.1791759469228055,
+    "last_tool": "route_mep_between",
+    "last_updated": "2026-02-24T14:13:47.8123014Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "fcu",
+    "success_count": 24,
+    "failure_count": 0,
+    "adjustment": 0.3218875824868201,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.7584582Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "view",
+    "success_count": 10,
+    "failure_count": 0,
+    "adjustment": 0.23978952727983707,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T14:13:47.4905163Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "list",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:46.8376365Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "ti\u00EAn",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.7295354Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "m\u00E0u",
+    "success_count": 5,
+    "failure_count": 0,
+    "adjustment": 0.1791759469228055,
+    "last_tool": "override_category_color",
+    "last_updated": "2026-02-24T14:13:47.8956254Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "c\u1EEDa",
+    "success_count": 5,
+    "failure_count": 5,
+    "adjustment": 0,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:48.0225534Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "th\u00E9p",
+    "success_count": 5,
+    "failure_count": 0,
+    "adjustment": 0.1791759469228055,
+    "last_tool": "check_rebar_coverage",
+    "last_updated": "2026-02-24T14:13:46.9002003Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "syss",
+    "success_count": 14,
+    "failure_count": 0,
+    "adjustment": 0.270805020110221,
+    "last_tool": "mep_quantity_takeoff",
+    "last_updated": "2026-02-24T14:13:48.0912536Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "limit",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.2741466Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "gi\u1EDD",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "check_velocity",
+    "last_updated": "2026-02-24T14:13:47.4481483Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "li\u1EC7u",
+    "success_count": 5,
+    "failure_count": 0,
+    "adjustment": 0.1791759469228055,
+    "last_tool": "export_to_csv",
+    "last_updated": "2026-02-24T14:13:48.0263361Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "b\u1EA3o",
+    "success_count": 5,
+    "failure_count": 0,
+    "adjustment": 0.1791759469228055,
+    "last_tool": "check_insulation_coverage",
+    "last_updated": "2026-02-24T14:13:47.6077179Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "insul",
+    "success_count": 5,
+    "failure_count": 0,
+    "adjustment": 0.1791759469228055,
+    "last_tool": "add_change_insulation",
+    "last_updated": "2026-02-24T14:13:47.5697190Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "within",
+    "success_count": 5,
+    "failure_count": 0,
+    "adjustment": 0.1791759469228055,
+    "last_tool": "find_elements_near",
+    "last_updated": "2026-02-24T14:13:48.0089123Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "missing",
+    "success_count": 5,
+    "failure_count": 0,
+    "adjustment": 0.1791759469228055,
+    "last_tool": "check_insulation_coverage",
+    "last_updated": "2026-02-24T14:13:47.6462160Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "t\u1EA7ng",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "check_velocity",
+    "last_updated": "2026-02-24T14:13:47.4960943Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "xem",
+    "success_count": 5,
+    "failure_count": 0,
+    "adjustment": 0.1791759469228055,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.2963490Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "m\u00F3ng",
+    "success_count": 5,
+    "failure_count": 0,
+    "adjustment": 0.1791759469228055,
+    "last_tool": "check_foundation_loads",
+    "last_updated": "2026-02-24T14:13:48.0958704Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "unhide",
+    "success_count": 5,
+    "failure_count": 0,
+    "adjustment": 0.1791759469228055,
+    "last_tool": "reset_view_isolation",
+    "last_updated": "2026-02-24T14:13:47.7055118Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "\u1ED1ng",
+    "success_count": 6,
+    "failure_count": 0,
+    "adjustment": 0.19459101490553132,
+    "last_tool": "check_disconnected_elements",
+    "last_updated": "2026-02-24T14:13:47.9442540Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "c\u1EEDa",
+    "success_count": 10,
+    "failure_count": 0,
+    "adjustment": 0.23978952727983707,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:48.0560172Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "\u0111\u1EB7t",
+    "success_count": 14,
+    "failure_count": 0,
+    "adjustment": 0.270805020110221,
+    "last_tool": "set_pipe_slope",
+    "last_updated": "2026-02-24T14:13:49.0888886Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "linked",
+    "success_count": 5,
+    "failure_count": 0,
+    "adjustment": 0.1791759469228055,
+    "last_tool": "count_linked_elements",
+    "last_updated": "2026-02-24T14:13:46.9408200Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "same",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.0463705Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "s\u1EE5t",
+    "success_count": 5,
+    "failure_count": 0,
+    "adjustment": 0.1791759469228055,
+    "last_tool": "get_voltage_drop",
+    "last_updated": "2026-02-24T14:13:48.0196522Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "ph\u1EA7n",
+    "success_count": 5,
+    "failure_count": 0,
+    "adjustment": 0.1791759469228055,
+    "last_tool": "check_disconnected_elements",
+    "last_updated": "2026-02-24T14:13:48.0468141Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "level",
+    "success_count": 5,
+    "failure_count": 0,
+    "adjustment": 0.1791759469228055,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:46.8901767Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "preview",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:47.0807936Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "ch\u1EA1m",
+    "success_count": 10,
+    "failure_count": 0,
+    "adjustment": 0.23978952727983707,
+    "last_tool": "check_clashes",
+    "last_updated": "2026-02-24T14:13:48.0304848Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "v\u1EADn",
+    "success_count": 14,
+    "failure_count": 0,
+    "adjustment": 0.270805020110221,
+    "last_tool": "check_velocity",
+    "last_updated": "2026-02-24T14:13:49.0727277Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "t\u1EA7ng",
+    "success_count": 14,
+    "failure_count": 0,
+    "adjustment": 0.270805020110221,
+    "last_tool": "isolate_by_level",
+    "last_updated": "2026-02-24T14:13:49.2317703Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "there",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:49.2531618Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "summarize",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "calculate_system_totals",
+    "last_updated": "2026-02-24T14:13:49.2552320Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "exceed",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "check_velocity",
+    "last_updated": "2026-02-24T14:13:49.2584607Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "exceed",
+    "success_count": 0,
+    "failure_count": 6,
+    "adjustment": -0.19459101490553132,
+    "last_updated": "2026-02-24T14:13:49.2598007Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "changes",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T14:13:49.2624897Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "pipes",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "export_mep_boq",
+    "last_updated": "2026-02-24T14:13:49.2714461Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "pipes",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:49.2949593Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "th\u1EF1c",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "rename_elements",
+    "last_updated": "2026-02-24T14:13:49.3275773Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "th\u1EF1c",
+    "success_count": 0,
+    "failure_count": 6,
+    "adjustment": -0.19459101490553132,
+    "last_updated": "2026-02-24T14:13:49.0920413Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "many",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:49.3908108Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "return",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "calculate_system_totals",
+    "last_updated": "2026-02-24T14:13:49.3982751Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "system",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "calculate_system_totals",
+    "last_updated": "2026-02-24T14:13:49.4004730Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "system",
+    "success_count": 0,
+    "failure_count": 6,
+    "adjustment": -0.19459101490553132,
+    "last_updated": "2026-02-24T14:13:49.4013325Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "comparison",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "export_to_csv",
+    "last_updated": "2026-02-24T14:13:49.4027174Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "warnings",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:49.0171531Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "disconnected",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T14:13:49.0242405Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "problematic",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "override_category_color",
+    "last_updated": "2026-02-24T14:13:49.0279223Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "cable",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:49.2960389Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "conduit",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:49.2971364Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "t\u01B0\u01A1ng",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "get_pipe_summary",
+    "last_updated": "2026-02-24T14:13:49.2992835Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "nh\u01B0ng",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "export_to_csv",
+    "last_updated": "2026-02-24T14:13:49.1746445Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "switch",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.2406259Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "also",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "export_ifc",
+    "last_updated": "2026-02-24T14:13:49.2517175Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "connected",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "check_disconnected_elements",
+    "last_updated": "2026-02-24T14:13:49.4112549Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "door",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T14:13:49.4128257Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "window",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T14:13:49.4139400Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "everything",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "reset_view_isolation",
+    "last_updated": "2026-02-24T14:13:49.4165742Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "everything",
+    "success_count": 0,
+    "failure_count": 6,
+    "adjustment": -0.19459101490553132,
+    "last_updated": "2026-02-24T14:13:49.4174464Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "ch\u1EE5p",
+    "success_count": 0,
+    "failure_count": 6,
+    "adjustment": -0.19459101490553132,
+    "last_updated": "2026-02-24T14:13:49.2357485Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "khay",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.0449224Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "ducts",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "move_elements",
+    "last_updated": "2026-02-24T14:13:49.2213548Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "clashes",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "check_clashes",
+    "last_updated": "2026-02-24T14:13:49.2224739Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "connect",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T14:13:49.1042560Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "connection",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "check_disconnected_elements",
+    "last_updated": "2026-02-24T14:13:49.1057230Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "connections",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T14:13:49.1164609Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "those",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T14:13:49.3607335Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "tagged",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "get_untagged_elements",
+    "last_updated": "2026-02-24T14:13:49.3617969Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "tagged",
+    "success_count": 0,
+    "failure_count": 6,
+    "adjustment": -0.19459101490553132,
+    "last_updated": "2026-02-24T14:13:49.3627602Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "t\u01B0\u01A1ng",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "get_untagged_elements",
+    "last_updated": "2026-02-24T14:13:49.3631435Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "annotate",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T14:13:49.3673558Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "remaining",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:49.3697461Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "remaining",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T14:13:49.3708208Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "families",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.1759542Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "unused",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:49.1778611Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "th\u1EF1c",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:49.3334657Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "remaining",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:49.1893841Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "cleanup",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "audit_model_standards",
+    "last_updated": "2026-02-24T14:13:49.1906210Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "standards",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "audit_model_standards",
+    "last_updated": "2026-02-24T14:13:49.1935234Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "instead",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T14:13:49.2755534Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "th\u1ED1ng",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "export_to_csv",
+    "last_updated": "2026-02-24T14:13:49.2868967Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "t\u01B0\u01A1ng",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "export_to_csv",
+    "last_updated": "2026-02-24T14:13:49.2880807Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "tr\u01B0\u1EDBc",
+    "success_count": 0,
+    "failure_count": 6,
+    "adjustment": -0.19459101490553132,
+    "last_updated": "2026-02-24T14:13:49.0758898Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "exhaust",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "check_velocity",
+    "last_updated": "2026-02-24T14:13:49.1287804Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "disconnected",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:49.1304887Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "disconnections",
+    "success_count": 18,
+    "failure_count": 0,
+    "adjustment": 0.29444389791664405,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T14:13:49.1318311Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "verify",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "check_disconnected_elements",
+    "last_updated": "2026-02-24T14:13:49.1332013Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "protection",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.1342146Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "everything",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "export_to_csv",
+    "last_updated": "2026-02-24T14:13:49.1391991Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "rooms",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "export_to_json",
+    "last_updated": "2026-02-24T14:13:49.3835748Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "elements",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "select_elements",
+    "last_updated": "2026-02-24T14:13:49.3083069Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "selected",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:49.3141907Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "selected",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "export_to_csv",
+    "last_updated": "2026-02-24T14:13:49.3155083Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "reset",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "reset_view_isolation",
+    "last_updated": "2026-02-24T14:13:49.3171382Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "500x300",
+    "success_count": 0,
+    "failure_count": 6,
+    "adjustment": -0.19459101490553132,
+    "last_updated": "2026-02-24T14:13:49.3232659Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "500x300",
+    "success_count": 0,
+    "failure_count": 6,
+    "adjustment": -0.19459101490553132,
+    "last_updated": "2026-02-24T14:13:49.3246526Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "ph\u1ECFng",
+    "success_count": 0,
+    "failure_count": 6,
+    "adjustment": -0.19459101490553132,
+    "last_updated": "2026-02-24T14:13:49.3299432Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "d\u1EE5ng",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "add_change_insulation",
+    "last_updated": "2026-02-24T14:13:49.3302104Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "details",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "get_rooms_detailed",
+    "last_updated": "2026-02-24T14:13:49.2016260Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "rooms",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T14:13:49.2074362Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "levels",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.1448616Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "sanitary",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:49.3401833Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "domestic",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "check_disconnected_elements",
+    "last_updated": "2026-02-24T14:13:49.3438175Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "plumbing",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "export_mep_boq",
+    "last_updated": "2026-02-24T14:13:49.3486988Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "fixtures",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T14:13:49.3509868Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "sprinklers",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T14:13:49.0616570Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "summary",
+    "success_count": 9,
+    "failure_count": 0,
+    "adjustment": 0.2302585092994046,
+    "last_tool": "export_to_csv",
+    "last_updated": "2026-02-24T14:13:49.0639100Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "th\u00F4ng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "calculate_system_totals",
+    "last_updated": "2026-02-24T10:21:29.2255585Z"
+  },
+  {
+    "intent": "Unknown",
+    "keyword": "th\u1EA5y",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "calculate_system_totals",
+    "last_updated": "2026-02-24T10:22:01.6865999Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "elements",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T10:23:57.9935245Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "kiem",
+    "success_count": 80,
+    "failure_count": 0,
+    "adjustment": 0.43944491546724396,
+    "last_tool": "check_pipe_slope",
+    "last_updated": "2026-02-24T14:13:47.8438890Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "xuat",
+    "success_count": 32,
+    "failure_count": 0,
+    "adjustment": 0.34965075614664803,
+    "last_tool": "export_ifc",
+    "last_updated": "2026-02-24T14:13:47.8681078Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "hien",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "reset_view_isolation",
+    "last_updated": "2026-02-24T14:13:48.1133686Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "tran",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "hide_category",
+    "last_updated": "2026-02-24T14:13:47.0414408Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "mach",
+    "success_count": 7,
+    "failure_count": 0,
+    "adjustment": 0.2079441541679836,
+    "last_tool": "get_circuit_loads",
+    "last_updated": "2026-02-24T14:13:47.9565703Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "sanh",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "compare_views",
+    "last_updated": "2026-02-24T14:13:47.4591945Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "suot",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "override_category_color",
+    "last_updated": "2026-02-24T14:13:47.4383288Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "nuoc",
+    "success_count": 14,
+    "failure_count": 0,
+    "adjustment": 0.270805020110221,
+    "last_tool": "override_category_color",
+    "last_updated": "2026-02-24T14:13:47.3500148Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "thong",
+    "success_count": 7,
+    "failure_count": 0,
+    "adjustment": 0.2079441541679836,
+    "last_tool": "override_color_by_system",
+    "last_updated": "2026-02-24T14:13:47.6056647Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "luong",
+    "success_count": 14,
+    "failure_count": 0,
+    "adjustment": 0.270805020110221,
+    "last_tool": "export_to_csv",
+    "last_updated": "2026-02-24T14:13:47.8178388Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "phan",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "get_phase_balance",
+    "last_updated": "2026-02-24T14:13:46.8942286Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "luong",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "check_panel_capacity",
+    "last_updated": "2026-02-24T14:13:48.1166712Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "thong",
+    "success_count": 14,
+    "failure_count": 0,
+    "adjustment": 0.270805020110221,
+    "last_tool": "get_rebar_schedule",
+    "last_updated": "2026-02-24T14:13:48.0595628Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "thong",
+    "success_count": 39,
+    "failure_count": 10,
+    "adjustment": 0.23152789215799233,
+    "last_tool": "mep_quantity_takeoff",
+    "last_updated": "2026-02-24T14:13:48.0604797Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "chup",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "screenshot_view",
+    "last_updated": "2026-02-24T14:13:47.8296840Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "nuoc",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T14:13:46.9289747Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "hien",
+    "success_count": 32,
+    "failure_count": 0,
+    "adjustment": 0.34965075614664803,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.4280400Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "thieu",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "check_insulation_coverage",
+    "last_updated": "2026-02-24T14:13:47.5252731Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "thoat",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "set_pipe_slope",
+    "last_updated": "2026-02-24T14:13:47.3885519Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "liet",
+    "success_count": 32,
+    "failure_count": 0,
+    "adjustment": 0.34965075614664803,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.8784091Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "phan",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "get_untagged_elements",
+    "last_updated": "2026-02-24T14:13:47.7362314Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "phan",
+    "success_count": 0,
+    "failure_count": 6,
+    "adjustment": -0.19459101490553132,
+    "last_updated": "2026-02-24T14:13:47.7377537Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "nhieu",
+    "success_count": 30,
+    "failure_count": 5,
+    "adjustment": 0.25596563846115067,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:47.5080034Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "guong",
+    "success_count": 7,
+    "failure_count": 0,
+    "adjustment": 0.2079441541679836,
+    "last_tool": "mirror_elements",
+    "last_updated": "2026-02-24T14:13:48.0810584Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "guong",
+    "success_count": 0,
+    "failure_count": 5,
+    "adjustment": -0.1791759469228055,
+    "last_updated": "2026-02-24T14:13:48.0824298Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "danh",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "select_elements",
+    "last_updated": "2026-02-24T14:13:47.2155686Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "danh",
+    "success_count": 0,
+    "failure_count": 6,
+    "adjustment": -0.19459101490553132,
+    "last_updated": "2026-02-24T14:13:47.2170144Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "thuoc",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "check_velocity",
+    "last_updated": "2026-02-24T14:13:46.7610836Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "tuong",
+    "success_count": 7,
+    "failure_count": 0,
+    "adjustment": 0.2079441541679836,
+    "last_tool": "hide_category",
+    "last_updated": "2026-02-24T14:13:48.1011945Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "tao",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "create_section_view",
+    "last_updated": "2026-02-24T14:13:47.4423212Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "tao",
+    "success_count": 0,
+    "failure_count": 6,
+    "adjustment": -0.19459101490553132,
+    "last_updated": "2026-02-24T14:13:47.4434821Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "tuong",
+    "success_count": 23,
+    "failure_count": 0,
+    "adjustment": 0.3178053830347946,
+    "last_tool": "create_element",
+    "last_updated": "2026-02-24T14:13:48.0620524Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "luong",
+    "success_count": 45,
+    "failure_count": 0,
+    "adjustment": 0.38286413964890953,
+    "last_tool": "get_pipe_summary",
+    "last_updated": "2026-02-24T14:13:48.0583402Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "hoan",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "undo_last_action",
+    "last_updated": "2026-02-24T14:13:47.0263644Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "phong",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "export_to_json",
+    "last_updated": "2026-02-24T14:13:47.7176607Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "luong",
+    "success_count": 7,
+    "failure_count": 0,
+    "adjustment": 0.2079441541679836,
+    "last_tool": "get_space_energy_data",
+    "last_updated": "2026-02-24T14:13:47.9049679Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "nhan",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "duplicate_views",
+    "last_updated": "2026-02-24T14:13:47.0044930Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "nhan",
+    "success_count": 0,
+    "failure_count": 6,
+    "adjustment": -0.19459101490553132,
+    "last_updated": "2026-02-24T14:13:47.0058791Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "phong",
+    "success_count": 7,
+    "failure_count": 0,
+    "adjustment": 0.2079441541679836,
+    "last_tool": "zoom_to_elements",
+    "last_updated": "2026-02-24T14:13:47.6759106Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "phan",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:47.9763063Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "chuyen",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "move_elements",
+    "last_updated": "2026-02-24T14:13:47.5551134Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "mieng",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.1721676Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "chinh",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "route_mep_between",
+    "last_updated": "2026-02-24T14:13:47.9200075Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "thiet",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "export_to_csv",
+    "last_updated": "2026-02-24T14:13:47.0888218Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "tang",
+    "success_count": 38,
+    "failure_count": 0,
+    "adjustment": 0.36635616461296466,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.9372080Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "tang",
+    "success_count": 16,
+    "failure_count": 0,
+    "adjustment": 0.2833213344056216,
+    "last_tool": "mep_quantity_takeoff",
+    "last_updated": "2026-02-24T14:13:47.7417950Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "chon",
+    "success_count": 16,
+    "failure_count": 0,
+    "adjustment": 0.2833213344056216,
+    "last_tool": "select_elements",
+    "last_updated": "2026-02-24T14:13:47.5357189Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "nuoc",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:47.0205876Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "phong",
+    "success_count": 7,
+    "failure_count": 0,
+    "adjustment": 0.2079441541679836,
+    "last_tool": "create_element",
+    "last_updated": "2026-02-24T14:13:47.8804181Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "dang",
+    "success_count": 7,
+    "failure_count": 0,
+    "adjustment": 0.2079441541679836,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T14:13:46.9428435Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "tang",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:47.9112110Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "dong",
+    "success_count": 15,
+    "failure_count": 0,
+    "adjustment": 0.2772588722239781,
+    "last_tool": "auto_size_mep",
+    "last_updated": "2026-02-24T14:13:47.3855613Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "phan",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "isolate_by_level",
+    "last_updated": "2026-02-24T14:13:47.4931824Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "chua",
+    "success_count": 16,
+    "failure_count": 0,
+    "adjustment": 0.2833213344056216,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T14:13:47.3587581Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "tran",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.6522604Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "nhan",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "check_disconnected_elements",
+    "last_updated": "2026-02-24T14:13:47.5067145Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "nhan",
+    "success_count": 0,
+    "failure_count": 6,
+    "adjustment": -0.19459101490553132,
+    "last_updated": "2026-02-24T14:13:47.5077309Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "thiet",
+    "success_count": 15,
+    "failure_count": 0,
+    "adjustment": 0.2772588722239781,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T14:13:48.0243363Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "thiet",
+    "success_count": 31,
+    "failure_count": 0,
+    "adjustment": 0.3465735902799727,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:48.0481460Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "kien",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:47.7889363Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "thiet",
+    "success_count": 7,
+    "failure_count": 0,
+    "adjustment": 0.2079441541679836,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T14:13:46.8695935Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "nuoc",
+    "success_count": 7,
+    "failure_count": 0,
+    "adjustment": 0.2079441541679836,
+    "last_tool": "set_pipe_slope",
+    "last_updated": "2026-02-24T14:13:47.4837898Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "kien",
+    "success_count": 16,
+    "failure_count": 0,
+    "adjustment": 0.2833213344056216,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:47.3552784Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "them",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "add_change_insulation",
+    "last_updated": "2026-02-24T14:13:47.2769272Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "them",
+    "success_count": 0,
+    "failure_count": 6,
+    "adjustment": -0.19459101490553132,
+    "last_updated": "2026-02-24T14:13:47.2778958Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "chon,",
+    "success_count": 15,
+    "failure_count": 0,
+    "adjustment": 0.2772588722239781,
+    "last_tool": "route_mep_between",
+    "last_updated": "2026-02-24T14:13:47.6621481Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "tang",
+    "success_count": 7,
+    "failure_count": 0,
+    "adjustment": 0.2079441541679836,
+    "last_tool": "create_element",
+    "last_updated": "2026-02-24T14:13:46.8008689Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "chieu",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "flip_mep_elements",
+    "last_updated": "2026-02-24T14:13:47.4689838Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "duong",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T14:13:47.1750463Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "nuoc",
+    "success_count": 7,
+    "failure_count": 0,
+    "adjustment": 0.2079441541679836,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T14:13:47.7123814Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "thong",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "change_mep_system_type",
+    "last_updated": "2026-02-24T14:13:47.2375534Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "chep",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "copy_elements",
+    "last_updated": "2026-02-24T14:13:48.1148300Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "thanh",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "rename_elements",
+    "last_updated": "2026-02-24T14:13:48.0756641Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "thuoc",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T14:13:47.1044822Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "luong",
+    "success_count": 8,
+    "failure_count": 0,
+    "adjustment": 0.21972245773362198,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:47.8265349Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "tang",
+    "success_count": 0,
+    "failure_count": 4,
+    "adjustment": -0.16094379124341004,
+    "last_updated": "2026-02-24T14:13:47.1176401Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "nhieu",
+    "success_count": 7,
+    "failure_count": 0,
+    "adjustment": 0.2079441541679836,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:46.9907764Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "phong",
+    "success_count": 16,
+    "failure_count": 0,
+    "adjustment": 0.2833213344056216,
+    "last_tool": "get_rooms",
+    "last_updated": "2026-02-24T14:13:47.8234030Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "scheduels",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_view_schedules",
+    "last_updated": "2026-02-24T13:40:24.3872594Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "ch\u1EC1iu",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "flip_mep_elements",
+    "last_updated": "2026-02-24T14:13:45.2948692Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "tn\u1EA7g",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:45.2963660Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "evlocity",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "check_velocity",
+    "last_updated": "2026-02-24T13:40:24.8648725Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "usmmary",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "calculate_system_totals",
+    "last_updated": "2026-02-24T14:13:45.2768277Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "cation",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "undo_last_action",
+    "last_updated": "2026-02-24T14:13:45.6492314Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "afmilies",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T13:40:24.4176163Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "03mm",
+    "success_count": 4,
+    "failure_count": 0,
+    "adjustment": 0.16094379124341004,
+    "last_tool": "add_change_insulation",
+    "last_updated": "2026-02-24T14:13:46.4058286Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "gunog",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "mirror_elements",
+    "last_updated": "2026-02-24T13:40:24.4249239Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "gunog",
+    "success_count": 0,
+    "failure_count": 1,
+    "adjustment": 0,
+    "last_updated": "2026-02-24T13:40:24.4258173Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "p\u00F2hng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "create_element",
+    "last_updated": "2026-02-24T13:40:24.4320600Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "shcedules",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_panel_schedules",
+    "last_updated": "2026-02-24T14:13:45.4910747Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "cacessories",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T13:40:24.4637047Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "\u01B0l\u1EE3ng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "calculate_system_totals",
+    "last_updated": "2026-02-24T13:40:24.4693373Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "tohng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "override_color_by_system",
+    "last_updated": "2026-02-24T13:40:24.4895923Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "phn\u00F2g",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T13:40:24.4983890Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "\u01B0n\u1EDBc",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "isolate_category",
+    "last_updated": "2026-02-24T13:40:24.5042720Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "c\u00EDhnh",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "route_mep_between",
+    "last_updated": "2026-02-24T13:40:24.5098385Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "p\u00F2hng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T13:40:24.5167265Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "nouc",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "isolate_category",
+    "last_updated": "2026-02-24T13:40:24.5188232Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "ebams",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T13:40:24.5351952Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "etrminals",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T13:40:24.5445599Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "nouc",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "set_pipe_slope",
+    "last_updated": "2026-02-24T13:40:24.5643619Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "torng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "count_linked_elements",
+    "last_updated": "2026-02-24T13:40:24.5700511Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "niheu",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T13:40:24.6046049Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "caapcity",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "check_panel_capacity",
+    "last_updated": "2026-02-24T13:40:24.6149703Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "ecilings",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T13:40:24.6178762Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "smumary",
+    "success_count": 4,
+    "failure_count": 0,
+    "adjustment": 0.16094379124341004,
+    "last_tool": "calculate_system_totals",
+    "last_updated": "2026-02-24T14:13:46.6356784Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "135m0m",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "split_mep_elements",
+    "last_updated": "2026-02-24T13:40:24.6442207Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "eelment",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "zoom_to_elements",
+    "last_updated": "2026-02-24T13:40:24.6523911Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "hteo",
+    "success_count": 4,
+    "failure_count": 0,
+    "adjustment": 0.16094379124341004,
+    "last_tool": "override_color_by_parameter",
+    "last_updated": "2026-02-24T14:13:46.1963110Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "equipmnet",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T13:40:24.6816787Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "\u01B0t\u1EDDng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "create_element",
+    "last_updated": "2026-02-24T13:40:24.6826794Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "ocnnections",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "check_disconnected_elements",
+    "last_updated": "2026-02-24T13:40:24.7040051Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "t\u1ED1hng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "change_mep_system_type",
+    "last_updated": "2026-02-24T13:40:24.7096205Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "analsyis",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "export_gbxml",
+    "last_updated": "2026-02-24T13:40:24.7122037Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "elemnet",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "zoom_to_elements",
+    "last_updated": "2026-02-24T13:40:24.7211145Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "hti\u1EBFt",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "get_untagged_elements",
+    "last_updated": "2026-02-24T14:13:46.0738739Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "ername",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "rename_elements",
+    "last_updated": "2026-02-24T13:40:24.7321995Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "aanlysis",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_phase_balance",
+    "last_updated": "2026-02-24T13:40:24.7360233Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "50m0m",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "move_elements",
+    "last_updated": "2026-02-24T13:40:24.7387077Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "gxbml",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "export_gbxml",
+    "last_updated": "2026-02-24T13:40:24.7414139Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "ivew",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "create_3d_view_by_system",
+    "last_updated": "2026-02-24T13:40:24.7425283Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "ivew",
+    "success_count": 0,
+    "failure_count": 1,
+    "adjustment": 0,
+    "last_updated": "2026-02-24T13:40:24.7434994Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "utong",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "create_element",
+    "last_updated": "2026-02-24T13:40:24.7563575Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "detectoin",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "get_clash_summary",
+    "last_updated": "2026-02-24T13:40:25.0001605Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "tahng",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:46.3371104Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "ifttings",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T13:40:24.7777549Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "hn\u1EADn",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "check_disconnected_elements",
+    "last_updated": "2026-02-24T14:13:45.8645914Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "hn\u1EADn",
+    "success_count": 0,
+    "failure_count": 2,
+    "adjustment": 0,
+    "last_updated": "2026-02-24T14:13:45.8663578Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "eleemnts",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "route_mep_between",
+    "last_updated": "2026-02-24T13:40:24.7845437Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "retrun",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T13:40:24.7999331Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "diaemter",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T13:40:24.8090300Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "lunog",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_space_energy_data",
+    "last_updated": "2026-02-24T13:40:24.8101168Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "anaylsis",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_phase_balance",
+    "last_updated": "2026-02-24T13:40:24.8157250Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "plubming",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_plumbing_fixtures",
+    "last_updated": "2026-02-24T13:40:24.8174444Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "tihng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T13:40:24.8207523Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "colmuns",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T13:40:24.8273816Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "213456",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "zoom_to_elements",
+    "last_updated": "2026-02-24T13:40:24.8290555Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "dicsonnected",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "check_disconnected_elements",
+    "last_updated": "2026-02-24T13:40:24.8324271Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "elemnets",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "reset_view_isolation",
+    "last_updated": "2026-02-24T14:13:46.5183583Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "diretcion",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "flip_mep_elements",
+    "last_updated": "2026-02-24T13:40:24.8448016Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "ivew",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:45.6280146Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "torng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "find_elements_near",
+    "last_updated": "2026-02-24T13:40:24.8512421Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "circiut",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_circuit_loads",
+    "last_updated": "2026-02-24T13:40:24.8638822Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "terminlas",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T13:40:24.8662209Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "ik\u1EC7n",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T13:40:24.8909204Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "oroms",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_rooms",
+    "last_updated": "2026-02-24T13:40:24.8975804Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "tihet",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T13:40:24.9011459Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "apnel",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_panel_schedules",
+    "last_updated": "2026-02-24T14:13:45.3493024Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "linekd",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "get_linked_models",
+    "last_updated": "2026-02-24T14:13:45.9966719Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "dcuts",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T13:40:24.9193430Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "aanlysis",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "export_gbxml",
+    "last_updated": "2026-02-24T13:40:24.9214467Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "mechaniacl",
+    "success_count": 4,
+    "failure_count": 0,
+    "adjustment": 0.16094379124341004,
+    "last_tool": "get_mechanical_equipment",
+    "last_updated": "2026-02-24T14:13:46.5877056Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "shcedule",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_rebar_schedule",
+    "last_updated": "2026-02-24T13:40:24.9321701Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "tn\u1EA7g",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:46.0655574Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "\u1ED9\u0111ng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "auto_size_mep",
+    "last_updated": "2026-02-24T13:40:24.9435919Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "adng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T13:40:24.9506026Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "\u01B0n\u1EDBc",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:46.4737418Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "termnials",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T13:40:24.9640432Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "\u00E1snh",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "compare_views",
+    "last_updated": "2026-02-24T13:40:24.9742499Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "m\u1EC7ing",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T13:40:24.9781159Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "voltgae",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_voltage_drop",
+    "last_updated": "2026-02-24T13:40:24.9793952Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "kahy",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:45.7420546Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "omdel",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "audit_model_standards",
+    "last_updated": "2026-02-24T13:40:24.9973605Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "direciton",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "flip_mep_elements",
+    "last_updated": "2026-02-24T13:40:24.9990162Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "lunog",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "export_mep_boq",
+    "last_updated": "2026-02-24T14:13:46.3846502Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "elemnets",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T13:40:25.0202522Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "atng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T13:40:25.0220068Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "atng",
+    "success_count": 0,
+    "failure_count": 1,
+    "adjustment": 0,
+    "last_updated": "2026-02-24T13:40:25.0233203Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "emchanical",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_mechanical_equipment",
+    "last_updated": "2026-02-24T13:40:25.0307823Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "sturctural",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_structural_model",
+    "last_updated": "2026-02-24T13:40:25.0377976Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "tahy",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "set_pipe_slope",
+    "last_updated": "2026-02-24T13:40:25.0451077Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "ceiligns",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T13:40:25.0486913Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "mc\u1EA1h",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_circuit_loads",
+    "last_updated": "2026-02-24T14:13:45.3589876Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "lsope",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "set_pipe_slope",
+    "last_updated": "2026-02-24T14:13:46.3800335Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "untagegd",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_untagged_elements",
+    "last_updated": "2026-02-24T13:40:25.0697940Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "structrual",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_structural_model",
+    "last_updated": "2026-02-24T13:40:25.0795847Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "hpong",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "zoom_to_elements",
+    "last_updated": "2026-02-24T13:40:25.0818005Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "torng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T13:40:25.1026933Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "commnads",
+    "success_count": 0,
+    "failure_count": 1,
+    "adjustment": 0,
+    "last_updated": "2026-02-24T13:40:25.1281790Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "n\u1EDB\u01B0c",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T13:40:25.1286768Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "ht\u1EA5t",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T13:40:25.1462100Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "ht\u1EA5t",
+    "success_count": 0,
+    "failure_count": 1,
+    "adjustment": 0,
+    "last_updated": "2026-02-24T13:40:25.1470608Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "offest",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "batch_set_offset",
+    "last_updated": "2026-02-24T13:40:25.1481578Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "slpoe",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "set_pipe_slope",
+    "last_updated": "2026-02-24T13:40:25.1570930Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "ppies",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T13:40:25.1662475Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "odors",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T13:40:25.1685054Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "t\u1ED1hng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_view_schedules",
+    "last_updated": "2026-02-24T13:40:25.1721882Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "hk\u00F4ng",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:45.4736917Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "setcion",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "create_section_view",
+    "last_updated": "2026-02-24T13:40:25.1927766Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "setcion",
+    "success_count": 0,
+    "failure_count": 1,
+    "adjustment": 0,
+    "last_updated": "2026-02-24T13:40:25.1935374Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "mdoel",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_linked_elements",
+    "last_updated": "2026-02-24T13:40:25.1962987Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "hkay",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:46.0180239Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "equimpent",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T13:40:25.2231229Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "ocverage",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "check_rebar_coverage",
+    "last_updated": "2026-02-24T13:40:25.2302644Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "atng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "create_element",
+    "last_updated": "2026-02-24T13:40:25.2334660Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "ssytems",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "calculate_system_totals",
+    "last_updated": "2026-02-24T13:40:25.2413657Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "unoc",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T13:40:25.2551389Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "p\u1EA7hn",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_untagged_elements",
+    "last_updated": "2026-02-24T14:13:46.2304441Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "naalysis",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "export_gbxml",
+    "last_updated": "2026-02-24T13:40:25.3000675Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "hto\u00E1t",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "set_pipe_slope",
+    "last_updated": "2026-02-24T13:40:25.3016409Z"
+  },
+  {
+    "intent": "Unknown",
+    "keyword": "summarize",
+    "success_count": 4,
+    "failure_count": 0,
+    "adjustment": 0.16094379124341004,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T13:42:27.4835003Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "ch\u1ECDn",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T13:44:08.2837626Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "ch\u01B0a",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T13:45:45.2507415Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "insluation",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "add_change_insulation",
+    "last_updated": "2026-02-24T14:13:46.1783149Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "insluation",
+    "success_count": 0,
+    "failure_count": 1,
+    "adjustment": 0,
+    "last_updated": "2026-02-24T14:13:45.3066181Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "romos",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:45.3164396Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "p\u1EA7hn",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:45.3200345Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "lighitng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:45.3319234Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "hni\u00EAu",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:46.0497409Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "\u01B0n\u1EDBc",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "set_pipe_slope",
+    "last_updated": "2026-02-24T14:13:45.3400043Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "l\u01B0n\u1EE3g",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "mep_quantity_takeoff",
+    "last_updated": "2026-02-24T14:13:45.3476315Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "leements",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_linked_elements",
+    "last_updated": "2026-02-24T14:13:45.3654134Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "theit",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_untagged_elements",
+    "last_updated": "2026-02-24T14:13:45.3785205Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "quanttiy",
+    "success_count": 3,
+    "failure_count": 0,
+    "adjustment": 0.13862943611198905,
+    "last_tool": "get_pipe_summary",
+    "last_updated": "2026-02-24T14:13:45.8027404Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "t\u1EDD\u01B0ng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "create_element",
+    "last_updated": "2026-02-24T14:13:45.3881312Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "rtong",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "override_category_color",
+    "last_updated": "2026-02-24T14:13:45.3897871Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "1530mm",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "split_mep_elements",
+    "last_updated": "2026-02-24T14:13:45.4022459Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "mcah",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_circuit_loads",
+    "last_updated": "2026-02-24T14:13:45.4133750Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "hti\u1EBFu",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "check_insulation_coverage",
+    "last_updated": "2026-02-24T14:13:45.4177021Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "hti\u1EBFu",
+    "success_count": 0,
+    "failure_count": 1,
+    "adjustment": 0,
+    "last_updated": "2026-02-24T14:13:45.4193306Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "equipemnt",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "export_to_csv",
+    "last_updated": "2026-02-24T14:13:45.4258818Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "ceiilngs",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:45.4357033Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "warinngs",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_model_warnings",
+    "last_updated": "2026-02-24T14:13:45.4588350Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "dutcs",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:45.4722778Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "tohng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_view_schedules",
+    "last_updated": "2026-02-24T14:13:45.4766867Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "capactiy",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "check_panel_capacity",
+    "last_updated": "2026-02-24T14:13:45.4810074Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "hti\u1EBFt",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T14:13:45.5092610Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "calbe",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:45.5107966Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "teho",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "override_color_by_system",
+    "last_updated": "2026-02-24T14:13:45.5217285Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "tohng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "calculate_system_totals",
+    "last_updated": "2026-02-24T14:13:45.5325631Z"
+  },
+  {
+    "intent": "Export",
+    "keyword": "l\u01B0n\u1EE3g",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "export_mep_boq",
+    "last_updated": "2026-02-24T14:13:45.5352012Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "sysetm",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "override_color_by_system",
+    "last_updated": "2026-02-24T14:13:45.5371205Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "ht\u1ED1ng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_view_schedules",
+    "last_updated": "2026-02-24T14:13:45.5740023Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "ulong",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_cable_tray_summary",
+    "last_updated": "2026-02-24T14:13:45.7717384Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "k\u1EC7in",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:45.6099169Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "ysstems",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "calculate_system_totals",
+    "last_updated": "2026-02-24T14:13:46.6753982Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "eqiupment",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "tag_all_in_view",
+    "last_updated": "2026-02-24T14:13:45.6649505Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "sleected",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:45.6675493Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "disconencted",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "select_elements",
+    "last_updated": "2026-02-24T14:13:45.6689401Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "sleected",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T14:13:45.7133195Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "toung",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "hide_category",
+    "last_updated": "2026-02-24T14:13:45.7230636Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "060x400mm",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T14:13:45.7251984Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "lunog",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "mep_quantity_takeoff",
+    "last_updated": "2026-02-24T14:13:45.7308462Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "th\u1EDB\u01B0c",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T14:13:46.3187688Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "rneame",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "rename_elements",
+    "last_updated": "2026-02-24T14:13:45.7588618Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "naalysis",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_phase_balance",
+    "last_updated": "2026-02-24T14:13:45.7623022Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "hci\u1EC1u",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "flip_mep_elements",
+    "last_updated": "2026-02-24T14:13:45.8058809Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "elmeents",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "count_linked_elements",
+    "last_updated": "2026-02-24T14:13:45.8103186Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "equpiment",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T14:13:46.6294075Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "odng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "auto_size_mep",
+    "last_updated": "2026-02-24T14:13:45.8427464Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "covearge",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "check_rebar_coverage",
+    "last_updated": "2026-02-24T14:13:45.8591507Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "strcutural",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "route_mep_between",
+    "last_updated": "2026-02-24T14:13:45.8624232Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "structrual",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "route_mep_between",
+    "last_updated": "2026-02-24T14:13:45.8811420Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "niheu",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:45.8919583Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "diameetr",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T14:13:45.9077320Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "tkaeoff",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "mep_quantity_takeoff",
+    "last_updated": "2026-02-24T14:13:45.9276542Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "unoc",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "isolate_category",
+    "last_updated": "2026-02-24T14:13:45.9314287Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "mdoel",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_model_warnings",
+    "last_updated": "2026-02-24T14:13:45.9539245Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "disconnceted",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "check_disconnected_elements",
+    "last_updated": "2026-02-24T14:13:45.9596046Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "theit",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_electrical_equipment",
+    "last_updated": "2026-02-24T14:13:45.9743075Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "1305mm",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "split_mep_elements",
+    "last_updated": "2026-02-24T14:13:45.9777068Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "moedl",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "count_linked_elements",
+    "last_updated": "2026-02-24T14:13:45.9820506Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "050mm",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "find_elements_near",
+    "last_updated": "2026-02-24T14:13:45.9907355Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "cricuit",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_circuit_loads",
+    "last_updated": "2026-02-24T14:13:46.0141233Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "l\u1EE3\u01B0ng",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "mep_quantity_takeoff",
+    "last_updated": "2026-02-24T14:13:46.0479799Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "insulaiton",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "check_insulation_coverage",
+    "last_updated": "2026-02-24T14:13:46.0708597Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "hnieu",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:46.0818668Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "seletced",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "mirror_elements",
+    "last_updated": "2026-02-24T14:13:46.1117351Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "t\u1EDD\u01B0ng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "hide_category",
+    "last_updated": "2026-02-24T14:13:46.1184437Z"
+  },
+  {
+    "intent": "Delete",
+    "keyword": "famliies",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "delete_elements",
+    "last_updated": "2026-02-24T14:13:46.1380260Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "insulatoin",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "check_insulation_coverage",
+    "last_updated": "2026-02-24T14:13:46.1566494Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "tnag",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:46.1711910Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "tnag",
+    "success_count": 0,
+    "failure_count": 1,
+    "adjustment": 0,
+    "last_updated": "2026-02-24T14:13:46.1760104Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "inuslation",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "check_insulation_coverage",
+    "last_updated": "2026-02-24T14:13:46.2019860Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "pohng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "create_element",
+    "last_updated": "2026-02-24T14:13:46.2165547Z"
+  },
+  {
+    "intent": "Count",
+    "keyword": "nh\u00EAiu",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "count_elements",
+    "last_updated": "2026-02-24T14:13:46.2282162Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "driection",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "flip_mep_elements",
+    "last_updated": "2026-02-24T14:13:46.2571574Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "d1n00",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:46.2751329Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "p\u1ECFhng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T14:13:46.2864713Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "actoin",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "undo_last_action",
+    "last_updated": "2026-02-24T14:13:46.3209403Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "d1n50",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T14:13:46.3547780Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "saniatry",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "set_pipe_slope",
+    "last_updated": "2026-02-24T14:13:46.3627061Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "k\u1EC7in",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_elements",
+    "last_updated": "2026-02-24T14:13:46.3700982Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "\u1EA1mch",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_circuit_loads",
+    "last_updated": "2026-02-24T14:13:46.3737624Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "\u0111nag",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "connect_mep_elements",
+    "last_updated": "2026-02-24T14:13:46.4024511Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "dierction",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "flip_mep_elements",
+    "last_updated": "2026-02-24T14:13:46.4133606Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "vleocity",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "check_velocity",
+    "last_updated": "2026-02-24T14:13:46.4252605Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "cohn,",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "route_mep_between",
+    "last_updated": "2026-02-24T14:13:46.4499411Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "wnidow",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "create_element",
+    "last_updated": "2026-02-24T14:13:46.4661649Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "ocmmands",
+    "success_count": 0,
+    "failure_count": 1,
+    "adjustment": 0,
+    "last_updated": "2026-02-24T14:13:46.4729937Z"
+  },
+  {
+    "intent": "Connect",
+    "keyword": "hc\u1ECDn,",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "route_mep_between",
+    "last_updated": "2026-02-24T14:13:46.5339398Z"
+  },
+  {
+    "intent": "Analyze",
+    "keyword": "\u1EA7tng",
+    "success_count": 2,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_duct_summary",
+    "last_updated": "2026-02-24T14:13:46.5424967Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "sprniklers",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_fire_protection_equipment",
+    "last_updated": "2026-02-24T14:13:46.5634869Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "esction",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "create_section_view",
+    "last_updated": "2026-02-24T14:13:46.5746410Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "esction",
+    "success_count": 0,
+    "failure_count": 1,
+    "adjustment": 0,
+    "last_updated": "2026-02-24T14:13:46.5756737Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "\u01B0\u0111\u1EDDng",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "resize_mep_elements",
+    "last_updated": "2026-02-24T14:13:46.6076389Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "inuslation",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "add_change_insulation",
+    "last_updated": "2026-02-24T14:13:46.6309423Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "veiw",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "create_3d_view_by_system",
+    "last_updated": "2026-02-24T14:13:46.6410866Z"
+  },
+  {
+    "intent": "Create",
+    "keyword": "veiw",
+    "success_count": 0,
+    "failure_count": 1,
+    "adjustment": 0,
+    "last_updated": "2026-02-24T14:13:46.6421774Z"
+  },
+  {
+    "intent": "Visual",
+    "keyword": "parmaeter",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "override_color_by_parameter",
+    "last_updated": "2026-02-24T14:13:46.6486407Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "detcetion",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "check_clashes",
+    "last_updated": "2026-02-24T14:13:46.6576762Z"
+  },
+  {
+    "intent": "Navigate",
+    "keyword": "dicsonnected",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "select_elements",
+    "last_updated": "2026-02-24T14:13:46.6606291Z"
+  },
+  {
+    "intent": "Check",
+    "keyword": "ehalth",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "audit_model_standards",
+    "last_updated": "2026-02-24T14:13:46.6664718Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "htong",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_rebar_schedule",
+    "last_updated": "2026-02-24T14:13:46.6839140Z"
+  },
+  {
+    "intent": "Tag",
+    "keyword": "unatgged",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "get_untagged_elements",
+    "last_updated": "2026-02-24T14:13:46.7257571Z"
+  },
+  {
+    "intent": "Query",
+    "keyword": "unatgged",
+    "success_count": 0,
+    "failure_count": 1,
+    "adjustment": 0,
+    "last_updated": "2026-02-24T14:13:46.7272326Z"
+  },
+  {
+    "intent": "Modify",
+    "keyword": "hcuy\u1EC3n",
+    "success_count": 1,
+    "failure_count": 0,
+    "adjustment": 0,
+    "last_tool": "move_elements",
+    "last_updated": "2026-02-24T14:13:46.7339684Z"
+  }
+]

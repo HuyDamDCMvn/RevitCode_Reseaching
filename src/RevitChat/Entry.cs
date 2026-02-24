@@ -45,7 +45,11 @@ namespace RevitChat
                 ChatFeedbackService.Initialize(dllDir);
                 InteractionLogger.Initialize(dllDir);
                 AdaptiveWeightManager.Initialize(dllDir);
+                ChatBandit.Initialize(dllDir);
+                ChatToolClassifier.Instance.Initialize(dllDir);
+                SelfLearningOrchestrator.Initialize(dllDir);
                 DynamicFewShotSelector.Initialize(dllDir);
+                ContextualAutoTrainer.Initialize(dllDir);
                 ProjectContextMemory.Initialize(dllDir);
 
                 var docTitle = uidoc.Document?.Title;

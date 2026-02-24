@@ -85,5 +85,48 @@
       "useCount": 1
     }
   ],
-  "corrections": []
+  "corrections": [
+    {
+      "prompt": "n\u1ED1i 2 \u1ED1ng gi\u00F3 \u0111\u01B0\u1EE3c ch\u1ECDn",
+      "wrong_tool": "connect_mep_elements",
+      "correct_tool": "",
+      "timestamp": "2026-02-24T13:44:57.6707960Z",
+      "hitCount": 1
+    },
+    {
+      "prompt": "n\u1ED1i 2 \u1ED1ng gi\u00F3 \u0111ang \u0111\u01B0\u1EE3c ch\u1ECDn",
+      "wrong_tool": "connect_mep_elements",
+      "correct_tool": "",
+      "timestamp": "2026-02-24T13:45:21.4890900Z",
+      "hitCount": 1
+    },
+    {
+      "prompt": "n\u1ED1i 2 \u1ED1ng gi\u00F3 \u0111ang \u0111\u01B0\u1EE3c ch\u1ECDn",
+      "wrong_tool": "connect_mep_elements",
+      "correct_tool": "",
+      "timestamp": "2026-02-24T13:45:30.6032193Z",
+      "hitCount": 1
+    },
+    {
+      "prompt": "\u1ED1ng gi\u00F3 v\u1EABn ch\u01B0a \u0111\u01B0\u1EE3c k\u1EBFt n\u1ED1i",
+      "wrong_tool": "connect_mep_elements",
+      "correct_tool": "",
+      "timestamp": "2026-02-24T13:45:58.0502109Z",
+      "hitCount": 1
+    },
+    {
+      "prompt": "li\u1EC7t k\u00EA",
+      "wrong_tool": "get_duct_summary",
+      "correct_tool": "",
+      "timestamp": "2026-02-24T14:14:39.4179613Z",
+      "hitCount": 1
+    },
+    {
+      "prompt": "li\u1EC7t k\u00EA",
+      "wrong_tool": "get_duct_summary",
+      "correct_tool": "",
+      "timestamp": "2026-02-24T14:14:52.2407568Z",
+      "hitCount": 1
+    }
+  ]
 }

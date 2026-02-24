@@ -23,8 +23,10 @@ namespace RevitChatLocal.Services
         private readonly SkillRegistry _skillRegistry;
         private HashSet<string> _allToolNames;
         private string _lastUserMessage = "";
+        private string _previousUserMessage = "";
         private bool _isContinuation;
         private RevitChat.Services.EmbeddingMatcher _embeddingMatcher;
+        private float[] _embeddingCache;
         private string _ollamaBaseUrl;
 
         public event Action<string> DebugMessage;
@@ -264,6 +266,15 @@ namespace RevitChatLocal.Services
             }
             catch { }
 
+            // Phase 2c: Contextual auto-learned examples (from failures resolved, follow-ups, corrections)
+            try
+            {
+                var contextExamples = RevitChat.Services.ContextualAutoTrainer.GetLearnedExamples(userMessage, 2);
+                foreach (var ce in contextExamples)
+                    scored.Add((90, ce));
+            }
+            catch { }
+
             if (scored.Count == 0)
             {
                 CacheFewShotResult(normalized, "");
@@ -312,6 +323,19 @@ namespace RevitChatLocal.Services
                 if (from == null || to == null) continue;
                 stripped = stripped.Replace(StripVietnameseDiacritics(from), to);
             }
+
+            // Apply learned normalizations from ContextualAutoTrainer
+            try
+            {
+                var learned = RevitChat.Services.ContextualAutoTrainer.GetLearnedNormalizations();
+                foreach (var kvp in learned)
+                {
+                    if (!string.IsNullOrEmpty(kvp.Key) && !string.IsNullOrEmpty(kvp.Value))
+                        stripped = stripped.Replace(kvp.Key, kvp.Value);
+                }
+            }
+            catch { }
+
             return stripped;
         }
 
@@ -453,6 +477,20 @@ namespace RevitChatLocal.Services
         {
             if (string.IsNullOrWhiteSpace(text)) return false;
             return text.Any(ch => ch >= 0x00C0 && ch <= 0x1EF9);
+        }
+
+        private static bool ContainsChinese(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return false;
+            int cjkCount = 0;
+            int totalAlpha = 0;
+            foreach (var ch in text)
+            {
+                if (char.IsLetter(ch)) totalAlpha++;
+                if ((ch >= 0x4E00 && ch <= 0x9FFF) || (ch >= 0x3400 && ch <= 0x4DBF))
+                    cjkCount++;
+            }
+            return totalAlpha > 0 && (double)cjkCount / totalAlpha > 0.15;
         }
 
         private static bool IsChitchat(string text)
@@ -662,6 +700,7 @@ namespace RevitChatLocal.Services
             if (_client == null)
                 throw new InvalidOperationException("Ollama client not initialized.");
 
+            _previousUserMessage = _lastUserMessage;
             _lastUserMessage = userMessage;
             _isContinuation = false;
             _conversationHistory.Add(new UserChatMessage(userMessage));
@@ -701,16 +740,22 @@ namespace RevitChatLocal.Services
             }
             catch { }
 
-            // Phase 4: Inject semantic examples (skip on CPU-only to reduce latency)
-            if (!IsCpuOnly && _embeddingMatcher?.IsAvailable == true)
+            // Phase 4: Inject semantic examples + cache embedding for ANN classifier
+            _embeddingCache = null;
+            if (_embeddingMatcher?.IsAvailable == true)
             {
                 try
                 {
-                    var semanticExamples = await _embeddingMatcher.GetSemanticExamplesAsync(userMessage, 2, ct);
-                    if (semanticExamples.Count > 0)
+                    _embeddingCache = await _embeddingMatcher.GetEmbeddingAsync(userMessage, ct);
+
+                    if (!IsCpuOnly)
                     {
-                        var embHint = "[Semantic Examples from history]\n" + string.Join("\n\n", semanticExamples);
-                        _conversationHistory.Add(new SystemChatMessage(embHint));
+                        var semanticExamples = await _embeddingMatcher.GetSemanticExamplesAsync(userMessage, 2, ct);
+                        if (semanticExamples.Count > 0)
+                        {
+                            var embHint = "[Semantic Examples from history]\n" + string.Join("\n\n", semanticExamples);
+                            _conversationHistory.Add(new SystemChatMessage(embHint));
+                        }
                     }
                 }
                 catch { }
@@ -750,6 +795,7 @@ namespace RevitChatLocal.Services
 
             sb.AppendLine("Now answer the user in natural language based on the results above.");
             sb.AppendLine("Do NOT output (tool call) or any tool syntax. Write a clear human-readable answer.");
+            sb.AppendLine("CRITICAL: Reply in Vietnamese if user wrote Vietnamese, English if English. NEVER reply in Chinese (中文).");
             sb.AppendLine("If more steps are needed, output exactly ONE <tool_call> block instead.");
 
             _conversationHistory.Add(new UserChatMessage(sb.ToString()));
@@ -787,14 +833,58 @@ namespace RevitChatLocal.Services
             CancellationToken ct)
         {
             var result = await GetCompletionOnceAsync(ct);
-            if (!result.shouldRetry) return result.parsed;
+            if (!result.shouldRetry)
+            {
+                var (msg, tools) = result.parsed;
+                if (tools.Count == 0 && ContainsChinese(msg))
+                {
+                    RevitChat.Services.ContextualAutoTrainer.RecordLanguageIssue(_lastUserMessage, "Chinese");
+                    _conversationHistory.Add(new UserChatMessage(
+                        "IMPORTANT: Your previous response was in Chinese. Reply in Vietnamese or English ONLY. NEVER use Chinese characters. Now answer again:"));
+                    var langRetry = await GetCompletionOnceAsync(ct);
+                    if (!langRetry.shouldRetry)
+                    {
+                        var fixedMsg = SanitizeChineseResponse(langRetry.parsed.Item1);
+                        return (fixedMsg, langRetry.parsed.Item2);
+                    }
+                }
+                return result.parsed;
+            }
 
             var retry = await GetCompletionOnceAsync(ct, retryHint: true);
-            if (!retry.shouldRetry) return retry.parsed;
+            if (!retry.shouldRetry)
+            {
+                var (msg2, tools2) = retry.parsed;
+                if (tools2.Count == 0 && ContainsChinese(msg2))
+                {
+                    RevitChat.Services.ContextualAutoTrainer.RecordLanguageIssue(_lastUserMessage, "Chinese");
+                    return (SanitizeChineseResponse(msg2), tools2);
+                }
+                return retry.parsed;
+            }
 
             var fallback = BuildFallbackSuggestion(_lastUserMessage);
+            RevitChat.Services.ContextualAutoTrainer.RecordFallback(
+                _lastUserMessage, fallback, _previousUserMessage);
             _conversationHistory.Add(new AssistantChatMessage(fallback));
             return (fallback, new List<RevitChat.Models.ToolCallRequest>());
+        }
+
+        private static string SanitizeChineseResponse(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text) || !ContainsChinese(text))
+                return text;
+            var sb = new System.Text.StringBuilder(text.Length);
+            foreach (var ch in text)
+            {
+                if ((ch >= 0x4E00 && ch <= 0x9FFF) || (ch >= 0x3400 && ch <= 0x4DBF))
+                    continue;
+                sb.Append(ch);
+            }
+            var cleaned = sb.ToString().Trim();
+            if (string.IsNullOrWhiteSpace(cleaned))
+                return "Xin lỗi, tôi gặp lỗi ngôn ngữ. Vui lòng thử lại.";
+            return cleaned;
         }
 
         private async Task<string> StreamCompletionAsync(
@@ -902,6 +992,8 @@ namespace RevitChatLocal.Services
             }
 
             var fallback = BuildFallbackSuggestion(_lastUserMessage);
+            RevitChat.Services.ContextualAutoTrainer.RecordFallback(
+                _lastUserMessage, fallback, _previousUserMessage);
             _conversationHistory.Add(new AssistantChatMessage(fallback));
             return (fallback, new List<RevitChat.Models.ToolCallRequest>());
         }
@@ -1000,9 +1092,9 @@ Example:
             {
                 // Smart mode: CoreTools + keyword match + PromptAnalyzer
                 selected = new HashSet<string>(CoreTools);
-                var combined = string.IsNullOrWhiteSpace(_lastUserMessage) || _lastUserMessage == userMessage
-                    ? userMessage
-                    : $"{userMessage} {_lastUserMessage}";
+                var combined = !string.IsNullOrWhiteSpace(_previousUserMessage)
+                    ? $"{userMessage} {_previousUserMessage}"
+                    : userMessage;
                 var normalized = NormalizeForMatching(combined);
                 var matches = GetMatchedGroups(normalized);
                 foreach (var match in matches)
@@ -1016,6 +1108,47 @@ Example:
                 {
                     if (toolIndex.ContainsKey(suggestedTool))
                         selected.Add(suggestedTool);
+                }
+
+                // ANN classifier: add top predicted tools if model available
+                var annClassifier = RevitChat.Services.ChatToolClassifier.Instance;
+                if (annClassifier.IsAvailable && _embeddingCache != null)
+                {
+                    try
+                    {
+                        var topTools = annClassifier.GetTopTools(_embeddingCache, 5);
+                        foreach (var (tool, prob) in topTools)
+                        {
+                            if (prob > 0.05 && toolIndex.ContainsKey(tool))
+                                selected.Add(tool);
+                        }
+                    }
+                    catch { }
+                }
+
+                // Contextual follow-up pattern suggestions
+                try
+                {
+                    var followUp = RevitChat.Services.ContextualAutoTrainer.GetFollowUpSuggestion(
+                        userMessage, _previousUserMessage);
+                    if (followUp.HasValue && toolIndex.ContainsKey(followUp.Value.tool))
+                        selected.Add(followUp.Value.tool);
+                }
+                catch { }
+
+                // Embedding-based learned recommendations (real-time self-learning)
+                if (_embeddingMatcher?.IsAvailable == true && _embeddingCache != null)
+                {
+                    try
+                    {
+                        var embRecs = _embeddingMatcher.GetToolRecommendations(_embeddingCache, minUseCount: 2);
+                        foreach (var kvp in embRecs)
+                        {
+                            if (kvp.Value > 0.6 && toolIndex.ContainsKey(kvp.Key))
+                                selected.Add(kvp.Key);
+                        }
+                    }
+                    catch { }
                 }
             }
 
@@ -1591,8 +1724,8 @@ Assistant:
             string prompt;
             if (IsCpuOnly)
             {
-                prompt = $@"You are a Revit BIM assistant. Call tools via <tool_call> JSON. Understand English, Vietnamese, mixed.
-ống gió=Ducts, ống nước=Pipes, tường=Walls, cửa=Doors, sàn=Floors, cột=Columns, phòng=Rooms.
+                prompt = $@"You are a Revit BIM assistant. Call tools via <tool_call> JSON. Understand English, Vietnamese, mixed. NEVER reply in Chinese (中文). Vietnamese input → Vietnamese reply. English input → English reply.
+ống gió=Ducts, ống nước=Pipes, tường=Walls, cửa=Doors, sàn=Floors, cột=Columns, phòng=Rooms, nối=Connect, kết nối=Connect.
 
 ## TOOLS
 {catalog}
@@ -1608,6 +1741,7 @@ Assistant:
 3. Destructive ops: confirm first.
 4. Prefer get_duct_summary/get_pipe_summary over get_elements.
 5. No matching tool → reply: ""Not yet trained for this.""
+6. FOLLOW-UP: Short follow-ups like 'phân loại theo size', 'group by level', 'by type' refer to the previous query subject. Ducts→get_duct_summary, Pipes→get_pipe_summary, else→mep_quantity_takeoff. ALWAYS produce a <tool_call>.
 
 {examplesSection}
 {tagKnowledgeSection}";
@@ -1631,11 +1765,13 @@ Assistant:
 4. After tool results, answer directly. Need more data → one more <tool_call>.
 5. Multi-step: handle FIRST step only. Next step after results.
 6. Destructive ops (delete/modify): confirm first.
-7. NEVER invent data. Reply in the language the user primarily uses.
-8. Vietnamese domain terms: tường=Walls, cửa=Doors, cửa sổ=Windows, ống gió=Ducts, ống nước=Pipes, ống dẫn=Conduits, phòng=Rooms, sàn=Floors, cột=Columns, dầm=Structural Framing, trần=Ceilings, mái=Roofs, cầu thang=Stairs, thiết bị vệ sinh=Plumbing Fixtures, khay cáp=Cable Trays, đèn=Lighting Fixtures, van=Valves, quạt=Fans, bơm=Pumps, phụ kiện=Fittings, bảo ôn=Insulation, cô lập=Isolate, ẩn=Hide, hiện=Unhide, tô màu=Override Color, xuất=Export, kiểm tra=Check/Audit, kết cấu=Structural, liên kết=Link, mạch=Circuit, bảng điện=Electrical Panel.
+7. NEVER invent data. Reply in the language the user primarily uses. CRITICAL: NEVER reply in Chinese (中文). If user writes Vietnamese → reply in Vietnamese. If user writes English → reply in English. If mixed → reply in Vietnamese.
+8. Vietnamese domain terms: tường=Walls, cửa=Doors, cửa sổ=Windows, ống gió=Ducts, ống nước=Pipes, ống dẫn=Conduits, phòng=Rooms, sàn=Floors, cột=Columns, dầm=Structural Framing, trần=Ceilings, mái=Roofs, cầu thang=Stairs, thiết bị vệ sinh=Plumbing Fixtures, khay cáp=Cable Trays, đèn=Lighting Fixtures, van=Valves, quạt=Fans, bơm=Pumps, phụ kiện=Fittings, bảo ôn=Insulation, cô lập=Isolate, ẩn=Hide, hiện=Unhide, tô màu=Override Color, xuất=Export, kiểm tra=Check/Audit, kết cấu=Structural, liên kết=Link, mạch=Circuit, bảng điện=Electrical Panel, nối=Connect, kết nối=Connect, đấu nối=Connect.
 9. No matching tool → reply: ""This matter haven't yet train, Please contact your Digital Lead to update me.""
 10. Prefer specific tools (get_duct_summary > get_elements). If 'selected'/'chọn' → use [Context] IDs or get_current_selection.
 11. MEP queries → prefer get_pipe_summary, get_duct_summary over get_elements.
+12. FOLLOW-UP CONTEXT: When the user says a short follow-up like 'phân loại theo size', 'group by level', 'theo hệ thống', 'chi tiết hơn', 'by size', 'hãy nối nó lại', 'nối đi', look at the PREVIOUS conversation to identify what category/elements they meant. ALWAYS produce a <tool_call> for follow-ups.
+13. ACTION FOLLOW-UPS: When user requests an action like 'hãy nối nó lại', 'nối đi', 'connect them', 'do it', 'thực hiện', 'chạy đi' → produce a <tool_call> with the relevant tool. NEVER just suggest a tool name in text — ALWAYS wrap it in <tool_call> tags. If element IDs were mentioned in previous turns, reuse them.
 
 {examplesSection}
 {tagKnowledgeSection}";

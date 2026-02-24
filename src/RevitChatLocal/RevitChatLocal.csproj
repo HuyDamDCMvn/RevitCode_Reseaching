@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.16.3" />
     <PackageReference Include="OpenAI" Version="2.*" />
   </ItemGroup>
 
@@ -34,6 +35,10 @@
     <Compile Include="..\RevitChat\Services\SelfTrainingService.cs" Link="Services\SelfTrainingService.cs" />
     <Compile Include="..\RevitChat\Services\ConversationContextTracker.cs" Link="Services\ConversationContextTracker.cs" />
     <Compile Include="..\RevitChat\Services\EmbeddingMatcher.cs" Link="Services\EmbeddingMatcher.cs" />
+    <Compile Include="..\RevitChat\Services\ChatBandit.cs" Link="Services\ChatBandit.cs" />
+    <Compile Include="..\RevitChat\Services\ChatToolClassifier.cs" Link="Services\ChatToolClassifier.cs" />
+    <Compile Include="..\RevitChat\Services\SelfLearningOrchestrator.cs" Link="Services\SelfLearningOrchestrator.cs" />
+    <Compile Include="..\RevitChat\Services\ContextualAutoTrainer.cs" Link="Services\ContextualAutoTrainer.cs" />
     <Compile Include="..\RevitChat\Services\McpServer.cs" Link="Services\McpServer.cs" />
     <Compile Include="..\RevitChat\ViewModel\BaseChatViewModel.cs" Link="ViewModel\BaseChatViewModel.cs" />
   </ItemGroup>

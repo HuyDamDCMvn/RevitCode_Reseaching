@@ -1,0 +1,68 @@
+{
+  "failed_prompts": [],
+  "learned_fewshots": [
+    {
+      "prompt": "li\u1EC7t k\u00EA",
+      "tool": "get_duct_summary",
+      "args": {
+        "level": "Level 1"
+      },
+      "is_followup": false,
+      "use_count": 1,
+      "created": "2026-02-24T14:14:39.4237534Z",
+      "last_used": "2026-02-24T14:14:39.4237709Z"
+    },
+    {
+      "prompt": "liet ke",
+      "tool": "get_duct_summary",
+      "args": {
+        "level": "Level 1"
+      },
+      "is_followup": false,
+      "use_count": 1,
+      "created": "2026-02-24T14:14:39.4237534Z",
+      "last_used": "2026-02-24T14:14:39.4237709Z"
+    },
+    {
+      "prompt": "sai r\u1ED3i",
+      "tool": "get_duct_summary",
+      "args": {
+        "level": "Level 1"
+      },
+      "is_followup": false,
+      "use_count": 1,
+      "created": "2026-02-24T14:14:39.4242412Z",
+      "last_used": "2026-02-24T14:14:39.4242417Z"
+    },
+    {
+      "prompt": "sai roi",
+      "tool": "get_duct_summary",
+      "args": {
+        "level": "Level 1"
+      },
+      "is_followup": false,
+      "use_count": 1,
+      "created": "2026-02-24T14:14:39.4242412Z",
+      "last_used": "2026-02-24T14:14:39.4242417Z"
+    }
+  ],
+  "followup_patterns": [],
+  "correction_pairs": [
+    {
+      "original": "li\u1EC7t k\u00EA",
+      "corrected": "sai r\u1ED3i",
+      "tool": "get_duct_summary",
+      "args": {
+        "level": "Level 1"
+      },
+      "timestamp": "2026-02-24T14:14:39.4229100Z"
+    }
+  ],
+  "learned_norms": {
+    "ong": "pipe",
+    "gio": "duct",
+    "hien": "show"
+  },
+  "auto_learned_count": 1,
+  "language_issue_count": 0
+}

@@ -1674,6 +1674,34 @@
     "example": "User: model health statistics\nAssistant:\n<tool_call>\n{\"name\": \"get_model_statistics\", \"arguments\": {}}\n</tool_call>"
   },
   {
+    "keywords": ["summary", "elements", "model", "tóm tắt"],
+    "example": "User: summary elements in model\nAssistant:\n<tool_call>\n{\"name\": \"get_model_statistics\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["summarize", "element", "model", "overview"],
+    "example": "User: summarize all elements in the model\nAssistant:\n<tool_call>\n{\"name\": \"get_model_statistics\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["tổng quan", "mô hình", "có gì", "tóm tắt"],
+    "example": "User: tổng quan mô hình có gì\nAssistant:\n<tool_call>\n{\"name\": \"get_model_statistics\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["tong quan", "mo hinh", "co gi", "tom tat"],
+    "example": "User: tom tat cac element trong mo hinh\nAssistant:\n<tool_call>\n{\"name\": \"get_model_statistics\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["what", "model", "elements", "overview"],
+    "example": "User: what is in this model?\nAssistant:\n<tool_call>\n{\"name\": \"get_model_statistics\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["count", "all", "model", "element", "in_view"],
+    "example": "User: count all elements in current view\nAssistant:\n<tool_call>\n{\"name\": \"count_elements\", \"arguments\": {\"in_view\": true}}\n</tool_call>"
+  },
+  {
+    "keywords": ["list", "elements", "in view", "active view"],
+    "example": "User: list elements visible in active view\nAssistant:\n<tool_call>\n{\"name\": \"get_elements\", \"arguments\": {\"in_view\": true, \"group_by\": \"family\"}}\n</tool_call>"
+  },
+  {
     "keywords": [
       "imported",
       "cad",
@@ -2077,6 +2105,22 @@
     "example": "User: di chuyển element 100 khớp với 200 nhưng không nối\nAssistant:\n<tool_call>\n{\"name\": \"auto_connect_mep\", \"arguments\": {\"source_id\": 100, \"target_id\": 200, \"connect\": false}}\n</tool_call>"
   },
   {
+    "keywords": ["nối", "ống gió", "chọn", "selected", "đang chọn"],
+    "example": "User: nối 2 ống gió đang được chọn\nAssistant:\n<tool_call>\n{\"name\": \"get_current_selection\", \"arguments\": {}}\n</tool_call>\n\n(After getting selection IDs 100 and 200)\n\n<tool_call>\n{\"name\": \"auto_connect_mep\", \"arguments\": {\"source_id\": 100, \"target_id\": 200}}\n</tool_call>"
+  },
+  {
+    "keywords": ["nối", "lại", "với nhau", "kết nối", "connect them"],
+    "example": "User: hãy nối nó lại với nhau\n(Previous context mentions element IDs 1544343 and 1544376)\nAssistant:\n<tool_call>\n{\"name\": \"auto_connect_mep\", \"arguments\": {\"source_id\": 1544343, \"target_id\": 1544376}}\n</tool_call>"
+  },
+  {
+    "keywords": ["ket noi", "ong gio", "chon", "dang chon"],
+    "example": "User: ket noi 2 ong gio dang chon\nAssistant:\n<tool_call>\n{\"name\": \"get_current_selection\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["connect", "selected", "duct", "pipe"],
+    "example": "User: connect selected ducts\nAssistant:\n<tool_call>\n{\"name\": \"get_current_selection\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
     "keywords": ["elbow", "co nối", "fitting"],
     "example": "User: tạo co nối giữa ống 100 và 200\nAssistant:\n<tool_call>\n{\"name\": \"create_elbow\", \"arguments\": {\"element_id_1\": 100, \"element_id_2\": 200}}\n</tool_call>"
   },
@@ -2357,5 +2401,162 @@
   {
     "keywords": ["liet ke", "list", "thiet bi", "equipment", "tang"],
     "example": "User: liet ke thiet bi co dien tang 3\nAssistant:\n<tool_call>\n{\"name\": \"get_mechanical_equipment\", \"arguments\": {\"level\": \"Level 3\"}}\n</tool_call>"
+  },
+
+  {
+    "keywords": ["liệt kê", "phòng", "room", "tầng", "level"],
+    "example": "User: liệt kê phòng trên level 2\nAssistant:\n<tool_call>\n{\"name\": \"get_rooms\", \"arguments\": {\"level\": \"Level 2\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["liet ke", "phong", "tang"],
+    "example": "User: liet ke phong tang 1\nAssistant:\n<tool_call>\n{\"name\": \"get_rooms\", \"arguments\": {\"level\": \"Level 1\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["tạo", "schedule", "bảng", "cho", "duct"],
+    "example": "User: tạo schedule cho duct gồm System Name, Size, Length\nAssistant:\n<tool_call>\n{\"name\": \"create_schedule\", \"arguments\": {\"category\": \"Ducts\", \"field_names\": [\"System Name\", \"Size\", \"Length\"]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["tao", "bang", "schedule", "pipe"],
+    "example": "User: tao bang thong ke pipe theo system va size\nAssistant:\n<tool_call>\n{\"name\": \"create_schedule\", \"arguments\": {\"category\": \"Pipes\", \"field_names\": [\"System Name\", \"Size\", \"Length\"]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["copy", "sao chép", "element", "offset"],
+    "example": "User: sao chép element 100,200 sang phải 3m\nAssistant:\n<tool_call>\n{\"name\": \"copy_elements\", \"arguments\": {\"element_ids\": [100, 200], \"offset_x\": 9.84, \"offset_y\": 0, \"offset_z\": 0}}\n</tool_call>"
+  },
+  {
+    "keywords": ["di chuyen", "move", "element"],
+    "example": "User: di chuyen element 300 len tren 1m\nAssistant:\n<tool_call>\n{\"name\": \"move_elements\", \"arguments\": {\"element_ids\": [300], \"offset_x\": 0, \"offset_y\": 0, \"offset_z\": 3.28}}\n</tool_call>"
+  },
+  {
+    "keywords": ["link", "liên kết", "model", "liệt kê"],
+    "example": "User: liệt kê các model liên kết\nAssistant:\n<tool_call>\n{\"name\": \"get_linked_models\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["lien ket", "model", "liet ke"],
+    "example": "User: liet ke cac model lien ket\nAssistant:\n<tool_call>\n{\"name\": \"get_linked_models\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["filter", "bộ lọc", "tạo", "create"],
+    "example": "User: tạo bộ lọc cho duct có System Name là Supply\nAssistant:\n<tool_call>\n{\"name\": \"create_parameter_filter\", \"arguments\": {\"filter_name\": \"Supply Ducts\", \"categories\": [\"Ducts\"], \"parameter_name\": \"System Name\", \"rule_type\": \"equals\", \"value\": \"Supply\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["tao", "bo loc", "filter", "pipe"],
+    "example": "User: tao bo loc cho pipe co Diameter lon hon 100\nAssistant:\n<tool_call>\n{\"name\": \"create_parameter_filter\", \"arguments\": {\"filter_name\": \"Large Pipes\", \"categories\": [\"Pipes\"], \"parameter_name\": \"Diameter\", \"rule_type\": \"greater\", \"value\": \"100\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["revision", "phát hành", "sửa đổi"],
+    "example": "User: liệt kê các phát hành\nAssistant:\n<tool_call>\n{\"name\": \"get_revisions\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["vật liệu", "material", "liệt kê"],
+    "example": "User: liệt kê vật liệu trong model\nAssistant:\n<tool_call>\n{\"name\": \"get_materials\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["vat lieu", "material", "liet ke"],
+    "example": "User: liet ke vat lieu trong model\nAssistant:\n<tool_call>\n{\"name\": \"get_materials\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["workset", "chuyển", "move"],
+    "example": "User: chuyển element 100, 200 sang workset MEP\nAssistant:\n<tool_call>\n{\"name\": \"move_to_workset\", \"arguments\": {\"element_ids\": [100, 200], \"workset_name\": \"MEP\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["chuyen", "workset"],
+    "example": "User: chuyen element 300 sang workset Structure\nAssistant:\n<tool_call>\n{\"name\": \"move_to_workset\", \"arguments\": {\"element_ids\": [300], \"workset_name\": \"Structure\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["phòng", "room", "chưa kín", "enclosure"],
+    "example": "User: kiểm tra phòng chưa kín\nAssistant:\n<tool_call>\n{\"name\": \"audit_room_enclosure\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["phong", "chua kin", "kiem tra"],
+    "example": "User: kiem tra phong chua kin\nAssistant:\n<tool_call>\n{\"name\": \"audit_room_enclosure\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["giao cắt", "clash", "ống gió", "ống nước", "duct", "pipe"],
+    "example": "User: kiểm tra giao cắt giữa ống gió và ống nước\nAssistant:\n<tool_call>\n{\"name\": \"check_clashes\", \"arguments\": {\"category_a\": \"Ducts\", \"category_b\": \"Pipes\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["giao cat", "ong gio", "ong nuoc", "clash"],
+    "example": "User: kiem tra giao cat ong gio va ong nuoc\nAssistant:\n<tool_call>\n{\"name\": \"check_clashes\", \"arguments\": {\"category_a\": \"Ducts\", \"category_b\": \"Pipes\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["grid", "lưới", "trục", "liệt kê"],
+    "example": "User: liệt kê tất cả lưới trục\nAssistant:\n<tool_call>\n{\"name\": \"get_grids\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["luoi", "truc", "grid", "liet ke"],
+    "example": "User: liet ke tat ca luoi truc\nAssistant:\n<tool_call>\n{\"name\": \"get_grids\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["tham số", "parameter", "trống", "empty", "thiếu"],
+    "example": "User: tìm element thiếu tham số Mark trong danh sách 100,200,300\nAssistant:\n<tool_call>\n{\"name\": \"find_empty_parameters\", \"arguments\": {\"element_ids\": [100, 200, 300], \"param_names\": [\"Mark\"]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["tham so", "trong", "thieu", "parameter"],
+    "example": "User: tim element thieu tham so Mark\nAssistant:\n<tool_call>\n{\"name\": \"find_empty_parameters\", \"arguments\": {\"element_ids\": [], \"param_names\": [\"Mark\"]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["show", "hiển thị", "pipe", "level", "tầng"],
+    "example": "User: show pipes on tầng 2\nAssistant:\n<tool_call>\n{\"name\": \"get_elements\", \"arguments\": {\"category\": \"Pipes\", \"level\": \"Level 2\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["find", "tìm", "duct", "supply", "cấp gió"],
+    "example": "User: find duct cấp gió trên tầng 1\nAssistant:\n<tool_call>\n{\"name\": \"get_elements\", \"arguments\": {\"category\": \"Ducts\", \"level\": \"Level 1\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["count", "đếm", "wall", "tường", "level"],
+    "example": "User: đếm walls trên Level 1\nAssistant:\n<tool_call>\n{\"name\": \"count_elements\", \"arguments\": {\"category\": \"Walls\", \"level\": \"Level 1\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["delete", "xóa", "element", "này"],
+    "example": "User: xóa element 100 và 200 đi\nAssistant:\n<tool_call>\n{\"name\": \"delete_elements\", \"arguments\": {\"element_ids\": [100, 200]}}\n</tool_call>"
+  },
+  {
+    "keywords": ["color", "tô", "duct", "level", "màu"],
+    "example": "User: tô màu duct trên level 1 sang xanh\nAssistant:\n<tool_call>\n{\"name\": \"override_color_by_filter\", \"arguments\": {\"category\": \"Ducts\", \"level_name\": \"Level 1\", \"color\": \"Blue\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["isolate", "cô lập", "pipe", "level"],
+    "example": "User: cô lập pipe level 2\nAssistant:\n<tool_call>\n{\"name\": \"isolate_by_filter\", \"arguments\": {\"category\": \"Pipes\", \"level_name\": \"Level 2\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["tag", "chưa", "duct", "view"],
+    "example": "User: bao nhiêu duct chưa tag trong view hiện tại\nAssistant:\n<tool_call>\n{\"name\": \"get_untagged_elements\", \"arguments\": {\"category\": \"Ducts\"}}\n</tool_call>"
+  },
+  {
+    "keywords": ["phân loại", "phan loai", "theo", "size", "kích thước", "kich thuoc", "duct", "ống gió"],
+    "example": "User: phân loại theo size\nAssistant:\n<tool_call>\n{\"name\": \"get_duct_summary\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["group", "by", "size", "duct", "classify"],
+    "example": "User: group ducts by size\nAssistant:\n<tool_call>\n{\"name\": \"get_duct_summary\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["phân loại", "phan loai", "theo", "level", "tầng", "tang", "duct", "ống gió"],
+    "example": "User: phân loại ống gió theo level\nAssistant:\n<tool_call>\n{\"name\": \"get_duct_summary\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["phân loại", "phan loai", "theo", "system", "hệ thống", "he thong", "pipe", "ống nước"],
+    "example": "User: phân loại pipe theo system\nAssistant:\n<tool_call>\n{\"name\": \"get_pipe_summary\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["chi tiết", "chi tiet", "detail", "more", "thêm", "them"],
+    "example": "User: chi tiết hơn\nAssistant:\n<tool_call>\n{\"name\": \"get_duct_summary\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["thống kê", "thong ke", "theo", "size", "kích thước"],
+    "example": "User: thống kê theo kích thước\nAssistant:\n<tool_call>\n{\"name\": \"get_duct_summary\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["bao nhiêu", "bao nhieu", "loại", "loai", "type", "duct"],
+    "example": "User: có bao nhiêu loại duct\nAssistant:\n<tool_call>\n{\"name\": \"get_duct_summary\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["nhóm", "nhom", "theo", "ống nước", "pipe", "size", "diameter"],
+    "example": "User: nhóm pipe theo diameter\nAssistant:\n<tool_call>\n{\"name\": \"get_pipe_summary\", \"arguments\": {}}\n</tool_call>"
+  },
+  {
+    "keywords": ["tổng hợp", "tong hop", "quantity", "khối lượng", "khoi luong", "MEP"],
+    "example": "User: tổng hợp khối lượng MEP\nAssistant:\n<tool_call>\n{\"name\": \"mep_quantity_takeoff\", \"arguments\": {\"category\": \"all\"}}\n</tool_call>"
   }
 ]

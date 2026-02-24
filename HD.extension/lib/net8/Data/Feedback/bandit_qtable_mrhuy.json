@@ -1,0 +1,60 @@
+{
+  "epsilon": 0.26202602880761594,
+  "total_interactions": 27,
+  "q_table": {
+    "Count_1_0_none": {
+      "count_elements": {
+        "q": 0.27749999999999997,
+        "count": 2,
+        "total_reward": 2,
+        "last_updated": "2026-02-24T13:41:04.4039195Z"
+      }
+    },
+    "Unknown_1_0_none": {
+      "get_duct_summary": {
+        "q": 0.27749999999999997,
+        "count": 2,
+        "total_reward": 2,
+        "last_updated": "2026-02-24T13:42:27.4834949Z"
+      },
+      "count_elements": {
+        "q": 0.27749999999999997,
+        "count": 2,
+        "total_reward": 2,
+        "last_updated": "2026-02-24T13:42:27.4834961Z"
+      }
+    },
+    "Check_0_0_none": {
+      "audit_model_standards": {
+        "q": 0.15,
+        "count": 1,
+        "total_reward": 1,
+        "last_updated": "2026-02-24T13:42:50.3241614Z"
+      }
+    },
+    "Connect_1_0_none": {
+      "connect_mep_elements": {
+        "q": -0.007632673114869842,
+        "count": 13,
+        "total_reward": 0.5,
+        "last_updated": "2026-02-24T13:45:58.0508890Z"
+      }
+    },
+    "Query_0_0_none": {
+      "get_duct_summary": {
+        "q": -0.28707764062499996,
+        "count": 6,
+        "total_reward": -1.5,
+        "last_updated": "2026-02-24T14:14:52.2418805Z"
+      }
+    },
+    "Query_1_0_none": {
+      "get_elements": {
+        "q": 0.15,
+        "count": 1,
+        "total_reward": 1,
+        "last_updated": "2026-02-24T14:15:23.6886690Z"
+      }
+    }
+  }
+}

@@ -33,12 +33,16 @@ namespace RevitChat.Services
         public static void RunIfNeeded()
         {
             if (_hasRun) return;
-            if (DynamicFewShotSelector.ExampleCount > 20 &&
-                AdaptiveWeightManager.TotalAdjustments > 10)
+
+            // Skip expensive training if user already has enough learned patterns
+            if (DynamicFewShotSelector.ExampleCount > 50 &&
+                AdaptiveWeightManager.TotalAdjustments > 20 &&
+                ChatBandit.TotalEntries > 10)
             {
                 _hasRun = true;
                 return;
             }
+
             _ = Task.Run(() => RunTraining());
         }
 
@@ -417,7 +421,49 @@ namespace RevitChat.Services
             AddSystemAbbr(d);
             AddDnDimension(d);
             AddConversational(d);
+            AddLearnedFromFeedback(d);
             return d;
+        }
+
+        /// <summary>
+        /// Inject samples from confirmed user interactions (DynamicFewShotSelector)
+        /// into the training dataset, enabling the chatbot to self-improve from real usage.
+        /// </summary>
+        private static void AddLearnedFromFeedback(List<TrainingSample> d)
+        {
+            try
+            {
+                var confirmed = DynamicFewShotSelector.GetConfirmedExamples(minUseCount: 2);
+                foreach (var ex in confirmed)
+                {
+                    if (string.IsNullOrWhiteSpace(ex.Prompt) || string.IsNullOrWhiteSpace(ex.ToolName))
+                        continue;
+
+                    if (!Enum.TryParse<PromptIntent>(ex.Intent, out var intent))
+                        intent = PromptIntent.Unknown;
+
+                    d.Add(new TrainingSample(
+                        ex.Prompt,
+                        intent,
+                        ex.Category,
+                        new[] { ex.ToolName }));
+
+                    // Also add a no-diacritics variant for Vietnamese resilience
+                    var stripped = PromptAnalyzer.StripDiacriticsPublic(ex.Prompt);
+                    if (stripped != ex.Prompt.ToLowerInvariant())
+                    {
+                        d.Add(new TrainingSample(
+                            stripped,
+                            intent,
+                            ex.Category,
+                            new[] { ex.ToolName }));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[SelfTraining] AddLearnedFromFeedback: {ex.Message}");
+            }
         }
 
         // ── QUERY ────────────────────────────────────────────────

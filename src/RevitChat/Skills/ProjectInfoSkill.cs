@@ -119,6 +119,7 @@ namespace RevitChat.Skills
             foreach (var elem in collector)
             {
                 if (elem.Category == null) continue;
+                if (IsMetadataCategory(elem.Category)) continue;
                 catCounts.TryGetValue(elem.Category.Name, out int c);
                 catCounts[elem.Category.Name] = c + 1;
             }

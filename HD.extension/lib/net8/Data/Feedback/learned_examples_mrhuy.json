@@ -1,0 +1,2972 @@
+[
+  {
+    "prompt": "list all ducts on level 1",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Ducts",
+    "use_count": 49,
+    "created": "2026-02-24T10:21:08.2940071Z",
+    "last_used": "2026-02-24T14:13:49.2893977Z"
+  },
+  {
+    "prompt": "ki\u1EC3m tra b\u1EA3o \u00F4n",
+    "tool": "check_insulation_coverage",
+    "args": {},
+    "intent": "Check",
+    "use_count": 42,
+    "created": "2026-02-24T10:21:08.6731079Z",
+    "last_used": "2026-02-24T14:13:49.3315179Z"
+  },
+  {
+    "prompt": "xu\u1EA5t PDF",
+    "tool": "export_pdf",
+    "args": {},
+    "intent": "Export",
+    "use_count": 38,
+    "created": "2026-02-24T10:21:08.7595801Z",
+    "last_used": "2026-02-24T14:13:49.3775533Z"
+  },
+  {
+    "prompt": "export gbXML",
+    "tool": "export_gbxml",
+    "args": {},
+    "intent": "Export",
+    "use_count": 37,
+    "created": "2026-02-24T10:21:08.7606842Z",
+    "last_used": "2026-02-24T14:13:49.3778234Z"
+  },
+  {
+    "prompt": "export rooms to JSON",
+    "tool": "export_to_json",
+    "args": {},
+    "intent": "Export",
+    "category": "Rooms",
+    "use_count": 32,
+    "created": "2026-02-24T10:21:08.7537643Z",
+    "last_used": "2026-02-24T14:13:49.2067455Z"
+  },
+  {
+    "prompt": "ki\u1EC3m tra va ch\u1EA1m",
+    "tool": "check_clashes",
+    "args": {},
+    "intent": "Check",
+    "use_count": 32,
+    "created": "2026-02-24T10:21:08.6751382Z",
+    "last_used": "2026-02-24T14:13:49.1550946Z"
+  },
+  {
+    "prompt": "route duct from FCU to main",
+    "tool": "route_mep_between",
+    "args": {},
+    "intent": "Connect",
+    "category": "Ducts",
+    "use_count": 32,
+    "created": "2026-02-24T10:21:08.8019973Z",
+    "last_used": "2026-02-24T14:13:49.1106599Z"
+  },
+  {
+    "prompt": "hide ceiling",
+    "tool": "hide_category",
+    "args": {},
+    "intent": "Visual",
+    "category": "Ceilings",
+    "use_count": 29,
+    "created": "2026-02-24T10:21:08.7850105Z",
+    "last_used": "2026-02-24T14:13:49.4163201Z"
+  },
+  {
+    "prompt": "go to room 101",
+    "tool": "zoom_to_elements",
+    "args": {},
+    "intent": "Navigate",
+    "category": "Rooms",
+    "use_count": 29,
+    "created": "2026-02-24T10:21:08.8436994Z",
+    "last_used": "2026-02-24T14:13:49.3063975Z"
+  },
+  {
+    "prompt": "\u1EA9n tr\u1EA7n",
+    "tool": "hide_category",
+    "args": {},
+    "intent": "Visual",
+    "category": "Ceilings",
+    "use_count": 29,
+    "created": "2026-02-24T10:21:08.7861425Z",
+    "last_used": "2026-02-24T14:13:49.2290040Z"
+  },
+  {
+    "prompt": "hi\u1EC7n t\u1EA5t c\u1EA3 ph\u1EA7n t\u1EED",
+    "tool": "reset_view_isolation",
+    "args": {},
+    "intent": "Visual",
+    "use_count": 28,
+    "created": "2026-02-24T10:21:08.7779973Z",
+    "last_used": "2026-02-24T14:13:49.2293075Z"
+  },
+  {
+    "prompt": "export to PDF",
+    "tool": "export_pdf",
+    "args": {},
+    "intent": "Export",
+    "use_count": 28,
+    "created": "2026-02-24T10:21:08.7585351Z",
+    "last_used": "2026-02-24T14:13:47.8460735Z"
+  },
+  {
+    "prompt": "screenshot current view",
+    "tool": "screenshot_view",
+    "args": {},
+    "intent": "Visual",
+    "use_count": 27,
+    "created": "2026-02-24T10:21:08.9112516Z",
+    "last_used": "2026-02-24T14:13:49.3167380Z"
+  },
+  {
+    "prompt": "t\u1EA1o view 3D cho h\u1EC7 c\u1EA5p gi\u00F3",
+    "tool": "create_3d_view_by_system",
+    "args": {},
+    "intent": "Visual",
+    "use_count": 27,
+    "created": "2026-02-24T10:21:08.9022525Z",
+    "last_used": "2026-02-24T14:13:49.2296114Z"
+  },
+  {
+    "prompt": "\u0111\u1EBFm khay c\u00E1p",
+    "tool": "count_elements",
+    "args": {},
+    "intent": "Count",
+    "category": "Cable Trays",
+    "use_count": 27,
+    "created": "2026-02-24T10:21:08.3429963Z",
+    "last_used": "2026-02-24T14:13:49.0471864Z"
+  },
+  {
+    "prompt": "ch\u1EE5p \u1EA3nh view hi\u1EC7n t\u1EA1i",
+    "tool": "screenshot_view",
+    "args": {},
+    "intent": "Visual",
+    "use_count": 27,
+    "created": "2026-02-24T10:21:08.9129431Z",
+    "last_used": "2026-02-24T14:13:49.0316632Z"
+  },
+  {
+    "prompt": "ph\u00E2n t\u00EDch c\u00E2n b\u1EB1ng pha",
+    "tool": "get_phase_balance",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Electrical Equipment",
+    "use_count": 26,
+    "created": "2026-02-24T10:21:08.8633514Z",
+    "last_used": "2026-02-24T14:13:49.0343965Z"
+  },
+  {
+    "prompt": "l\u1EA5y t\u1EA3i m\u1EA1ch",
+    "tool": "get_circuit_loads",
+    "args": {},
+    "intent": "Query",
+    "category": "Electrical Equipment",
+    "use_count": 26,
+    "created": "2026-02-24T10:21:08.8566524Z",
+    "last_used": "2026-02-24T14:13:49.0333460Z"
+  },
+  {
+    "prompt": "create a wall from point A to B",
+    "tool": "create_element",
+    "args": {},
+    "intent": "Create",
+    "category": "Walls",
+    "use_count": 26,
+    "created": "2026-02-24T10:21:08.7211196Z",
+    "last_used": "2026-02-24T14:13:47.8251272Z"
+  },
+  {
+    "prompt": "zoom to element 123456",
+    "tool": "zoom_to_elements",
+    "args": {},
+    "intent": "Navigate",
+    "use_count": 25,
+    "created": "2026-02-24T10:21:08.8334884Z",
+    "last_used": "2026-02-24T14:13:49.3048073Z"
+  },
+  {
+    "prompt": "so s\u00E1nh hai view",
+    "tool": "compare_views",
+    "args": {},
+    "intent": "Visual",
+    "use_count": 25,
+    "created": "2026-02-24T10:21:08.9210145Z",
+    "last_used": "2026-02-24T14:13:49.2341842Z"
+  },
+  {
+    "prompt": "connect pipe to equipment",
+    "tool": "connect_mep_elements",
+    "args": {},
+    "intent": "Connect",
+    "category": "Pipes",
+    "use_count": 25,
+    "created": "2026-02-24T10:21:08.8060961Z",
+    "last_used": "2026-02-24T14:13:49.1143827Z"
+  },
+  {
+    "prompt": "hi\u1EC3n th\u1ECB b\u1EA3ng panel",
+    "tool": "get_panel_schedules",
+    "args": {},
+    "intent": "Query",
+    "category": "Electrical Equipment",
+    "use_count": 25,
+    "created": "2026-02-24T10:21:08.8497649Z",
+    "last_used": "2026-02-24T14:13:49.0321702Z"
+  },
+  {
+    "prompt": "check model health",
+    "tool": "audit_model_standards",
+    "args": {},
+    "intent": "Check",
+    "use_count": 25,
+    "created": "2026-02-24T10:21:08.6878940Z",
+    "last_used": "2026-02-24T14:13:49.0149902Z"
+  },
+  {
+    "prompt": "export model to IFC",
+    "tool": "export_ifc",
+    "args": {},
+    "intent": "Export",
+    "use_count": 25,
+    "created": "2026-02-24T10:21:08.7508083Z",
+    "last_used": "2026-02-24T14:13:47.9586967Z"
+  },
+  {
+    "prompt": "run clash detection",
+    "tool": "get_clash_summary",
+    "args": {},
+    "intent": "Check",
+    "use_count": 24,
+    "created": "2026-02-24T10:21:08.6741267Z",
+    "last_used": "2026-02-24T14:13:49.2170796Z"
+  },
+  {
+    "prompt": "run clash detection",
+    "tool": "check_clashes",
+    "args": {},
+    "intent": "Check",
+    "use_count": 24,
+    "created": "2026-02-24T10:21:08.6738649Z",
+    "last_used": "2026-02-24T14:13:49.2169931Z"
+  },
+  {
+    "prompt": "ki\u1EC3m tra t\u1EA3i m\u00F3ng",
+    "tool": "check_foundation_loads",
+    "args": {},
+    "intent": "Check",
+    "use_count": 24,
+    "created": "2026-02-24T10:21:08.8770612Z",
+    "last_used": "2026-02-24T14:13:49.2154307Z"
+  },
+  {
+    "prompt": "check rebar coverage",
+    "tool": "check_rebar_coverage",
+    "args": {},
+    "intent": "Check",
+    "use_count": 24,
+    "created": "2026-02-24T10:21:08.8680922Z",
+    "last_used": "2026-02-24T14:13:49.2144067Z"
+  },
+  {
+    "prompt": "show structural model",
+    "tool": "get_structural_model",
+    "args": {},
+    "intent": "Query",
+    "use_count": 24,
+    "created": "2026-02-24T10:21:08.8649217Z",
+    "last_used": "2026-02-24T14:13:49.2139259Z"
+  },
+  {
+    "prompt": "get view schedules",
+    "tool": "get_view_schedules",
+    "args": {},
+    "intent": "Query",
+    "use_count": 24,
+    "created": "2026-02-24T10:21:08.8785792Z",
+    "last_used": "2026-02-24T14:13:49.2135106Z"
+  },
+  {
+    "prompt": "get space energy data",
+    "tool": "get_space_energy_data",
+    "args": {},
+    "intent": "Query",
+    "use_count": 24,
+    "created": "2026-02-24T10:21:08.8860174Z",
+    "last_used": "2026-02-24T14:13:49.2052636Z"
+  },
+  {
+    "prompt": "list sprinklers on level 2",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Sprinklers",
+    "use_count": 24,
+    "created": "2026-02-24T10:21:08.3141392Z",
+    "last_used": "2026-02-24T14:13:49.0507588Z"
+  },
+  {
+    "prompt": "ki\u1EC3m tra s\u1EE5t \u00E1p",
+    "tool": "get_voltage_drop",
+    "args": {},
+    "intent": "Check",
+    "category": "Electrical Equipment",
+    "use_count": 24,
+    "created": "2026-02-24T10:21:08.8595289Z",
+    "last_used": "2026-02-24T14:13:49.0339051Z"
+  },
+  {
+    "prompt": "export pipe BOQ to xlsx",
+    "tool": "export_to_csv",
+    "args": {},
+    "intent": "Export",
+    "category": "Pipes",
+    "use_count": 24,
+    "created": "2026-02-24T10:21:08.7467912Z",
+    "last_used": "2026-02-24T14:13:48.0017009Z"
+  },
+  {
+    "prompt": "create 3D view for supply air",
+    "tool": "create_3d_view_by_system",
+    "args": {},
+    "intent": "Visual",
+    "use_count": 24,
+    "created": "2026-02-24T10:21:08.9004463Z",
+    "last_used": "2026-02-24T14:13:47.5194245Z"
+  },
+  {
+    "prompt": "ki\u1EC3m tra v\u1EADn t\u1ED1c t\u1ED1i \u0111a 5 m/s",
+    "tool": "check_velocity",
+    "args": {
+      "max_velocity_ms": 5
+    },
+    "intent": "Check",
+    "use_count": 24,
+    "created": "2026-02-24T10:21:08.6798989Z",
+    "last_used": "2026-02-24T14:13:46.4826584Z"
+  },
+  {
+    "prompt": "list all ducts on level 1",
+    "tool": "get_duct_summary",
+    "args": {},
+    "intent": "Query",
+    "category": "Ducts",
+    "use_count": 23,
+    "created": "2026-02-24T10:21:08.2994514Z",
+    "last_used": "2026-02-24T14:13:49.2528999Z"
+  },
+  {
+    "prompt": "\u0111\u1EB7t trong su\u1ED1t 50% cho \u1ED1ng gi\u00F3",
+    "tool": "override_category_color",
+    "args": {
+      "transparency": 50
+    },
+    "intent": "Visual",
+    "category": "Ducts",
+    "use_count": 23,
+    "created": "2026-02-24T10:21:08.7754580Z",
+    "last_used": "2026-02-24T14:13:49.2315088Z"
+  },
+  {
+    "prompt": "t\u00F4 m\u00E0u \u1ED1ng n\u01B0\u1EDBc \u0111\u1ECF",
+    "tool": "override_category_color",
+    "args": {},
+    "intent": "Visual",
+    "category": "Pipes",
+    "use_count": 23,
+    "created": "2026-02-24T10:21:08.7830461Z",
+    "last_used": "2026-02-24T14:13:49.2311089Z"
+  },
+  {
+    "prompt": "show beams on level 2",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Structural Framing",
+    "use_count": 23,
+    "created": "2026-02-24T10:21:08.3223928Z",
+    "last_used": "2026-02-24T14:13:49.2199045Z"
+  },
+  {
+    "prompt": "ki\u1EC3m tra \u0111\u1ED9 d\u1ED1c \u1ED1ng n\u01B0\u1EDBc",
+    "tool": "check_pipe_slope",
+    "args": {},
+    "intent": "Check",
+    "category": "Pipes",
+    "use_count": 23,
+    "created": "2026-02-24T10:21:08.6661663Z",
+    "last_used": "2026-02-24T14:13:49.0238530Z"
+  },
+  {
+    "prompt": "ki\u1EC3m tra va ch\u1EA1m",
+    "tool": "get_clash_summary",
+    "args": {},
+    "intent": "Check",
+    "use_count": 23,
+    "created": "2026-02-24T10:21:08.6754468Z",
+    "last_used": "2026-02-24T14:13:49.0155337Z"
+  },
+  {
+    "prompt": "export pipe BOQ to xlsx",
+    "tool": "export_mep_boq",
+    "args": {},
+    "intent": "Export",
+    "category": "Pipes",
+    "use_count": 23,
+    "created": "2026-02-24T10:21:08.7463367Z",
+    "last_used": "2026-02-24T14:13:48.0016109Z"
+  },
+  {
+    "prompt": "export gbXML for energy analysis",
+    "tool": "export_gbxml",
+    "args": {},
+    "intent": "Export",
+    "use_count": 23,
+    "created": "2026-02-24T10:21:08.8817665Z",
+    "last_used": "2026-02-24T14:13:47.5113560Z"
+  },
+  {
+    "prompt": "xu\u1EA5t b\u00F3c kh\u1ED1i l\u01B0\u1EE3ng \u1ED1ng n\u01B0\u1EDBc",
+    "tool": "export_mep_boq",
+    "args": {},
+    "intent": "Export",
+    "category": "Pipes",
+    "use_count": 22,
+    "created": "2026-02-24T10:21:08.7484415Z",
+    "last_used": "2026-02-24T14:13:49.3861334Z"
+  },
+  {
+    "prompt": "select all ducts",
+    "tool": "select_elements",
+    "args": {},
+    "intent": "Navigate",
+    "category": "Ducts",
+    "use_count": 22,
+    "created": "2026-02-24T10:21:08.8278501Z",
+    "last_used": "2026-02-24T14:13:49.3044392Z"
+  },
+  {
+    "prompt": "c\u00F4 l\u1EADp \u1ED1ng n\u01B0\u1EDBc t\u1EA7ng 1",
+    "tool": "isolate_category",
+    "args": {},
+    "intent": "Visual",
+    "category": "Pipes",
+    "use_count": 22,
+    "created": "2026-02-24T10:21:08.7696723Z",
+    "last_used": "2026-02-24T14:13:49.2276612Z"
+  },
+  {
+    "prompt": "t\u00F4 m\u00E0u \u1ED1ng gi\u00F3 theo h\u1EC7 th\u1ED1ng",
+    "tool": "override_color_by_system",
+    "args": {},
+    "intent": "Visual",
+    "category": "Ducts",
+    "use_count": 22,
+    "created": "2026-02-24T10:21:08.7648483Z",
+    "last_used": "2026-02-24T14:13:49.2272578Z"
+  },
+  {
+    "prompt": "create a new room on level 2",
+    "tool": "create_element",
+    "args": {},
+    "intent": "Create",
+    "category": "Rooms",
+    "use_count": 22,
+    "created": "2026-02-24T10:21:08.7294524Z",
+    "last_used": "2026-02-24T14:13:49.2071622Z"
+  },
+  {
+    "prompt": "list sprinklers on level 2",
+    "tool": "get_fire_protection_equipment",
+    "args": {},
+    "intent": "Query",
+    "category": "Sprinklers",
+    "use_count": 22,
+    "created": "2026-02-24T10:21:08.3140917Z",
+    "last_used": "2026-02-24T14:13:49.0506790Z"
+  },
+  {
+    "prompt": "tag all untagged ducts",
+    "tool": "get_untagged_elements",
+    "args": {},
+    "intent": "Tag",
+    "category": "Ducts",
+    "use_count": 21,
+    "created": "2026-02-24T10:21:08.8091140Z",
+    "last_used": "2026-02-24T14:13:49.3556067Z"
+  },
+  {
+    "prompt": "select pipes on level 1",
+    "tool": "select_elements",
+    "args": {},
+    "intent": "Navigate",
+    "category": "Pipes",
+    "use_count": 21,
+    "created": "2026-02-24T10:21:08.8364272Z",
+    "last_used": "2026-02-24T14:13:49.3052174Z"
+  },
+  {
+    "prompt": "resize ducts to 300mm",
+    "tool": "resize_mep_elements",
+    "args": {
+      "diameter_mm": 300
+    },
+    "intent": "Modify",
+    "category": "Ducts",
+    "use_count": 21,
+    "created": "2026-02-24T10:21:08.6895781Z",
+    "last_used": "2026-02-24T14:13:49.2740590Z"
+  },
+  {
+    "prompt": "b\u1EA3ng th\u1ED1ng k\u00EA th\u00E9p t\u1EA7ng 1",
+    "tool": "get_rebar_schedule",
+    "args": {},
+    "intent": "Query",
+    "use_count": 21,
+    "created": "2026-02-24T10:21:08.8731016Z",
+    "last_used": "2026-02-24T14:13:49.2150229Z"
+  },
+  {
+    "prompt": "n\u1ED1i 2 \u1ED1ng n\u01B0\u1EDBc \u0111ang ch\u1ECDn",
+    "tool": "connect_mep_elements",
+    "args": {},
+    "intent": "Connect",
+    "category": "Pipes",
+    "use_count": 21,
+    "created": "2026-02-24T10:21:08.7941063Z",
+    "last_used": "2026-02-24T14:13:49.1079640Z"
+  },
+  {
+    "prompt": "ki\u1EC3m tra dung l\u01B0\u1EE3ng t\u1EE7 \u0111i\u1EC7n",
+    "tool": "check_panel_capacity",
+    "args": {},
+    "intent": "Check",
+    "category": "Electrical Equipment",
+    "use_count": 21,
+    "created": "2026-02-24T10:21:08.8536592Z",
+    "last_used": "2026-02-24T14:13:49.0328627Z"
+  },
+  {
+    "prompt": "find all rooms on level B1",
+    "tool": "get_rooms_detailed",
+    "args": {},
+    "intent": "Query",
+    "category": "Rooms",
+    "use_count": 21,
+    "created": "2026-02-24T10:21:08.3048842Z",
+    "last_used": "2026-02-24T14:13:46.5942731Z"
+  },
+  {
+    "prompt": "tag all untagged ducts",
+    "tool": "tag_all_in_view",
+    "args": {},
+    "intent": "Tag",
+    "category": "Ducts",
+    "use_count": 20,
+    "created": "2026-02-24T10:21:08.8096683Z",
+    "last_used": "2026-02-24T14:13:49.3557947Z"
+  },
+  {
+    "prompt": "highlight disconnected elements",
+    "tool": "select_elements",
+    "args": {},
+    "intent": "Navigate",
+    "use_count": 20,
+    "created": "2026-02-24T10:21:08.8393347Z",
+    "last_used": "2026-02-24T14:13:49.3059389Z"
+  },
+  {
+    "prompt": "check for disconnected elements",
+    "tool": "check_disconnected_elements",
+    "args": {},
+    "intent": "Check",
+    "use_count": 20,
+    "created": "2026-02-24T10:21:08.6696114Z",
+    "last_used": "2026-02-24T14:13:49.0162695Z"
+  },
+  {
+    "prompt": "t\u1EA1o t\u01B0\u1EDDng t\u1EEB \u0111i\u1EC3m A \u0111\u1EBFn B",
+    "tool": "create_element",
+    "args": {},
+    "intent": "Create",
+    "category": "Walls",
+    "use_count": 20,
+    "created": "2026-02-24T10:21:08.7221921Z",
+    "last_used": "2026-02-24T14:13:48.0908707Z"
+  },
+  {
+    "prompt": "li\u1EC7t k\u00EA s\u00E0n",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Floors",
+    "use_count": 20,
+    "created": "2026-02-24T10:21:08.3244992Z",
+    "last_used": "2026-02-24T14:13:48.0452886Z"
+  },
+  {
+    "prompt": "\u0111\u00E1nh gi\u00E1 k\u00EDch th\u01B0\u1EDBc \u1ED1ng h\u00FAt",
+    "tool": "check_velocity",
+    "args": {},
+    "intent": "Check",
+    "category": "Ducts",
+    "use_count": 20,
+    "created": "2026-02-24T10:21:08.6837398Z",
+    "last_used": "2026-02-24T14:13:47.9821829Z"
+  },
+  {
+    "prompt": "d\u1ECDn d\u1EB9p family kh\u00F4ng s\u1EED d\u1EE5ng",
+    "tool": "delete_elements",
+    "args": {},
+    "intent": "Delete",
+    "use_count": 20,
+    "created": "2026-02-24T10:21:08.7357999Z",
+    "last_used": "2026-02-24T14:13:47.8779157Z"
+  },
+  {
+    "prompt": "hi\u1EC3n th\u1ECB t\u1EA5t c\u1EA3 \u0111\u00E8n",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Lighting Fixtures",
+    "use_count": 20,
+    "created": "2026-02-24T10:21:08.3182017Z",
+    "last_used": "2026-02-24T14:13:47.8093591Z"
+  },
+  {
+    "prompt": "ho\u00E0n t\u00E1c",
+    "tool": "undo_last_action",
+    "args": {},
+    "intent": "Modify",
+    "use_count": 20,
+    "created": "2026-02-24T10:21:08.7201448Z",
+    "last_used": "2026-02-24T14:13:47.6918665Z"
+  },
+  {
+    "prompt": "hide all walls",
+    "tool": "hide_category",
+    "args": {},
+    "intent": "Visual",
+    "category": "Walls",
+    "use_count": 20,
+    "created": "2026-02-24T10:21:08.7660880Z",
+    "last_used": "2026-02-24T14:13:47.6690539Z"
+  },
+  {
+    "prompt": "xu\u1EA5t gbXML",
+    "tool": "export_gbxml",
+    "args": {},
+    "intent": "Export",
+    "use_count": 20,
+    "created": "2026-02-24T10:21:08.7617723Z",
+    "last_used": "2026-02-24T14:13:47.6301070Z"
+  },
+  {
+    "prompt": "t\u1EA1o m\u1EB7t c\u1EAFt",
+    "tool": "create_section_view",
+    "args": {},
+    "intent": "Visual",
+    "use_count": 20,
+    "created": "2026-02-24T10:21:08.9062814Z",
+    "last_used": "2026-02-24T14:13:47.4828997Z"
+  },
+  {
+    "prompt": "list all floors",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Floors",
+    "use_count": 20,
+    "created": "2026-02-24T10:21:08.3240836Z",
+    "last_used": "2026-02-24T14:13:47.3518460Z"
+  },
+  {
+    "prompt": "find all rooms on level B1",
+    "tool": "get_rooms",
+    "args": {},
+    "intent": "Query",
+    "category": "Rooms",
+    "use_count": 20,
+    "created": "2026-02-24T10:21:08.3048630Z",
+    "last_used": "2026-02-24T14:13:46.5336714Z"
+  },
+  {
+    "prompt": "what FCU are on level 3",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Mechanical Equipment",
+    "use_count": 20,
+    "created": "2026-02-24T10:21:08.3203448Z",
+    "last_used": "2026-02-24T14:13:46.5223659Z"
+  },
+  {
+    "prompt": "what FCU are on level 3",
+    "tool": "get_mechanical_equipment",
+    "args": {},
+    "intent": "Query",
+    "category": "Mechanical Equipment",
+    "use_count": 20,
+    "created": "2026-02-24T10:21:08.3202431Z",
+    "last_used": "2026-02-24T14:13:46.5221718Z"
+  },
+  {
+    "prompt": "export ducts to CSV",
+    "tool": "export_mep_boq",
+    "args": {},
+    "intent": "Export",
+    "category": "Ducts",
+    "use_count": 20,
+    "created": "2026-02-24T10:21:08.7426458Z",
+    "last_used": "2026-02-24T14:13:46.4286105Z"
+  },
+  {
+    "prompt": "BOQ for all MEP systems",
+    "tool": "mep_quantity_takeoff",
+    "args": {},
+    "intent": "Analyze",
+    "use_count": 20,
+    "created": "2026-02-24T10:21:08.6477245Z",
+    "last_used": "2026-02-24T14:13:45.8724112Z"
+  },
+  {
+    "prompt": "export ducts to CSV",
+    "tool": "export_to_csv",
+    "args": {},
+    "intent": "Export",
+    "category": "Ducts",
+    "use_count": 20,
+    "created": "2026-02-24T10:21:08.7422302Z",
+    "last_used": "2026-02-24T14:13:45.6750382Z"
+  },
+  {
+    "prompt": "find untagged elements",
+    "tool": "get_untagged_elements",
+    "args": {},
+    "intent": "Tag",
+    "use_count": 19,
+    "created": "2026-02-24T10:21:08.8147565Z",
+    "last_used": "2026-02-24T14:13:49.3552014Z"
+  },
+  {
+    "prompt": "split pipes every 1350mm",
+    "tool": "split_mep_elements",
+    "args": {
+      "segment_length_mm": 1350
+    },
+    "intent": "Modify",
+    "category": "Pipes",
+    "use_count": 19,
+    "created": "2026-02-24T10:21:08.6931983Z",
+    "last_used": "2026-02-24T14:13:49.2840334Z"
+  },
+  {
+    "prompt": "t\u00ECm ph\u1EA7n t\u1EED trong b\u00E1n k\u00EDnh 500mm",
+    "tool": "find_elements_near",
+    "args": {
+      "radius_mm": 500
+    },
+    "intent": "Query",
+    "use_count": 19,
+    "created": "2026-02-24T10:21:08.9394700Z",
+    "last_used": "2026-02-24T14:13:48.0448433Z"
+  },
+  {
+    "prompt": "\u0111\u1EB7t view range 0 \u0111\u1EBFn 3000mm",
+    "tool": "set_view_range",
+    "args": {},
+    "intent": "Visual",
+    "use_count": 19,
+    "created": "2026-02-24T10:21:08.9177283Z",
+    "last_used": "2026-02-24T14:13:48.0221272Z"
+  },
+  {
+    "prompt": "t\u00ECm c\u1EA7u thang",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Stairs",
+    "use_count": 19,
+    "created": "2026-02-24T10:21:08.3362092Z",
+    "last_used": "2026-02-24T14:13:48.0138778Z"
+  },
+  {
+    "prompt": "ph\u00F3ng to ph\u1EA7n t\u1EED 123456",
+    "tool": "zoom_to_elements",
+    "args": {},
+    "intent": "Navigate",
+    "use_count": 19,
+    "created": "2026-02-24T10:21:08.8349863Z",
+    "last_used": "2026-02-24T14:13:47.6896374Z"
+  },
+  {
+    "prompt": "\u1EA9n t\u1EA5t c\u1EA3 t\u01B0\u1EDDng",
+    "tool": "hide_category",
+    "args": {},
+    "intent": "Visual",
+    "category": "Walls",
+    "use_count": 19,
+    "created": "2026-02-24T10:21:08.7672480Z",
+    "last_used": "2026-02-24T14:13:47.6455944Z"
+  },
+  {
+    "prompt": "th\u00EAm c\u1EEDa s\u1ED5 v\u00E0o t\u01B0\u1EDDng",
+    "tool": "create_element",
+    "args": {},
+    "intent": "Create",
+    "category": "Windows",
+    "use_count": 19,
+    "created": "2026-02-24T10:21:08.7282989Z",
+    "last_used": "2026-02-24T14:13:47.6378822Z"
+  },
+  {
+    "prompt": "nh\u00E2n b\u1EA3n view hi\u1EC7n t\u1EA1i",
+    "tool": "duplicate_views",
+    "args": {},
+    "intent": "Modify",
+    "use_count": 19,
+    "created": "2026-02-24T10:21:08.9095446Z",
+    "last_used": "2026-02-24T14:13:47.5548158Z"
+  },
+  {
+    "prompt": "add a door to the wall",
+    "tool": "create_element",
+    "args": {},
+    "intent": "Create",
+    "category": "Doors",
+    "use_count": 19,
+    "created": "2026-02-24T10:21:08.7232368Z",
+    "last_used": "2026-02-24T14:13:47.3736852Z"
+  },
+  {
+    "prompt": "show me all pipes in Supply Air system",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Pipes",
+    "use_count": 19,
+    "created": "2026-02-24T10:21:08.3040344Z",
+    "last_used": "2026-02-24T14:13:46.5406769Z"
+  },
+  {
+    "prompt": "BOQ for all MEP systems",
+    "tool": "calculate_system_totals",
+    "args": {},
+    "intent": "Analyze",
+    "use_count": 19,
+    "created": "2026-02-24T10:21:08.6479288Z",
+    "last_used": "2026-02-24T14:13:45.8472233Z"
+  },
+  {
+    "prompt": "filter by Supply Air system",
+    "tool": "override_color_by_system",
+    "args": {},
+    "intent": "Visual",
+    "use_count": 19,
+    "created": "2026-02-24T10:21:08.7873402Z",
+    "last_used": "2026-02-24T14:13:45.2672754Z"
+  },
+  {
+    "prompt": "hi\u1EC3n th\u1ECB model li\u00EAn k\u1EBFt",
+    "tool": "get_linked_models",
+    "args": {},
+    "intent": "Query",
+    "use_count": 18,
+    "created": "2026-02-24T10:21:08.8909815Z",
+    "last_used": "2026-02-24T14:13:48.0697309Z"
+  },
+  {
+    "prompt": "c\u00F3 ch\u1ED7 n\u00E0o thi\u1EBFu b\u1EA3o \u00F4n kh\u00F4ng",
+    "tool": "check_insulation_coverage",
+    "args": {},
+    "intent": "Check",
+    "use_count": 18,
+    "created": "2026-02-24T10:21:08.6870194Z",
+    "last_used": "2026-02-24T14:13:47.9923700Z"
+  },
+  {
+    "prompt": "auto size pipe at 1.5 m/s",
+    "tool": "auto_size_mep",
+    "args": {
+      "target_velocity_ms": 1.5
+    },
+    "intent": "Modify",
+    "category": "Pipes",
+    "use_count": 18,
+    "created": "2026-02-24T10:21:08.9413643Z",
+    "last_used": "2026-02-24T14:13:47.9583224Z"
+  },
+  {
+    "prompt": "find stairs in the building",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Stairs",
+    "use_count": 18,
+    "created": "2026-02-24T10:21:08.3357540Z",
+    "last_used": "2026-02-24T14:13:47.7684756Z"
+  },
+  {
+    "prompt": "show pipe accessories",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Pipe Accessories",
+    "use_count": 18,
+    "created": "2026-02-24T10:21:08.3194459Z",
+    "last_used": "2026-02-24T14:13:47.5905932Z"
+  },
+  {
+    "prompt": "set view range 0 to 3000mm",
+    "tool": "set_view_range",
+    "args": {},
+    "intent": "Visual",
+    "use_count": 18,
+    "created": "2026-02-24T10:21:08.9147159Z",
+    "last_used": "2026-02-24T14:13:47.5064336Z"
+  },
+  {
+    "prompt": "l\u1ECDc theo h\u1EC7 c\u1EA5p gi\u00F3",
+    "tool": "override_color_by_system",
+    "args": {},
+    "intent": "Visual",
+    "use_count": 18,
+    "created": "2026-02-24T10:21:08.7886523Z",
+    "last_used": "2026-02-24T14:13:47.4725015Z"
+  },
+  {
+    "prompt": "li\u1EC7t k\u00EA mi\u1EC7ng gi\u00F3",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Air Terminals",
+    "use_count": 18,
+    "created": "2026-02-24T10:21:08.3158040Z",
+    "last_used": "2026-02-24T14:13:47.2722922Z"
+  },
+  {
+    "prompt": "auto size duct at 4 m/s",
+    "tool": "auto_size_mep",
+    "args": {
+      "target_velocity_ms": 4
+    },
+    "intent": "Modify",
+    "category": "Ducts",
+    "use_count": 18,
+    "created": "2026-02-24T10:21:08.7004446Z",
+    "last_used": "2026-02-24T14:13:47.1870661Z"
+  },
+  {
+    "prompt": "xu\u1EA5t file IFC",
+    "tool": "export_ifc",
+    "args": {},
+    "intent": "Export",
+    "use_count": 18,
+    "created": "2026-02-24T10:21:08.7526867Z",
+    "last_used": "2026-02-24T14:13:47.1397781Z"
+  },
+  {
+    "prompt": "show all air terminals",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Air Terminals",
+    "use_count": 18,
+    "created": "2026-02-24T10:21:08.3155013Z",
+    "last_used": "2026-02-24T14:13:47.0706335Z"
+  },
+  {
+    "prompt": "duct summary for Supply Air system",
+    "tool": "get_duct_summary",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Ducts",
+    "use_count": 18,
+    "created": "2026-02-24T10:21:08.3503517Z",
+    "last_used": "2026-02-24T14:13:46.4203947Z"
+  },
+  {
+    "prompt": "change duct system to Return Air",
+    "tool": "change_mep_system_type",
+    "args": {},
+    "intent": "Modify",
+    "category": "Ducts",
+    "use_count": 18,
+    "created": "2026-02-24T10:21:08.7139005Z",
+    "last_used": "2026-02-24T14:13:46.4196957Z"
+  },
+  {
+    "prompt": "color elements by parameter Mark",
+    "tool": "override_color_by_parameter",
+    "args": {},
+    "intent": "Visual",
+    "use_count": 18,
+    "created": "2026-02-24T10:21:08.7709639Z",
+    "last_used": "2026-02-24T14:13:46.1801216Z"
+  },
+  {
+    "prompt": "duct summary for Supply Air system",
+    "tool": "calculate_system_totals",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Ducts",
+    "use_count": 18,
+    "created": "2026-02-24T10:21:08.3505468Z",
+    "last_used": "2026-02-24T14:13:45.7962407Z"
+  },
+  {
+    "prompt": "\u0111i \u0111\u1EBFn ph\u00F2ng 101",
+    "tool": "zoom_to_elements",
+    "args": {},
+    "intent": "Navigate",
+    "category": "Rooms",
+    "use_count": 17,
+    "created": "2026-02-24T10:21:08.8451728Z",
+    "last_used": "2026-02-24T14:13:48.1007639Z"
+  },
+  {
+    "prompt": "\u0111\u00E1nh d\u1EA5u ph\u1EA7n t\u1EED b\u1ECB ng\u1EAFt",
+    "tool": "select_elements",
+    "args": {},
+    "intent": "Navigate",
+    "use_count": 17,
+    "created": "2026-02-24T10:21:08.8421607Z",
+    "last_used": "2026-02-24T14:13:47.9906564Z"
+  },
+  {
+    "prompt": "b\u00F3c kh\u1ED1i l\u01B0\u1EE3ng khay c\u00E1p",
+    "tool": "get_cable_tray_summary",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Cable Trays",
+    "use_count": 17,
+    "created": "2026-02-24T10:21:08.6565806Z",
+    "last_used": "2026-02-24T14:13:47.8285984Z"
+  },
+  {
+    "prompt": "add window to wall",
+    "tool": "create_element",
+    "args": {},
+    "intent": "Create",
+    "category": "Windows",
+    "use_count": 17,
+    "created": "2026-02-24T10:21:08.7272485Z",
+    "last_used": "2026-02-24T14:13:47.8005674Z"
+  },
+  {
+    "prompt": "\u0111\u1ED9 d\u1ED1c 1.5% \u1ED1ng tho\u00E1t n\u01B0\u1EDBc",
+    "tool": "set_pipe_slope",
+    "args": {
+      "slope_pct": 1.5
+    },
+    "intent": "Modify",
+    "category": "Pipes",
+    "use_count": 17,
+    "created": "2026-02-24T10:21:08.9470121Z",
+    "last_used": "2026-02-24T14:13:47.7652018Z"
+  },
+  {
+    "prompt": "b\u1EA3o \u00F4n 30mm",
+    "tool": "add_change_insulation",
+    "args": {
+      "thickness_mm": 30
+    },
+    "intent": "Modify",
+    "use_count": 17,
+    "created": "2026-02-24T10:21:08.9316611Z",
+    "last_used": "2026-02-24T14:13:47.5656542Z"
+  },
+  {
+    "prompt": "delete all unused views",
+    "tool": "delete_elements",
+    "args": {},
+    "intent": "Delete",
+    "use_count": 17,
+    "created": "2026-02-24T10:21:08.7392923Z",
+    "last_used": "2026-02-24T14:13:47.5337041Z"
+  },
+  {
+    "prompt": "hi\u1EC3n th\u1ECB m\u00F4 h\u00ECnh k\u1EBFt c\u1EA5u",
+    "tool": "get_structural_model",
+    "args": {},
+    "intent": "Query",
+    "use_count": 17,
+    "created": "2026-02-24T10:21:08.8664891Z",
+    "last_used": "2026-02-24T14:13:47.4705999Z"
+  },
+  {
+    "prompt": "compare two views",
+    "tool": "compare_views",
+    "args": {},
+    "intent": "Visual",
+    "use_count": 17,
+    "created": "2026-02-24T10:21:08.9194349Z",
+    "last_used": "2026-02-24T14:13:47.4550061Z"
+  },
+  {
+    "prompt": "t\u00F4 m\u00E0u theo tham s\u1ED1 Mark",
+    "tool": "override_color_by_parameter",
+    "args": {},
+    "intent": "Visual",
+    "use_count": 17,
+    "created": "2026-02-24T10:21:08.7722263Z",
+    "last_used": "2026-02-24T14:13:47.4443232Z"
+  },
+  {
+    "prompt": "th\u00EAm c\u1EEDa v\u00E0o t\u01B0\u1EDDng",
+    "tool": "create_element",
+    "args": {},
+    "intent": "Create",
+    "category": "Doors",
+    "use_count": 17,
+    "created": "2026-02-24T10:21:08.7242552Z",
+    "last_used": "2026-02-24T14:13:47.2766795Z"
+  },
+  {
+    "prompt": "l\u1EA5y b\u1EA3ng th\u1ED1ng k\u00EA",
+    "tool": "get_view_schedules",
+    "args": {},
+    "intent": "Query",
+    "use_count": 17,
+    "created": "2026-02-24T10:21:08.8801271Z",
+    "last_used": "2026-02-24T14:13:47.1378029Z"
+  },
+  {
+    "prompt": "save equipment data to csv",
+    "tool": "export_to_csv",
+    "args": {},
+    "intent": "Export",
+    "category": "Mechanical Equipment",
+    "use_count": 17,
+    "created": "2026-02-24T10:21:08.7561039Z",
+    "last_used": "2026-02-24T14:13:47.0824499Z"
+  },
+  {
+    "prompt": "rename all ducts Mark to D-",
+    "tool": "rename_elements",
+    "args": {},
+    "intent": "Modify",
+    "category": "Ducts",
+    "use_count": 17,
+    "created": "2026-02-24T10:21:08.7046012Z",
+    "last_used": "2026-02-24T14:13:46.4615066Z"
+  },
+  {
+    "prompt": "set pipe slope to 2%",
+    "tool": "set_pipe_slope",
+    "args": {
+      "slope_pct": 2
+    },
+    "intent": "Modify",
+    "category": "Pipes",
+    "use_count": 16,
+    "created": "2026-02-24T10:21:08.6913987Z",
+    "last_used": "2026-02-24T14:13:48.0936223Z"
+  },
+  {
+    "prompt": "l\u1EADt g\u01B0\u01A1ng ph\u1EA7n t\u1EED \u0111ang ch\u1ECDn",
+    "tool": "mirror_elements",
+    "args": {},
+    "intent": "Modify",
+    "use_count": 16,
+    "created": "2026-02-24T10:21:08.7108721Z",
+    "last_used": "2026-02-24T14:13:48.0835399Z"
+  },
+  {
+    "prompt": "show all lighting fixtures",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Lighting Fixtures",
+    "use_count": 16,
+    "created": "2026-02-24T10:21:08.3178198Z",
+    "last_used": "2026-02-24T14:13:47.9916798Z"
+  },
+  {
+    "prompt": "b\u00F3c kh\u1ED1i l\u01B0\u1EE3ng khay c\u00E1p",
+    "tool": "mep_quantity_takeoff",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Cable Trays",
+    "use_count": 16,
+    "created": "2026-02-24T10:21:08.6569452Z",
+    "last_used": "2026-02-24T14:13:47.8292435Z"
+  },
+  {
+    "prompt": "how many rooms are there",
+    "tool": "count_elements",
+    "args": {},
+    "intent": "Count",
+    "category": "Rooms",
+    "use_count": 16,
+    "created": "2026-02-24T10:21:08.3386683Z",
+    "last_used": "2026-02-24T14:13:47.7325449Z"
+  },
+  {
+    "prompt": "c\u00F3 bao nhi\u00EAu ph\u00F2ng",
+    "tool": "count_elements",
+    "args": {},
+    "intent": "Count",
+    "category": "Rooms",
+    "use_count": 16,
+    "created": "2026-02-24T10:21:08.3391668Z",
+    "last_used": "2026-02-24T14:13:47.6295779Z"
+  },
+  {
+    "prompt": "t\u00ECm ph\u1EA7n t\u1EED ch\u01B0a \u0111\u01B0\u1EE3c tag",
+    "tool": "get_untagged_elements",
+    "args": {},
+    "intent": "Tag",
+    "use_count": 16,
+    "created": "2026-02-24T10:21:08.8170487Z",
+    "last_used": "2026-02-24T14:13:47.6171288Z"
+  },
+  {
+    "prompt": "audit model for warnings",
+    "tool": "get_model_warnings",
+    "args": {},
+    "intent": "Check",
+    "use_count": 16,
+    "created": "2026-02-24T10:21:08.6672232Z",
+    "last_used": "2026-02-24T14:13:47.5327482Z"
+  },
+  {
+    "prompt": "\u0111\u1EBFm ph\u1EA7n t\u1EED trong model link",
+    "tool": "count_linked_elements",
+    "args": {},
+    "intent": "Count",
+    "use_count": 16,
+    "created": "2026-02-24T10:21:08.8943486Z",
+    "last_used": "2026-02-24T14:13:47.3549390Z"
+  },
+  {
+    "prompt": "di chuy\u1EC3n ph\u1EA7n t\u1EED \u0111ang ch\u1ECDn l\u00EAn 500mm",
+    "tool": "move_elements",
+    "args": {},
+    "intent": "Modify",
+    "use_count": 16,
+    "created": "2026-02-24T10:21:08.6974800Z",
+    "last_used": "2026-02-24T14:13:47.2921936Z"
+  },
+  {
+    "prompt": "get all mechanical equipment",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Mechanical Equipment",
+    "use_count": 16,
+    "created": "2026-02-24T10:21:08.3128807Z",
+    "last_used": "2026-02-24T14:13:47.0202197Z"
+  },
+  {
+    "prompt": "audit model for warnings",
+    "tool": "audit_model_standards",
+    "args": {},
+    "intent": "Check",
+    "use_count": 16,
+    "created": "2026-02-24T10:21:08.6669240Z",
+    "last_used": "2026-02-24T14:13:46.9183370Z"
+  },
+  {
+    "prompt": "create section view",
+    "tool": "create_section_view",
+    "args": {},
+    "intent": "Visual",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.9039456Z",
+    "last_used": "2026-02-24T14:13:48.0394043Z"
+  },
+  {
+    "prompt": "xu\u1EA5t danh s\u00E1ch ph\u00F2ng ra JSON",
+    "tool": "export_to_json",
+    "args": {},
+    "intent": "Export",
+    "category": "Rooms",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.7549238Z",
+    "last_used": "2026-02-24T14:13:48.0130255Z"
+  },
+  {
+    "prompt": "count cable trays",
+    "tool": "count_elements",
+    "args": {},
+    "intent": "Count",
+    "category": "Cable Trays",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.3423710Z",
+    "last_used": "2026-02-24T14:13:48.0045665Z"
+  },
+  {
+    "prompt": "duplicate current view",
+    "tool": "duplicate_views",
+    "args": {},
+    "intent": "Modify",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.9078768Z",
+    "last_used": "2026-02-24T14:13:47.8558894Z"
+  },
+  {
+    "prompt": "validate duct sizes for exhaust",
+    "tool": "check_velocity",
+    "args": {},
+    "intent": "Check",
+    "category": "Ducts",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.6828333Z",
+    "last_used": "2026-02-24T14:13:47.8324162Z"
+  },
+  {
+    "prompt": "d\u1EEF li\u1EC7u n\u0103ng l\u01B0\u1EE3ng kh\u00F4ng gian",
+    "tool": "get_space_energy_data",
+    "args": {},
+    "intent": "Query",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.8877053Z",
+    "last_used": "2026-02-24T14:13:47.7996904Z"
+  },
+  {
+    "prompt": "l\u1EA5y ph\u1EA7n t\u1EED t\u1EEB model li\u00EAn k\u1EBFt",
+    "tool": "get_linked_elements",
+    "args": {},
+    "intent": "Query",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.8986482Z",
+    "last_used": "2026-02-24T14:13:47.7357756Z"
+  },
+  {
+    "prompt": "phase balance analysis",
+    "tool": "get_phase_balance",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Electrical Equipment",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.8609961Z",
+    "last_used": "2026-02-24T14:13:47.6718683Z"
+  },
+  {
+    "prompt": "x\u00F3a ph\u1EA7n t\u1EED \u0111ang ch\u1ECDn",
+    "tool": "delete_elements",
+    "args": {},
+    "intent": "Delete",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.7336358Z",
+    "last_used": "2026-02-24T14:13:47.6313179Z"
+  },
+  {
+    "prompt": "check pipe slope",
+    "tool": "check_pipe_slope",
+    "args": {},
+    "intent": "Check",
+    "category": "Pipes",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.6654337Z",
+    "last_used": "2026-02-24T14:13:47.5568742Z"
+  },
+  {
+    "prompt": "show linked models",
+    "tool": "get_linked_models",
+    "args": {},
+    "intent": "Query",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.8893660Z",
+    "last_used": "2026-02-24T14:13:47.5442161Z"
+  },
+  {
+    "prompt": "cable tray takeoff",
+    "tool": "get_cable_tray_summary",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Cable Trays",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.6551249Z",
+    "last_used": "2026-02-24T14:13:47.5120686Z"
+  },
+  {
+    "prompt": "get circuit loads",
+    "tool": "get_circuit_loads",
+    "args": {},
+    "intent": "Query",
+    "category": "Electrical Equipment",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.8552299Z",
+    "last_used": "2026-02-24T14:13:47.4380392Z"
+  },
+  {
+    "prompt": "purge unused families",
+    "tool": "delete_elements",
+    "args": {},
+    "intent": "Delete",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.7347129Z",
+    "last_used": "2026-02-24T14:13:47.4174807Z"
+  },
+  {
+    "prompt": "xu\u1EA5t gbXML ph\u00E2n t\u00EDch n\u0103ng l\u01B0\u1EE3ng",
+    "tool": "export_gbxml",
+    "args": {},
+    "intent": "Export",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.8834710Z",
+    "last_used": "2026-02-24T14:13:47.3851528Z"
+  },
+  {
+    "prompt": "undo last action",
+    "tool": "undo_last_action",
+    "args": {},
+    "intent": "Modify",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.7181445Z",
+    "last_used": "2026-02-24T14:13:47.3730956Z"
+  },
+  {
+    "prompt": "flip pipe direction",
+    "tool": "flip_mep_elements",
+    "args": {},
+    "intent": "Modify",
+    "category": "Pipes",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.7118751Z",
+    "last_used": "2026-02-24T14:13:47.3704252Z"
+  },
+  {
+    "prompt": "show panel schedules",
+    "tool": "get_panel_schedules",
+    "args": {},
+    "intent": "Query",
+    "category": "Electrical Equipment",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.8483150Z",
+    "last_used": "2026-02-24T14:13:47.1520262Z"
+  },
+  {
+    "prompt": "cable tray takeoff",
+    "tool": "mep_quantity_takeoff",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Cable Trays",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.6554162Z",
+    "last_used": "2026-02-24T14:13:47.1236023Z"
+  },
+  {
+    "prompt": "check foundation loads",
+    "tool": "check_foundation_loads",
+    "args": {},
+    "intent": "Check",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.8755353Z",
+    "last_used": "2026-02-24T14:13:47.1183366Z"
+  },
+  {
+    "prompt": "get all mechanical equipment",
+    "tool": "get_mechanical_equipment",
+    "args": {},
+    "intent": "Query",
+    "category": "Mechanical Equipment",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.3128476Z",
+    "last_used": "2026-02-24T14:13:47.0968683Z"
+  },
+  {
+    "prompt": "check panel capacity",
+    "tool": "check_panel_capacity",
+    "args": {},
+    "intent": "Check",
+    "category": "Electrical Equipment",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.8512391Z",
+    "last_used": "2026-02-24T14:13:47.0936322Z"
+  },
+  {
+    "prompt": "check voltage drop",
+    "tool": "get_voltage_drop",
+    "args": {},
+    "intent": "Check",
+    "category": "Electrical Equipment",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.8580677Z",
+    "last_used": "2026-02-24T14:13:47.0084402Z"
+  },
+  {
+    "prompt": "x\u00F3a view kh\u00F4ng d\u00F9ng",
+    "tool": "delete_elements",
+    "args": {},
+    "intent": "Delete",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.7403495Z",
+    "last_used": "2026-02-24T14:13:46.9543460Z"
+  },
+  {
+    "prompt": "create a floor on level 1",
+    "tool": "create_element",
+    "args": {},
+    "intent": "Create",
+    "category": "Floors",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.7252683Z",
+    "last_used": "2026-02-24T14:13:46.7508357Z"
+  },
+  {
+    "prompt": "thi\u1EBFt b\u1ECB v\u1EC7 sinh t\u1EA7ng 1 c\u00F3 g\u00EC",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Plumbing Fixtures",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.3166682Z",
+    "last_used": "2026-02-24T14:13:46.7175080Z"
+  },
+  {
+    "prompt": "chia \u1ED1ng gi\u00F3 m\u1ED7i 3m",
+    "tool": "split_mep_elements",
+    "args": {
+      "segment_length_mm": 3000
+    },
+    "intent": "Modify",
+    "category": "Ducts",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.9515925Z",
+    "last_used": "2026-02-24T14:13:46.6940173Z"
+  },
+  {
+    "prompt": "set transparency 50% for ducts",
+    "tool": "override_category_color",
+    "args": {
+      "transparency": 50
+    },
+    "intent": "Visual",
+    "category": "Ducts",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.7741653Z",
+    "last_used": "2026-02-24T14:13:46.6072493Z"
+  },
+  {
+    "prompt": "\u0111\u1EBFm \u0111\u1EA7u phun t\u1EA5t c\u1EA3 t\u1EA7ng",
+    "tool": "count_elements",
+    "args": {},
+    "intent": "Count",
+    "category": "Sprinklers",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.3458615Z",
+    "last_used": "2026-02-24T14:13:46.5742351Z"
+  },
+  {
+    "prompt": "xu\u1EA5t \u1ED1ng gi\u00F3 ra CSV",
+    "tool": "export_to_csv",
+    "args": {},
+    "intent": "Export",
+    "category": "Ducts",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.7441178Z",
+    "last_used": "2026-02-24T14:13:46.5581630Z"
+  },
+  {
+    "prompt": "ch\u1ECDn t\u1EA5t c\u1EA3 \u1ED1ng gi\u00F3",
+    "tool": "select_elements",
+    "args": {},
+    "intent": "Navigate",
+    "category": "Ducts",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.8293082Z",
+    "last_used": "2026-02-24T14:13:46.4984684Z"
+  },
+  {
+    "prompt": "ghi ch\u00FA t\u1EA5t c\u1EA3 \u1ED1ng gi\u00F3 ch\u01B0a tag",
+    "tool": "get_untagged_elements",
+    "args": {},
+    "intent": "Tag",
+    "category": "Ducts",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.8117137Z",
+    "last_used": "2026-02-24T14:13:46.3776135Z"
+  },
+  {
+    "prompt": "xu\u1EA5t \u1ED1ng gi\u00F3 ra CSV",
+    "tool": "export_mep_boq",
+    "args": {},
+    "intent": "Export",
+    "category": "Ducts",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.7446792Z",
+    "last_used": "2026-02-24T14:13:46.3277652Z"
+  },
+  {
+    "prompt": "\u0111\u1EBFm \u1ED1ng d\u1EABn t\u1EA7ng 3",
+    "tool": "count_elements",
+    "args": {},
+    "intent": "Count",
+    "category": "Conduits",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.3417228Z",
+    "last_used": "2026-02-24T14:13:46.2546215Z"
+  },
+  {
+    "prompt": "c\u00F4 l\u1EADp ph\u1EA7n t\u1EED t\u1EA7ng 1",
+    "tool": "isolate_by_level",
+    "args": {},
+    "intent": "Visual",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.7805345Z",
+    "last_used": "2026-02-24T14:13:46.1052646Z"
+  },
+  {
+    "prompt": "ghi ch\u00FA t\u1EA5t c\u1EA3 \u1ED1ng gi\u00F3 ch\u01B0a tag",
+    "tool": "tag_all_in_view",
+    "args": {},
+    "intent": "Tag",
+    "category": "Ducts",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.8124926Z",
+    "last_used": "2026-02-24T14:13:46.1038710Z"
+  },
+  {
+    "prompt": "t\u1EA7ng 3 c\u00F3 FCU n\u00E0o",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Mechanical Equipment",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.3209608Z",
+    "last_used": "2026-02-24T14:13:46.0917862Z"
+  },
+  {
+    "prompt": "t\u1EA7ng 3 c\u00F3 FCU n\u00E0o",
+    "tool": "get_mechanical_equipment",
+    "args": {},
+    "intent": "Query",
+    "category": "Mechanical Equipment",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.3208421Z",
+    "last_used": "2026-02-24T14:13:46.0913319Z"
+  },
+  {
+    "prompt": "t\u1EA1o s\u00E0n t\u1EA7ng 1",
+    "tool": "create_element",
+    "args": {},
+    "intent": "Create",
+    "category": "Floors",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.7262662Z",
+    "last_used": "2026-02-24T14:13:46.0872724Z"
+  },
+  {
+    "prompt": "th\u1ED1ng k\u00EA \u1ED1ng gi\u00F3 c\u1EA5p gi\u00F3",
+    "tool": "calculate_system_totals",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Ducts",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.3515940Z",
+    "last_used": "2026-02-24T14:13:45.9816444Z"
+  },
+  {
+    "prompt": "split ducts every 3m",
+    "tool": "split_mep_elements",
+    "args": {
+      "segment_length_mm": 3000
+    },
+    "intent": "Modify",
+    "category": "Ducts",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.9498116Z",
+    "last_used": "2026-02-24T14:13:45.8914945Z"
+  },
+  {
+    "prompt": "th\u1ED1ng k\u00EA \u1ED1ng gi\u00F3 c\u1EA5p gi\u00F3",
+    "tool": "get_duct_summary",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Ducts",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.3513421Z",
+    "last_used": "2026-02-24T14:13:45.8904934Z"
+  },
+  {
+    "prompt": "ki\u1EC3m tra v\u1EADn t\u1ED1c \u1ED1ng gi\u00F3",
+    "tool": "check_velocity",
+    "args": {},
+    "intent": "Check",
+    "category": "Ducts",
+    "use_count": 15,
+    "created": "2026-02-24T10:21:08.6646985Z",
+    "last_used": "2026-02-24T14:13:45.8054018Z"
+  },
+  {
+    "prompt": "li\u1EC7t k\u00EA t\u1EA5t c\u1EA3 \u1ED1ng gi\u00F3 t\u1EA7ng 1",
+    "tool": "get_duct_summary",
+    "args": {},
+    "intent": "Query",
+    "category": "Ducts",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.3002908Z",
+    "last_used": "2026-02-24T14:13:46.7534679Z"
+  },
+  {
+    "prompt": "sao ch\u00E9p ph\u1EA7n t\u1EED sang t\u1EA7ng 2",
+    "tool": "copy_elements",
+    "args": {},
+    "intent": "Modify",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.7088561Z",
+    "last_used": "2026-02-24T14:13:46.7476909Z"
+  },
+  {
+    "prompt": "n\u1ED1i \u1ED1ng gi\u00F3 t\u1EEB FCU ra \u1ED1ng ch\u00EDnh",
+    "tool": "route_mep_between",
+    "args": {},
+    "intent": "Connect",
+    "category": "Ducts",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.8035155Z",
+    "last_used": "2026-02-24T14:13:46.7187278Z"
+  },
+  {
+    "prompt": "l\u01B0u d\u1EEF li\u1EC7u thi\u1EBFt b\u1ECB ra csv",
+    "tool": "export_to_csv",
+    "args": {},
+    "intent": "Export",
+    "category": "Mechanical Equipment",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.7573313Z",
+    "last_used": "2026-02-24T14:13:46.6835375Z"
+  },
+  {
+    "prompt": "ki\u1EC3m tra c\u1EA3nh b\u00E1o model",
+    "tool": "audit_model_standards",
+    "args": {},
+    "intent": "Check",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.6682360Z",
+    "last_used": "2026-02-24T14:13:46.6778019Z"
+  },
+  {
+    "prompt": "xem d\u1EA7m t\u1EA7ng 2",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Structural Framing",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.3228388Z",
+    "last_used": "2026-02-24T14:13:46.6733247Z"
+  },
+  {
+    "prompt": "xem ph\u1EE5 ki\u1EC7n \u1ED1ng gi\u00F3 t\u1EA7ng 1",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Duct Fittings",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.3190526Z",
+    "last_used": "2026-02-24T14:13:46.6689815Z"
+  },
+  {
+    "prompt": "ki\u1EC3m tra s\u1EE9c kh\u1ECFe model",
+    "tool": "audit_model_standards",
+    "args": {},
+    "intent": "Check",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.6887231Z",
+    "last_used": "2026-02-24T14:13:46.6602529Z"
+  },
+  {
+    "prompt": "b\u00E1o gi\u00E1 \u1ED1ng gi\u00F3 t\u1EA7ng 1",
+    "tool": "get_duct_summary",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Ducts",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.6622877Z",
+    "last_used": "2026-02-24T14:13:46.6242866Z"
+  },
+  {
+    "prompt": "b\u00E1o gi\u00E1 \u1ED1ng gi\u00F3 t\u1EA7ng 1",
+    "tool": "mep_quantity_takeoff",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Ducts",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.6619831Z",
+    "last_used": "2026-02-24T14:13:46.6230365Z"
+  },
+  {
+    "prompt": "check velocity max 2.5 m/s on level 1",
+    "tool": "check_velocity",
+    "args": {
+      "max_velocity_ms": 2.5
+    },
+    "intent": "Check",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.9227317Z",
+    "last_used": "2026-02-24T14:13:46.6060667Z"
+  },
+  {
+    "prompt": "show all cable trays level 3",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Cable Trays",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.3135568Z",
+    "last_used": "2026-02-24T14:13:46.5900540Z"
+  },
+  {
+    "prompt": "set offset to 3000mm for pipes",
+    "tool": "batch_set_offset",
+    "args": {
+      "offset_mm": 3000
+    },
+    "intent": "Modify",
+    "category": "Pipes",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.7161393Z",
+    "last_used": "2026-02-24T14:13:46.5512952Z"
+  },
+  {
+    "prompt": "li\u1EC7t k\u00EA t\u1EA5t c\u1EA3 \u1ED1ng gi\u00F3 t\u1EA7ng 1",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Ducts",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.3002750Z",
+    "last_used": "2026-02-24T14:13:46.5040325Z"
+  },
+  {
+    "prompt": "ki\u1EC3m tra l\u1EDBp b\u1EA3o v\u1EC7 c\u1ED1t th\u00E9p",
+    "tool": "check_rebar_coverage",
+    "args": {},
+    "intent": "Check",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.8697270Z",
+    "last_used": "2026-02-24T14:13:46.4792211Z"
+  },
+  {
+    "prompt": "t\u1EA1o ph\u00F2ng m\u1EDBi t\u1EA7ng 2",
+    "tool": "create_element",
+    "args": {},
+    "intent": "Create",
+    "category": "Rooms",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.7314982Z",
+    "last_used": "2026-02-24T14:13:46.4439657Z"
+  },
+  {
+    "prompt": "t\u1ED5ng h\u1EE3p kh\u1ED1i l\u01B0\u1EE3ng h\u1EC7 th\u1ED1ng MEP",
+    "tool": "calculate_system_totals",
+    "args": {},
+    "intent": "Analyze",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.6491461Z",
+    "last_used": "2026-02-24T14:13:46.3986515Z"
+  },
+  {
+    "prompt": "t\u1ED5ng h\u1EE3p kh\u1ED1i l\u01B0\u1EE3ng h\u1EC7 th\u1ED1ng MEP",
+    "tool": "mep_quantity_takeoff",
+    "args": {},
+    "intent": "Analyze",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.6488529Z",
+    "last_used": "2026-02-24T14:13:46.3976245Z"
+  },
+  {
+    "prompt": "thi\u1EBFt b\u1ECB v\u1EC7 sinh t\u1EA7ng 1 c\u00F3 g\u00EC",
+    "tool": "get_plumbing_fixtures",
+    "args": {},
+    "intent": "Query",
+    "category": "Plumbing Fixtures",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.3165762Z",
+    "last_used": "2026-02-24T14:13:46.3697041Z"
+  },
+  {
+    "prompt": "t\u1EF1 \u0111\u1ED9ng size \u1ED1ng gi\u00F3 v\u1EADn t\u1ED1c 4 m/s",
+    "tool": "auto_size_mep",
+    "args": {
+      "target_velocity_ms": 4
+    },
+    "intent": "Modify",
+    "category": "Ducts",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.7014631Z",
+    "last_used": "2026-02-24T14:13:46.2691444Z"
+  },
+  {
+    "prompt": "t\u00F3m t\u1EAFt h\u1EC7 th\u1ED1ng exhaust air",
+    "tool": "calculate_system_totals",
+    "args": {},
+    "intent": "Analyze",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.6605505Z",
+    "last_used": "2026-02-24T14:13:46.0072215Z"
+  },
+  {
+    "prompt": "x\u00F3a ph\u1EE5 ki\u1EC7n \u1ED1ng gi\u00F3 t\u1EA7ng 1",
+    "tool": "delete_elements",
+    "args": {},
+    "intent": "Delete",
+    "category": "Duct Accessories",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.7381265Z",
+    "last_used": "2026-02-24T14:13:45.8691000Z"
+  },
+  {
+    "prompt": "unhide all elements",
+    "tool": "reset_view_isolation",
+    "args": {},
+    "intent": "Visual",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.7767632Z",
+    "last_used": "2026-02-24T14:13:45.7649356Z"
+  },
+  {
+    "prompt": "show all doors on level 1",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Doors",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.3249293Z",
+    "last_used": "2026-02-24T14:13:45.7093067Z"
+  },
+  {
+    "prompt": "how many conduits on level 3",
+    "tool": "count_elements",
+    "args": {},
+    "intent": "Count",
+    "category": "Conduits",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.3410209Z",
+    "last_used": "2026-02-24T14:13:45.6822231Z"
+  },
+  {
+    "prompt": "annotate equipment on level 1",
+    "tool": "get_untagged_elements",
+    "args": {},
+    "intent": "Tag",
+    "category": "Mechanical Equipment",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.8214603Z",
+    "last_used": "2026-02-24T14:13:45.6715234Z"
+  },
+  {
+    "prompt": "b\u00F3c kh\u1ED1i l\u01B0\u1EE3ng \u1ED1ng n\u01B0\u1EDBc t\u1EA7ng 1",
+    "tool": "mep_quantity_takeoff",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Pipes",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.6464994Z",
+    "last_used": "2026-02-24T14:13:45.6514259Z"
+  },
+  {
+    "prompt": "danh s\u00E1ch \u0111\u1EA7u phun PCCC t\u1EA7ng 2",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Sprinklers",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.3151312Z",
+    "last_used": "2026-02-24T14:13:45.6393841Z"
+  },
+  {
+    "prompt": "danh s\u00E1ch \u0111\u1EA7u phun PCCC t\u1EA7ng 2",
+    "tool": "get_fire_protection_equipment",
+    "args": {},
+    "intent": "Query",
+    "category": "Sprinklers",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.3150603Z",
+    "last_used": "2026-02-24T14:13:45.6387244Z"
+  },
+  {
+    "prompt": "list all columns on level 1",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Columns",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.3215593Z",
+    "last_used": "2026-02-24T14:13:45.5789525Z"
+  },
+  {
+    "prompt": "\u0111\u1EB7t \u0111\u1ED9 d\u1ED1c \u1ED1ng n\u01B0\u1EDBc 2%",
+    "tool": "set_pipe_slope",
+    "args": {
+      "slope_pct": 2
+    },
+    "intent": "Modify",
+    "category": "Pipes",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.6922933Z",
+    "last_used": "2026-02-24T14:13:45.4945817Z"
+  },
+  {
+    "prompt": "th\u1ED1ng k\u00EA \u1ED1ng d\u1EABn t\u1EA7ng 2",
+    "tool": "mep_quantity_takeoff",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Conduits",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.6539409Z",
+    "last_used": "2026-02-24T14:13:45.4662418Z"
+  },
+  {
+    "prompt": "c\u1EEDa s\u1ED5 t\u1EA7ng 2 c\u00F3 bao nhi\u00EAu",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Windows",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.3341107Z",
+    "last_used": "2026-02-24T14:13:45.4608328Z"
+  },
+  {
+    "prompt": "th\u00EAm b\u1EA3o \u00F4n 25mm cho \u1ED1ng n\u01B0\u1EDBc",
+    "tool": "add_change_insulation",
+    "args": {
+      "thickness_mm": 25
+    },
+    "intent": "Modify",
+    "category": "Pipes",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.6994810Z",
+    "last_used": "2026-02-24T14:13:45.4582512Z"
+  },
+  {
+    "prompt": "count all pipes",
+    "tool": "count_elements",
+    "args": {},
+    "intent": "Count",
+    "category": "Pipes",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.3376538Z",
+    "last_used": "2026-02-24T14:13:45.3520220Z"
+  },
+  {
+    "prompt": "k\u1EBFt n\u1ED1i \u1ED1ng n\u01B0\u1EDBc v\u00E0o thi\u1EBFt b\u1ECB",
+    "tool": "connect_mep_elements",
+    "args": {},
+    "intent": "Connect",
+    "category": "Pipes",
+    "use_count": 14,
+    "created": "2026-02-24T10:21:08.8075485Z",
+    "last_used": "2026-02-24T14:13:45.3052614Z"
+  },
+  {
+    "prompt": "t\u00ECm t\u1EA5t c\u1EA3 ph\u00F2ng t\u1EA7ng h\u1EA7m",
+    "tool": "get_rooms_detailed",
+    "args": {},
+    "intent": "Query",
+    "category": "Rooms",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.3051783Z",
+    "last_used": "2026-02-24T14:13:46.7120510Z"
+  },
+  {
+    "prompt": "ki\u1EC3m tra c\u1EA3nh b\u00E1o model",
+    "tool": "get_model_warnings",
+    "args": {},
+    "intent": "Check",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.6685465Z",
+    "last_used": "2026-02-24T14:13:46.6785930Z"
+  },
+  {
+    "prompt": "li\u1EC7t k\u00EA \u1ED1ng d\u1EABn t\u1EA7ng 2",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Conduits",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.3174570Z",
+    "last_used": "2026-02-24T14:13:46.6631003Z"
+  },
+  {
+    "prompt": "remove all duct accessories on level 1",
+    "tool": "delete_elements",
+    "args": {},
+    "intent": "Delete",
+    "category": "Duct Accessories",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.7369579Z",
+    "last_used": "2026-02-24T14:13:46.6376892Z"
+  },
+  {
+    "prompt": "n\u1ED1i \u1ED1ng gi\u00F3 \u0111ang ch\u1ECDn",
+    "tool": "connect_mep_elements",
+    "args": {},
+    "intent": "Connect",
+    "category": "Ducts",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.7912256Z",
+    "last_used": "2026-02-24T14:13:46.6041982Z"
+  },
+  {
+    "prompt": "classify elements by system",
+    "tool": "calculate_system_totals",
+    "args": {},
+    "intent": "Analyze",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.6633240Z",
+    "last_used": "2026-02-24T14:13:46.5854820Z"
+  },
+  {
+    "prompt": "what plumbing fixtures are on level 1",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Plumbing Fixtures",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.3161823Z",
+    "last_used": "2026-02-24T14:13:46.4974020Z"
+  },
+  {
+    "prompt": "t\u00ECm t\u1EA5t c\u1EA3 ph\u00F2ng t\u1EA7ng h\u1EA7m",
+    "tool": "get_rooms",
+    "args": {},
+    "intent": "Query",
+    "category": "Rooms",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.3051475Z",
+    "last_used": "2026-02-24T14:13:46.4823040Z"
+  },
+  {
+    "prompt": "danh s\u00E1ch c\u1ED9t t\u1EA7ng 1",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Columns",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.3219789Z",
+    "last_used": "2026-02-24T14:13:46.3843586Z"
+  },
+  {
+    "prompt": "ch\u1ECDn \u1ED1ng n\u01B0\u1EDBc t\u1EA7ng 1",
+    "tool": "select_elements",
+    "args": {},
+    "intent": "Navigate",
+    "category": "Pipes",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.8378613Z",
+    "last_used": "2026-02-24T14:13:46.3830735Z"
+  },
+  {
+    "prompt": "n\u1ED1i 2 \u1ED1ng gi\u00F3 \u0111ang ch\u1ECDn, tr\u00E1nh k\u1EBFt c\u1EA5u",
+    "tool": "connect_mep_elements",
+    "args": {},
+    "intent": "Connect",
+    "category": "Ducts",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.7988580Z",
+    "last_used": "2026-02-24T14:13:46.3795467Z"
+  },
+  {
+    "prompt": "xu\u1EA5t b\u00F3c kh\u1ED1i l\u01B0\u1EE3ng \u1ED1ng n\u01B0\u1EDBc",
+    "tool": "export_to_csv",
+    "args": {},
+    "intent": "Export",
+    "category": "Pipes",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.7490239Z",
+    "last_used": "2026-02-24T14:13:46.3056353Z"
+  },
+  {
+    "prompt": "how many doors on level 1",
+    "tool": "count_elements",
+    "args": {},
+    "intent": "Count",
+    "category": "Doors",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.3436629Z",
+    "last_used": "2026-02-24T14:13:46.1863001Z"
+  },
+  {
+    "prompt": "hi\u1EC3n th\u1ECB \u1ED1ng n\u01B0\u1EDBc t\u1EA7ng 2",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Pipes",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.3045621Z",
+    "last_used": "2026-02-24T14:13:46.0634239Z"
+  },
+  {
+    "prompt": "chia \u1ED1ng n\u01B0\u1EDBc m\u1ED7i 1350mm",
+    "tool": "split_mep_elements",
+    "args": {
+      "segment_length_mm": 1350
+    },
+    "intent": "Modify",
+    "category": "Pipes",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.6940611Z",
+    "last_used": "2026-02-24T14:13:45.9407224Z"
+  },
+  {
+    "prompt": "check velocity max 5 m/s",
+    "tool": "check_velocity",
+    "args": {
+      "max_velocity_ms": 5
+    },
+    "intent": "Check",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.6788929Z",
+    "last_used": "2026-02-24T14:13:45.9258529Z"
+  },
+  {
+    "prompt": "get duct fittings on level 1",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Duct Fittings",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.3186618Z",
+    "last_used": "2026-02-24T14:13:45.8587569Z"
+  },
+  {
+    "prompt": "ki\u1EC3m tra ph\u1EA7n t\u1EED ng\u1EAFt k\u1EBFt n\u1ED1i",
+    "tool": "check_disconnected_elements",
+    "args": {},
+    "intent": "Check",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.6714922Z",
+    "last_used": "2026-02-24T14:13:45.8294322Z"
+  },
+  {
+    "prompt": "b\u00F3c kh\u1ED1i l\u01B0\u1EE3ng \u1ED1ng n\u01B0\u1EDBc t\u1EA7ng 1",
+    "tool": "get_pipe_summary",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Pipes",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.6467846Z",
+    "last_used": "2026-02-24T14:13:45.6526373Z"
+  },
+  {
+    "prompt": "color ducts by system",
+    "tool": "override_color_by_system",
+    "args": {},
+    "intent": "Visual",
+    "category": "Ducts",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.7635691Z",
+    "last_used": "2026-02-24T14:13:45.3941897Z"
+  },
+  {
+    "prompt": "count sprinklers on all levels",
+    "tool": "count_elements",
+    "args": {},
+    "intent": "Count",
+    "category": "Sprinklers",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.3451003Z",
+    "last_used": "2026-02-24T14:13:45.3513559Z"
+  },
+  {
+    "prompt": "n\u1ED1i 2 \u1ED1ng gi\u00F3 \u0111ang ch\u1ECDn, tr\u00E1nh k\u1EBFt c\u1EA5u",
+    "tool": "route_mep_between",
+    "args": {},
+    "intent": "Connect",
+    "category": "Ducts",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.7996499Z",
+    "last_used": "2026-02-24T14:13:44.7035849Z"
+  },
+  {
+    "prompt": "\u0111\u1EB7t offset \u1ED1ng n\u01B0\u1EDBc 3000mm",
+    "tool": "batch_set_offset",
+    "args": {
+      "offset_mm": 3000
+    },
+    "intent": "Modify",
+    "category": "Pipes",
+    "use_count": 13,
+    "created": "2026-02-24T10:21:08.7171617Z",
+    "last_used": "2026-02-24T14:13:44.6460126Z"
+  },
+  {
+    "prompt": "l\u1EA5y danh s\u00E1ch thi\u1EBFt b\u1ECB \u0111i\u1EC7n",
+    "tool": "get_electrical_equipment",
+    "args": {},
+    "intent": "Query",
+    "category": "Electrical Equipment",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.3131949Z",
+    "last_used": "2026-02-24T14:13:46.5659638Z"
+  },
+  {
+    "prompt": "list windows on level 2",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Windows",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.3336218Z",
+    "last_used": "2026-02-24T14:13:46.5294816Z"
+  },
+  {
+    "prompt": "what plumbing fixtures are on level 1",
+    "tool": "get_plumbing_fixtures",
+    "args": {},
+    "intent": "Query",
+    "category": "Plumbing Fixtures",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.3161135Z",
+    "last_used": "2026-02-24T14:13:46.4627000Z"
+  },
+  {
+    "prompt": "\u0111\u1ED5i h\u1EC7 th\u1ED1ng \u1ED1ng gi\u00F3 sang h\u1ED3i gi\u00F3",
+    "tool": "change_mep_system_type",
+    "args": {},
+    "intent": "Modify",
+    "category": "Ducts",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.7149900Z",
+    "last_used": "2026-02-24T14:13:46.4478268Z"
+  },
+  {
+    "prompt": "tag t\u1EA5t c\u1EA3 \u1ED1ng n\u01B0\u1EDBc trong view",
+    "tool": "tag_all_in_view",
+    "args": {},
+    "intent": "Tag",
+    "category": "Pipes",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.8199918Z",
+    "last_used": "2026-02-24T14:13:46.4390059Z"
+  },
+  {
+    "prompt": "isolate level 1 elements",
+    "tool": "isolate_by_level",
+    "args": {},
+    "intent": "Visual",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.7792587Z",
+    "last_used": "2026-02-24T14:13:46.4001764Z"
+  },
+  {
+    "prompt": "\u0111\u1EBFm \u1ED1ng n\u01B0\u1EDBc",
+    "tool": "count_elements",
+    "args": {},
+    "intent": "Count",
+    "category": "Pipes",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.3381510Z",
+    "last_used": "2026-02-24T14:13:46.3599064Z"
+  },
+  {
+    "prompt": "find ceilings on level 1",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Ceilings",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.3232537Z",
+    "last_used": "2026-02-24T14:13:46.3522131Z"
+  },
+  {
+    "prompt": "how many ducts on level 1",
+    "tool": "count_elements",
+    "args": {},
+    "intent": "Count",
+    "category": "Ducts",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.3366666Z",
+    "last_used": "2026-02-24T14:13:46.3322349Z"
+  },
+  {
+    "prompt": "x\u00E1c nh\u1EADn k\u1EBFt n\u1ED1i \u1ED1ng t\u1EA7ng 1",
+    "tool": "check_disconnected_elements",
+    "args": {},
+    "intent": "Check",
+    "category": "Pipes",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.6819096Z",
+    "last_used": "2026-02-24T14:13:46.3182532Z"
+  },
+  {
+    "prompt": "get furniture on level 1",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Furniture",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.3348248Z",
+    "last_used": "2026-02-24T14:13:46.1927256Z"
+  },
+  {
+    "prompt": "c\u1EEDa \u0111i t\u1EA7ng 1",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Doors",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.3253641Z",
+    "last_used": "2026-02-24T14:13:46.1560631Z"
+  },
+  {
+    "prompt": "conduit summary level 2",
+    "tool": "mep_quantity_takeoff",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Conduits",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.6524752Z",
+    "last_used": "2026-02-24T14:13:45.7113654Z"
+  },
+  {
+    "prompt": "annotate equipment on level 1",
+    "tool": "tag_all_in_view",
+    "args": {},
+    "intent": "Tag",
+    "category": "Mechanical Equipment",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.8220315Z",
+    "last_used": "2026-02-24T14:13:45.6723488Z"
+  },
+  {
+    "prompt": "count walls on level 2",
+    "tool": "count_elements",
+    "args": {},
+    "intent": "Count",
+    "category": "Walls",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.3396904Z",
+    "last_used": "2026-02-24T14:13:45.5720588Z"
+  },
+  {
+    "prompt": "conduit summary level 2",
+    "tool": "get_conduit_summary",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Conduits",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.6522125Z",
+    "last_used": "2026-02-24T14:13:45.4236010Z"
+  },
+  {
+    "prompt": "verify pipe connections on level 1",
+    "tool": "check_disconnected_elements",
+    "args": {},
+    "intent": "Check",
+    "category": "Pipes",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.6807814Z",
+    "last_used": "2026-02-24T14:13:45.4084430Z"
+  },
+  {
+    "prompt": "s\u1ED1 l\u01B0\u1EE3ng t\u01B0\u1EDDng t\u1EA7ng 2",
+    "tool": "count_elements",
+    "args": {},
+    "intent": "Count",
+    "category": "Walls",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.3403523Z",
+    "last_used": "2026-02-24T14:13:45.3276310Z"
+  },
+  {
+    "prompt": "add 25mm insulation to pipes",
+    "tool": "add_change_insulation",
+    "args": {
+      "thickness_mm": 25
+    },
+    "intent": "Modify",
+    "category": "Pipes",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.6985259Z",
+    "last_used": "2026-02-24T14:13:44.9977286Z"
+  },
+  {
+    "prompt": "bao nhi\u00EAu mi\u1EC7ng gi\u00F3 t\u1EA7ng 2",
+    "tool": "count_elements",
+    "args": {},
+    "intent": "Count",
+    "category": "Air Terminals",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.3497335Z",
+    "last_used": "2026-02-24T14:13:44.9559767Z"
+  },
+  {
+    "prompt": "move selected elements up 500mm",
+    "tool": "move_elements",
+    "args": {},
+    "intent": "Modify",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.6954717Z",
+    "last_used": "2026-02-24T14:13:44.9155983Z"
+  },
+  {
+    "prompt": "ghi ch\u00FA thi\u1EBFt b\u1ECB t\u1EA7ng 1",
+    "tool": "tag_all_in_view",
+    "args": {},
+    "intent": "Tag",
+    "category": "Mechanical Equipment",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.8248040Z",
+    "last_used": "2026-02-24T14:13:44.9035575Z"
+  },
+  {
+    "prompt": "t\u00ECm tr\u1EA7n t\u1EA7ng 1",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Ceilings",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.3236739Z",
+    "last_used": "2026-02-24T14:13:44.8789636Z"
+  },
+  {
+    "prompt": "list conduits on level 2",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Conduits",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.3171100Z",
+    "last_used": "2026-02-24T14:13:44.8745815Z"
+  },
+  {
+    "prompt": "offset \u1ED1ng n\u01B0\u1EDBc 2500mm",
+    "tool": "batch_set_offset",
+    "args": {
+      "offset_mm": 2500
+    },
+    "intent": "Modify",
+    "category": "Pipes",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.9349454Z",
+    "last_used": "2026-02-24T14:13:44.8581966Z"
+  },
+  {
+    "prompt": "\u0111\u1ED5i t\u00EAn Mark \u1ED1ng gi\u00F3 th\u00E0nh D-",
+    "tool": "rename_elements",
+    "args": {},
+    "intent": "Modify",
+    "category": "Ducts",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.7055957Z",
+    "last_used": "2026-02-24T14:13:44.8504667Z"
+  },
+  {
+    "prompt": "ghi ch\u00FA thi\u1EBFt b\u1ECB t\u1EA7ng 1",
+    "tool": "get_untagged_elements",
+    "args": {},
+    "intent": "Tag",
+    "category": "Mechanical Equipment",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.8241023Z",
+    "last_used": "2026-02-24T14:13:44.8363135Z"
+  },
+  {
+    "prompt": "bao nhi\u00EAu \u1ED1ng gi\u00F3 t\u1EA7ng 1",
+    "tool": "count_elements",
+    "args": {},
+    "intent": "Count",
+    "category": "Ducts",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.3371628Z",
+    "last_used": "2026-02-24T14:13:44.7886719Z"
+  },
+  {
+    "prompt": "th\u1ED1ng k\u00EA \u1ED1ng d\u1EABn t\u1EA7ng 2",
+    "tool": "get_conduit_summary",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Conduits",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.6535781Z",
+    "last_used": "2026-02-24T14:13:44.7731860Z"
+  },
+  {
+    "prompt": "copy selected elements to level 2",
+    "tool": "copy_elements",
+    "args": {},
+    "intent": "Modify",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.7066081Z",
+    "last_used": "2026-02-24T14:13:44.7647108Z"
+  },
+  {
+    "prompt": "color pipes red",
+    "tool": "override_category_color",
+    "args": {},
+    "intent": "Visual",
+    "category": "Pipes",
+    "use_count": 12,
+    "created": "2026-02-24T10:21:08.7818027Z",
+    "last_used": "2026-02-24T14:13:44.7403925Z"
+  },
+  {
+    "prompt": "find elements within 500mm radius",
+    "tool": "find_elements_near",
+    "args": {
+      "radius_mm": 500
+    },
+    "intent": "Query",
+    "use_count": 11,
+    "created": "2026-02-24T10:21:08.9367110Z",
+    "last_used": "2026-02-24T14:13:46.5729617Z"
+  },
+  {
+    "prompt": "tag all pipes in view",
+    "tool": "tag_all_in_view",
+    "args": {},
+    "intent": "Tag",
+    "category": "Pipes",
+    "use_count": 11,
+    "created": "2026-02-24T10:21:08.8185238Z",
+    "last_used": "2026-02-24T14:13:46.5331212Z"
+  },
+  {
+    "prompt": "l\u1EA5y danh s\u00E1ch thi\u1EBFt b\u1ECB \u0111i\u1EC7n",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Electrical Equipment",
+    "use_count": 11,
+    "created": "2026-02-24T10:21:08.3132465Z",
+    "last_used": "2026-02-24T14:13:46.0437243Z"
+  },
+  {
+    "prompt": "how many air terminals on level 2",
+    "tool": "count_elements",
+    "args": {},
+    "intent": "Count",
+    "category": "Air Terminals",
+    "use_count": 11,
+    "created": "2026-02-24T10:21:08.3466444Z",
+    "last_used": "2026-02-24T14:13:46.0242419Z"
+  },
+  {
+    "prompt": "are there any missing insulation",
+    "tool": "check_insulation_coverage",
+    "args": {},
+    "intent": "Check",
+    "use_count": 11,
+    "created": "2026-02-24T10:21:08.6859265Z",
+    "last_used": "2026-02-24T14:13:46.0061103Z"
+  },
+  {
+    "prompt": "route pipe between 2 elements",
+    "tool": "route_mep_between",
+    "args": {},
+    "intent": "Connect",
+    "category": "Pipes",
+    "use_count": 11,
+    "created": "2026-02-24T10:21:08.7927096Z",
+    "last_used": "2026-02-24T14:13:45.8680058Z"
+  },
+  {
+    "prompt": "connect 2 selected ducts, avoid structural",
+    "tool": "connect_mep_elements",
+    "args": {},
+    "intent": "Connect",
+    "category": "Ducts",
+    "use_count": 11,
+    "created": "2026-02-24T10:21:08.7962239Z",
+    "last_used": "2026-02-24T14:13:45.6844849Z"
+  },
+  {
+    "prompt": "hi\u1EC3n th\u1ECB khay c\u00E1p t\u1EA7ng 3",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Cable Trays",
+    "use_count": 11,
+    "created": "2026-02-24T10:21:08.3138211Z",
+    "last_used": "2026-02-24T14:13:45.6202250Z"
+  },
+  {
+    "prompt": "isolate pipes on level 1",
+    "tool": "isolate_category",
+    "args": {},
+    "intent": "Visual",
+    "category": "Pipes",
+    "use_count": 11,
+    "created": "2026-02-24T10:21:08.7684323Z",
+    "last_used": "2026-02-24T14:13:45.5492327Z"
+  },
+  {
+    "prompt": "resize pipe to 150mm diameter",
+    "tool": "resize_mep_elements",
+    "args": {
+      "diameter_mm": 150
+    },
+    "intent": "Modify",
+    "category": "Pipes",
+    "use_count": 11,
+    "created": "2026-02-24T10:21:08.9254424Z",
+    "last_used": "2026-02-24T14:13:45.1499731Z"
+  },
+  {
+    "prompt": "slope 1.5% for sanitary pipes",
+    "tool": "set_pipe_slope",
+    "args": {
+      "slope_pct": 1.5
+    },
+    "intent": "Modify",
+    "category": "Pipes",
+    "use_count": 11,
+    "created": "2026-02-24T10:21:08.9450840Z",
+    "last_used": "2026-02-24T14:13:45.1370336Z"
+  },
+  {
+    "prompt": "\u0111\u1EA3o chi\u1EC1u \u1ED1ng n\u01B0\u1EDBc",
+    "tool": "flip_mep_elements",
+    "args": {},
+    "intent": "Modify",
+    "category": "Pipes",
+    "use_count": 11,
+    "created": "2026-02-24T10:21:08.7128783Z",
+    "last_used": "2026-02-24T14:13:45.1049579Z"
+  },
+  {
+    "prompt": "return air system summary",
+    "tool": "calculate_system_totals",
+    "args": {},
+    "intent": "Analyze",
+    "use_count": 11,
+    "created": "2026-02-24T10:21:08.6612625Z",
+    "last_used": "2026-02-24T14:13:45.0896617Z"
+  },
+  {
+    "prompt": "\u0111\u1ED5i \u0111\u01B0\u1EDDng k\u00EDnh \u1ED1ng n\u01B0\u1EDBc sang 150mm",
+    "tool": "resize_mep_elements",
+    "args": {
+      "diameter_mm": 150
+    },
+    "intent": "Modify",
+    "category": "Pipes",
+    "use_count": 11,
+    "created": "2026-02-24T10:21:08.9281491Z",
+    "last_used": "2026-02-24T14:13:45.0822503Z"
+  },
+  {
+    "prompt": "bao nhi\u00EAu c\u1EEDa t\u1EA7ng 1",
+    "tool": "count_elements",
+    "args": {},
+    "intent": "Count",
+    "category": "Doors",
+    "use_count": 11,
+    "created": "2026-02-24T10:21:08.3443720Z",
+    "last_used": "2026-02-24T14:13:45.0699200Z"
+  },
+  {
+    "prompt": "pipe quantity takeoff level 1",
+    "tool": "mep_quantity_takeoff",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Pipes",
+    "use_count": 11,
+    "created": "2026-02-24T10:21:08.6454148Z",
+    "last_used": "2026-02-24T14:13:45.0430008Z"
+  },
+  {
+    "prompt": "xem ph\u1EE5 ki\u1EC7n \u1ED1ng n\u01B0\u1EDBc",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Pipe Accessories",
+    "use_count": 11,
+    "created": "2026-02-24T10:21:08.3198305Z",
+    "last_used": "2026-02-24T14:13:45.0286153Z"
+  },
+  {
+    "prompt": "preview resize ducts to 500x300",
+    "tool": "resize_mep_elements",
+    "args": {
+      "width_mm": 500,
+      "height_mm": 300
+    },
+    "intent": "Modify",
+    "category": "Ducts",
+    "use_count": 11,
+    "created": "2026-02-24T10:21:08.7025136Z",
+    "last_used": "2026-02-24T14:13:45.0262130Z"
+  },
+  {
+    "prompt": "xem tr\u01B0\u1EDBc \u0111\u1ED5i k\u00EDch th\u01B0\u1EDBc \u1ED1ng gi\u00F3 500x300",
+    "tool": "resize_mep_elements",
+    "args": {
+      "width_mm": 500,
+      "height_mm": 300
+    },
+    "intent": "Modify",
+    "category": "Ducts",
+    "use_count": 11,
+    "created": "2026-02-24T10:21:08.7035435Z",
+    "last_used": "2026-02-24T14:13:45.0017403Z"
+  },
+  {
+    "prompt": "t\u1EF1 \u0111\u1ED9ng size \u1ED1ng n\u01B0\u1EDBc 1.5 m/s",
+    "tool": "auto_size_mep",
+    "args": {
+      "target_velocity_ms": 1.5
+    },
+    "intent": "Modify",
+    "category": "Pipes",
+    "use_count": 10,
+    "created": "2026-02-24T10:21:08.9432231Z",
+    "last_used": "2026-02-24T14:13:45.2548820Z"
+  },
+  {
+    "prompt": "offset pipes 2500mm",
+    "tool": "batch_set_offset",
+    "args": {
+      "offset_mm": 2500
+    },
+    "intent": "Modify",
+    "category": "Pipes",
+    "use_count": 10,
+    "created": "2026-02-24T10:21:08.9332855Z",
+    "last_used": "2026-02-24T14:13:45.2498420Z"
+  },
+  {
+    "prompt": "set insulation 30mm",
+    "tool": "add_change_insulation",
+    "args": {
+      "thickness_mm": 30
+    },
+    "intent": "Modify",
+    "use_count": 10,
+    "created": "2026-02-24T10:21:08.9300217Z",
+    "last_used": "2026-02-24T14:13:45.2473235Z"
+  },
+  {
+    "prompt": "get elements from linked model",
+    "tool": "get_linked_elements",
+    "args": {},
+    "intent": "Query",
+    "use_count": 10,
+    "created": "2026-02-24T10:21:08.8968804Z",
+    "last_used": "2026-02-24T14:13:45.2448303Z"
+  },
+  {
+    "prompt": "count elements in linked model",
+    "tool": "count_linked_elements",
+    "args": {},
+    "intent": "Count",
+    "use_count": 10,
+    "created": "2026-02-24T10:21:08.8926602Z",
+    "last_used": "2026-02-24T14:13:45.2425411Z"
+  },
+  {
+    "prompt": "get rebar schedule level 1",
+    "tool": "get_rebar_schedule",
+    "args": {},
+    "intent": "Query",
+    "use_count": 10,
+    "created": "2026-02-24T10:21:08.8714539Z",
+    "last_used": "2026-02-24T14:13:45.2378476Z"
+  },
+  {
+    "prompt": "connect 2 selected ducts, avoid structural",
+    "tool": "route_mep_between",
+    "args": {},
+    "intent": "Connect",
+    "category": "Ducts",
+    "use_count": 10,
+    "created": "2026-02-24T10:21:08.7967860Z",
+    "last_used": "2026-02-24T14:13:45.2326141Z"
+  },
+  {
+    "prompt": "connect selected ducts",
+    "tool": "connect_mep_elements",
+    "args": {},
+    "intent": "Connect",
+    "category": "Ducts",
+    "use_count": 10,
+    "created": "2026-02-24T10:21:08.7899239Z",
+    "last_used": "2026-02-24T14:13:45.2220559Z"
+  },
+  {
+    "prompt": "delete selected elements",
+    "tool": "delete_elements",
+    "args": {},
+    "intent": "Delete",
+    "use_count": 10,
+    "created": "2026-02-24T10:21:08.7325536Z",
+    "last_used": "2026-02-24T14:13:45.2163306Z"
+  },
+  {
+    "prompt": "mirror selected elements",
+    "tool": "mirror_elements",
+    "args": {},
+    "intent": "Modify",
+    "use_count": 10,
+    "created": "2026-02-24T10:21:08.7098649Z",
+    "last_used": "2026-02-24T14:13:45.2142907Z"
+  },
+  {
+    "prompt": "\u0111\u1ED5i k\u00EDch th\u01B0\u1EDBc \u1ED1ng gi\u00F3 sang 300mm",
+    "tool": "resize_mep_elements",
+    "args": {
+      "diameter_mm": 300
+    },
+    "intent": "Modify",
+    "category": "Ducts",
+    "use_count": 10,
+    "created": "2026-02-24T10:21:08.6904744Z",
+    "last_used": "2026-02-24T14:13:45.2092699Z"
+  },
+  {
+    "prompt": "check insulation coverage",
+    "tool": "check_insulation_coverage",
+    "args": {},
+    "intent": "Check",
+    "use_count": 10,
+    "created": "2026-02-24T10:21:08.6723613Z",
+    "last_used": "2026-02-24T14:13:45.2014782Z"
+  },
+  {
+    "prompt": "check duct velocity",
+    "tool": "check_velocity",
+    "args": {},
+    "intent": "Check",
+    "category": "Ducts",
+    "use_count": 10,
+    "created": "2026-02-24T10:21:08.6639774Z",
+    "last_used": "2026-02-24T14:13:45.1994297Z"
+  },
+  {
+    "prompt": "ph\u00E2n t\u00EDch t\u1ED5ng h\u1EC7 th\u1ED1ng n\u01B0\u1EDBc l\u1EA1nh",
+    "tool": "calculate_system_totals",
+    "args": {},
+    "intent": "Analyze",
+    "use_count": 10,
+    "created": "2026-02-24T10:21:08.6513208Z",
+    "last_used": "2026-02-24T14:13:45.1944929Z"
+  },
+  {
+    "prompt": "analyze chilled water system totals",
+    "tool": "calculate_system_totals",
+    "args": {},
+    "intent": "Analyze",
+    "use_count": 10,
+    "created": "2026-02-24T10:21:08.6501279Z",
+    "last_used": "2026-02-24T14:13:45.1880225Z"
+  },
+  {
+    "prompt": "pipe quantity takeoff level 1",
+    "tool": "get_pipe_summary",
+    "args": {},
+    "intent": "Analyze",
+    "category": "Pipes",
+    "use_count": 10,
+    "created": "2026-02-24T10:21:08.6456479Z",
+    "last_used": "2026-02-24T14:13:45.1851781Z"
+  },
+  {
+    "prompt": "n\u1ED9i th\u1EA5t t\u1EA7ng 1",
+    "tool": "get_elements",
+    "args": {},
+    "intent": "Query",
+    "category": "Furniture",
+    "use_count": 10,
+    "created": "2026-02-24T10:21:08.3352907Z",
+    "last_used": "2026-02-24T14:13:45.1779176Z"
+  }
+]

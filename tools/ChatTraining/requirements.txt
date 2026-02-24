@@ -1,0 +1,6 @@
+# ChatBot Tool Classifier Training
+torch>=2.0
+numpy>=1.24
+onnx>=1.14
+requests>=2.31
+tqdm>=4.65

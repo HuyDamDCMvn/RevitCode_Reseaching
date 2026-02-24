@@ -227,6 +227,78 @@ namespace RevitChat.Services
             }
         }
 
+        /// <summary>
+        /// Export successful interactions as training data for the ANN tool classifier.
+        /// Output format: JSON array of {prompt, tool, args, intent, category}.
+        /// </summary>
+        public static int ExportTrainingBatch(string outputPath)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    var samples = new List<object>();
+                    var source = _recentRecords;
+
+                    if (!string.IsNullOrEmpty(_filePath) && File.Exists(_filePath))
+                    {
+                        var lines = File.ReadAllLines(_filePath);
+                        source = new List<InteractionRecord>();
+                        foreach (var line in lines)
+                        {
+                            if (string.IsNullOrWhiteSpace(line)) continue;
+                            try
+                            {
+                                var rec = JsonSerializer.Deserialize<InteractionRecord>(line);
+                                if (rec != null) source.Add(rec);
+                            }
+                            catch { }
+                        }
+                    }
+
+                    foreach (var rec in source)
+                    {
+                        if (!rec.Success || rec.WasRetried) continue;
+                        if (string.IsNullOrEmpty(rec.Prompt)) continue;
+                        if (rec.ToolCalls == null || rec.ToolCalls.Count == 0) continue;
+
+                        foreach (var tc in rec.ToolCalls)
+                        {
+                            if (!tc.ResultOk || string.IsNullOrEmpty(tc.Name)) continue;
+                            samples.Add(new
+                            {
+                                prompt = rec.Prompt,
+                                tool = tc.Name,
+                                args = tc.Args,
+                                intent = rec.Intent ?? "",
+                                category = rec.Category ?? ""
+                            });
+                        }
+                    }
+
+                    if (samples.Count > 0)
+                    {
+                        var dir = Path.GetDirectoryName(outputPath);
+                        if (!string.IsNullOrEmpty(dir))
+                            Directory.CreateDirectory(dir);
+
+                        var json = JsonSerializer.Serialize(samples, new JsonSerializerOptions
+                        {
+                            WriteIndented = true
+                        });
+                        File.WriteAllText(outputPath, json);
+                    }
+
+                    return samples.Count;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[InteractionLogger] Export: {ex.Message}");
+                    return 0;
+                }
+            }
+        }
+
         private static string SanitizeFileName(string name)
         {
             if (string.IsNullOrWhiteSpace(name)) return "default";

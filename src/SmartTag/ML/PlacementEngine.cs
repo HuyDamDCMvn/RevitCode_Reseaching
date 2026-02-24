@@ -30,12 +30,15 @@ namespace SmartTag.ML
         private readonly TemplateLibrary _templateLibrary = TemplateLibrary.Instance;
         private readonly TagPlacementRadiusService _radiusService = TagPlacementRadiusService.Instance;
 
+        private readonly RLAgent _rlAgent;
+
         // Configuration
         private readonly int _knnK;
         private readonly bool _useKNN;
         private readonly bool _useCSP;
         private readonly bool _useRules;
         private readonly bool _usePatterns;
+        private readonly bool _useRL;
 
         // Cached values
         private double _tagWidth;
@@ -58,6 +61,22 @@ namespace SmartTag.ML
             _useCSP = options.UseCSP;
             _useRules = options.UseRules;
             _usePatterns = options.UsePatterns;
+            _useRL = options.UseRL;
+
+            if (_useRL)
+            {
+                try
+                {
+                    _rlAgent = new RLAgent(options.RLModelPath);
+                    System.Diagnostics.Debug.WriteLine(
+                        $"PlacementEngine: RL agent loaded (ONNX={_rlAgent.IsOnnxAvailable})");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(
+                        $"PlacementEngine: RL agent init failed: {ex.Message}");
+                }
+            }
 
             // Rule engine (repo Rules from Data/Rules/Tagging)
             _ruleEngine = RuleEngine.Instance;
@@ -186,16 +205,32 @@ namespace SmartTag.ML
             var context = _contextAnalyzer.Analyze(element, allElements);
             var candidates = GenerateCandidates(element, context, settings);
 
+            float[] features = null;
             TagPositionVote knnVote = null;
             if (_useKNN && _knnMatcher.SampleCount > 0)
             {
-                var features = _featureExtractor.ExtractFeatures(element, context);
+                features = _featureExtractor.ExtractFeatures(element, context);
                 var neighbors = _knnMatcher.FindKNearestByCategory(
                     features,
                     element.BuiltInCategoryName ?? "Other",
                     _knnK);
                 knnVote = _knnMatcher.Vote(neighbors);
                 candidates = ReorderByKNNVote(candidates, knnVote);
+            }
+
+            // RL refinement: reorder candidates by DQN Q-values (ONNX or JSON fallback)
+            if (_useRL && _rlAgent != null)
+            {
+                features ??= _featureExtractor.ExtractFeatures(element, context);
+                var rlScores = _rlAgent.GetPositionScores(element, context, features);
+                if (rlScores.Count > 0)
+                {
+                    candidates = candidates
+                        .OrderByDescending(c =>
+                            rlScores.TryGetValue(c.Position, out var s) ? s : 0.0)
+                        .ThenBy(c => c.DistanceMultiplier)
+                        .ToList();
+                }
             }
 
             TagPlacement finalPlacement;
@@ -731,5 +766,15 @@ namespace SmartTag.ML
         /// Use repo Patterns (Data/Patterns/TagPositions) for position/leader hints when no rule matches.
         /// </summary>
         public bool UsePatterns { get; set; } = true;
+
+        /// <summary>
+        /// Enable RL-based candidate refinement (ONNX model or JSON policy fallback).
+        /// </summary>
+        public bool UseRL { get; set; } = true;
+
+        /// <summary>
+        /// Path to the ONNX RL policy model. If null, uses default DataPathResolver location.
+        /// </summary>
+        public string RLModelPath { get; set; }
     }
 }

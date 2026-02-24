@@ -15,5 +15,9 @@ launch_dll(
     dll_name="SmartTag.dll",
     namespace="SmartTag",
     method="ShowTool",
-    dependencies=["CommunityToolkit.Mvvm.dll", "HD.Core.dll"]
+    dependencies=[
+        "HD.Core.dll",
+        "CommunityToolkit.Mvvm.dll",
+        "Microsoft.ML.OnnxRuntime.dll",
+    ]
 )

@@ -196,6 +196,66 @@ namespace RevitChat.Services
             get { lock (_lock) { return _entries.Count; } }
         }
 
+        /// <summary>
+        /// Get tool recommendations by aggregating similarity scores across all stored entries.
+        /// Returns a dictionary of tool_name -> cumulative weighted similarity score.
+        /// This enables real-time learning: as new successful interactions are stored,
+        /// future prompts instantly benefit from the expanded knowledge base.
+        /// </summary>
+        public Dictionary<string, double> GetToolRecommendations(float[] queryEmbedding, int minUseCount = 1)
+        {
+            if (queryEmbedding == null || queryEmbedding.Length == 0)
+                return new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+
+            lock (_lock)
+            {
+                var scores = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+                var counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var entry in _entries)
+                {
+                    if (entry.UseCount < minUseCount) continue;
+
+                    var sim = CosineSimilarity(queryEmbedding, entry.Embedding);
+                    if (sim < MinSimilarityThreshold) continue;
+
+                    var usageBoost = 1.0 + Math.Log(entry.UseCount + 1) * 0.2;
+                    var weightedSim = sim * usageBoost;
+
+                    scores.TryGetValue(entry.ToolName, out double current);
+                    scores[entry.ToolName] = Math.Max(current, weightedSim);
+
+                    counts.TryGetValue(entry.ToolName, out int cnt);
+                    counts[entry.ToolName] = cnt + 1;
+                }
+
+                // Boost tools that matched multiple stored prompts
+                foreach (var tool in counts.Keys.ToList())
+                {
+                    if (counts[tool] >= 2 && scores.ContainsKey(tool))
+                        scores[tool] *= 1.0 + counts[tool] * 0.05;
+                }
+
+                return scores;
+            }
+        }
+
+        /// <summary>
+        /// Get tool recommendations asynchronously by first fetching the embedding.
+        /// </summary>
+        public async Task<Dictionary<string, double>> GetToolRecommendationsAsync(
+            string prompt, int minUseCount = 1, CancellationToken ct = default)
+        {
+            if (!_available || string.IsNullOrWhiteSpace(prompt))
+                return new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+
+            var embedding = await GetEmbeddingAsync(prompt, ct);
+            if (embedding == null)
+                return new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+
+            return GetToolRecommendations(embedding, minUseCount);
+        }
+
         private static float CosineSimilarity(float[] a, float[] b)
         {
             if (a == null || b == null || a.Length != b.Length || a.Length == 0) return 0;

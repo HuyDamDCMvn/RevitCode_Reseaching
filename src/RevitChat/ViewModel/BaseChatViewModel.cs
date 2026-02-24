@@ -36,6 +36,7 @@ namespace RevitChat.ViewModel
         private Dictionary<string, string> _lastToolResults;
         private System.Diagnostics.Stopwatch _responseTimer;
         private bool _sendFailed;
+        private string _lastBanditStateKey;
 
         private const int AnalyzeThresholdChars = 1200;
         private ChatMessage _streamingMessage;
@@ -122,9 +123,20 @@ namespace RevitChat.ViewModel
                 var corrections = ChatFeedbackService.CorrectionCount;
                 var dynamicExamples = DynamicFewShotSelector.ExampleCount;
                 var adaptiveWeights = AdaptiveWeightManager.TotalAdjustments;
-                int total = approved + corrections + dynamicExamples + adaptiveWeights;
+                var banditEntries = ChatBandit.TotalEntries;
+                var learningSummary = SelfLearningOrchestrator.GetStatusSummary();
+
+                var autoTrainerSummary = ContextualAutoTrainer.GetSummary();
+
+                int total = approved + corrections + dynamicExamples + adaptiveWeights + banditEntries;
                 if (total > 0)
+                {
                     msg += $"\n({approved} patterns, {dynamicExamples} learned examples, {adaptiveWeights} adapted weights)";
+                    if (!string.IsNullOrEmpty(learningSummary))
+                        msg += $"\n[Self-learning: {learningSummary}]";
+                    if (!string.IsNullOrEmpty(autoTrainerSummary))
+                        msg += $"\n[Auto-trainer: {autoTrainerSummary}]";
+                }
             }
             catch { }
             Messages.Add(ChatMessage.FromAssistant(msg));
@@ -175,6 +187,26 @@ namespace RevitChat.ViewModel
                 UserCorrectionCapture.SaveCorrection(correction);
                 if (_currentInteraction != null)
                     InteractionLogger.MarkRetried(_currentInteraction);
+
+                if (!string.IsNullOrEmpty(_lastBanditStateKey) && _lastToolNames?.Count > 0)
+                {
+                    foreach (var tn in _lastToolNames)
+                        ChatBandit.RecordRetry(_lastBanditStateKey, tn);
+                }
+
+                SelfLearningOrchestrator.RecordInteraction(new InteractionOutcome
+                {
+                    Prompt = _lastUserPrompt,
+                    BanditStateKey = _lastBanditStateKey,
+                    ToolNames = _lastToolNames?.ToList() ?? new List<string>(),
+                    Success = false,
+                    WasCorrection = true
+                });
+
+                ContextualAutoTrainer.RecordCorrection(
+                    _lastUserPrompt, text,
+                    _lastToolNames?.FirstOrDefault(),
+                    _lastToolCalls?.FirstOrDefault()?.Arguments);
             }
 
             Messages.Add(ChatMessage.FromUser(text));
@@ -579,6 +611,18 @@ namespace RevitChat.ViewModel
                     tools = toolNames.Select(n => new ToolUsage { Name = n }).ToList();
                 }
                 ChatFeedbackService.SaveApproved(prompt, tools);
+
+                if (!string.IsNullOrEmpty(_lastBanditStateKey))
+                {
+                    foreach (var t in tools)
+                        ChatBandit.RecordThumbsUp(_lastBanditStateKey, t.Name);
+                }
+
+                SelfLearningOrchestrator.RecordFeedback(
+                    _lastBanditStateKey,
+                    tools.Select(t => t.Name).ToList(),
+                    positive: true);
+
                 StatusMessage = "Feedback saved";
             }
         }
@@ -594,7 +638,17 @@ namespace RevitChat.ViewModel
             if (toolNames?.Count > 0)
             {
                 foreach (var toolName in toolNames)
+                {
                     ChatFeedbackService.SaveCorrection(prompt, toolName, null);
+                    if (!string.IsNullOrEmpty(_lastBanditStateKey))
+                        ChatBandit.RecordThumbsDown(_lastBanditStateKey, toolName);
+                }
+
+                SelfLearningOrchestrator.RecordFeedback(
+                    _lastBanditStateKey,
+                    toolNames.ToList(),
+                    positive: false);
+
                 StatusMessage = "Correction saved";
             }
         }
@@ -635,6 +689,10 @@ namespace RevitChat.ViewModel
                 var category = _promptContext?.DetectedCategory;
 
                 var keyword = ExtractMainKeyword(prompt);
+                _lastBanditStateKey = ChatBandit.BuildStateKey(_promptContext);
+
+                bool anyToolSuccess = false;
+
                 foreach (var tc in _lastToolCalls)
                 {
                     bool toolSuccess = success && (_lastToolResults == null ||
@@ -643,10 +701,14 @@ namespace RevitChat.ViewModel
 
                     if (toolSuccess)
                     {
+                        anyToolSuccess = true;
                         DynamicFewShotSelector.RecordSuccess(prompt, tc.FunctionName, tc.Arguments, intent, category);
                         AdaptiveWeightManager.RecordSuccess(intent, keyword, tc.FunctionName);
+                        ChatBandit.RecordSuccess(_lastBanditStateKey, tc.FunctionName);
                         ProjectContextMemory.RecordToolUsage(tc.FunctionName, category,
                             _promptContext?.DetectedSystem, intent);
+
+                        ContextualAutoTrainer.RecordSuccess(prompt, tc.FunctionName, tc.Arguments);
 
                         if (ChatService is Models.IEmbeddingCapable embeddable)
                         {
@@ -657,8 +719,29 @@ namespace RevitChat.ViewModel
                     else
                     {
                         AdaptiveWeightManager.RecordFailure(intent, keyword);
+                        ChatBandit.RecordCorrection(_lastBanditStateKey, tc.FunctionName);
                     }
                 }
+
+                // Orchestrator: meta-level learning (auto-augment, consolidation, retrain trigger)
+                SelfLearningOrchestrator.RecordInteraction(new InteractionOutcome
+                {
+                    Prompt = prompt,
+                    Intent = intent,
+                    Category = category,
+                    Keyword = keyword,
+                    BanditStateKey = _lastBanditStateKey,
+                    ToolNames = _lastToolCalls.Select(tc => tc.FunctionName).ToList(),
+                    ToolCalls = _lastToolCalls.Select(tc => new ToolCallInfo
+                    {
+                        Name = tc.FunctionName,
+                        Args = tc.Arguments ?? new Dictionary<string, object>()
+                    }).ToList(),
+                    Success = anyToolSuccess
+                });
+
+                // Track prompt flow for follow-up learning
+                ContextualAutoTrainer.SetPreviousPrompt(prompt);
             }
             catch (Exception ex)
             {

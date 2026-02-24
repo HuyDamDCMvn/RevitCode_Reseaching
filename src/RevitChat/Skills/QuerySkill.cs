@@ -14,6 +14,8 @@ namespace RevitChat.Skills
         protected override string SkillName => "Query";
         protected override string SkillDescription => "Query and search elements in the Revit model";
 
+        private UIDocument _uidoc;
+
         protected override HashSet<string> HandledFunctions { get; } = new()
         {
             "get_elements", "count_elements", "get_element_parameters", "search_elements",
@@ -26,14 +28,15 @@ namespace RevitChat.Skills
         {
             ChatTool.CreateFunctionTool(
                 functionName: "get_elements",
-                functionDescription: "Get a list of elements from the Revit model filtered by category, type name, and/or level. Returns element ID, category, family, type, and level for each match.",
+                functionDescription: "Get a list of elements from the Revit model filtered by category, type name, and/or level. Returns element ID, category, family, type, and level for each match. Set in_view=true to scope to active view only.",
                 functionParameters: BinaryData.FromString("""
                 {
                     "type": "object",
                     "properties": {
-                        "category": { "type": "string", "description": "Revit category name (e.g. 'Walls', 'Doors', 'Windows'). Use get_categories first if unsure." },
+                        "category": { "type": "string", "description": "Revit category name (e.g. 'Walls', 'Doors', 'Ducts'). Use get_categories first if unsure." },
                         "type_name": { "type": "string", "description": "Family type name to filter by (partial match)" },
                         "level": { "type": "string", "description": "Level name to filter by" },
+                        "in_view": { "type": "boolean", "description": "If true, only return elements visible in the active view. Default false." },
                         "limit": { "type": "integer", "description": "Max elements to return. Default 100.", "default": 100 },
                         "group_by": { "type": "string", "enum": ["level", "family", "type", "system"], "description": "Group results by field. Returns grouped counts and first few IDs per group." }
                     },
@@ -43,13 +46,14 @@ namespace RevitChat.Skills
 
             ChatTool.CreateFunctionTool(
                 functionName: "count_elements",
-                functionDescription: "Count elements in the Revit model grouped by type, filtered by category and/or level.",
+                functionDescription: "Count elements in the Revit model grouped by type, filtered by category and/or level. Set in_view=true to count only elements in the active view. For a high-level model summary, prefer get_model_statistics instead.",
                 functionParameters: BinaryData.FromString("""
                 {
                     "type": "object",
                     "properties": {
-                        "category": { "type": "string", "description": "Revit category name" },
-                        "level": { "type": "string", "description": "Level name filter" }
+                        "category": { "type": "string", "description": "Revit category name (e.g. 'Ducts', 'Pipes', 'Walls')" },
+                        "level": { "type": "string", "description": "Level name filter" },
+                        "in_view": { "type": "boolean", "description": "If true, only count elements visible in the active view. Default false." }
                     },
                     "required": []
                 }
@@ -196,6 +200,7 @@ namespace RevitChat.Skills
 
         protected override string ExecuteTool(string functionName, UIDocument uidoc, Document doc, Dictionary<string, object> args)
         {
+            _uidoc = uidoc;
             return functionName switch
             {
                 "get_elements" => GetElements(doc, args),
@@ -221,16 +226,23 @@ namespace RevitChat.Skills
             var level = GetArg<string>(args, "level");
             var limit = GetArg<int>(args, "limit", 100);
             var groupBy = GetArg<string>(args, "group_by");
+            bool inView = GetArg<bool>(args, "in_view", false);
             if (limit <= 0) limit = 100;
 
+            var viewId = inView ? _uidoc?.ActiveView?.Id : null;
             var resolvedLevel = ResolveLevelName(doc, level);
-            var collector = BuildCollector(doc, category);
+            var collector = BuildCollector(doc, category, viewId);
             bool needsCategoryFallback = !string.IsNullOrEmpty(category) && ResolveCategoryFilter(doc, category) == null;
+            bool noSpecificCategory = string.IsNullOrWhiteSpace(NormalizeArg(category))
+                || NormalizeArg(category) == "all" || NormalizeArg(category) == "tat ca";
             var results = new List<object>();
 
             foreach (var elem in collector)
             {
                 if (elem.Category == null) continue;
+
+                if (noSpecificCategory && IsMetadataCategory(elem.Category))
+                    continue;
 
                 if (needsCategoryFallback &&
                     !MatchesCategoryName(elem.Category.Name, category))
@@ -305,19 +317,26 @@ namespace RevitChat.Skills
         {
             var category = GetArg<string>(args, "category");
             var level = GetArg<string>(args, "level");
+            bool inView = GetArg<bool>(args, "in_view", false);
 
             string resolvedLevel = ResolveLevelName(doc, level);
             bool levelFilterActive = !string.IsNullOrEmpty(level);
             bool levelResolved = resolvedLevel != null;
 
-            var collector = BuildCollector(doc, category);
+            var viewId = inView ? _uidoc?.ActiveView?.Id : null;
+            var collector = BuildCollector(doc, category, viewId);
             bool needsCategoryFallback = !string.IsNullOrEmpty(category) && ResolveCategoryFilter(doc, category) == null;
+            bool noSpecificCategory = string.IsNullOrWhiteSpace(NormalizeArg(category))
+                || NormalizeArg(category) == "all" || NormalizeArg(category) == "tat ca";
             var typeCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             int total = 0;
 
             foreach (var elem in collector)
             {
                 if (elem.Category == null) continue;
+
+                if (noSpecificCategory && IsMetadataCategory(elem.Category))
+                    continue;
 
                 if (needsCategoryFallback &&
                     !MatchesCategoryName(elem.Category.Name, category))

@@ -1,0 +1,16 @@
+{
+  "total_interactions": 10,
+  "successful": 6,
+  "failed": 4,
+  "thumbs_up": 0,
+  "thumbs_down": 2,
+  "patterns_promoted": 0,
+  "patterns_pruned": 0,
+  "new_since_augment": 10,
+  "new_since_retrain": 10,
+  "new_since_consolidate": 10,
+  "retrain_notified": false,
+  "last_interaction": "2026-02-24T14:15:23.6916416Z",
+  "last_export": null,
+  "last_export_count": 0
+}

@@ -23,5 +23,6 @@ launch_dll(
         "System.Net.ServerSentEvents.dll",
         "Microsoft.Extensions.DependencyInjection.Abstractions.dll",
         "Microsoft.Extensions.Logging.Abstractions.dll",
+        "Microsoft.ML.OnnxRuntime.dll",
     ]
 )

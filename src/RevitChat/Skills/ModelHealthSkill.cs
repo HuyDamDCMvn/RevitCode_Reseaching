@@ -49,7 +49,7 @@ namespace RevitChat.Skills
                 """)),
 
             ChatTool.CreateFunctionTool("get_model_statistics",
-                "Get comprehensive model statistics: element counts by category, family counts, view counts, link counts.",
+                "Get comprehensive model statistics and element summary: counts by top categories (Walls, Ducts, Pipes, Equipment, etc.), family counts, view counts, link counts, warnings. Use this tool when the user asks to 'summarize elements', 'summary of model', 'what is in the model', or 'model overview'.",
                 BinaryData.FromString("""
                 {
                     "type": "object",
@@ -197,11 +197,17 @@ namespace RevitChat.Skills
                 BuiltInCategory.OST_Walls, BuiltInCategory.OST_Floors, BuiltInCategory.OST_Roofs,
                 BuiltInCategory.OST_Doors, BuiltInCategory.OST_Windows,
                 BuiltInCategory.OST_StructuralColumns, BuiltInCategory.OST_StructuralFraming,
-                BuiltInCategory.OST_DuctCurves, BuiltInCategory.OST_PipeCurves,
+                BuiltInCategory.OST_DuctCurves, BuiltInCategory.OST_DuctFitting,
+                BuiltInCategory.OST_DuctAccessory, BuiltInCategory.OST_DuctTerminal,
+                BuiltInCategory.OST_FlexDuctCurves,
+                BuiltInCategory.OST_PipeCurves, BuiltInCategory.OST_PipeFitting,
+                BuiltInCategory.OST_PipeAccessory, BuiltInCategory.OST_FlexPipeCurves,
                 BuiltInCategory.OST_CableTray, BuiltInCategory.OST_Conduit,
                 BuiltInCategory.OST_MechanicalEquipment, BuiltInCategory.OST_ElectricalEquipment,
-                BuiltInCategory.OST_PlumbingFixtures, BuiltInCategory.OST_Rooms,
-                BuiltInCategory.OST_Furniture, BuiltInCategory.OST_GenericModel
+                BuiltInCategory.OST_PlumbingFixtures, BuiltInCategory.OST_Sprinklers,
+                BuiltInCategory.OST_LightingFixtures,
+                BuiltInCategory.OST_Rooms, BuiltInCategory.OST_Furniture,
+                BuiltInCategory.OST_GenericModel
             };
 
             var byCat = topCategories

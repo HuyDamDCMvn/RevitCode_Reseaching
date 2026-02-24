@@ -147,7 +147,7 @@ namespace RevitChat.Services
             (new[]{"cable tray","cable trays","khay cap","khay cáp","mang cap","máng cáp"}, "cable_tray", "Cable Trays"),
             (new[]{"wall","walls","tuong","tường"}, "wall", "Walls"),
             (new[]{"floor","floors","san","sàn"}, "floor", "Floors"),
-            (new[]{"door","doors","cua di","cửa đi"}, "door", "Doors"),
+            (new[]{"door","doors","cua di","cửa đi","cua","cửa"}, "door", "Doors"),
             (new[]{"window","windows","cua so","cửa sổ"}, "window", "Windows"),
             (new[]{"room","rooms","phong","phòng"}, "room", "Rooms"),
             (new[]{"column","columns","cot","cột"}, "column", "Columns"),
@@ -166,7 +166,12 @@ namespace RevitChat.Services
             (new[]{"pipe fitting","pipe fittings","phu kien ong nuoc"}, "pipe_fitting", "Pipe Fittings"),
             (new[]{"duct accessory","duct accessories","phu kien gio"}, "duct_acc", "Duct Accessories"),
             (new[]{"pipe accessory","pipe accessories","phu kien nuoc"}, "pipe_acc", "Pipe Accessories"),
-            (new[]{"fire protection","pccc","chua chay","chữa cháy"}, "fire", "Fire Protection"),
+            (new[]{"fire protection","pccc","chua chay","chữa cháy","phong chay","phòng cháy"}, "fire", "Fire Protection"),
+            (new[]{"roof","roofs","mai","mái"}, "roof", "Roofs"),
+            (new[]{"generic model","generic models"}, "generic", "Generic Models"),
+            (new[]{"flex duct","flex ducts","ong mem","ống mềm"}, "flex_duct", "Flex Ducts"),
+            (new[]{"flex pipe","flex pipes"}, "flex_pipe", "Flex Pipes"),
+            (new[]{"electrical fixture","electrical fixtures","o cam","ổ cắm","cong tac","công tắc"}, "elec_fix", "Electrical Fixtures"),
         };
 
         private static readonly (string[] keywords, string canonical)[] SystemMap =

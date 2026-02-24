@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.16.3" />
   </ItemGroup>
 
   <!-- Post-build: Copy dependencies + PDB for debugging -->
@@ -24,6 +25,8 @@
           Condition="Exists('$(OutputPath)HD.Core.pdb')" />
     <Copy SourceFiles="$(OutputPath)CommunityToolkit.Mvvm.dll" DestinationFolder="$(ExtLibNet8)"
           Condition="Exists('$(OutputPath)CommunityToolkit.Mvvm.dll')" />
+    <Copy SourceFiles="$(OutputPath)Microsoft.ML.OnnxRuntime.dll" DestinationFolder="$(ExtLibNet8)"
+          Condition="Exists('$(OutputPath)Microsoft.ML.OnnxRuntime.dll')" />
   </Target>
 
 </Project>
