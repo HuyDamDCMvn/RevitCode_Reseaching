@@ -579,11 +579,14 @@ namespace RevitChatLocal.Services
 
         public bool IsWarmedUp => _warmupTask?.IsCompletedSuccessfully == true;
 
+        /// <summary>True when Ollama reports 0 VRAM → CPU-only inference.</summary>
+        public bool IsCpuOnly { get; private set; }
+
         private async Task WarmupModelAsync(string model)
         {
             try
             {
-                DebugMessage?.Invoke($"[Warmup] Loading {model} into VRAM...");
+                DebugMessage?.Invoke($"[Warmup] Loading {model}...");
                 var sw = System.Diagnostics.Stopwatch.StartNew();
                 var payload = JsonSerializer.Serialize(new
                 {
@@ -597,8 +600,29 @@ namespace RevitChatLocal.Services
                 var resp = await _warmupHttp.PostAsync(
                     $"{_ollamaBaseUrl}/api/generate", content);
                 sw.Stop();
+
+                // Detect CPU-only inference
+                try
+                {
+                    var psResp = await _warmupHttp.GetStringAsync($"{_ollamaBaseUrl}/api/ps");
+                    using var psDoc = JsonDocument.Parse(psResp);
+                    if (psDoc.RootElement.TryGetProperty("models", out var models))
+                    {
+                        foreach (var m in models.EnumerateArray())
+                        {
+                            if (m.TryGetProperty("size_vram", out var vram) && vram.GetInt64() == 0)
+                            {
+                                IsCpuOnly = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                catch { }
+
+                var mode = IsCpuOnly ? "CPU-only" : "GPU";
                 if (resp.IsSuccessStatusCode)
-                    DebugMessage?.Invoke($"[Warmup] {model} loaded OK ({sw.Elapsed.TotalSeconds:F1}s)");
+                    DebugMessage?.Invoke($"[Warmup] {model} loaded OK — {mode} ({sw.Elapsed.TotalSeconds:F1}s)");
                 else
                     DebugMessage?.Invoke($"[Warmup] {model} returned {resp.StatusCode} ({sw.Elapsed.TotalSeconds:F1}s)");
             }
@@ -677,8 +701,8 @@ namespace RevitChatLocal.Services
             }
             catch { }
 
-            // Phase 4: Inject semantic examples from embedding matcher (async, non-blocking)
-            if (_embeddingMatcher?.IsAvailable == true)
+            // Phase 4: Inject semantic examples (skip on CPU-only to reduce latency)
+            if (!IsCpuOnly && _embeddingMatcher?.IsAvailable == true)
             {
                 try
                 {
@@ -819,7 +843,8 @@ namespace RevitChatLocal.Services
             CancellationToken ct, bool retryHint = false)
         {
             var config = LocalConfigService.Load();
-            var options = new ChatCompletionOptions { MaxOutputTokenCount = config.MaxTokens };
+            var maxTok = IsCpuOnly ? Math.Min(config.MaxTokens, 512) : config.MaxTokens;
+            var options = new ChatCompletionOptions { MaxOutputTokenCount = maxTok };
 
             var messages = BuildMessages();
             if (retryHint)
@@ -994,7 +1019,7 @@ Example:
                 }
             }
 
-            const int maxToolsInCatalog = 25;
+            int maxToolsInCatalog = IsCpuOnly ? 15 : 25;
             var ordered = selected
                 .Where(t => toolIndex.ContainsKey(t))
                 .OrderBy(t => t, StringComparer.Ordinal)
@@ -1563,7 +1588,33 @@ Assistant:
 {""name"": ""override_category_color"", ""arguments"": {""category"": ""Ducts"", ""color"": ""Red""}}
 </tool_call>";
 
-            var prompt = $@"You are a Revit BIM assistant. Execute tools to answer queries. Fully understand English, Vietnamese, and mixed-language prompts (e.g. 'isolate tất cả duct trên Level 1'). Handle missing diacritics (e.g. 'ong gio' = 'ống gió' = Ducts).
+            string prompt;
+            if (IsCpuOnly)
+            {
+                prompt = $@"You are a Revit BIM assistant. Call tools via <tool_call> JSON. Understand English, Vietnamese, mixed.
+ống gió=Ducts, ống nước=Pipes, tường=Walls, cửa=Doors, sàn=Floors, cột=Columns, phòng=Rooms.
+
+## TOOLS
+{catalog}
+
+## FORMAT
+<tool_call>
+{{""name"": ""tool_name"", ""arguments"": {{""key"": ""value""}}}}
+</tool_call>
+
+## RULES
+1. <tool_call> immediately for queries. No explanation before.
+2. ONE <tool_call> per response. After results, answer in natural language.
+3. Destructive ops: confirm first.
+4. Prefer get_duct_summary/get_pipe_summary over get_elements.
+5. No matching tool → reply: ""Not yet trained for this.""
+
+{examplesSection}
+{tagKnowledgeSection}";
+            }
+            else
+            {
+                prompt = $@"You are a Revit BIM assistant. Execute tools to answer queries. Fully understand English, Vietnamese, and mixed-language prompts (e.g. 'isolate tất cả duct trên Level 1'). Handle missing diacritics (e.g. 'ong gio' = 'ống gió' = Ducts).
 
 ## TOOLS
 {catalog}
@@ -1588,19 +1639,23 @@ Assistant:
 
 {examplesSection}
 {tagKnowledgeSection}";
+            }
 
             var ctx = RevitChat.Services.PromptAnalyzer.Analyze(userMsg);
             if (!string.IsNullOrEmpty(ctx.ContextHint))
                 prompt += $"\n\n{ctx.ContextHint}";
 
-            // Phase 3: Project context profile
-            try
+            // Phase 3: Project context profile (skip on CPU to reduce prompt tokens)
+            if (!IsCpuOnly)
             {
-                var projectProfile = RevitChat.Services.ProjectContextMemory.GetProfileSummary();
-                if (!string.IsNullOrEmpty(projectProfile))
-                    prompt += $"\n\n{projectProfile}";
+                try
+                {
+                    var projectProfile = RevitChat.Services.ProjectContextMemory.GetProfileSummary();
+                    if (!string.IsNullOrEmpty(projectProfile))
+                        prompt += $"\n\n{projectProfile}";
+                }
+                catch { }
             }
-            catch { }
 
             if (forcedTools == null)
             {

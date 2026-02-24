@@ -292,7 +292,10 @@ namespace RevitChatLocal.ViewModel
                     new Action(() =>
                     {
                         if (!IsBusy)
-                            StatusMessage = $"Ready — {_chatService.CurrentModel} loaded";
+                        {
+                            var mode = _chatService.IsCpuOnly ? "CPU" : "GPU";
+                            StatusMessage = $"Ready — {_chatService.CurrentModel} [{mode}]";
+                        }
                     }));
             });
         }
