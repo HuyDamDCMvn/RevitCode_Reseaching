@@ -548,6 +548,43 @@ namespace RevitChatLocal.Services
                 _embeddingMatcher.Initialize(dllDir, _ollamaBaseUrl);
             }
             catch { _embeddingMatcher = null; }
+
+            // Warmup: pre-load model into VRAM in background
+            _currentModel = model;
+            _ = Task.Run(() => WarmupModelAsync(model));
+        }
+
+        private string _currentModel;
+        private static readonly System.Net.Http.HttpClient _warmupHttp = new()
+        {
+            Timeout = TimeSpan.FromMinutes(5)
+        };
+
+        private async Task WarmupModelAsync(string model)
+        {
+            try
+            {
+                DebugMessage?.Invoke($"[Warmup] Loading {model} into VRAM...");
+                var payload = JsonSerializer.Serialize(new
+                {
+                    model,
+                    prompt = "hi",
+                    stream = false,
+                    options = new { num_predict = 1 }
+                });
+                var content = new System.Net.Http.StringContent(
+                    payload, Encoding.UTF8, "application/json");
+                var resp = await _warmupHttp.PostAsync(
+                    $"{_ollamaBaseUrl}/api/generate", content);
+                if (resp.IsSuccessStatusCode)
+                    DebugMessage?.Invoke($"[Warmup] {model} loaded OK");
+                else
+                    DebugMessage?.Invoke($"[Warmup] {model} returned {resp.StatusCode}");
+            }
+            catch (Exception ex)
+            {
+                DebugMessage?.Invoke($"[Warmup] Failed: {ex.Message}");
+            }
         }
 
         public bool IsInitialized => _client != null;
