@@ -50,6 +50,8 @@
         Exclude="$(OutputPath)RevitChatLocal.dll;$(OutputPath)RevitAPI*.dll;$(OutputPath)HD.Core.dll;$(OutputPath)RevitChat.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(LocalDependencyDlls)" DestinationFolder="$(ExtLibNet8)" />
+    <Copy SourceFiles="@(LocalDependencyDlls)" DestinationFolder="$(PyRevitExtLib)" SkipUnchangedFiles="true"
+          Condition="Exists('$(PyRevitExtLib)')" />
   </Target>
 
 </Project>

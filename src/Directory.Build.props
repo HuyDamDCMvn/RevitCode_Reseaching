@@ -34,11 +34,22 @@
     </Reference>
   </ItemGroup>
 
-  <!-- Post-build: Copy main DLL to pyRevit lib folder -->
+  <!-- pyRevit runtime extension path (auto-sync on build) -->
+  <PropertyGroup>
+    <PyRevitExtLib>$(APPDATA)\pyRevit\extensions\HD.extension\lib\net8\</PyRevitExtLib>
+  </PropertyGroup>
+
+  <!-- Post-build: Copy main DLL to repo lib folder -->
   <Target Name="CopyMainDllToExtension" AfterTargets="Build">
     <MakeDir Directories="$(ExtLibNet8)" />
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ExtLibNet8)" />
     <Message Text="→ $(AssemblyName).dll → lib/net8/" Importance="high" />
+  </Target>
+
+  <!-- Post-build: Also sync to pyRevit extensions if folder exists -->
+  <Target Name="SyncToPyRevit" AfterTargets="CopyMainDllToExtension" Condition="Exists('$(PyRevitExtLib)')">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PyRevitExtLib)" SkipUnchangedFiles="true" />
+    <Message Text="→ $(AssemblyName).dll → pyRevit extensions" Importance="high" />
   </Target>
 
 </Project>
