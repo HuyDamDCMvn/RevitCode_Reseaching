@@ -23,10 +23,19 @@ namespace RevitChatLocal.ViewModel
 
         protected override IChatService ChatService => _chatService;
         protected override int ToolTimeoutMs => 120_000;
-        protected override TimeSpan SendTimeout => TimeSpan.FromMinutes(5);
+        protected override TimeSpan SendTimeout => TimeSpan.FromMinutes(10);
         protected override string NotInitializedMessage => "Please configure Ollama endpoint (click Settings)";
         protected override string WelcomeText => "Hello, I'm HD's Assistant.";
         protected override int MaxToolResultChars => 4000;
+
+        protected override async Task OnBeforeSendAsync(CancellationToken ct)
+        {
+            if (!_chatService.IsWarmedUp)
+            {
+                StatusMessage = "Loading model into VRAM...";
+                await _chatService.WaitForWarmupAsync(ct);
+            }
+        }
 
         [ObservableProperty]
         private string _endpointUrl = "http://localhost:11434";
@@ -112,7 +121,8 @@ namespace RevitChatLocal.ViewModel
                 {
                     _chatService.Initialize(config.EndpointUrl, config.Model);
                     ApplyToolSettings(config);
-                    StatusMessage = $"Connected to Ollama ({config.Model})";
+                    StatusMessage = $"Connected — warming up {config.Model}...";
+                    TrackWarmup();
                 }
                 catch (Exception ex)
                 {
@@ -168,7 +178,8 @@ namespace RevitChatLocal.ViewModel
                 {
                     _chatService.Initialize(config.EndpointUrl, config.Model);
                     ApplyToolSettings(config);
-                    StatusMessage = $"Saved - {config.Model} / {config.ToolSelectionMode} mode";
+                    StatusMessage = $"Saved — warming up {config.Model}...";
+                    TrackWarmup();
                 }
                 else
                 {
@@ -270,6 +281,20 @@ namespace RevitChatLocal.ViewModel
         private void CancelPull()
         {
             _pullCts?.Cancel();
+        }
+
+        private void TrackWarmup()
+        {
+            _ = Task.Run(async () =>
+            {
+                await _chatService.WaitForWarmupAsync();
+                Application.Current?.Dispatcher?.BeginInvoke(
+                    new Action(() =>
+                    {
+                        if (!IsBusy)
+                            StatusMessage = $"Ready — {_chatService.CurrentModel} loaded";
+                    }));
+            });
         }
     }
 }

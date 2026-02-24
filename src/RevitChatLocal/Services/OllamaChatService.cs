@@ -551,20 +551,38 @@ namespace RevitChatLocal.Services
 
             // Warmup: pre-load model into VRAM in background
             _currentModel = model;
-            _ = Task.Run(() => WarmupModelAsync(model));
+            _warmupTask = Task.Run(() => WarmupModelAsync(model));
         }
 
         private string _currentModel;
+        public string CurrentModel => _currentModel;
+        private Task _warmupTask;
         private static readonly System.Net.Http.HttpClient _warmupHttp = new()
         {
-            Timeout = TimeSpan.FromMinutes(5)
+            Timeout = TimeSpan.FromMinutes(10)
         };
+
+        /// <summary>
+        /// Wait for warmup to finish (call before first LLM request).
+        /// Returns immediately if warmup already completed.
+        /// </summary>
+        public async Task WaitForWarmupAsync(CancellationToken ct = default)
+        {
+            var t = _warmupTask;
+            if (t == null || t.IsCompleted) return;
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            var completed = await Task.WhenAny(t, Task.Delay(Timeout.Infinite, linked.Token));
+            if (completed == t) await t;
+        }
+
+        public bool IsWarmedUp => _warmupTask?.IsCompletedSuccessfully == true;
 
         private async Task WarmupModelAsync(string model)
         {
             try
             {
                 DebugMessage?.Invoke($"[Warmup] Loading {model} into VRAM...");
+                var sw = System.Diagnostics.Stopwatch.StartNew();
                 var payload = JsonSerializer.Serialize(new
                 {
                     model,
@@ -576,10 +594,11 @@ namespace RevitChatLocal.Services
                     payload, Encoding.UTF8, "application/json");
                 var resp = await _warmupHttp.PostAsync(
                     $"{_ollamaBaseUrl}/api/generate", content);
+                sw.Stop();
                 if (resp.IsSuccessStatusCode)
-                    DebugMessage?.Invoke($"[Warmup] {model} loaded OK");
+                    DebugMessage?.Invoke($"[Warmup] {model} loaded OK ({sw.Elapsed.TotalSeconds:F1}s)");
                 else
-                    DebugMessage?.Invoke($"[Warmup] {model} returned {resp.StatusCode}");
+                    DebugMessage?.Invoke($"[Warmup] {model} returned {resp.StatusCode} ({sw.Elapsed.TotalSeconds:F1}s)");
             }
             catch (Exception ex)
             {

@@ -191,6 +191,7 @@ namespace RevitChat.ViewModel
 
             try
             {
+                await OnBeforeSendAsync(_cts.Token);
                 StatusMessage = $"Collecting context... ({_responseTimer.Elapsed.TotalSeconds:F1}s)";
                 _promptContext = PromptAnalyzer.Analyze(text);
                 _contextTracker.ApplyCarryover(_promptContext, text);
@@ -420,6 +421,9 @@ namespace RevitChat.ViewModel
         }
 
         private bool CanSend() => !IsBusy;
+
+        /// <summary>Override to run pre-send work (e.g. wait for model warmup).</summary>
+        protected virtual Task OnBeforeSendAsync(CancellationToken ct) => Task.CompletedTask;
 
         private async Task<(string response, List<ToolCallRequest> toolCalls)> ValidateAndRetryIfNeeded(
             string response, List<ToolCallRequest> toolCalls)
