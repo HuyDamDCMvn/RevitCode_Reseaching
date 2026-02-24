@@ -34,6 +34,7 @@ namespace RevitChat.ViewModel
         private readonly Action _onModelModifiedHandler;
         private InteractionRecord _currentInteraction;
         private Dictionary<string, string> _lastToolResults;
+        private System.Diagnostics.Stopwatch _responseTimer;
 
         private const int AnalyzeThresholdChars = 1200;
         private ChatMessage _streamingMessage;
@@ -183,13 +184,14 @@ namespace RevitChat.ViewModel
             _lastToolNames = new List<string>();
             _lastToolCalls = new List<ToolCallRequest>();
             _lastToolResults = null;
+            _responseTimer = System.Diagnostics.Stopwatch.StartNew();
             StatusMessage = "Thinking...";
 
             _cts = new CancellationTokenSource(SendTimeout);
 
             try
             {
-                StatusMessage = "Collecting context...";
+                StatusMessage = $"Collecting context... ({_responseTimer.Elapsed.TotalSeconds:F1}s)";
                 _promptContext = PromptAnalyzer.Analyze(text);
                 _contextTracker.ApplyCarryover(_promptContext, text);
                 _contextTracker.Update(_promptContext);
@@ -200,7 +202,7 @@ namespace RevitChat.ViewModel
                     ? text
                     : $"{text}\n\n[Context]\n{contextText}";
 
-                StatusMessage = "Thinking...";
+                StatusMessage = $"Thinking... ({_responseTimer.Elapsed.TotalSeconds:F1}s)";
                 BeginStreaming();
                 try
                 {
@@ -241,8 +243,13 @@ namespace RevitChat.ViewModel
             }
             finally
             {
+                _responseTimer?.Stop();
+                var elapsed = _responseTimer?.Elapsed;
                 RemoveToolProgressMessages();
                 IsBusy = false;
+                StatusMessage = elapsed != null
+                    ? $"Ready — {elapsed.Value.TotalSeconds:F1}s"
+                    : "Ready";
                 _cts?.Dispose();
                 _cts = null;
             }
@@ -253,6 +260,7 @@ namespace RevitChat.ViewModel
             Messages.Add(ChatMessage.FromUser(text));
             InputText = "";
             IsBusy = true;
+            _responseTimer = System.Diagnostics.Stopwatch.StartNew();
             StatusMessage = "Executing confirmed action...";
             _cts = new CancellationTokenSource(SendTimeout);
 
@@ -264,7 +272,8 @@ namespace RevitChat.ViewModel
                 foreach (var tc in confirmedCalls)
                     Messages.Add(ChatMessage.ToolProgress(tc.FunctionName));
 
-                StatusMessage = $"Executing {confirmedCalls.Count} tool(s)...";
+                var ts = _responseTimer?.Elapsed.TotalSeconds ?? 0;
+                StatusMessage = $"Executing {confirmedCalls.Count} tool(s)... ({ts:F1}s)";
                 var toolResults = await _toolExec.ExecuteAsync(confirmedCalls, ToolTimeoutMs, _cts.Token);
                 _toolExecutedInSession = true;
                 _lastToolNames.AddRange(confirmedCalls.Select(t => t.FunctionName));
@@ -274,7 +283,10 @@ namespace RevitChat.ViewModel
                 _toolExec.UpdateMemory(confirmedCalls, toolResults);
                 var compressed = ToolExecutionService.CompressAndTruncate(confirmedCalls, toolResults, MaxToolResultChars);
                 var totalChars = ChatGuardService.GetTotalChars(compressed);
-                StatusMessage = totalChars > AnalyzeThresholdChars ? "Analyzing results..." : "Finalizing...";
+                ts = _responseTimer?.Elapsed.TotalSeconds ?? 0;
+                StatusMessage = totalChars > AnalyzeThresholdChars
+                    ? $"Analyzing results... ({ts:F1}s)"
+                    : $"Finalizing... ({ts:F1}s)";
 
                 var (response, toolCalls) = await ChatService.ContinueWithToolResultsAsync(compressed, _cts.Token);
                 await ProcessToolCallLoopAsync(response, toolCalls);
@@ -295,8 +307,13 @@ namespace RevitChat.ViewModel
             }
             finally
             {
+                _responseTimer?.Stop();
+                var elapsed = _responseTimer?.Elapsed;
                 RemoveToolProgressMessages();
                 IsBusy = false;
+                StatusMessage = elapsed != null
+                    ? $"Ready — {elapsed.Value.TotalSeconds:F1}s"
+                    : "Ready";
                 _cts?.Dispose();
                 _cts = null;
             }
@@ -334,7 +351,8 @@ namespace RevitChat.ViewModel
                 foreach (var tc in toolCalls)
                     Messages.Add(ChatMessage.ToolProgress(tc.FunctionName));
 
-                StatusMessage = $"Executing {toolCalls.Count} tool(s)...";
+                var ts = _responseTimer?.Elapsed.TotalSeconds ?? 0;
+                StatusMessage = $"Executing {toolCalls.Count} tool(s)... ({ts:F1}s)";
                 var toolResults = await _toolExec.ExecuteAsync(toolCalls, ToolTimeoutMs, _cts.Token);
                 _toolExecutedInSession = true;
                 _lastToolNames.AddRange(toolCalls.Select(t => t.FunctionName));
@@ -346,7 +364,10 @@ namespace RevitChat.ViewModel
                 _toolExec.UpdateMemory(toolCalls, toolResults);
                 var compressed = ToolExecutionService.CompressAndTruncate(toolCalls, toolResults, MaxToolResultChars);
                 var totalChars = ChatGuardService.GetTotalChars(compressed);
-                StatusMessage = totalChars > AnalyzeThresholdChars ? "Analyzing results..." : "Finalizing...";
+                ts = _responseTimer?.Elapsed.TotalSeconds ?? 0;
+                StatusMessage = totalChars > AnalyzeThresholdChars
+                    ? $"Analyzing results... ({ts:F1}s)"
+                    : $"Finalizing... ({ts:F1}s)";
 
                 BeginStreaming();
                 try
@@ -369,6 +390,10 @@ namespace RevitChat.ViewModel
                 }
             }
 
+            var timingFooter = _responseTimer != null
+                ? $"\n\n⏱ {_responseTimer.Elapsed.TotalSeconds:F1}s"
+                : "";
+
             if (_streamingMessage != null)
             {
                 if (IsGarbageResponse(_streamingMessage.Content))
@@ -376,19 +401,20 @@ namespace RevitChat.ViewModel
                     Messages.Remove(_streamingMessage);
                     _streamingMessage = null;
                     if (_toolExecutedInSession)
-                        AddAssistantMessage("Done. The action was completed.");
+                        AddAssistantMessage($"Done. The action was completed.{timingFooter}");
                 }
                 else
                 {
+                    _streamingMessage.Content += timingFooter;
                     _streamingMessage.AssociatedPrompt = _lastUserPrompt;
                     _streamingMessage.AssociatedToolNames = _lastToolNames.Count > 0 ? new List<string>(_lastToolNames) : null;
                     _streamingMessage.AssociatedToolCalls = _lastToolCalls.Count > 0 ? new List<ToolCallRequest>(_lastToolCalls) : null;
                 }
             }
             else if (!string.IsNullOrEmpty(response) && !ChatGuardService.IsEchoResponse(response))
-                AddAssistantMessage(response);
+                AddAssistantMessage(response + timingFooter);
             else if (_toolExecutedInSession)
-                AddAssistantMessage("Done. The action was completed.");
+                AddAssistantMessage($"Done. The action was completed.{timingFooter}");
 
             StatusMessage = "Ready";
         }

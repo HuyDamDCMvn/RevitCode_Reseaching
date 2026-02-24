@@ -425,26 +425,91 @@ Bước 2:  Sau khi train xong, thử:
 
 Sau khi test, điền kết quả:
 
-| Test Case | Kết quả | Ghi chú |
-|-----------|---------|---------|
-| A1. Intent EN | ✅/⚠️/❌ | |
-| A2. Intent VN | ✅/⚠️/❌ | |
-| A3. Numeric | ✅/⚠️/❌ | |
-| A4. System | ✅/⚠️/❌ | |
-| A5. DryRun | ✅/⚠️/❌ | |
-| B1. Duct EN | ✅/⚠️/❌ | |
-| B2. Pipe VN | ✅/⚠️/❌ | |
-| B3. Multi-System | ✅/⚠️/❌ | |
-| B4. Mixed Lang | ✅/⚠️/❌ | |
-| B5. Level Switch | ✅/⚠️/❌ | |
-| B6. QA Audit | ✅/⚠️/❌ | |
-| B7. Connect | ✅/⚠️/❌ | |
-| C1. Ambiguous | ✅/⚠️/❌ | |
-| C2. Numeric Edge | ✅/⚠️/❌ | |
-| C3. DryRun→Exec | ✅/⚠️/❌ | |
-| C4. Self-Train | ✅/⚠️/❌ | |
+| Test Case | qwen2.5:14b | qwen3:14b | Ghi chú |
+|-----------|:-----------:|:---------:|---------|
+| A1. Intent EN | ✅/⚠️/❌ | ✅/⚠️/❌ | |
+| A2. Intent VN | ✅/⚠️/❌ | ✅/⚠️/❌ | |
+| A3. Numeric | ✅/⚠️/❌ | ✅/⚠️/❌ | |
+| A4. System | ✅/⚠️/❌ | ✅/⚠️/❌ | |
+| A5. DryRun | ✅/⚠️/❌ | ✅/⚠️/❌ | |
+| B1. Duct EN | ✅/⚠️/❌ | ✅/⚠️/❌ | |
+| B2. Pipe VN | ✅/⚠️/❌ | ✅/⚠️/❌ | |
+| B3. Multi-System | ✅/⚠️/❌ | ✅/⚠️/❌ | |
+| B4. Mixed Lang | ✅/⚠️/❌ | ✅/⚠️/❌ | |
+| B5. Level Switch | ✅/⚠️/❌ | ✅/⚠️/❌ | |
+| B6. QA Audit | ✅/⚠️/❌ | ✅/⚠️/❌ | |
+| B7. Connect | ✅/⚠️/❌ | ✅/⚠️/❌ | |
+| C1. Ambiguous | ✅/⚠️/❌ | ✅/⚠️/❌ | |
+| C2. Numeric Edge | ✅/⚠️/❌ | ✅/⚠️/❌ | |
+| C3. DryRun→Exec | ✅/⚠️/❌ | ✅/⚠️/❌ | |
+| C4. Self-Train | ✅/⚠️/❌ | ✅/⚠️/❌ | |
 
 ### Tiêu chí đánh giá
 - ✅ **Đúng**: Intent + Category + System + Tool đều chính xác
 - ⚠️ **Gần đúng**: Intent đúng nhưng category/system sai, hoặc tool không tối ưu
 - ❌ **Sai**: Intent sai hoàn toàn, hoặc chatbot không hiểu prompt
+
+---
+
+## E. BENCHMARK THỜI GIAN PHẢN HỒI
+
+> Ghi lại thời gian phản hồi (⏱) hiển thị ở cuối mỗi response.
+> Mỗi prompt test 1 lần, ghi thời gian (s). Clear chat giữa mỗi test đơn lẻ.
+> VRAM khuyến nghị: ≥ 12GB cho 14b model.
+
+### E1. Single Prompt — Thời gian phản hồi (giây)
+
+| # | Prompt | qwen2.5:14b | qwen3:14b | Δ |
+|---|--------|:-----------:|:---------:|:-:|
+| 1 | `list all ducts on level 1` | — | — | — |
+| 2 | `how many pipes on level 2` | — | — | — |
+| 3 | `liệt kê ống gió tầng 1` | — | — | — |
+| 4 | `đếm ống nước tầng 2` | — | — | — |
+| 5 | `check velocity max 5 m/s` | — | — | — |
+| 6 | `resize ducts to 400mm` | — | — | — |
+| 7 | `list SA ducts` | — | — | — |
+| 8 | `preview resize ducts to 400mm` | — | — | — |
+| 9 | `connect 2 selected ducts` | — | — | — |
+| 10 | `export ducts to CSV` | — | — | — |
+
+### E2. Conversation Chain — Thời gian mỗi bước (giây)
+
+> Dùng B1 (Duct Workflow EN) để benchmark. Ghi thời gian từng bước.
+
+| Bước | Prompt | qwen2.5:14b | qwen3:14b |
+|:----:|--------|:-----------:|:---------:|
+| 1 | `list all ducts on level 1` | — | — |
+| 2 | `how many are there` | — | — |
+| 3 | `summarize by system` | — | — |
+| 4 | `check velocity` | — | — |
+| 5 | `which ones exceed 5 m/s` | — | — |
+| 6 | `resize those to 400mm` | — | — |
+| 7 | `preview first` | — | — |
+| 8 | `ok apply the changes` | — | — |
+| 9 | `now check velocity again` | — | — |
+| 10 | `color them by system` | — | — |
+| 11 | `export to CSV` | — | — |
+| 12 | `do the same for pipes` | — | — |
+| 13 | `how many pipes total` | — | — |
+| | **Tổng / Trung bình** | **—** | **—** |
+
+### E3. Bảng tổng hợp thời gian
+
+| Metric | qwen2.5:14b | qwen3:14b | Winner |
+|--------|:-----------:|:---------:|:------:|
+| Avg single prompt (s) | — | — | — |
+| Avg conversation step (s) | — | — | — |
+| Min response (s) | — | — | — |
+| Max response (s) | — | — | — |
+| Total B1 chain (s) | — | — | — |
+
+### E4. Nhận xét
+
+| Tiêu chí | qwen2.5:14b | qwen3:14b |
+|----------|:-----------:|:---------:|
+| Tốc độ | — | — |
+| Chính xác | — | — |
+| Tool Calling | — | — |
+| Context Carryover | — | — |
+| Mixed Language | — | — |
+| **Tổng kết** | — | — |
