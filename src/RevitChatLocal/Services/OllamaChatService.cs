@@ -531,7 +531,11 @@ namespace RevitChatLocal.Services
                 endpoint += "/v1";
             endpoint += "/";
 
-            var options = new OpenAIClientOptions { Endpoint = new Uri(endpoint) };
+            var options = new OpenAIClientOptions
+            {
+                Endpoint = new Uri(endpoint),
+                NetworkTimeout = TimeSpan.FromMinutes(5)
+            };
             var client = new OpenAIClient(new ApiKeyCredential("ollama"), options);
             _client = client.GetChatClient(model);
 
