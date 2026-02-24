@@ -5,6 +5,28 @@ alwaysApply: true
 
 # Build & Package — DLLs into pyRevit Extension
 
+## CRITICAL: Two DLL Locations
+
+Build outputs go to **TWO places** — both must be updated:
+
+| Location | Path | Purpose |
+|----------|------|---------|
+| Repo (source) | `HD.extension/lib/net8/` | Git version control |
+| pyRevit runtime | `%APPDATA%\pyRevit\extensions\HD.extension\lib\net8\` | **Revit loads DLLs from here** |
+
+`Directory.Build.props` has a `SyncToPyRevit` target that auto-copies on build.
+If build fails to sync (DLL locked), **close Revit first** then rebuild.
+
+### Verify after build
+
+```powershell
+# Check both locations have same version
+Get-Item "HD.extension\lib\net8\RevitChatLocal.dll" | Select LastWriteTime
+Get-Item "$env:APPDATA\pyRevit\extensions\HD.extension\lib\net8\RevitChatLocal.dll" | Select LastWriteTime
+```
+
+If timestamps differ → DLLs are out of sync → Revit runs old code.
+
 ## Build Matrix (Hard Rule)
 
 Always produce BOTH targets:
@@ -29,15 +51,16 @@ Copy outputs to pyRevit extension lib folders:
 
 If DLL has dependencies, place them alongside the DLL in the same lib folder.
 
-```
-lib/net48/
-  YourDll.dll
-  Newtonsoft.Json.dll   # dependency
-  OtherLib.dll          # dependency
-```
+## When user says "build to test in Revit"
+
+1. Run `dotnet build ... --configuration Release`
+2. Verify build log shows `→ pyRevit extensions` for each DLL
+3. If any DLL shows copy error → remind user to close Revit first
+4. After build, user must **restart Revit** (DLLs are locked while running)
 
 ## Never Do
 
 - Do NOT ship separate `.addin` manifests for this workflow.
 - Do NOT point pyRevit to `bin/Debug` or `bin/Release` paths in production builds.
 - Do NOT assume dependencies are shared — each lib folder must be self-contained.
+- Do NOT forget to sync to pyRevit runtime folder — repo copy alone is NOT enough.
