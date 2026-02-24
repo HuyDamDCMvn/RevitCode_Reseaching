@@ -17,28 +17,14 @@ namespace RevitChat.Skills
 
         protected override HashSet<string> HandledFunctions { get; } = new()
         {
-            "get_building_schedules", "set_operating_schedule", "export_gbxml", "get_space_energy_data"
+            "get_view_schedules", "export_gbxml", "get_space_energy_data"
         };
 
         public override IReadOnlyList<ChatTool> GetToolDefinitions() => new List<ChatTool>
         {
-            ChatTool.CreateFunctionTool("get_building_schedules",
-                "List building operating schedules.",
+            ChatTool.CreateFunctionTool("get_view_schedules",
+                "List Revit ViewSchedule objects in the document (e.g. panel schedules, quantity schedules). / Liệt kê các bảng thống kê (ViewSchedule) trong mô hình Revit.",
                 BinaryData.FromString("""{ "type": "object", "properties": {}, "required": [] }""")),
-
-            ChatTool.CreateFunctionTool("set_operating_schedule",
-                "Create or modify a building operating schedule.",
-                BinaryData.FromString("""
-                {
-                    "type": "object",
-                    "properties": {
-                        "name": { "type": "string", "description": "Schedule name" },
-                        "hours_start": { "type": "integer", "description": "Operating start hour (0-23)" },
-                        "hours_end": { "type": "integer", "description": "Operating end hour (0-23)" }
-                    },
-                    "required": ["name"]
-                }
-                """)),
 
             ChatTool.CreateFunctionTool("export_gbxml",
                 "Export model to gbXML for energy analysis.",
@@ -69,35 +55,33 @@ namespace RevitChat.Skills
         {
             return functionName switch
             {
-                "get_building_schedules" => GetBuildingSchedules(doc),
-                "set_operating_schedule" => SetOperatingSchedule(doc, args),
+                "get_view_schedules" => GetViewSchedules(doc),
                 "export_gbxml" => ExportGbxml(doc, args),
                 "get_space_energy_data" => GetSpaceEnergyData(doc, args),
                 _ => UnknownTool(functionName)
             };
         }
 
-        private string GetBuildingSchedules(Document doc)
+        private string GetViewSchedules(Document doc)
         {
             var schedules = new FilteredElementCollector(doc)
                 .OfClass(typeof(ViewSchedule))
                 .Cast<ViewSchedule>()
                 .Where(v => !v.IsTitleblockRevisionSchedule)
                 .Take(50)
-                .Select(s => new { id = s.Id.Value, name = s.Name })
+                .Select(s => new
+                {
+                    id = s.Id.Value,
+                    name = s.Name,
+                    is_internal = s.Definition?.IsInternalKeynoteSchedule ?? false
+                })
                 .ToList();
 
-            return JsonSerializer.Serialize(new { count = schedules.Count, schedules }, JsonOpts);
-        }
-
-        private string SetOperatingSchedule(Document doc, Dictionary<string, object> args)
-        {
-            var name = GetArg<string>(args, "name");
-            if (string.IsNullOrEmpty(name)) return JsonError("name required.");
             return JsonSerializer.Serialize(new
             {
-                message = $"Operating schedule '{name}' noted. Revit Energy Analysis settings should be configured in the Energy Settings dialog.",
-                note = "Programmatic schedule creation requires the Energy Analysis API which depends on the energy model being active."
+                count = schedules.Count,
+                schedules,
+                note = "These are Revit ViewSchedules (quantity/panel schedules), not building operating schedules. / Đây là bảng thống kê Revit, không phải lịch vận hành công trình."
             }, JsonOpts);
         }
 

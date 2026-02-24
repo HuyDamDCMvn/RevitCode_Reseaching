@@ -15,13 +15,22 @@ namespace RevitChat.Services
         private CancellationTokenSource _cts;
         private readonly Func<string, Dictionary<string, object>, string> _toolExecutor;
         private readonly int _port;
+        private readonly string _authToken;
 
         public bool IsRunning { get; private set; }
 
-        public McpServer(int port, Func<string, Dictionary<string, object>, string> toolExecutor)
+        /// <param name="port">Port to listen on (localhost only).</param>
+        /// <param name="toolExecutor">Delegate that executes a named tool with args and returns JSON result.</param>
+        /// <param name="authToken">
+        /// Optional bearer token. If non-null, every request must include
+        /// <c>Authorization: Bearer {token}</c> header. Prevents other local processes
+        /// from calling destructive tools.
+        /// </param>
+        public McpServer(int port, Func<string, Dictionary<string, object>, string> toolExecutor, string authToken = null)
         {
             _port = port;
             _toolExecutor = toolExecutor;
+            _authToken = authToken;
         }
 
         public void Start()
@@ -64,10 +73,25 @@ namespace RevitChat.Services
                 var request = context.Request;
                 var response = context.Response;
 
+                // Health endpoint is always public
                 if (request.HttpMethod == "GET" && request.Url.AbsolutePath == "/health")
                 {
                     WriteResponse(response, 200, JsonSerializer.Serialize(new { status = "ok", port = _port }));
                     return;
+                }
+
+                // Auth check for all other endpoints
+                if (!string.IsNullOrEmpty(_authToken))
+                {
+                    var authHeader = request.Headers["Authorization"];
+                    if (string.IsNullOrEmpty(authHeader) || !authHeader.Equals($"Bearer {_authToken}", StringComparison.Ordinal))
+                    {
+                        WriteResponse(response, 401, JsonSerializer.Serialize(new
+                        {
+                            error = "Unauthorized. Provide 'Authorization: Bearer <token>' header. / Không có quyền. Cung cấp header 'Authorization: Bearer <token>'."
+                        }));
+                        return;
+                    }
                 }
 
                 if (request.HttpMethod == "POST" && request.Url.AbsolutePath == "/tools/call")
@@ -79,14 +103,14 @@ namespace RevitChat.Services
 
                     if (!root.TryGetProperty("name", out var nameEl) || nameEl.ValueKind != JsonValueKind.String)
                     {
-                        WriteResponse(response, 400, JsonSerializer.Serialize(new { error = "Missing or invalid 'name' property." }));
+                        WriteResponse(response, 400, JsonSerializer.Serialize(new { error = "Missing or invalid 'name' property. / Thiếu hoặc sai thuộc tính 'name'." }));
                         return;
                     }
 
                     string toolName = nameEl.GetString();
                     if (string.IsNullOrWhiteSpace(toolName))
                     {
-                        WriteResponse(response, 400, JsonSerializer.Serialize(new { error = "Tool name cannot be empty." }));
+                        WriteResponse(response, 400, JsonSerializer.Serialize(new { error = "Tool name cannot be empty. / Tên tool không được trống." }));
                         return;
                     }
 
@@ -104,11 +128,14 @@ namespace RevitChat.Services
 
                 if (request.HttpMethod == "GET" && request.Url.AbsolutePath == "/tools/list")
                 {
-                    WriteResponse(response, 200, JsonSerializer.Serialize(new { message = "POST to /tools/execute with {\"tool\":\"name\",\"args\":{}} to execute a tool." }));
+                    WriteResponse(response, 200, JsonSerializer.Serialize(new
+                    {
+                        message = "POST to /tools/call with {\"name\":\"tool_name\",\"arguments\":{}} to execute a tool. / POST đến /tools/call với {\"name\":\"tên_tool\",\"arguments\":{}} để thực thi tool."
+                    }));
                     return;
                 }
 
-                WriteResponse(response, 404, JsonSerializer.Serialize(new { error = "Not found" }));
+                WriteResponse(response, 404, JsonSerializer.Serialize(new { error = "Not found. Available: GET /health, GET /tools/list, POST /tools/call" }));
             }
             catch (Exception ex)
             {

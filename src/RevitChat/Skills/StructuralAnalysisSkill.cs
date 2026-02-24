@@ -113,7 +113,23 @@ namespace RevitChat.Skills
         private string GetRebarSchedule(Document doc, Dictionary<string, object> args)
         {
             var levelFilter = GetArg<string>(args, "level");
+            var resolvedLevel = !string.IsNullOrWhiteSpace(levelFilter)
+                ? ResolveLevelName(doc, levelFilter)
+                : null;
+
             var rebars = new FilteredElementCollector(doc).OfClass(typeof(Rebar)).Cast<Rebar>().ToList();
+
+            if (resolvedLevel != null)
+            {
+                rebars = rebars.Where(r =>
+                {
+                    var hostId = r.GetHostId();
+                    if (hostId == ElementId.InvalidElementId) return false;
+                    var host = doc.GetElement(hostId);
+                    return host != null && GetElementLevel(doc, host)
+                        .Equals(resolvedLevel, StringComparison.OrdinalIgnoreCase);
+                }).ToList();
+            }
 
             var grouped = rebars.GroupBy(r =>
             {
@@ -133,7 +149,15 @@ namespace RevitChat.Skills
                 };
             }).OrderBy(x => x.bar_type).ToList();
 
-            return JsonSerializer.Serialize(new { bar_type_count = grouped.Count, schedule = grouped }, JsonOpts);
+            var result = new Dictionary<string, object>
+            {
+                ["bar_type_count"] = grouped.Count,
+                ["schedule"] = grouped
+            };
+            if (resolvedLevel != null)
+                result["level_filter"] = resolvedLevel;
+
+            return JsonSerializer.Serialize(result, JsonOpts);
         }
 
         private string CheckFoundationLoads(Document doc)

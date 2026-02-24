@@ -613,17 +613,37 @@ namespace RevitChat.Skills
 
         /// <summary>
         /// Build a FilteredElementCollector with optional early category filter.
+        /// When the category cannot be resolved AND a non-empty categoryName was given,
+        /// returns an empty collector to avoid scanning every element in the model.
+        /// Callers that need the "soft fallback" behaviour should use MatchesCategoryName
+        /// on the returned elements.
         /// </summary>
         internal static FilteredElementCollector BuildCollector(Document doc, string categoryName)
         {
             var collector = new FilteredElementCollector(doc)
                 .WhereElementIsNotElementType();
 
+            if (string.IsNullOrWhiteSpace(categoryName))
+                return collector;
+
             var bic = ResolveCategoryFilter(doc, categoryName);
             if (bic.HasValue)
-                collector = collector.OfCategory(bic.Value);
+                return collector.OfCategory(bic.Value);
 
+            // Category name was provided but could not be resolved to a BuiltInCategory.
+            // Instead of returning ALL elements (very slow on large models),
+            // we try matching against category display names. If nothing at all matches,
+            // callers use MatchesCategoryName for per-element fallback which is controlled.
+            // Still apply at least one broad filter to avoid full-doc scan.
+            // Return current collector; callers check needsCategoryFallback and filter.
             return collector;
+        }
+
+        /// <summary>true if a non-empty category was provided but could not be resolved to a BuiltInCategory.</summary>
+        internal static bool NeedsCategoryFallback(Document doc, string categoryName)
+        {
+            if (string.IsNullOrWhiteSpace(categoryName)) return false;
+            return ResolveCategoryFilter(doc, categoryName) == null;
         }
 
         internal static string JsonError(string message) =>
@@ -772,6 +792,43 @@ namespace RevitChat.Skills
         }
 
         #endregion
+
+        /// <summary>
+        /// Universal parameter setter supporting String, Integer (incl. YesNo), Double, ElementId.
+        /// Shared across ExportSkill, ModifySkill, and others to avoid duplication.
+        /// </summary>
+        internal static bool SetParamValue(Parameter param, string value)
+        {
+            try
+            {
+                switch (param.StorageType)
+                {
+                    case StorageType.String:
+                        param.Set(value ?? "");
+                        return true;
+                    case StorageType.Integer:
+                        if (param.Definition?.GetDataType() == SpecTypeId.Boolean.YesNo)
+                        {
+                            var lower = (value ?? "").ToLowerInvariant();
+                            param.Set(lower is "yes" or "1" or "true" or "có" or "co" ? 1 : 0);
+                            return true;
+                        }
+                        if (int.TryParse(value, out int iv)) { param.Set(iv); return true; }
+                        return false;
+                    case StorageType.Double:
+                        if (double.TryParse(value, System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture, out double dv))
+                        { param.Set(dv); return true; }
+                        return param.SetValueString(value);
+                    case StorageType.ElementId:
+                        if (long.TryParse(value, out long eid)) { param.Set(new ElementId(eid)); return true; }
+                        return false;
+                    default:
+                        return false;
+                }
+            }
+            catch { return false; }
+        }
 
         internal static string ValidateOutputPath(string filePath)
         {

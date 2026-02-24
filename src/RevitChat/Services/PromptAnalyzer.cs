@@ -21,7 +21,8 @@ namespace RevitChat.Services
         Navigate,
         Analyze,
         Connect,
-        Tag
+        Tag,
+        Help
     }
 
     public sealed class PromptContext
@@ -29,12 +30,20 @@ namespace RevitChat.Services
         public PromptIntent PrimaryIntent { get; internal set; } = PromptIntent.Unknown;
         public PromptIntent SecondaryIntent { get; internal set; } = PromptIntent.Unknown;
         public string DetectedCategory { get; internal set; }
+        public List<string> DetectedCategories { get; internal set; } = new();
         public string DetectedSystem { get; internal set; }
         public string DetectedLevel { get; internal set; }
         public List<long> DetectedElementIds { get; internal set; } = new();
         public string DetectedParameter { get; internal set; }
         public List<string> SuggestedTools { get; internal set; } = new();
         public string ContextHint { get; internal set; } = "";
+
+        // --- v2 fields ---
+        public List<(double Value, string Unit, string RawText)> DetectedNumbers { get; internal set; } = new();
+        public bool DetectedDryRun { get; internal set; }
+        public int? DetectedLimit { get; internal set; }
+        public (double X, double Y, double Z)? DetectedDirection { get; internal set; }
+        public bool IsAmbiguous { get; internal set; }
     }
 
     /// <summary>
@@ -54,10 +63,10 @@ namespace RevitChat.Services
             (PromptIntent.Analyze, new[] {
                 ("summary",3), ("statistics",3), ("thong ke",3), ("thống kê",3),
                 ("tom tat",3), ("tóm tắt",3), ("boq",4), ("khoi luong",3),
-                ("khối lượng",3), ("bao gia",3), ("báo giá",3), ("tong hop",2),
-                ("tổng hợp",2), ("boc khoi luong",3), ("quantity takeoff",3),
+                ("khối lượng",3), ("bao gia",3), ("báo giá",3), ("tong hop",3),
+                ("tổng hợp",3), ("boc khoi luong",3), ("quantity takeoff",3),
                 ("phan loai",2), ("classify",2), ("analyze",3), ("phân tích",3),
-                ("tong",2)
+                ("tong ket",3), ("tổng kết",3), ("tong so",2), ("tổng số",2)
             }),
             (PromptIntent.Query, new[] {
                 ("list",2), ("get",2), ("show",2), ("liet ke",2), ("liệt kê",2),
@@ -77,8 +86,11 @@ namespace RevitChat.Services
             }),
             (PromptIntent.Modify, new[] {
                 ("set",3), ("change",3), ("modify",3), ("update",3),
-                ("doi",2), ("đổi",2), ("sua",2), ("sửa",2), ("chinh",2),
-                ("resize",3), ("split",3), ("chia",2), ("rename",3), ("flip",3)
+                ("doi",2), ("đổi",2), ("sua",2), ("sửa",2), ("chinh",2), ("chỉnh",2),
+                ("resize",3), ("split",3), ("chia",2), ("rename",3), ("flip",3),
+                ("thay doi",3), ("thay đổi",3), ("chinh sua",3), ("chỉnh sửa",3),
+                ("cap nhat",2), ("cập nhật",2), ("di chuyen",3), ("di chuyển",3),
+                ("move",3), ("copy",3), ("sao chep",3), ("mirror",3)
             }),
             (PromptIntent.Delete, new[] {
                 ("delete",4), ("remove",3), ("xoa",3), ("xóa",4),
@@ -89,22 +101,37 @@ namespace RevitChat.Services
                 ("download",2), ("save file",2)
             }),
             (PromptIntent.Visual, new[] {
-                ("color",3), ("mau",2), ("màu",3), ("hide",3), ("ẩn",3),
-                ("unhide",3), ("isolate",4), ("co lap",3), ("cô lập",4),
-                ("override",3), ("to mau",3), ("tô màu",3), ("doi mau",3),
-                ("transparency",3), ("trong suot",2)
+                ("color",3), ("mau",2), ("màu",3), ("hide",3), ("ẩn",3), ("an",2),
+                ("unhide",3), ("hien",2), ("hiện",2),
+                ("isolate",4), ("co lap",3), ("cô lập",4),
+                ("override",3), ("to mau",3), ("tô màu",3), ("doi mau",3), ("đổi màu",3),
+                ("transparency",3), ("trong suot",2), ("trong suốt",2),
+                ("hien thi",2), ("hiển thị",2), ("filter",2), ("loc",2), ("lọc",2)
             }),
             (PromptIntent.Navigate, new[] {
                 ("zoom",3), ("select",3), ("chon",2), ("chọn",3),
-                ("highlight",3), ("focus",2), ("phong to",2)
+                ("highlight",3), ("focus",2), ("phong to",2), ("phóng to",2),
+                ("dang chon",3), ("đang chọn",3), ("selected",3),
+                ("tim",2), ("tìm",2), ("di den",2), ("đi đến",2),
+                ("go to",2), ("navigate",3)
             }),
             (PromptIntent.Connect, new[] {
                 ("connect",3), ("noi ong",3), ("nối",3), ("ngat",2), ("ngắt",3),
-                ("tap connection",3), ("elbow",3), ("coupling",3), ("bloom",2), ("co noi",3)
+                ("tap connection",3), ("elbow",3), ("coupling",3), ("bloom",2), ("co noi",3),
+                ("dau noi",3), ("đấu nối",3), ("ket noi",3), ("kết nối",3),
+                ("noi 2",4), ("noi hai",3), ("route",3), ("routing",3),
+                ("tranh",2), ("tránh",2), ("avoid",2)
             }),
             (PromptIntent.Tag, new[] {
                 ("tag",3), ("annotation",3), ("ghi chu",2), ("ghi chú",3),
                 ("untagged",3), ("chua tag",3)
+            }),
+            (PromptIntent.Help, new[] {
+                ("help",4), ("tro giup",3), ("trợ giúp",3), ("huong dan",3), ("hướng dẫn",3),
+                ("what can you do",4), ("lam duoc gi",3), ("làm được gì",3),
+                ("co the lam gi",3), ("có thể làm gì",3), ("danh sach lenh",3),
+                ("list commands",3), ("how to use",3), ("cach dung",3), ("cách dùng",3),
+                ("kha nang",2), ("khả năng",2), ("chuc nang",2), ("chức năng",2)
             })
         };
 
@@ -128,10 +155,10 @@ namespace RevitChat.Services
             (new[]{"ceiling","ceilings","tran","trần"}, "ceiling", "Ceilings"),
             (new[]{"sprinkler","sprinklers","dau phun","đầu phun"}, "sprinkler", "Sprinklers"),
             (new[]{"air terminal","air terminals","mieng gio","miệng gió","diffuser","grille","louver"}, "air_terminal", "Air Terminals"),
-            (new[]{"mechanical equipment","thiet bi co","thiết bị cơ","ahu","fcu","vav"}, "mech_equip", "Mechanical Equipment"),
-            (new[]{"electrical equipment","thiet bi dien","thiết bị điện","mdb","tu dien","tủ điện"}, "elec_equip", "Electrical Equipment"),
-            (new[]{"plumbing fixture","thiet bi ve sinh","thiết bị vệ sinh"}, "plumb_fix", "Plumbing Fixtures"),
-            (new[]{"lighting fixture","den","đèn"}, "light_fix", "Lighting Fixtures"),
+            (new[]{"mechanical equipment","thiet bi co","thiết bị cơ","ahu","fcu","vav","may lanh","máy lạnh","quat","quạt","bom","bơm"}, "mech_equip", "Mechanical Equipment"),
+            (new[]{"electrical equipment","thiet bi dien","thiết bị điện","mdb","tu dien","tủ điện","smdb","bang dien","bảng điện"}, "elec_equip", "Electrical Equipment"),
+            (new[]{"plumbing fixture","thiet bi ve sinh","thiết bị vệ sinh","bon cau","bồn cầu","chau rua","chậu rửa"}, "plumb_fix", "Plumbing Fixtures"),
+            (new[]{"lighting fixture","den","đèn","lighting","chieu sang","chiếu sáng"}, "light_fix", "Lighting Fixtures"),
             (new[]{"stair","stairs","cau thang","cầu thang"}, "stair", "Stairs"),
             (new[]{"railing","railings","lan can"}, "railing", "Railings"),
             (new[]{"furniture","noi that","nội thất"}, "furniture", "Furniture"),
@@ -163,12 +190,21 @@ namespace RevitChat.Services
         private static readonly (string[] keywords, string canonical)[] AbbrSystemMap =
         {
             (new[]{"sa"}, "Supply Air"),
+            (new[]{"ra"}, "Return Air"),
             (new[]{"ea"}, "Exhaust Air"), (new[]{"fa","oa"}, "Fresh Air"),
             (new[]{"chw","chws","chwr"}, "Chilled Water"),
             (new[]{"hw","hws","hwr","dhw"}, "Hot Water"),
-            (new[]{"cw","cwr","cws"}, "Condenser Water"),
+            (new[]{"cwr","cws"}, "Condenser Water"),
             (new[]{"sw"}, "Sanitary"), (new[]{"sd"}, "Storm"),
-            (new[]{"dw"}, "Domestic Water"), (new[]{"fp","fps"}, "Fire Protection"),
+            (new[]{"dw"}, "Domestic Water"), (new[]{"fp","fps","pccc"}, "Fire Protection"),
+            // VN abbreviations
+            (new[]{"cg","capgio"}, "Supply Air"),
+            (new[]{"hg","hoigio"}, "Return Air"),
+            (new[]{"hutgio","hgio"}, "Exhaust Air"),
+            (new[]{"nl","nuoclanh"}, "Chilled Water"),
+            (new[]{"nn","nuocnong"}, "Hot Water"),
+            (new[]{"tn","thoatnuoc"}, "Sanitary"),
+            (new[]{"ns","nuocsinh"}, "Domestic Water"),
         };
 
         private static readonly (string[] keywords, string canonical)[] ParameterMap =
@@ -192,6 +228,62 @@ namespace RevitChat.Services
         private static readonly Regex ElementIdRegex = new(
             @"(?:element|id|phần tử|phan tu)\s*(?:ids?\s*)?[:=]?\s*([\d,\s]+)",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // v2: Numeric + Unit extraction
+        private static readonly Regex NumericUnitRegex = new(
+            @"(\d+(?:[.,]\d+)?)\s*" +
+            @"(mm|cm|m(?![/a-z])|ft|feet|inch|""|" +
+            @"%|percent|phan\s*tram|" +
+            @"m/s|m\/s|pa|kpa|kw|va|" +
+            @"l/s|l\/s|cfm|gpm|" +
+            @"do|degree|degrees|độ)",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // v2: Dimension pattern (500x300, 500×300)
+        private static readonly Regex DimensionRegex = new(
+            @"(\d+(?:\.\d+)?)\s*[x×X]\s*(\d+(?:\.\d+)?)\s*(mm|cm|m)?",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // v2: DN notation (DN100, DN50)
+        private static readonly Regex DnRegex = new(
+            @"DN\s*(\d+)",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // v2: Diameter symbol (ø150, Ø200)
+        private static readonly Regex DiameterSymbolRegex = new(
+            @"[øØ]\s*(\d+(?:\.\d+)?)\s*(mm|cm|m)?",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // v2: Limit extraction
+        private static readonly Regex LimitRegex = new(
+            @"(?:top|first|limit|max|toi\s*da|lay|xem)\s+(\d+)",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // v2: DryRun keywords
+        private static readonly string[] DryRunKeywordsEn =
+            { "preview", "dry run", "just show", "don't apply", "dont apply", "show first",
+              "what would change", "simulate", "test only", "preview only" };
+        private static readonly string[] DryRunKeywordsVn =
+            { "xem truoc", "chi xem", "dung ap dung", "mo phong", "thu truoc",
+              "xem thu", "khong ap dung", "chi la xem", "chi xem thoi" };
+
+        // v2: Directional keywords
+        private static readonly (string[] kw, double x, double y, double z)[] DirectionMap =
+        {
+            (new[]{"to the right","sang phai","qua phai","ben phai"}, 1, 0, 0),
+            (new[]{"to the left","sang trai","qua trai","ben trai"}, -1, 0, 0),
+            (new[]{"forward","phia truoc","ra truoc"}, 0, 1, 0),
+            (new[]{"backward","phia sau","ra sau","lui"}, 0, -1, 0),
+            (new[]{"upward","len tren","len trên","up","len cao"}, 0, 0, 1),
+            (new[]{"downward","xuong duoi","xuống dưới","down","ha thap","xuong"}, 0, 0, -1),
+        };
+
+        // v2: Carryover / reference keywords
+        internal static readonly string[] CarryoverKeywords =
+            { "same", "tuong tu", "giong", "nhu tren", "like above", "do it again",
+              "lam lai", "tuong tu nhu vay", "y het", "giong vay",
+              "them", "those", "that one", "it", "cai do", "chung", "cung vay",
+              "tiep tuc", "nhu vay", "also for", "do the same", "repeat" };
 
         #endregion
 
@@ -250,6 +342,9 @@ namespace RevitChat.Services
 
             // Navigate
             {(PromptIntent.Navigate, "_default"), new[]{"select_elements","zoom_to_elements"}},
+
+            // Help
+            {(PromptIntent.Help, "_default"), new string[]{}},
         };
 
         #endregion
@@ -264,12 +359,22 @@ namespace RevitChat.Services
             var spaced = stripped.Replace('_', ' ').Replace('-', ' ');
             spaced = CollapseSpaces(spaced);
 
+            // Phase 1: original extractors
             ClassifyIntent(stripped, spaced, ctx);
             ExtractCategory(stripped, spaced, ctx);
+            ExtractMultiCategory(stripped, spaced, ctx);
             ExtractSystem(stripped, spaced, ctx);
             ExtractLevel(userMessage, stripped, ctx);
             ExtractElementIds(userMessage, ctx);
             ExtractParameter(stripped, spaced, ctx);
+
+            // Phase 2: v2 extractors
+            ExtractNumericWithUnit(userMessage, stripped, ctx);
+            ExtractDryRun(stripped, spaced, ctx);
+            ExtractLimit(stripped, ctx);
+            ExtractDirectional(stripped, spaced, ctx);
+            DetectAmbiguity(ctx, stripped);
+
             SuggestTools(ctx, spaced);
             ctx.ContextHint = FormatHint(ctx);
 
@@ -300,6 +405,10 @@ namespace RevitChat.Services
                 }
                 if (score > 0) scores[intent] = score;
             }
+
+            // Phase 2a: Apply adaptive weight adjustments from learning
+            try { AdaptiveWeightManager.ApplyToScores(scores, stripped, spaced); }
+            catch { }
 
             if (scores.Count == 0) return;
 
@@ -428,6 +537,218 @@ namespace RevitChat.Services
             }
         }
 
+        // --- A4: Multi-category extraction ---
+        private static void ExtractMultiCategory(string stripped, string spaced, PromptContext ctx)
+        {
+            var found = new List<(int len, string revitCat)>();
+            foreach (var (keywords, _, revitCat) in CategoryMap)
+            {
+                foreach (var kw in keywords)
+                {
+                    var kwNorm = StripDiacritics(kw.ToLowerInvariant());
+                    bool matched = kwNorm.Contains(' ')
+                        ? (spaced.Contains(kwNorm) || stripped.Contains(kwNorm))
+                        : (ContainsWord(spaced, kwNorm) || ContainsWord(stripped, kwNorm));
+                    if (matched)
+                    {
+                        if (!found.Any(f => f.revitCat == revitCat))
+                            found.Add((kw.Length, revitCat));
+                        break;
+                    }
+                }
+            }
+
+            ctx.DetectedCategories = found.OrderByDescending(f => f.len).Select(f => f.revitCat).ToList();
+            if (ctx.DetectedCategory == null && ctx.DetectedCategories.Count > 0)
+                ctx.DetectedCategory = ctx.DetectedCategories[0];
+        }
+
+        #endregion
+
+        #region 2b) v2 Extractors
+
+        // --- A1: Numeric + Unit extraction ---
+        private static void ExtractNumericWithUnit(string original, string stripped, PromptContext ctx)
+        {
+            // Standard numeric+unit
+            foreach (Match m in NumericUnitRegex.Matches(stripped))
+            {
+                if (TryParseNumber(m.Groups[1].Value, out double val))
+                {
+                    var unit = NormalizeUnit(m.Groups[2].Value);
+                    val = ConvertToBaseUnit(val, unit, out string baseUnit);
+                    ctx.DetectedNumbers.Add((val, baseUnit, m.Value.Trim()));
+                }
+            }
+            // Also match on original (preserves m/s, special chars)
+            foreach (Match m in NumericUnitRegex.Matches(original.ToLowerInvariant()))
+            {
+                if (TryParseNumber(m.Groups[1].Value, out double val))
+                {
+                    var unit = NormalizeUnit(m.Groups[2].Value);
+                    val = ConvertToBaseUnit(val, unit, out string baseUnit);
+                    if (!ctx.DetectedNumbers.Any(n =>
+                        Math.Abs(n.Value - val) < 0.001 && n.Unit == baseUnit))
+                        ctx.DetectedNumbers.Add((val, baseUnit, m.Value.Trim()));
+                }
+            }
+
+            // DN notation: DN100 → 100mm diameter
+            foreach (Match m in DnRegex.Matches(original))
+            {
+                if (TryParseNumber(m.Groups[1].Value, out double val))
+                    ctx.DetectedNumbers.Add((val, "mm", m.Value.Trim()));
+            }
+
+            // ø symbol: ø150 → 150mm diameter
+            foreach (Match m in DiameterSymbolRegex.Matches(original))
+            {
+                if (TryParseNumber(m.Groups[1].Value, out double val))
+                {
+                    var unit = m.Groups[2].Success ? NormalizeUnit(m.Groups[2].Value) : "mm";
+                    val = ConvertToBaseUnit(val, unit, out string baseUnit);
+                    ctx.DetectedNumbers.Add((val, baseUnit, m.Value.Trim()));
+                }
+            }
+
+            // Dimension: 500x300 → width_mm=500, height_mm=300
+            var dimMatch = DimensionRegex.Match(original);
+            if (dimMatch.Success)
+            {
+                if (TryParseNumber(dimMatch.Groups[1].Value, out double w) &&
+                    TryParseNumber(dimMatch.Groups[2].Value, out double h))
+                {
+                    var unit = dimMatch.Groups[3].Success ? NormalizeUnit(dimMatch.Groups[3].Value) : "mm";
+                    w = ConvertToBaseUnit(w, unit, out _);
+                    h = ConvertToBaseUnit(h, unit, out _);
+                    ctx.DetectedNumbers.Add((w, "mm_w", dimMatch.Value.Trim()));
+                    ctx.DetectedNumbers.Add((h, "mm_h", dimMatch.Value.Trim()));
+                }
+            }
+        }
+
+        private static bool TryParseNumber(string s, out double val)
+        {
+            s = s.Replace(',', '.');
+            return double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out val);
+        }
+
+        private static string NormalizeUnit(string raw)
+        {
+            var u = raw.Trim().ToLowerInvariant()
+                .Replace("percent", "%").Replace("phan tram", "%")
+                .Replace("feet", "ft").Replace("inch", "in")
+                .Replace("degree", "deg").Replace("degrees", "deg").Replace("do", "deg")
+                .Replace("\"", "in");
+            if (u == "độ") u = "deg";
+            return u;
+        }
+
+        private static double ConvertToBaseUnit(double val, string unit, out string baseUnit)
+        {
+            switch (unit)
+            {
+                case "cm": baseUnit = "mm"; return val * 10;
+                case "m": baseUnit = "mm"; return val * 1000;
+                case "in": baseUnit = "mm"; return val * 25.4;
+                case "ft": baseUnit = "ft"; return val;
+                default: baseUnit = unit; return val;
+            }
+        }
+
+        // --- A2: DryRun detection ---
+        private static void ExtractDryRun(string stripped, string spaced, PromptContext ctx)
+        {
+            foreach (var kw in DryRunKeywordsEn)
+            {
+                var kwNorm = StripDiacritics(kw.ToLowerInvariant());
+                if (spaced.Contains(kwNorm) || stripped.Contains(kwNorm))
+                { ctx.DetectedDryRun = true; return; }
+            }
+            foreach (var kw in DryRunKeywordsVn)
+            {
+                var kwNorm = StripDiacritics(kw.ToLowerInvariant());
+                if (spaced.Contains(kwNorm) || stripped.Contains(kwNorm))
+                { ctx.DetectedDryRun = true; return; }
+            }
+        }
+
+        // --- A3: Limit extraction ---
+        private static void ExtractLimit(string stripped, PromptContext ctx)
+        {
+            var match = LimitRegex.Match(stripped);
+            if (match.Success && int.TryParse(match.Groups[1].Value, out int limit) && limit > 0 && limit <= 10000)
+                ctx.DetectedLimit = limit;
+        }
+
+        // --- A5: Directional extraction ---
+        private static void ExtractDirectional(string stripped, string spaced, PromptContext ctx)
+        {
+            foreach (var (keywords, x, y, z) in DirectionMap)
+            {
+                foreach (var kw in keywords)
+                {
+                    var kwNorm = StripDiacritics(kw.ToLowerInvariant());
+                    if (spaced.Contains(kwNorm) || stripped.Contains(kwNorm))
+                    {
+                        double magnitude = 1.0;
+                        if (ctx.DetectedNumbers.Count > 0)
+                        {
+                            var ftNum = ctx.DetectedNumbers.FirstOrDefault(n => n.Unit == "ft");
+                            if (ftNum.Unit != null) magnitude = ftNum.Value;
+                            else
+                            {
+                                var mmNum = ctx.DetectedNumbers.FirstOrDefault(n => n.Unit == "mm");
+                                if (mmNum.Unit != null) magnitude = mmNum.Value / 304.8;
+                            }
+                        }
+                        ctx.DetectedDirection = (x * magnitude, y * magnitude, z * magnitude);
+                        return;
+                    }
+                }
+            }
+        }
+
+        // --- E: Disambiguation detection ---
+        private static void DetectAmbiguity(PromptContext ctx, string stripped)
+        {
+            if (ctx.DetectedCategory != null) return;
+            if (ContainsWord(stripped, "ong") &&
+                !stripped.Contains("ong gio") && !stripped.Contains("ong nuoc") &&
+                !stripped.Contains("ong dan") && !stripped.Contains("ong thoat"))
+            {
+                ctx.IsAmbiguous = true;
+
+                // Strategy 1: Use system hint to disambiguate
+                if (ctx.DetectedSystem != null)
+                {
+                    var sys = ctx.DetectedSystem.ToLowerInvariant();
+                    if (sys.Contains("air") || sys.Contains("supply") || sys.Contains("return") ||
+                        sys.Contains("exhaust") || sys.Contains("fresh"))
+                        ctx.DetectedCategory = "Ducts";
+                    else if (sys.Contains("water") || sys.Contains("sanitary") || sys.Contains("storm"))
+                        ctx.DetectedCategory = "Pipes";
+                    else if (sys.Contains("fire"))
+                        ctx.DetectedCategory = "Pipes";
+
+                    if (ctx.DetectedCategory != null) { ctx.IsAmbiguous = false; return; }
+                }
+
+                // Strategy 2: Use project history to disambiguate
+                try
+                {
+                    var projectGuess = ProjectContextMemory.DisambiguateByProjectHistory("ong");
+                    if (!string.IsNullOrEmpty(projectGuess))
+                    {
+                        ctx.DetectedCategory = projectGuess;
+                        ctx.IsAmbiguous = false;
+                        return;
+                    }
+                }
+                catch { }
+            }
+        }
+
         #endregion
 
         #region 3) Tool Suggestion
@@ -495,7 +816,8 @@ namespace RevitChat.Services
         {
             if (ctx.PrimaryIntent == PromptIntent.Unknown
                 && ctx.DetectedCategory == null
-                && ctx.DetectedSystem == null)
+                && ctx.DetectedSystem == null
+                && ctx.DetectedNumbers.Count == 0)
                 return "";
 
             var sb = new StringBuilder();
@@ -511,6 +833,8 @@ namespace RevitChat.Services
 
             if (ctx.DetectedCategory != null)
                 sb.AppendLine($"- Category: {ctx.DetectedCategory}");
+            if (ctx.DetectedCategories.Count > 1)
+                sb.AppendLine($"- All categories: {string.Join(", ", ctx.DetectedCategories)}");
             if (ctx.DetectedSystem != null)
                 sb.AppendLine($"- System: {ctx.DetectedSystem}");
             if (ctx.DetectedLevel != null)
@@ -519,6 +843,20 @@ namespace RevitChat.Services
                 sb.AppendLine($"- Parameter: {ctx.DetectedParameter}");
             if (ctx.DetectedElementIds.Count > 0)
                 sb.AppendLine($"- Element IDs: {string.Join(", ", ctx.DetectedElementIds.Take(10))}");
+
+            if (ctx.DetectedNumbers.Count > 0)
+                sb.AppendLine($"- Numbers: {string.Join(", ", ctx.DetectedNumbers.Select(n => $"{n.Value}{n.Unit}"))}");
+            if (ctx.DetectedDryRun)
+                sb.AppendLine("- Mode: DRY RUN (preview only)");
+            if (ctx.DetectedLimit.HasValue)
+                sb.AppendLine($"- Limit: {ctx.DetectedLimit.Value}");
+            if (ctx.DetectedDirection.HasValue)
+            {
+                var d = ctx.DetectedDirection.Value;
+                sb.AppendLine($"- Direction: ({d.X:F1}, {d.Y:F1}, {d.Z:F1})");
+            }
+            if (ctx.IsAmbiguous)
+                sb.AppendLine("- WARNING: Ambiguous category. Ask user to clarify (duct/pipe/conduit?). / CẢNH BÁO: Loại phần tử không rõ ràng, hãy hỏi lại user.");
 
             if (ctx.SuggestedTools.Count > 0)
                 sb.AppendLine($"- Suggested tools: {string.Join(", ", ctx.SuggestedTools)}");
@@ -540,12 +878,15 @@ namespace RevitChat.Services
             PromptIntent.Analyze => "analyze/summarize/BOQ",
             PromptIntent.Connect => "connect/disconnect MEP",
             PromptIntent.Tag => "tag/annotate elements",
+            PromptIntent.Help => "help/usage info",
             _ => intent.ToString()
         };
 
         #endregion
 
         #region Helpers
+
+        internal static string StripDiacriticsPublic(string text) => StripDiacritics(text);
 
         private static string StripDiacritics(string text)
         {

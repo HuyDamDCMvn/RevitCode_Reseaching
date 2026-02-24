@@ -20,6 +20,7 @@ namespace RevitChat.ViewModel
     {
         private readonly ToolExecutionService _toolExec;
         private readonly ContextCollectionService _contextService = new();
+        private readonly ConversationContextTracker _contextTracker = new();
         private readonly Dispatcher _dispatcher;
 
         private CancellationTokenSource _cts;
@@ -31,6 +32,8 @@ namespace RevitChat.ViewModel
         private List<string> _lastToolNames = new();
         private List<ToolCallRequest> _lastToolCalls = new();
         private readonly Action _onModelModifiedHandler;
+        private InteractionRecord _currentInteraction;
+        private Dictionary<string, string> _lastToolResults;
 
         private const int AnalyzeThresholdChars = 1200;
         private ChatMessage _streamingMessage;
@@ -115,8 +118,11 @@ namespace RevitChat.ViewModel
             {
                 var approved = ChatFeedbackService.ApprovedCount;
                 var corrections = ChatFeedbackService.CorrectionCount;
-                if (approved + corrections > 0)
-                    msg += $"\n({approved} learned patterns, {corrections} corrections)";
+                var dynamicExamples = DynamicFewShotSelector.ExampleCount;
+                var adaptiveWeights = AdaptiveWeightManager.TotalAdjustments;
+                int total = approved + corrections + dynamicExamples + adaptiveWeights;
+                if (total > 0)
+                    msg += $"\n({approved} patterns, {dynamicExamples} learned examples, {adaptiveWeights} adapted weights)";
             }
             catch { }
             Messages.Add(ChatMessage.FromAssistant(msg));
@@ -160,6 +166,15 @@ namespace RevitChat.ViewModel
                 ChatService.RepairHistoryAfterCancel();
             }
 
+            // Phase 1b: Check if this is a user correction before processing
+            var correction = UserCorrectionCapture.Detect(text, _lastUserPrompt, _lastToolNames);
+            if (correction is { IsCorrection: true })
+            {
+                UserCorrectionCapture.SaveCorrection(correction);
+                if (_currentInteraction != null)
+                    InteractionLogger.MarkRetried(_currentInteraction);
+            }
+
             Messages.Add(ChatMessage.FromUser(text));
             InputText = "";
             IsBusy = true;
@@ -167,6 +182,7 @@ namespace RevitChat.ViewModel
             _lastUserPrompt = text;
             _lastToolNames = new List<string>();
             _lastToolCalls = new List<ToolCallRequest>();
+            _lastToolResults = null;
             StatusMessage = "Thinking...";
 
             _cts = new CancellationTokenSource(SendTimeout);
@@ -175,6 +191,9 @@ namespace RevitChat.ViewModel
             {
                 StatusMessage = "Collecting context...";
                 _promptContext = PromptAnalyzer.Analyze(text);
+                _contextTracker.ApplyCarryover(_promptContext, text);
+                _contextTracker.Update(_promptContext);
+                _currentInteraction = InteractionLogger.BeginInteraction(text, _promptContext);
                 var contextText = await _contextService.CollectAsync(text,
                     calls => _toolExec.ExecuteAsync(calls, ToolTimeoutMs, _cts.Token));
                 var llmText = string.IsNullOrWhiteSpace(contextText)
@@ -203,16 +222,22 @@ namespace RevitChat.ViewModel
                     _streamingMessage = null;
                     throw;
                 }
+
+                InteractionLogger.EndInteraction(_currentInteraction, true);
+                RecordLearningSignals(text, true);
             }
             catch (OperationCanceledException)
             {
                 Messages.Add(ChatMessage.FromAssistant("Request was cancelled."));
                 StatusMessage = "Cancelled";
+                InteractionLogger.EndInteraction(_currentInteraction, false, "cancelled");
             }
             catch (Exception ex)
             {
                 Messages.Add(ChatMessage.FromAssistant($"Error: {ex.Message}"));
                 StatusMessage = "Error occurred";
+                InteractionLogger.EndInteraction(_currentInteraction, false, ex.Message);
+                RecordLearningSignals(text, false);
             }
             finally
             {
@@ -253,6 +278,9 @@ namespace RevitChat.ViewModel
 
                 var (response, toolCalls) = await ChatService.ContinueWithToolResultsAsync(compressed, _cts.Token);
                 await ProcessToolCallLoopAsync(response, toolCalls);
+
+                _lastToolResults = toolResults;
+                RecordLearningSignals(text, true);
             }
             catch (OperationCanceledException)
             {
@@ -263,6 +291,7 @@ namespace RevitChat.ViewModel
             {
                 Messages.Add(ChatMessage.FromAssistant($"Error: {ex.Message}"));
                 StatusMessage = "Error occurred";
+                RecordLearningSignals(text, false);
             }
             finally
             {
@@ -310,6 +339,8 @@ namespace RevitChat.ViewModel
                 _toolExecutedInSession = true;
                 _lastToolNames.AddRange(toolCalls.Select(t => t.FunctionName));
                 _lastToolCalls.AddRange(toolCalls);
+                _lastToolResults = toolResults;
+                InteractionLogger.RecordToolCalls(_currentInteraction, toolCalls, toolResults);
                 RemoveToolProgressMessages();
 
                 _toolExec.UpdateMemory(toolCalls, toolResults);
@@ -424,6 +455,7 @@ namespace RevitChat.ViewModel
         {
             Messages.Clear();
             ChatService.ClearHistory();
+            _contextTracker.Reset();
             _pendingToolCalls = null;
             AddWelcomeMessage();
             StatusMessage = "Chat cleared";
@@ -433,6 +465,42 @@ namespace RevitChat.ViewModel
         private void ToggleSettings()
         {
             IsSettingsVisible = !IsSettingsVisible;
+        }
+
+        [RelayCommand]
+        private async Task RetrainAsync()
+        {
+            if (IsBusy) return;
+            IsBusy = true;
+            StatusMessage = "Self-training...";
+
+            try
+            {
+                var report = await Task.Run(() => SelfTrainingService.RunTraining(epochs: 3, augment: true));
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine($"Self-training complete ({report.Epochs} epochs × {report.TotalSamples} samples):");
+                sb.AppendLine($"Overall: {report.Matched}/{report.TotalProcessed} ({report.OverallAccuracy:F0}%)");
+                sb.AppendLine($"Intent: {report.IntentAccuracy:F0}% | Category: {report.CategoryAccuracy:F0}% | Tool: {report.ToolAccuracy:F0}%");
+                sb.AppendLine($"Conv: {report.ConversationMatched}/{report.ConversationSteps} ({report.ConversationAccuracy:F0}%) [{report.ConversationChains} chains]");
+                sb.AppendLine($"{report.FewShotAdded} examples, {report.WeightsAdjusted} weights ({report.ElapsedMs}ms)");
+                if (report.EpochResults.Count > 1)
+                {
+                    sb.Append("Per-epoch: ");
+                    foreach (var er in report.EpochResults)
+                        sb.Append($"E{er.Epoch}={er.Matched} ");
+                }
+                Messages.Add(ChatMessage.FromAssistant(sb.ToString().TrimEnd()));
+                StatusMessage = "Training complete";
+            }
+            catch (Exception ex)
+            {
+                Messages.Add(ChatMessage.FromAssistant($"Training error: {ex.Message}"));
+                StatusMessage = "Training failed";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         [RelayCommand]
@@ -488,6 +556,63 @@ namespace RevitChat.ViewModel
             msg.AssociatedToolCalls = _lastToolCalls.Count > 0 ? new List<ToolCallRequest>(_lastToolCalls) : null;
             Messages.Add(msg);
             return msg;
+        }
+
+        private static readonly HashSet<string> _stopWords = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "the","a","an","of","in","on","to","for","and","or","is","are","all","my","me","it",
+            "this","that","with","by","from","at","please","can","how","what","show","list",
+            "toi","cua","cac","va","cho","trong","la","co","khong","voi","hay","giup",
+            "hãy","được","không","bao","nhiêu","tất","cả","mọi","những"
+        };
+
+        private static string ExtractMainKeyword(string prompt)
+        {
+            var words = prompt.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            return words
+                .Where(w => w.Length > 2 && !_stopWords.Contains(w))
+                .OrderByDescending(w => w.Length)
+                .FirstOrDefault() ?? "";
+        }
+
+        private void RecordLearningSignals(string prompt, bool success)
+        {
+            try
+            {
+                if (_lastToolCalls == null || _lastToolCalls.Count == 0) return;
+                var intent = _promptContext?.PrimaryIntent.ToString() ?? "Unknown";
+                var category = _promptContext?.DetectedCategory;
+
+                var keyword = ExtractMainKeyword(prompt);
+                foreach (var tc in _lastToolCalls)
+                {
+                    bool toolSuccess = success && (_lastToolResults == null ||
+                        (_lastToolResults.TryGetValue(tc.ToolCallId ?? tc.FunctionName, out var r) &&
+                         !string.IsNullOrEmpty(r) && !r.Contains("\"error\"")));
+
+                    if (toolSuccess)
+                    {
+                        DynamicFewShotSelector.RecordSuccess(prompt, tc.FunctionName, tc.Arguments, intent, category);
+                        AdaptiveWeightManager.RecordSuccess(intent, keyword, tc.FunctionName);
+                        ProjectContextMemory.RecordToolUsage(tc.FunctionName, category,
+                            _promptContext?.DetectedSystem, intent);
+
+                        if (ChatService is Models.IEmbeddingCapable embeddable)
+                        {
+                            _ = embeddable.StoreEmbeddingAsync(prompt, tc.FunctionName,
+                                tc.Arguments, intent, CancellationToken.None);
+                        }
+                    }
+                    else
+                    {
+                        AdaptiveWeightManager.RecordFailure(intent, keyword);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[RecordLearningSignals] {ex.Message}");
+            }
         }
 
         public void Cleanup()

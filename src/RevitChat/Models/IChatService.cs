@@ -24,4 +24,13 @@ namespace RevitChat.Models
         Task<(string assistantMessage, List<ToolCallRequest> toolCalls)> RetryWithValidationErrorAsync(
             List<string> errors, CancellationToken ct = default);
     }
+
+    /// <summary>
+    /// Optional interface for chat services that support embedding-based learning.
+    /// </summary>
+    public interface IEmbeddingCapable
+    {
+        Task StoreEmbeddingAsync(string prompt, string toolName,
+            Dictionary<string, object> args, string intent, CancellationToken ct = default);
+    }
 }

@@ -928,6 +928,40 @@ namespace RevitChat.Skills
 
         #region auto_size_mep
 
+        private static readonly double[] PipeStandardSizes =
+            { 15, 20, 25, 32, 40, 50, 65, 80, 100, 125, 150, 200, 250, 300 };
+        private static readonly double[] DuctStandardSizes =
+            { 100, 125, 150, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800 };
+
+        private static (double recommendedMm, double currentMm, double flow, string error) CalcAutoSize(
+            Document doc, Element elem, double targetVelocityMs)
+        {
+            bool isPipe = elem.Category?.Id.Value == (long)BuiltInCategory.OST_PipeCurves;
+            double defaultVel = isPipe ? 2.0 : 6.0;
+            double vel = targetVelocityMs > 0 ? targetVelocityMs : defaultVel;
+            double velFps = vel * 3.28084;
+
+            var flowParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_FLOW_PARAM)
+                         ?? elem.get_Parameter(BuiltInParameter.RBS_DUCT_FLOW_PARAM);
+            double flow = flowParam?.AsDouble() ?? 0;
+            if (flow <= 0) return (0, 0, 0, "no flow data / không có dữ liệu lưu lượng");
+
+            bool isDuct = (elem.Category?.Name ?? "").IndexOf("Duct", StringComparison.OrdinalIgnoreCase) >= 0;
+            double flowForArea = isDuct ? flow / 60.0 : flow;
+            double requiredArea = flowForArea / velFps;
+            double requiredDiaMm = 2 * Math.Sqrt(requiredArea / Math.PI) * 304.8;
+
+            var sizes = isPipe ? PipeStandardSizes : DuctStandardSizes;
+            double selectedMm = sizes.FirstOrDefault(s => s >= requiredDiaMm);
+            if (selectedMm == 0) selectedMm = sizes[^1];
+
+            var currentDia = elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)
+                          ?? elem.get_Parameter(BuiltInParameter.RBS_CURVE_DIAMETER_PARAM);
+            double currentMm = (currentDia?.AsDouble() ?? 0) * 304.8;
+
+            return (selectedMm, currentMm, flow, null);
+        }
+
         private string AutoSizeMep(Document doc, Dictionary<string, object> args)
         {
             var ids = GetArgLongArray(args, "element_ids");
@@ -942,36 +976,17 @@ namespace RevitChat.Skills
                 var elem = doc.GetElement(new ElementId(id));
                 if (elem == null) continue;
 
-                bool isPipe = elem.Category?.Id.Value == (long)BuiltInCategory.OST_PipeCurves;
-                double defaultVel = isPipe ? 2.0 : 6.0;
-                double vel = targetVelocity > 0 ? targetVelocity : defaultVel;
-                double velFps = vel * 3.28084;
+                var (recMm, curMm, flow, err) = CalcAutoSize(doc, elem, targetVelocity);
+                if (err != null) { preview.Add(new { id, error = err }); continue; }
 
-                var flowParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_FLOW_PARAM)
-                             ?? elem.get_Parameter(BuiltInParameter.RBS_DUCT_FLOW_PARAM);
-                double flow = flowParam?.AsDouble() ?? 0;
-                if (flow <= 0) { preview.Add(new { id, error = "no flow data" }); continue; }
-
-                bool isDuct = (elem.Category?.Name ?? "").IndexOf("Duct", StringComparison.OrdinalIgnoreCase) >= 0;
-                double flowForArea = isDuct ? flow / 60.0 : flow;
-                double requiredArea = flowForArea / velFps;
-                double requiredDiameter = 2 * Math.Sqrt(requiredArea / Math.PI);
-                double requiredDiaMm = requiredDiameter * 304.8;
-
-                double[] standardSizes = isPipe
-                    ? new[] { 15.0, 20.0, 25.0, 32.0, 40.0, 50.0, 65.0, 80.0, 100.0, 125.0, 150.0, 200.0, 250.0, 300.0 }
-                    : new[] { 100.0, 125.0, 150.0, 200.0, 250.0, 300.0, 350.0, 400.0, 450.0, 500.0, 600.0, 700.0, 800.0 };
-
-                double selectedMm = standardSizes.FirstOrDefault(s => s >= requiredDiaMm);
-                if (selectedMm == 0) selectedMm = standardSizes.Last();
-
-                var currentDia = elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)
-                              ?? elem.get_Parameter(BuiltInParameter.RBS_CURVE_DIAMETER_PARAM);
-                double currentMm = (currentDia?.AsDouble() ?? 0) * 304.8;
-
-                preview.Add(new { id, flow_cfs = Math.Round(flow, 4),
-                    current_dia_mm = Math.Round(currentMm, 0), recommended_dia_mm = selectedMm,
-                    would_change = Math.Abs(currentMm - selectedMm) > 1 });
+                preview.Add(new
+                {
+                    id,
+                    flow_cfs = Math.Round(flow, 4),
+                    current_dia_mm = Math.Round(curMm, 0),
+                    recommended_dia_mm = recMm,
+                    would_change = Math.Abs(curMm - recMm) > 1
+                });
             }
 
             if (dryRun)
@@ -985,30 +1000,15 @@ namespace RevitChat.Skills
                 {
                     var elem = doc.GetElement(new ElementId(id));
                     if (elem == null) continue;
-                    bool isPipe2 = elem.Category?.Id.Value == (long)BuiltInCategory.OST_PipeCurves;
+
                     var diaParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)
                                 ?? elem.get_Parameter(BuiltInParameter.RBS_CURVE_DIAMETER_PARAM);
                     if (diaParam == null || diaParam.IsReadOnly) continue;
 
-                    var flowParam2 = elem.get_Parameter(BuiltInParameter.RBS_PIPE_FLOW_PARAM)
-                                  ?? elem.get_Parameter(BuiltInParameter.RBS_DUCT_FLOW_PARAM);
-                    double flow2 = flowParam2?.AsDouble() ?? 0;
-                    if (flow2 <= 0) continue;
+                    var (recMm, curMm, _, err) = CalcAutoSize(doc, elem, targetVelocity);
+                    if (err != null || Math.Abs(curMm - recMm) <= 1) continue;
 
-                    bool isDuct2 = (elem.Category?.Name ?? "").IndexOf("Duct", StringComparison.OrdinalIgnoreCase) >= 0;
-                    double flowForArea2 = isDuct2 ? flow2 / 60.0 : flow2;
-                    double vel2 = targetVelocity > 0 ? targetVelocity : (isPipe2 ? 2.0 : 6.0);
-                    double reqArea = flowForArea2 / (vel2 * 3.28084);
-                    double reqDia = 2 * Math.Sqrt(reqArea / Math.PI);
-                    double reqMm = reqDia * 304.8;
-
-                    double[] sizes = isPipe2
-                        ? new[] { 15.0, 20.0, 25.0, 32.0, 40.0, 50.0, 65.0, 80.0, 100.0, 125.0, 150.0, 200.0, 250.0, 300.0 }
-                        : new[] { 100.0, 125.0, 150.0, 200.0, 250.0, 300.0, 350.0, 400.0, 450.0, 500.0, 600.0, 700.0, 800.0 };
-                    double selMm = sizes.FirstOrDefault(s => s >= reqMm);
-                    if (selMm == 0) selMm = sizes.Last();
-
-                    diaParam.Set(selMm / 304.8);
+                    diaParam.Set(recMm / 304.8);
                     changed++;
                 }
                 if (changed > 0) trans.Commit(); else trans.RollBack();
@@ -1051,8 +1051,14 @@ namespace RevitChat.Skills
 
             Connector startConn = FindOpenConnector(startElem);
             Connector endConn = FindOpenConnector(endElem);
-            if (startConn == null) return JsonError($"No open connector on start element {startId}.");
-            if (endConn == null) return JsonError($"No open connector on end element {endId}.");
+            if (startConn == null) return JsonError($"No connector on start element {startId}. / Phần tử bắt đầu {startId} không có connector.");
+            if (endConn == null) return JsonError($"No connector on end element {endId}. / Phần tử kết thúc {endId} không có connector.");
+
+            var connWarnings = new List<string>();
+            if (startConn.IsConnected)
+                connWarnings.Add($"Start element {startId} has no open connector — routing may require a tee/tap. / Phần tử bắt đầu {startId} không có connector trống — có thể cần tee/tap.");
+            if (endConn.IsConnected)
+                connWarnings.Add($"End element {endId} has no open connector — routing may require a tee/tap. / Phần tử kết thúc {endId} không có connector trống — có thể cần tee/tap.");
 
             XYZ startPt = startConn.Origin;
             XYZ endPt = endConn.Origin;
@@ -1073,7 +1079,7 @@ namespace RevitChat.Skills
             XYZ bestMidPt = variants[0].Mid;
             int bestClashCount = 0;
             int obstacleCount = 0;
-            var clashWarnings = new List<string>();
+            var clashWarnings = new List<string>(connWarnings);
 
             if (!string.IsNullOrEmpty(avoidCats))
             {
@@ -1269,12 +1275,15 @@ namespace RevitChat.Skills
             else if (elem is FamilyInstance fi) cm = fi.MEPModel?.ConnectorManager;
             if (cm == null) return null;
 
+            Connector firstAny = null;
             foreach (Connector c in cm.Connectors)
             {
                 if (!c.IsConnected) return c;
+                firstAny ??= c;
             }
-            foreach (Connector c in cm.Connectors) return c;
-            return null;
+            // Only return a connected connector as last resort — caller should
+            // handle this case (routing may create a tee/tap instead of direct connect).
+            return firstAny;
         }
 
         #endregion

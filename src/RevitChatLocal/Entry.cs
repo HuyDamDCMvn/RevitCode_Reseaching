@@ -43,6 +43,19 @@ namespace RevitChatLocal
                 var dllDir = System.IO.Path.GetDirectoryName(typeof(Entry).Assembly.Location)
                             ?? AppContext.BaseDirectory;
                 ChatFeedbackService.Initialize(dllDir);
+                InteractionLogger.Initialize(dllDir);
+                AdaptiveWeightManager.Initialize(dllDir);
+                DynamicFewShotSelector.Initialize(dllDir);
+                ProjectContextMemory.Initialize(dllDir);
+
+                var docTitle = uidoc.Document?.Title;
+                if (!string.IsNullOrEmpty(docTitle))
+                {
+                    InteractionLogger.SetProjectContext(docTitle);
+                    ProjectContextMemory.SetProject(docTitle);
+                }
+
+                SelfTrainingService.RunIfNeeded();
 
                 if (_skillRegistry == null)
                     _skillRegistry = SkillRegistry.CreateDefault();

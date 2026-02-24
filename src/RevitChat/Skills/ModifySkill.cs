@@ -1105,37 +1105,8 @@ namespace RevitChat.Skills
 
         #endregion
 
-        private static bool SetParamValue(Parameter param, string value)
-        {
-            try
-            {
-                switch (param.StorageType)
-                {
-                    case StorageType.String:
-                        param.Set(value ?? "");
-                        return true;
-                    case StorageType.Integer:
-                        if (param.Definition?.GetDataType() == SpecTypeId.Boolean.YesNo)
-                        {
-                            var lower = value?.ToLower() ?? "";
-                            param.Set(lower is "yes" or "1" or "true" ? 1 : 0);
-                            return true;
-                        }
-                        if (int.TryParse(value, out int iv)) { param.Set(iv); return true; }
-                        return false;
-                    case StorageType.Double:
-                        if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out double dv))
-                        { param.Set(dv); return true; }
-                        return param.SetValueString(value);
-                    case StorageType.ElementId:
-                        if (long.TryParse(value, out long lid)) { param.Set(new ElementId(lid)); return true; }
-                        return false;
-                    default:
-                        return false;
-                }
-            }
-            catch { return false; }
-        }
+        // Delegates to RevitHelpers.SetParamValue (single shared implementation)
+        private static bool SetParamValue(Parameter param, string value) => RevitHelpers.SetParamValue(param, value);
 
         private string BatchRenamePattern(Document doc, Dictionary<string, object> args)
         {

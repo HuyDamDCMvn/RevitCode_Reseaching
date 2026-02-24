@@ -301,18 +301,23 @@ namespace RevitChat.Skills
             var idColumn = GetArg(args, "id_column", "ElementId");
             bool dryRun = GetArg(args, "dry_run", true);
 
-            if (string.IsNullOrEmpty(filePath)) return JsonError("file_path required.");
+            if (string.IsNullOrEmpty(filePath)) return JsonError("file_path required. / file_path là bắt buộc.");
             filePath = Path.GetFullPath(filePath);
             var readPathErr = ValidateOutputPath(filePath);
             if (readPathErr != null) return JsonError(readPathErr);
-            if (!File.Exists(filePath)) return JsonError($"File not found: {filePath}");
+            if (!File.Exists(filePath)) return JsonError($"File not found: {filePath} / Không tìm thấy file: {filePath}");
+
+            const long maxFileSizeBytes = 10 * 1024 * 1024; // 10 MB
+            var fileInfo = new FileInfo(filePath);
+            if (fileInfo.Length > maxFileSizeBytes)
+                return JsonError($"CSV file too large ({fileInfo.Length / 1024 / 1024}MB). Max 10MB. / File CSV quá lớn ({fileInfo.Length / 1024 / 1024}MB). Tối đa 10MB.");
 
             string[] lines;
             try { lines = File.ReadAllLines(filePath, Encoding.UTF8); }
-            catch (Exception ex) { return JsonError($"Cannot read file: {ex.Message}"); }
+            catch (Exception ex) { return JsonError($"Cannot read file: {ex.Message} / Không đọc được file: {ex.Message}"); }
 
-            if (lines.Length > 10001) return JsonError($"CSV too large ({lines.Length} rows). Maximum 10,000 data rows supported.");
-            if (lines.Length < 2) return JsonError("CSV must have a header row and at least one data row.");
+            if (lines.Length > 10001) return JsonError($"CSV too large ({lines.Length} rows). Max 10,000 data rows. / CSV quá lớn ({lines.Length} dòng). Tối đa 10.000 dòng dữ liệu.");
+            if (lines.Length < 2) return JsonError("CSV must have a header row and at least one data row. / CSV cần có dòng tiêu đề và ít nhất 1 dòng dữ liệu.");
 
             var headers = ParseCsvLine(lines[0]);
             int idIdx = headers.FindIndex(h => h.Equals(idColumn, StringComparison.OrdinalIgnoreCase));
@@ -475,35 +480,8 @@ namespace RevitChat.Skills
             return JsonSerializer.Serialize(new { count = mappings.Count, mappings }, JsonOpts);
         }
 
-        private static bool SetParamValue(Parameter param, string value)
-        {
-            try
-            {
-                switch (param.StorageType)
-                {
-                    case StorageType.String: param.Set(value ?? ""); return true;
-                    case StorageType.Integer:
-                        if (param.Definition?.GetDataType() == SpecTypeId.Boolean.YesNo)
-                        {
-                            var lower = (value ?? "").ToLowerInvariant();
-                            param.Set(lower == "yes" || lower == "1" || lower == "true" ? 1 : 0);
-                            return true;
-                        }
-                        if (int.TryParse(value, out int iv)) { param.Set(iv); return true; }
-                        return false;
-                    case StorageType.Double:
-                        if (double.TryParse(value, System.Globalization.NumberStyles.Any,
-                            System.Globalization.CultureInfo.InvariantCulture, out double dv))
-                        { param.Set(dv); return true; }
-                        return false;
-                    case StorageType.ElementId:
-                        if (long.TryParse(value, out long eid)) { param.Set(new ElementId(eid)); return true; }
-                        return false;
-                    default: return false;
-                }
-            }
-            catch { return false; }
-        }
+        // Delegates to RevitHelpers.SetParamValue (single shared implementation)
+        private static bool SetParamValue(Parameter param, string value) => RevitHelpers.SetParamValue(param, value);
 
         private static List<string> ParseCsvLine(string line)
         {

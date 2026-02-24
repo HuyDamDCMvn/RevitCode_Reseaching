@@ -45,29 +45,61 @@ namespace RevitChat.Skills
         {
             try
             {
-                var addinFiles = Directory.GetFiles(
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-                        "Autodesk", "Revit", "Addins"), "*.addin", SearchOption.AllDirectories);
+                var searchPaths = new List<string>();
 
-                var addins = addinFiles.Take(50).Select(f => new
+                // System-level addins
+                var commonPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                    "Autodesk", "Revit", "Addins");
+                if (Directory.Exists(commonPath)) searchPaths.Add(commonPath);
+
+                // User-level addins
+                var userPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "Autodesk", "Revit", "Addins");
+                if (Directory.Exists(userPath)) searchPaths.Add(userPath);
+
+                var addinFiles = searchPaths
+                    .SelectMany(p =>
+                    {
+                        try { return Directory.GetFiles(p, "*.addin", SearchOption.AllDirectories); }
+                        catch { return Array.Empty<string>(); }
+                    })
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+
+                var addins = addinFiles.Take(100).Select(f => new
                 {
                     file = Path.GetFileName(f),
                     path = f,
-                    size_kb = new FileInfo(f).Length / 1024
+                    size_kb = new FileInfo(f).Length / 1024,
+                    scope = f.StartsWith(commonPath, StringComparison.OrdinalIgnoreCase)
+                        ? "machine" : "user"
                 }).ToList();
 
-                return JsonSerializer.Serialize(new { addin_count = addins.Count, addins }, JsonOpts);
+                return JsonSerializer.Serialize(new
+                {
+                    addin_count = addins.Count,
+                    addins,
+                    search_paths = searchPaths
+                }, JsonOpts);
             }
-            catch (Exception ex) { return JsonError($"Cannot enumerate addins: {ex.Message}"); }
+            catch (Exception ex)
+            {
+                return JsonError($"Cannot enumerate addins: {ex.Message} / Không thể liệt kê addins: {ex.Message}");
+            }
         }
 
         private string GetAddinLoadTimes()
         {
             return JsonSerializer.Serialize(new
             {
-                message = "Add-in load time tracking requires the AddInsManagerSettings API (Revit 2025.3). " +
-                          "Use 'get_loaded_addins' to list registered add-ins.",
-                tip = "For slow startup diagnosis, check the Revit journal file in %LOCALAPPDATA%/Autodesk/Revit."
+                message = "Add-in load time tracking is not available via API. " +
+                          "Use 'get_loaded_addins' to list registered add-ins. / " +
+                          "Theo dõi thời gian load add-in không khả dụng qua API. " +
+                          "Dùng 'get_loaded_addins' để xem danh sách add-ins.",
+                tip = "For slow startup diagnosis, check the Revit journal file in %LOCALAPPDATA%/Autodesk/Revit. / " +
+                      "Để chẩn đoán khởi động chậm, kiểm tra Revit journal file tại %LOCALAPPDATA%/Autodesk/Revit."
             }, JsonOpts);
         }
     }

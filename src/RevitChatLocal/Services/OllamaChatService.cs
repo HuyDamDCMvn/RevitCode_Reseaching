@@ -16,7 +16,7 @@ using OaiMessage = OpenAI.Chat.ChatMessage;
 
 namespace RevitChatLocal.Services
 {
-    public class OllamaChatService : RevitChat.Models.IChatService
+    public class OllamaChatService : RevitChat.Models.IChatService, RevitChat.Models.IEmbeddingCapable
     {
         private ChatClient _client;
         private readonly List<OaiMessage> _conversationHistory = new();
@@ -24,6 +24,8 @@ namespace RevitChatLocal.Services
         private HashSet<string> _allToolNames;
         private string _lastUserMessage = "";
         private bool _isContinuation;
+        private RevitChat.Services.EmbeddingMatcher _embeddingMatcher;
+        private string _ollamaBaseUrl;
 
         public event Action<string> DebugMessage;
         public event Action<string> TokenReceived;
@@ -248,6 +250,17 @@ namespace RevitChatLocal.Services
                     var example = $"User: {a.Prompt}\nAssistant:\n<tool_call>\n{{\"name\": \"{tool.Name}\", \"arguments\": {argsJson}}}\n</tool_call>";
                     scored.Add((100 + a.UseCount, example));
                 }
+            }
+            catch { }
+
+            // Phase 2b: Dynamic learned examples from successful interactions
+            try
+            {
+                var ctx = RevitChat.Services.PromptAnalyzer.Analyze(userMessage);
+                var dynamicExamples = RevitChat.Services.DynamicFewShotSelector.GetDynamicExamples(
+                    userMessage, 2, ctx.PrimaryIntent.ToString(), ctx.DetectedCategory);
+                foreach (var de in dynamicExamples)
+                    scored.Add((80, de));
             }
             catch { }
 
@@ -512,7 +525,8 @@ namespace RevitChatLocal.Services
         {
             if (string.IsNullOrWhiteSpace(endpointUrl))
                 throw new ArgumentException("Endpoint URL cannot be empty.", nameof(endpointUrl));
-            var endpoint = endpointUrl.TrimEnd('/');
+            _ollamaBaseUrl = endpointUrl.TrimEnd('/');
+            var endpoint = _ollamaBaseUrl;
             if (!endpoint.EndsWith("/v1"))
                 endpoint += "/v1";
             endpoint += "/";
@@ -520,6 +534,16 @@ namespace RevitChatLocal.Services
             var options = new OpenAIClientOptions { Endpoint = new Uri(endpoint) };
             var client = new OpenAIClient(new ApiKeyCredential("ollama"), options);
             _client = client.GetChatClient(model);
+
+            // Phase 4: Initialize embedding matcher (async, non-blocking)
+            try
+            {
+                var dllDir = System.IO.Path.GetDirectoryName(typeof(OllamaChatService).Assembly.Location)
+                            ?? AppDomain.CurrentDomain.BaseDirectory;
+                _embeddingMatcher = new RevitChat.Services.EmbeddingMatcher();
+                _embeddingMatcher.Initialize(dllDir, _ollamaBaseUrl);
+            }
+            catch { _embeddingMatcher = null; }
         }
 
         public bool IsInitialized => _client != null;
@@ -591,7 +615,33 @@ namespace RevitChatLocal.Services
             }
             catch { }
 
+            // Phase 4: Inject semantic examples from embedding matcher (async, non-blocking)
+            if (_embeddingMatcher?.IsAvailable == true)
+            {
+                try
+                {
+                    var semanticExamples = await _embeddingMatcher.GetSemanticExamplesAsync(userMessage, 2, ct);
+                    if (semanticExamples.Count > 0)
+                    {
+                        var embHint = "[Semantic Examples from history]\n" + string.Join("\n\n", semanticExamples);
+                        _conversationHistory.Add(new SystemChatMessage(embHint));
+                    }
+                }
+                catch { }
+            }
+
             return await GetCompletionAsync(ct);
+        }
+
+        /// <summary>
+        /// Store a successful tool call interaction in the embedding matcher for future semantic retrieval.
+        /// </summary>
+        public async Task StoreEmbeddingAsync(string prompt, string toolName,
+            Dictionary<string, object> args, string intent, CancellationToken ct = default)
+        {
+            if (_embeddingMatcher?.IsAvailable != true) return;
+            try { await _embeddingMatcher.StoreAsync(prompt, toolName, args, intent, ct); }
+            catch { }
         }
 
         public async Task<(string assistantMessage, List<RevitChat.Models.ToolCallRequest> toolCalls)> ContinueWithToolResultsAsync(
@@ -1480,6 +1530,15 @@ Assistant:
             var ctx = RevitChat.Services.PromptAnalyzer.Analyze(userMsg);
             if (!string.IsNullOrEmpty(ctx.ContextHint))
                 prompt += $"\n\n{ctx.ContextHint}";
+
+            // Phase 3: Project context profile
+            try
+            {
+                var projectProfile = RevitChat.Services.ProjectContextMemory.GetProfileSummary();
+                if (!string.IsNullOrEmpty(projectProfile))
+                    prompt += $"\n\n{projectProfile}";
+            }
+            catch { }
 
             if (forcedTools == null)
             {

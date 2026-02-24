@@ -342,6 +342,32 @@ Rules:
             if (!string.IsNullOrEmpty(hint))
                 messages.Add(new SystemChatMessage(hint));
 
+            // Project context profile
+            try
+            {
+                var projectProfile = ProjectContextMemory.GetProfileSummary();
+                if (!string.IsNullOrEmpty(projectProfile))
+                    messages.Add(new SystemChatMessage(projectProfile));
+            }
+            catch { }
+
+            // Dynamic learned examples
+            try
+            {
+                var ctx = _lastPromptContext;
+                if (ctx != null)
+                {
+                    var dynamicExamples = DynamicFewShotSelector.GetDynamicExamples(
+                        _lastUserMessage, 2, ctx.PrimaryIntent.ToString(), ctx.DetectedCategory);
+                    if (dynamicExamples.Count > 0)
+                    {
+                        var exHint = "[Learned Examples]\n" + string.Join("\n\n", dynamicExamples);
+                        messages.Add(new SystemChatMessage(exHint));
+                    }
+                }
+            }
+            catch { }
+
             messages.AddRange(_conversationHistory);
             return messages;
         }
