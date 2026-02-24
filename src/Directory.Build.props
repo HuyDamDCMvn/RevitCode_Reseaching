@@ -52,4 +52,15 @@
     <Message Text="→ $(AssemblyName).dll → pyRevit extensions" Importance="high" />
   </Target>
 
+  <!-- Post-build: Sync Data folder (ChatConfig, Rules, etc.) to pyRevit -->
+  <Target Name="SyncDataToPyRevit" AfterTargets="SyncToPyRevit" Condition="Exists('$(PyRevitExtLib)') And Exists('$(ExtLibNet8)Data')">
+    <ItemGroup>
+      <DataFiles Include="$(ExtLibNet8)Data\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DataFiles)"
+          DestinationFiles="@(DataFiles->'$(PyRevitExtLib)Data\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Message Text="→ Data/ → pyRevit extensions (%(DataFiles.RecursiveDir) synced)" Importance="normal" />
+  </Target>
+
 </Project>
