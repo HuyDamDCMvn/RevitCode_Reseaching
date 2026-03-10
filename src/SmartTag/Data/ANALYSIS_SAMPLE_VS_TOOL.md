@@ -1,52 +1,52 @@
-# Phân tích: Bản mẫu vs Output tool
+# Analysis: Reference Drawings vs Tool Output
 
-So sánh bản vẽ mẫu (chuẩn) với output Smart Tag để cập nhật thuật toán training/placement.
-
----
-
-## Bản mẫu (reference)
-
-- **Tag**: dạng PREFIX-WIDTHxHEIGHT (EA-350x250, SA-200x150).
-- **Vị trí**: gần đoạn ống, thường **trên** (blue) hoặc **trên/dưới** (red).
-- **Cặp EA/SA**: hai tag **xếp dọc** (cùng X), một trên một dưới, cùng gắn vào một đoạn/điểm.
-- **Cột**: nhiều cặp tag cùng vùng X tạo thành **cột thẳng** (cùng X), dễ đọc.
-- **Leader**: ngắn, nối từ tag xuống ống; một số leader cắt ống/leader khác khi mật độ cao.
+Comparison of reference drawings (standard) with Smart Tag output to improve the training/placement algorithm.
 
 ---
 
-## Output tool (trước cập nhật)
+## Reference Drawings
 
-- **Align tags in rows**: tag cùng hàng (cùng Y) → hàng ngang gọn.
-- **Thiếu căn cột**: tag gần nhau theo X chưa được kéo về cùng X → ít khi stack dọc như EA/SA.
-- Vùng đông tag vẫn dễ **dính nhau** hoặc **chồng nhẹ** dù đã resolve/refinement.
-
----
-
-## Cập nhật thuật toán (đã làm)
-
-1. **Căn cột (column alignment)** trong `AlignTagPlacements`:
-   - Sau khi căn hàng (Y), gộp tag theo **X** (tolerance ~ 2× chiều rộng tag).
-   - Trong mỗi cột có ≥ 2 tag: căn **X** về trung bình nếu không gây collision.
-   - Kết quả: tag cùng vùng X xếp **dọc** (cùng cột), giống cặp EA/SA trong mẫu.
-
-2. **Bonus scoring “cùng cột”** trong `ScorePlacement`:
-   - Nếu vị trí candidate có **X gần** với tag khác (trong band ~1.5 ft) và **không overlap** → giảm điểm (bonus).
-   - Ưu tiên chọn vị trí tạo **stack dọc** với tag đã đặt.
-
-3. **Rule HVAC ducts** (đã có): `preferredPositions: ["Center","TopCenter","BottomCenter"]`, `groupAlignment: "AlongCenterline"` – giữ nguyên, phù hợp ống và bản mẫu.
+- **Tags**: PREFIX-WIDTHxHEIGHT format (EA-350x250, SA-200x150).
+- **Position**: near the duct segment, typically **above** (blue) or **above/below** (red).
+- **EA/SA Pairs**: two tags **stacked vertically** (same X), one above and one below, both attached to the same segment/point.
+- **Columns**: multiple tag pairs in the same X region form **vertical columns** (same X), easy to read.
+- **Leaders**: short, connecting from tag to duct; some leaders cross ducts/other leaders in high-density areas.
 
 ---
 
-## Kết quả mong đợi
+## Tool Output (Before Update)
 
-- Tag trên cùng đoạn/ống có xu hướng **cùng cột** (cùng X), xếp dọc.
-- Hàng (cùng Y) vẫn giữ nhờ căn hàng hiện có.
-- Kết hợp **hàng + cột** gần với bố cục bản mẫu (EA/SA stack, cột thẳng).
+- **Align tags in rows**: tags in the same row (same Y) → neat horizontal rows.
+- **Missing column alignment**: tags near each other in X were not pulled to the same X → rarely stacked vertically like EA/SA.
+- High-density areas still had tags **touching** or **slightly overlapping** despite resolve/refinement.
 
 ---
 
-## Gợi ý training thêm
+## Algorithm Updates (Completed)
 
-- **Export** view đã chỉnh tay đúng ý (cột/hàng như mẫu) → dùng **Export training data from view**.
-- Chạy **ingest** (tự động sau export hoặc `tools/ingest_annotated_to_learned.py`) để cập nhật **preferAlignRow** / **preferAlignColumn** trong learned_overrides.
-- Learned alignment đã được dùng để tăng **AlignmentBonus** khi đặt tag.
+1. **Column alignment** in `AlignTagPlacements`:
+   - After row alignment (Y), group tags by **X** (tolerance ~ 2x tag width).
+   - Within each column of 2+ tags: align **X** to the average if no collision results.
+   - Result: tags in the same X region stack **vertically** (same column), matching EA/SA pairs in reference drawings.
+
+2. **"Same column" scoring bonus** in `ScorePlacement`:
+   - If a candidate position has **X close to** another tag (within ~1.5 ft band) and **no overlap** → score reduction (bonus).
+   - Promotes choosing positions that create **vertical stacks** with already-placed tags.
+
+3. **HVAC duct rule** (already in place): `preferredPositions: ["Center","TopCenter","BottomCenter"]`, `groupAlignment: "AlongCenterline"` — unchanged, consistent with duct and reference drawing patterns.
+
+---
+
+## Expected Result
+
+- Tags on the same duct segment tend to be **in the same column** (same X), stacked vertically.
+- Rows (same Y) are still maintained via existing row alignment.
+- Combined **row + column** alignment closely matches the reference drawing layout (EA/SA stacking, vertical columns).
+
+---
+
+## Further Training Suggestions
+
+- **Export** a view that has been manually adjusted to match the desired column/row layout → use **Export training data from view**.
+- Run **ingest** (automatic after export or `tools/ingest_annotated_to_learned.py`) to update **preferAlignRow** / **preferAlignColumn** in learned_overrides.
+- Learned alignment is already used to increase **AlignmentBonus** during tag placement.

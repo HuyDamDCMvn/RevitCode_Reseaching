@@ -1,78 +1,78 @@
 # Feature 04: Show Boundary
 
-Hiển thị bounding box và các điểm đặc biệt của elements trong Revit viewport.
+Display bounding boxes and special points of elements in the Revit viewport.
 
-## Tổng quan
+## Overview
 
-Feature này cho phép user visualize:
-- **Bounding Box**: Khung bao quanh element (world-aligned hoặc rotated)
-- **Min Point**: Điểm có tọa độ nhỏ nhất (đỏ)
-- **Max Point**: Điểm có tọa độ lớn nhất (xanh lá)
-- **Centroid**: Tâm của bounding box (vàng)
+This feature allows users to visualize:
+- **Bounding Box**: Frame around an element (world-aligned or rotated)
+- **Min Point**: Point with the smallest coordinates (red)
+- **Max Point**: Point with the largest coordinates (green)
+- **Centroid**: Center of the bounding box (yellow)
 
-Tất cả graphics là **temporary** - tự động biến mất khi đóng window.
+All graphics are **temporary** — they disappear automatically when the window is closed.
 
-## Cách sử dụng
+## Usage
 
-### Chọn elements
+### Selecting Elements
 
-1. **Chọn trước**: Chọn elements trong Revit, sau đó mở feature
-2. **Chọn trong tool**: Click "Pick Elements" để chọn từ Revit model
-3. **Auto-update**: Selection thay đổi trong Revit → preview tự động cập nhật
+1. **Pre-select**: Select elements in Revit, then open the feature
+2. **Pick in tool**: Click "Pick Elements" to select from the Revit model
+3. **Auto-update**: When selection changes in Revit, the preview updates automatically
 
-### Hiển thị Bounding Box
+### Displaying Bounding Box
 
-- Toggle "Show Bounding Box" để bật/tắt
-- **Origin (World-aligned)**: Box căn theo trục X-Y-Z của project
-- **Rotated**: Box xoay theo hướng của element (FamilyInstance, Wall với rotation)
-- Có thể chọn màu và độ dày line
+- Toggle "Show Bounding Box" to enable/disable
+- **Origin (World-aligned)**: Box aligned to the project's X-Y-Z axes
+- **Rotated**: Box rotated to match the element's orientation (FamilyInstance, Wall with rotation)
+- Line color and thickness are customizable
 
-### Hiển thị Points
+### Displaying Points
 
-- Toggle riêng cho từng loại: Min, Max, Centroid
-- Points được render dạng sphere
-- Có thể chọn màu và diameter (mm) cho spheres
+- Separate toggle for each type: Min, Max, Centroid
+- Points are rendered as spheres
+- Color and diameter (mm) are customizable for each sphere type
 
-## Kiến trúc
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                     BoundaryWindow                          │
-│  (WPF UI - không gọi Revit API trực tiếp)                  │
+│  (WPF UI — does not call Revit API directly)                │
 │                                                             │
-│  • Callbacks được set bởi CommonFeatureHandler             │
-│  • DispatcherTimer để monitor selection changes            │
+│  • Callbacks set by CommonFeatureHandler                    │
+│  • DispatcherTimer to monitor selection changes             │
 └──────────────────────────┬──────────────────────────────────┘
                            │ Callbacks
                            ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                  CommonFeatureHandler                       │
-│  (ExecuteShowBoundary - tạo và quản lý các components)     │
+│  (ExecuteShowBoundary — creates and manages components)     │
 │                                                             │
-│  • Tạo BoundaryGraphicsServer + BoundaryExternalHandler    │
-│  • Set callbacks cho BoundaryWindow                        │
-│  • Cleanup khi window đóng                                 │
+│  • Creates BoundaryGraphicsServer + BoundaryExternalHandler │
+│  • Sets callbacks for BoundaryWindow                        │
+│  • Cleanup when window closes                               │
 └──────────────────────────┬──────────────────────────────────┘
                            │ ExternalEvent.Raise()
                            ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                 BoundaryExternalHandler                     │
-│  (IExternalEventHandler - chạy trên Revit main thread)     │
+│  (IExternalEventHandler — runs on Revit main thread)        │
 │                                                             │
-│  Request types:                                            │
-│  • PickElements: Selection.PickObjects()                   │
-│  • UpdatePreview: Calculate bounds → Update graphics       │
-│  • ClearPreview: Remove all graphics                       │
+│  Request types:                                             │
+│  • PickElements: Selection.PickObjects()                    │
+│  • UpdatePreview: Calculate bounds → Update graphics        │
+│  • ClearPreview: Remove all graphics                        │
 └──────────────────────────┬──────────────────────────────────┘
                            │ UpdateData()
                            ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                  BoundaryGraphicsServer                     │
-│  (IDirectContext3DServer - render 3D graphics)             │
+│  (IDirectContext3DServer — renders 3D graphics)             │
 │                                                             │
-│  • Đăng ký với Revit's ExternalServiceRegistry            │
-│  • Render lines (bounding box) và triangles (spheres)      │
-│  • Thread-safe với lock                                    │
+│  • Registered with Revit's ExternalServiceRegistry          │
+│  • Renders lines (bounding box) and triangles (spheres)     │
+│  • Thread-safe with lock                                    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -83,9 +83,9 @@ src/CommonFeature/
 ├── Models/
 │   └── BoundaryModels.cs          # DTOs: BoundaryDisplaySettings, ElementBoundaryData
 ├── Handlers/
-│   └── BoundaryExternalHandler.cs # IExternalEventHandler cho Boundary operations
+│   └── BoundaryExternalHandler.cs # IExternalEventHandler for Boundary operations
 ├── Graphics/
-│   └── BoundaryGraphicsServer.cs  # DirectContext3D server render graphics
+│   └── BoundaryGraphicsServer.cs  # DirectContext3D server for rendering
 ├── Views/
 │   ├── BoundaryWindow.xaml        # UI layout
 │   └── BoundaryWindow.xaml.cs     # UI logic + callbacks
@@ -108,13 +108,13 @@ src/CommonFeature/
    - externalEvent.Raise()
    ↓
 4. Revit calls BoundaryExternalHandler.Execute()
-   - Lấy elements từ document
-   - Tính BoundingBox, transform, centroid cho mỗi element
+   - Gets elements from document
+   - Calculates BoundingBox, transform, centroid for each element
    - graphicsServer.UpdateData(dataList, settings)
    ↓
 5. BoundaryGraphicsServer.RenderScene()
-   - Rebuild geometry nếu cần
-   - FlushBuffer để render
+   - Rebuilds geometry if needed
+   - FlushBuffer for rendering
 ```
 
 ### Selection Auto-Update Flow
@@ -122,65 +122,65 @@ src/CommonFeature/
 ```
 1. DispatcherTimer tick (500ms interval)
    ↓
-2. GetCurrentSelectionCallback() → lấy selection từ Revit
+2. GetCurrentSelectionCallback() → gets selection from Revit
    ↓
-3. So sánh hash với _lastSelectionHash
+3. Compare hash with _lastSelectionHash
    ↓
-4. Nếu khác → UpdatePreviewIfNeeded()
+4. If different → UpdatePreviewIfNeeded()
 ```
 
 ## Models
 
 ### BoundaryDisplaySettings
 
-Settings từ UI để render graphics:
+Settings from UI for rendering graphics:
 
-| Property | Type | Mô tả |
-|----------|------|-------|
-| ElementIds | List<long> | IDs của elements cần hiển thị |
-| ShowBoundingBox | bool | Hiển thị bounding box lines |
-| UseRotatedBoundingBox | bool | Xoay theo hướng element |
-| ShowMinPoint/MaxPoint/Centroid | bool | Hiển thị các điểm |
-| BoundingBoxColor | Color | Màu của bounding box |
-| Min/Max/CentroidColor | Color | Màu của các điểm |
-| LineThickness | int | Độ dày line (1-10) |
-| SphereDiameterMm | int | Đường kính sphere (20-500mm) |
+| Property | Type | Description |
+|----------|------|-------------|
+| ElementIds | List<long> | IDs of elements to display |
+| ShowBoundingBox | bool | Show bounding box lines |
+| UseRotatedBoundingBox | bool | Rotate to match element orientation |
+| ShowMinPoint/MaxPoint/Centroid | bool | Show respective points |
+| BoundingBoxColor | Color | Color of the bounding box |
+| Min/Max/CentroidColor | Color | Color of respective points |
+| LineThickness | int | Line thickness (1-10) |
+| SphereDiameterMm | int | Sphere diameter (20-500mm) |
 
 ### ElementBoundaryData
 
-Dữ liệu đã tính cho một element:
+Computed data for a single element:
 
-| Property | Type | Mô tả |
-|----------|------|-------|
-| ElementId | long | ID của element |
+| Property | Type | Description |
+|----------|------|-------------|
+| ElementId | long | Element ID |
 | BoundingBox | BoundingBoxXYZ | World-aligned bounding box |
-| RotationTransform | Transform | Transform để xoay (nếu có) |
-| MinPoint/MaxPoint/Centroid | XYZ | Các điểm đặc biệt |
+| RotationTransform | Transform | Rotation transform (if applicable) |
+| MinPoint/MaxPoint/Centroid | XYZ | Special points |
 
 ## DirectContext3D Notes
 
 ### Compatibility
 
-- API ổn định từ Revit 2023-2026
-- Hoạt động trong: 3D, FloorPlan, CeilingPlan, Section, Elevation views
+- API stable from Revit 2023-2026
+- Works in: 3D, FloorPlan, CeilingPlan, Section, Elevation views
 
 ### Geometry
 
 **Bounding Box** (12 lines):
-- 4 cạnh bottom face
-- 4 cạnh top face  
-- 4 cạnh vertical
+- 4 bottom face edges
+- 4 top face edges
+- 4 vertical edges
 
 **Sphere** (UV sphere):
-- 8 latitude segments × 12 longitude segments
+- 8 latitude segments x 12 longitude segments
 - ~192 triangles per sphere
 
 ### Memory
 
-- VertexBuffer và IndexBuffer được dispose khi:
-  - Data thay đổi (UpdateData)
-  - Server unregister
-- Maximum 500 elements để tránh memory issues
+- VertexBuffer and IndexBuffer are disposed when:
+  - Data changes (UpdateData)
+  - Server is unregistered
+- Maximum 500 elements to avoid memory issues
 
 ## Robustness
 
@@ -189,31 +189,31 @@ Dữ liệu đã tính cho một element:
 - **Null checks**: doc, uidoc, element, boundingBox
 - **Validity checks**: elem.IsValidObject, doc.IsValidObject
 - **Zero-size bbox**: bbox.Min.IsAlmostEqualTo(bbox.Max)
-- **Element limit**: Max 500 elements với warning
+- **Element limit**: Max 500 elements with warning
 
 ### Document Change Detection
 
-Nếu user switch document khi BoundaryWindow đang mở:
-- Detect qua PathName/Title comparison
-- Show warning message
-- Auto-close window
+If the user switches documents while BoundaryWindow is open:
+- Detected via PathName/Title comparison
+- Shows warning message
+- Auto-closes window
 
 ### Error Handling
 
-- Try-catch quanh từng element trong loop
-- Elements lỗi được skip, không crash toàn bộ feature
-- Cleanup errors được ignore (không block window close)
+- Try-catch around each element in the loop
+- Failed elements are skipped without crashing the entire feature
+- Cleanup errors are ignored (do not block window close)
 
 ## Known Limitations
 
-1. **Line thickness**: DirectContext3D không support variable line thickness (hardcoded = 1 pixel)
-2. **Rotated bbox cho Wall**: Chỉ có effect với walls có rotation, straight walls không có visual difference
-3. **Linked elements**: Elements từ linked files được skip
-4. **Large selections**: UI có thể lag nếu > 500 elements
+1. **Line thickness**: DirectContext3D does not support variable line thickness (hardcoded = 1 pixel)
+2. **Rotated bbox for Wall**: Only has effect on walls with rotation; straight walls show no visual difference
+3. **Linked elements**: Elements from linked files are skipped
+4. **Large selections**: UI may lag if > 500 elements
 
 ## Future Improvements
 
 1. Add "Export coordinates to CSV" button
 2. Support linked model elements
 3. Add dimension labels on bounding box
-4. Real line thickness support (nếu Revit API hỗ trợ trong tương lai)
+4. Real line thickness support (if Revit API supports it in the future)

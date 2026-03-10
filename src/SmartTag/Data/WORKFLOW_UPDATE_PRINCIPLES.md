@@ -1,79 +1,79 @@
-# Cập nhật nguyên lý (Rules/Patterns) từ bản vẽ của bạn
+# Updating Principles (Rules/Patterns) from Your Drawings
 
-## Phân luồng ưu tiên
+## Priority Routing
 
-Tool luôn ưu tiên **rule và pattern nội bộ** trước, sau đó mới dùng dữ liệu từ export của người dùng (nếu có):
+The tool always prioritizes **internal rules and patterns** first, then uses user-exported data (if available):
 
-1. **Rule nội bộ** – `Data/Rules/Tagging/*.json` (ưu tiên cao nhất)
-2. **Pattern nội bộ** – `Data/Patterns/TagPositions/*.json`
-3. **Learned (user export)** – `Data/Training/learned_overrides.json` (chỉ dùng khi không có rule/pattern trùng, hoặc bù offset/leader khi rule không chỉ định)
+1. **Internal Rules** — `Data/Rules/Tagging/*.json` (highest priority)
+2. **Internal Patterns** — `Data/Patterns/TagPositions/*.json`
+3. **Learned (user export)** — `Data/Training/learned_overrides.json` (only used when no matching rule/pattern exists, or to supplement offset/leader when rules don't specify)
 
-Như vậy: nếu đã có rule/pattern cho category đó thì luôn dùng; chỉ khi không có hoặc thiếu tham số thì mới lấy từ learned (JSON export của người dùng).
-
----
-
-## Tự học khi export (không cần nhắn AI)
-
-Khi bạn nhấn **"Export training data from view"** trong Revit:
-
-1. Tool export JSON vào `Data/Training/annotated/`.
-2. **Tự động**: Tool đọc lại file vừa export, gom theo **category** (và **category+system**), tính:
-   - vị trí tag hay gặp nhất → `preferredPositions`
-   - có leader hay không (đa số) → `addLeader`
-   - khoảng cách offset trung bình → `offsetDistance`
-3. Kết quả ghi vào **`Data/Training/learned_overrides.json`** (không sửa file Rules/Patterns gốc).
-4. Lần đặt tag sau: dùng **Rule** → **Pattern** trước; nếu không có hoặc thiếu thì mới dùng **Learned** từ file trên.
-
-Bạn **không cần nhắn AI** để cập nhật: chỉ cần export từ view đã tag chuẩn khi muốn bổ sung kiểu đặt tag của mình; rule/pattern nội bộ vẫn được ưu tiên.
+This means: if a rule/pattern already exists for that category, it is always used; learned data is only consulted when no rule/pattern matches or when parameters are missing.
 
 ---
 
-## Tôi có đọc được file .rvt không?
+## Auto-Learning on Export (No AI Prompt Needed)
 
-**Không.** Ở đây (Cursor/IDE) không có Revit chạy, và file `.rvt` là định dạng nhị phân của Revit, chỉ mở được bằng Revit hoặc Autodesk Forge API.  
-Vì vậy **upload file .rvt vào repo không giúp tôi tự đọc và cập nhật nguyên lý được**.
+When you click **"Export training data from view"** in Revit:
 
-## Cách làm đúng: Export trong Revit → Đưa JSON vào repo → Tôi cập nhật
+1. The tool exports JSON to `Data/Training/annotated/`.
+2. **Automatically**: The tool reads back the exported file, groups by **category** (and **category+system**), and calculates:
+   - Most common tag position → `preferredPositions`
+   - Whether most tags have leaders → `addLeader`
+   - Average offset distance → `offsetDistance`
+3. Results are written to **`Data/Training/learned_overrides.json`** (original Rules/Patterns files are not modified).
+4. Next time tags are placed: **Rule** → **Pattern** is used first; only when missing does it fall back to **Learned** from the file above.
 
-### Bước 1: Trong Revit
+You **do not need to prompt the AI** to update: just export from a well-tagged view whenever you want to add your own tag placement preferences; internal rules/patterns still take priority.
 
-1. Mở file **.rvt** của bạn trong Revit.
-2. Mở một **view** đã được tag chuẩn (floor plan / ceiling plan / section có nhiều tag).
-3. Mở **Smart Tag** (pyRevit → Smart Tag).
-4. Nhấn **"Export training data from view"**.
-5. Tool sẽ:
-   - Thu thập mọi element **đã có tag** trong view
-   - Ghi ra file JSON (element + context + vị trí tag thực tế)
-   - Lưu vào thư mục **Data/Training/annotated/** (cạnh DLL hoặc đường dẫn dev)
+---
 
-### Bước 2: Đưa file JSON vào repo
+## Can I Read .rvt Files?
 
-- Nếu build từ repo và chạy từ `HD.extension`, file export có thể đã nằm trong:
+**No.** In this environment (Cursor/IDE), there is no running Revit instance, and `.rvt` files are Revit's proprietary binary format — only readable by Revit or Autodesk Forge API.
+Therefore, **uploading .rvt files to the repo does not allow me to read and update principles automatically**.
+
+## Correct Approach: Export in Revit → Add JSON to Repo → I Update
+
+### Step 1: In Revit
+
+1. Open your **.rvt** file in Revit.
+2. Open a **view** that has been properly tagged (floor plan / ceiling plan / section with many tags).
+3. Open **Smart Tag** (pyRevit → Smart Tag).
+4. Click **"Export training data from view"**.
+5. The tool will:
+   - Collect all elements **that already have tags** in the view
+   - Write a JSON file (element + context + actual tag position)
+   - Save to the **Data/Training/annotated/** folder (next to the DLL or dev path)
+
+### Step 2: Add the JSON File to the Repo
+
+- If building from the repo and running from `HD.extension`, the exported file may already be in:
   - `src/SmartTag/Data/Training/annotated/exported_<ViewName>_<date>.json`
-- Copy file đó vào repo (hoặc đảm bảo nó nằm trong workspace).
-- Commit và push nếu bạn muốn tôi đọc từ repo.
+- Copy that file into the repo (or ensure it's in the workspace).
+- Commit and push if you want me to read it from the repo.
 
-### Bước 3: Báo tôi cập nhật nguyên lý
+### Step 3: Ask Me to Update Principles
 
-Trong chat, bạn viết rõ:
+In chat, write clearly:
 
-- **"Cập nhật nguyên lý từ file exported_xxx.json"**  
-  hoặc  
-- Đính kèm / paste đường dẫn file JSON (ví dụ: `Data/Training/annotated/exported_FloorPlan_20260213_1430.json`).
+- **"Update principles from file exported_xxx.json"**
+  or
+- Attach / paste the JSON file path (e.g., `Data/Training/annotated/exported_FloorPlan_20260213_1430.json`).
 
-Tôi sẽ:
+I will:
 
-- Đọc file JSON đã export,
-- Phân tích theo category, vị trí tag (position), offset, hasLeader,
-- Đề xuất (hoặc sinh) cập nhật:
-  - **Rules** (`Data/Rules/Tagging/*.json`): `preferredPositions`, `offsetDistance`, `addLeader`, v.v.
-  - **Patterns** (`Data/Patterns/TagPositions/*.json`): thêm/sửa `observations` với `position`, `hasLeader` phù hợp bản vẽ của bạn.
+- Read the exported JSON file,
+- Analyze by category, tag position, offset, hasLeader,
+- Propose (or generate) updates to:
+  - **Rules** (`Data/Rules/Tagging/*.json`): `preferredPositions`, `offsetDistance`, `addLeader`, etc.
+  - **Patterns** (`Data/Patterns/TagPositions/*.json`): add/update `observations` with `position`, `hasLeader` matching your drawings.
 
-## Tóm tắt
+## Summary
 
-| Bạn làm | Tôi làm được? |
-|--------|----------------|
-| Upload file **.rvt** | ❌ Không đọc được .rvt |
-| Export trong Revit → file **.json** → đưa vào repo | ✅ Đọc JSON và cập nhật Rules/Patterns |
+| You Do | Can I Do It? |
+|--------|--------------|
+| Upload **.rvt** file | No — cannot read .rvt |
+| Export in Revit → **.json** file → add to repo | Yes — read JSON and update Rules/Patterns |
 
-**Quy trình:** Mở .rvt trong Revit → View đã tag chuẩn → Smart Tag → **Export training data from view** → Đưa file JSON vào repo → Nhắn tôi **"cập nhật nguyên lý từ file &lt;tên file&gt;"**.
+**Workflow:** Open .rvt in Revit → Well-tagged view → Smart Tag → **Export training data from view** → Add JSON file to repo → Tell me **"update principles from file &lt;filename&gt;"**.

@@ -1,148 +1,148 @@
-# Luồng suy nghĩ khi đặt tag (Tag Placement Flow)
+# Tag Placement Decision Flow
 
-Tài liệu mô tả cách thuật toán Smart Tag quyết định **đặt tag ở đâu** cho từng element trong view.
-
----
-
-## Tổng quan
-
-Luồng gồm **4 giai đoạn** chính:
-
-1. **Chuẩn bị** – Load rules/patterns/learned, index elements & obstacles  
-2. **Chọn vị trí** – Sinh candidate, chấm điểm, chọn vị trí tốt nhất cho từng element  
-3. **Giải va chạm** – Đẩy tag ra khỏi annotation/clearance, rồi đẩy tag–tag tránh overlap  
-4. **Căn chỉnh** – Căn tag theo hàng/cột (nếu bật “Align tags in rows”)
+This document describes how the Smart Tag algorithm decides **where to place a tag** for each element in a view.
 
 ---
 
-## 1. Chuẩn bị (Handler + TagPlacementService.Initialize)
+## Overview
+
+The flow consists of **4 main phases**:
+
+1. **Preparation** — Load rules/patterns/learned data, index elements & obstacles
+2. **Position Selection** — Generate candidates, score them, select the best position for each element
+3. **Collision Resolution** — Push tags away from annotations/clearance zones, then push tag-tag to avoid overlap
+4. **Alignment** — Align tags into rows/columns (if "Align tags in rows" is enabled)
+
+---
+
+## 1. Preparation (Handler + TagPlacementService.Initialize)
 
 - **Handler** (Revit thread):
-  - Lấy danh sách element cần tag theo category user chọn.
-  - Lấy **existing tags** (tag đã có trong view) và **annotations** (dimension, text note, **ClearanceZone**).
+  - Retrieves the list of elements to tag based on the user's category selection.
+  - Retrieves **existing tags** (tags already in the view) and **annotations** (dimensions, text notes, **ClearanceZones**).
 - **TagPlacementService.Initialize(elements, existingTags, annotations)**:
-  - Build **spatial index** cho:
-    - **Element** (để kiểm tra tag có chồng lên element khác không).
-    - **Tag** (tag hiện có + tag vừa đặt – để tránh tag chồng tag).
-    - **Annotation** (dimension, text, ClearanceZone – tag không được chồng lên).
-  - Calibration: kích thước tag (width/height), leader length, min spacing (từ regression + Revit API).
+  - Builds **spatial indices** for:
+    - **Elements** (to check if a tag overlaps another element).
+    - **Tags** (existing tags + newly placed tags — to avoid tag-on-tag overlap).
+    - **Annotations** (dimensions, text, ClearanceZones — tags must not overlap these).
+  - Calibration: tag size (width/height), leader length, min spacing (from regression + Revit API).
 
 ---
 
-## 2. Chọn vị trí cho từng element (CalculatePlacements)
+## 2. Position Selection per Element (CalculatePlacements)
 
-### 2.1 Thứ tự xử lý element
+### 2.1 Element Processing Order
 
-- Lọc element trong group (theo `ShouldTagGroupedElement`).
-- **Sắp xếp**: theo **Y giảm dần** (trên trước), rồi **X tăng dần** (trái trước) → xử lý từ trên xuống, trái sang phải.
-- Bỏ qua element đã có tag nếu user bật “Skip already tagged”.
+- Filter elements in groups (via `ShouldTagGroupedElement`).
+- **Sort**: by **Y descending** (top first), then **X ascending** (left first) — processes top-to-bottom, left-to-right.
+- Skip elements that already have tags if the user enabled "Skip already tagged".
 
-### 2.2 Hai loại element
+### 2.2 Two Element Types
 
-- **Linear dài** (ống/duct dài hơn ngưỡng): **CreateLinearElementPlacements**
-  - Chia thành nhiều segment, mỗi segment một tag dọc theo centerline.
-  - Mỗi segment: sinh candidate quanh điểm giữa segment, chấm điểm, chọn vị trí tốt nhất.
-- **Còn lại** (equipment, fitting, linear ngắn…): **FindBestPlacement**
-  - Một tag cho một element.
+- **Long linear elements** (pipes/ducts longer than threshold): **CreateLinearElementPlacements**
+  - Split into multiple segments, one tag per segment along the centerline.
+  - Each segment: generate candidates around the segment midpoint, score them, select the best position.
+- **Everything else** (equipment, fittings, short linear elements): **FindBestPlacement**
+  - One tag per element.
 
-### 2.3 Sinh candidate (GenerateCandidatePositions)
+### 2.3 Candidate Generation (GenerateCandidatePositions)
 
-- **Vị trí ưu tiên** lấy từ (theo thứ tự):
-  1. **Rule** (Data/Rules/Tagging) – theo category/family/system.
-  2. **Pattern** (Data/Patterns/TagPositions) – theo category/system, scale.
-  3. **Learned** (learned_overrides.json) – từ export của user.
-- **Khoảng cách** (offset): từ rule/learned hoặc mặc định (leader length + tag size + spacing).
-- **Candidate** = các vị trí: TopLeft, TopCenter, TopRight, Left, Center, Right, BottomLeft, BottomCenter, BottomRight (có thể thêm tier xa hơn nếu cần).
-- **Linear element** (khi rule bật PreferCenterline): candidate nằm dọc centerline, không leader.
-- Candidate được **sắp xếp**: ưu tiên đúng thứ tự preferred positions từ rule/pattern/learned, sau đó theo khoảng cách (gần hơn tốt hơn).
+- **Preferred positions** are sourced from (in order):
+  1. **Rules** (Data/Rules/Tagging) — by category/family/system.
+  2. **Patterns** (Data/Patterns/TagPositions) — by category/system, scale.
+  3. **Learned** (learned_overrides.json) — from user exports.
+- **Offset distance**: from rule/learned or default (leader length + tag size + spacing).
+- **Candidates** = positions: TopLeft, TopCenter, TopRight, Left, Center, Right, BottomLeft, BottomCenter, BottomRight (additional farther tiers may be added if needed).
+- **Linear elements** (when rule enables PreferCenterline): candidates along centerline, no leader.
+- Candidates are **sorted**: preferred positions from rule/pattern/learned come first, then by distance (closer is better).
 
-### 2.4 Chấm điểm (ScorePlacement) – điểm thấp = tốt hơn
+### 2.4 Scoring (ScorePlacement) — lower score = better
 
-| Thành phần | Cách tính | Mục đích |
-|------------|-----------|----------|
-| **Tag–tag collision** | Penalty rất lớn × 3^(số collision) | Ưu tiên không chồng tag khác |
-| **Diện tích overlap** | + overlap area × 200 | Tránh overlap càng nhiều càng tốt |
-| **Tag–element** | + số element bị chồng × ELEMENT_COLLISION_PENALTY | Tránh tag đè lên element khác |
-| **Rule AvoidCategories** | Penalty thêm nếu chồng category rule cấm | Tôn trọng rule “tránh” category |
-| **Tag–annotation/ClearanceZone** | + số collision × ANNOTATION_COLLISION_PENALTY | Tránh đè dimension, text, vùng clearance |
-| **Leader collision** | + số collision × LEADER_COLLISION_PENALTY | Leader không cắt tag/element |
-| **Vị trí user chọn** | Preference score (theo dropdown Position) | Ưu tiên TopRight/Left/… nếu user chọn |
-| **Rule/learned preferred position** | − PreferenceBonus nếu trùng vị trí ưu tiên | Ưu tiên đúng vị trí rule/learned |
-| **Leader length** | + độ dài leader × 1 | Tag gần element hơn tốt hơn (nhẹ) |
-| **Linear, no leader** | − 20 (bonus) | Ưu tiên tag dọc centerline không leader |
-| **Distance tier** | + distance multiplier × 5 (khi không collision) | Ưu tiên vị trí gần hơn |
-| **Alignment với grid** | − alignment score × AlignmentBonus/10 | Ưu tiên tag nằm trên lưới (1 ft) |
-| **Learned alignment** | AlignmentBonus tăng nếu learned có preferAlignRow/Column | Càng ưu tiên align khi đã học từ export |
-| **Near-edge (equipment)** | Bonus nếu tag gần mép element | Tag không bay xa quá |
+| Component | Calculation | Purpose |
+|-----------|-------------|---------|
+| **Tag-tag collision** | Very large penalty x 3^(collision count) | Prioritize no tag overlap |
+| **Overlap area** | + overlap area x 200 | Minimize overlap as much as possible |
+| **Tag-element** | + element collision count x ELEMENT_COLLISION_PENALTY | Avoid tag covering other elements |
+| **Rule AvoidCategories** | Extra penalty if overlapping a rule-forbidden category | Respect rule "avoid" categories |
+| **Tag-annotation/ClearanceZone** | + collision count x ANNOTATION_COLLISION_PENALTY | Avoid covering dimensions, text, clearance zones |
+| **Leader collision** | + collision count x LEADER_COLLISION_PENALTY | Leader should not cross tags/elements |
+| **User-selected position** | Preference score (based on dropdown Position) | Prioritize TopRight/Left/etc. if user selected |
+| **Rule/learned preferred position** | - PreferenceBonus if matching preferred position | Prioritize rule/learned positions |
+| **Leader length** | + leader length x 1 | Closer to element is slightly better |
+| **Linear, no leader** | - 20 (bonus) | Prefer centerline tags without leader |
+| **Distance tier** | + distance multiplier x 5 (when no collision) | Prefer closer positions |
+| **Grid alignment** | - alignment score x AlignmentBonus/10 | Prefer tags on grid (1 ft) |
+| **Learned alignment** | AlignmentBonus increases if learned has preferAlignRow/Column | Stronger alignment preference when learned from exports |
+| **Near-edge (equipment)** | Bonus if tag is close to element edge | Keep tag from drifting too far |
 
-### 2.5 Chọn vị trí tốt nhất (FindBestPlacement)
+### 2.5 Best Position Selection (FindBestPlacement)
 
-- Với mỗi candidate:
-  - Kiểm tra **có collision với tag** (trong index) không.
-  - Chấm điểm bằng **ScorePlacement**.
-- **Tách** candidate thành hai nhóm: **không collision** và **có collision**.
-- **Ưu tiên**: luôn chọn **candidate không collision có điểm thấp nhất**.
-- Chỉ khi **không còn** candidate không collision mới xét candidate có collision (điểm thấp nhất).
-- Nếu điểm tốt nhất vẫn **> MAX_ACCEPTABLE_SCORE** → **bỏ qua** element (không đặt tag).
-- Sau khi chọn, **thêm** tag đó vào **tag index** để các element sau không đè lên.
-
----
-
-## 3. Giải va chạm (ResolveCollisions)
-
-Sau khi có danh sách placement cho tất cả element:
-
-### 3.1 Đẩy ra khỏi annotation / ClearanceZone
-
-- Với mỗi placement, kiểm tra **chồng** với _annotationIndex (dimension, text, **ClearanceZone**).
-- Nếu chồng: **PushAwayFromAnnotation** – đẩy tag theo hướng từ tâm vùng annotation ra ngoài, một đoạn đủ để hết overlap + margin.
-- Lặp tối đa 5 lần để ổn định.
-
-### 3.2 Đẩy tag–tag (PushApart)
-
-- Dùng spatial index của **các placement**.
-- Tìm cặp placement có **EstimatedTagBounds** giao nhau.
-- **PushApart**: tính hướng và khoảng cách cần đẩy (half-width/height + spacing), đẩy hai tag ra hai phía.
-- Lặp tối đa 20 lần đến khi không còn overlap.
+- For each candidate:
+  - Check **collision with tags** (in index).
+  - Score using **ScorePlacement**.
+- **Split** candidates into two groups: **no collision** and **has collision**.
+- **Priority**: always select the **no-collision candidate with the lowest score**.
+- Only when **no collision-free candidates remain** does it consider candidates with collisions (lowest score).
+- If the best score still exceeds **MAX_ACCEPTABLE_SCORE** → **skip** the element (no tag placed).
+- After selection, **add** that tag to the **tag index** so subsequent elements avoid overlapping it.
 
 ---
 
-## 4. Vòng lặp tinh chỉnh (RefinePlacementsIterative)
+## 3. Collision Resolution (ResolveCollisions)
 
-Sau ResolveCollisions, chạy **tối đa 3 lần**:
+After generating placements for all elements:
 
-1. **Resolve + Align lại**: gọi lại ResolveCollisions (đẩy annotation, đẩy tag–tag), rồi AlignTagPlacements nếu bật "Align tags in rows".
-2. **Cập nhật _tagIndex**: đồng bộ index với bounds hiện tại của từng placement (sau khi đã đẩy/căn).
-3. **Quét overlap**: tìm placement nào vẫn còn chồng tag khác hoặc chồng annotation.
-4. **Đặt lại (re-place)**:
-   - Chỉ xét placement thuộc element **chỉ có 1 tag** (bỏ qua linear nhiều segment).
-   - Với mỗi placement còn overlap: xóa nó khỏi _tagIndex, gọi **FindBestPlacement** lại cho element đó (với trạng thái tag index hiện tại), nếu có vị trí mới thì thay placement trong list và thêm vào _tagIndex; không thì giữ nguyên và thêm lại vào index.
-5. Nếu không còn placement nào overlap → thoát vòng; nếu hết 3 lần thì dừng.
+### 3.1 Push Away from Annotations / ClearanceZones
 
-Kết quả: tag còn overlap sau bước 3 có cơ hội được **đặt lại** vị trí khác hoặc được **căn chỉnh** thêm qua Resolve/Align trong lần lặp sau.
+- For each placement, check **overlap** with _annotationIndex (dimensions, text, **ClearanceZones**).
+- If overlapping: **PushAwayFromAnnotation** — push the tag in the direction from the annotation center outward, far enough to clear overlap + margin.
+- Repeat up to 5 iterations to stabilize.
 
----
+### 3.2 Push Tags Apart (PushApart)
 
-## 5. Căn chỉnh (AlignTagPlacements)
-
-Chỉ chạy khi user bật **“Align tags in rows”**:
-
-- **Hàng (row)** – gộp theo Y (tolerance = ~2× chiều cao tag): trong mỗi hàng ≥ 2 tag thì căn Y về trung bình nếu không gây collision → tag cùng hàng có cùng Y.
-- **Cột (column)** – theo bản mẫu (EA/SA xếp dọc): gộp theo X (tolerance = ~2× chiều rộng tag), trong mỗi cột ≥ 2 tag thì căn X về trung bình nếu không gây collision → tag cùng cột xếp dọc (stack như EA-350x250 / SA-350x250).
-
-Scoring có **bonus căn cột**: candidate có X gần tag khác (cùng cột, không overlap) được giảm điểm để ưu tiên stack dọc.
+- Use spatial index of **placements**.
+- Find pairs of placements whose **EstimatedTagBounds** intersect.
+- **PushApart**: compute direction and distance needed (half-width/height + spacing), push both tags in opposite directions.
+- Repeat up to 20 iterations until no more overlap.
 
 ---
 
-## 6. Tóm tắt thứ tự quyết định
+## 4. Refinement Loop (RefinePlacementsIterative)
 
-1. **Rule / Pattern / Learned** → vị trí ưu tiên (TopRight, BottomCenter, …) và offset/leader/alignment bonus.  
-2. **Sinh candidate** quanh element theo các vị trí đó, nhiều khoảng cách.  
-3. **Chấm điểm** từng candidate (collision nặng nhất, rồi preference, alignment, distance).  
-4. **Chọn** candidate **không collision** tốt nhất; không có thì mới chọn có collision.  
-5. **Cập nhật tag index** để element tiếp theo tránh đè.  
-6. Sau khi chọn xong mọi element: **đẩy** tag khỏi annotation/clearance, rồi **đẩy** tag–tag.  
-7. **Vòng tinh chỉnh** (tối đa 3 lần): resolve + align lại → quét placement còn overlap → **đặt lại** (re-place) cho từng tag overlap (chỉ element 1 tag) → lặp đến khi sạch hoặc hết lần.  
-8. Nếu bật align: **căn** tag theo hàng (cùng Y) khi an toàn.
+After ResolveCollisions, run **up to 3 iterations**:
 
-Toàn bộ luồng đảm bảo: **tránh overlap** (tag, element, dimension, ClearanceZone) là ưu tiên cao nhất; sau đó mới tối ưu **vị trí ưa thích** và **alignment** theo rule/pattern/learned và thiết lập user.
+1. **Re-resolve + Re-align**: call ResolveCollisions again (push annotations, push tag-tag), then AlignTagPlacements if "Align tags in rows" is enabled.
+2. **Update _tagIndex**: synchronize the index with current bounds of each placement (after pushing/aligning).
+3. **Scan for overlap**: find placements that still overlap another tag or annotation.
+4. **Re-place**:
+   - Only consider placements belonging to elements with **a single tag** (skip linear multi-segment elements).
+   - For each placement still overlapping: remove it from _tagIndex, call **FindBestPlacement** again for that element (using the current tag index state); if a new position is found, replace the placement in the list and add to _tagIndex; otherwise keep the original and re-add to index.
+5. If no placements still overlap → exit loop; if all 3 iterations are exhausted → stop.
+
+Result: tags still overlapping after step 3 get a chance to be **re-placed** at a different position or **re-aligned** via Resolve/Align in subsequent iterations.
+
+---
+
+## 5. Alignment (AlignTagPlacements)
+
+Only runs when the user enables **"Align tags in rows"**:
+
+- **Rows** — group by Y (tolerance ~ 2x tag height): within each row of 2+ tags, align Y to the average if it doesn't cause collisions → tags in the same row share the same Y.
+- **Columns** — based on reference patterns (EA/SA vertical stacking): group by X (tolerance ~ 2x tag width), within each column of 2+ tags, align X to the average if it doesn't cause collisions → tags in the same column stack vertically (like EA-350x250 / SA-350x250).
+
+Scoring includes **column alignment bonus**: candidates with X close to another tag (same column, no overlap) receive a score reduction to promote vertical stacking.
+
+---
+
+## 6. Decision Order Summary
+
+1. **Rule / Pattern / Learned** → preferred positions (TopRight, BottomCenter, etc.) and offset/leader/alignment bonus.
+2. **Generate candidates** around element at those positions, multiple distances.
+3. **Score** each candidate (collision is most penalized, then preference, alignment, distance).
+4. **Select** the best **no-collision** candidate; only consider collision candidates if none are collision-free.
+5. **Update tag index** so the next element avoids overlapping.
+6. After selecting for all elements: **push** tags away from annotations/clearance, then **push** tag-tag apart.
+7. **Refinement loop** (up to 3 iterations): re-resolve + re-align → scan placements still overlapping → **re-place** each overlapping tag (single-tag elements only) → repeat until clean or iterations exhausted.
+8. If alignment is enabled: **align** tags into rows (same Y) when safe.
+
+The entire flow ensures: **avoiding overlap** (tags, elements, dimensions, ClearanceZones) is the highest priority; only then does it optimize for **preferred position** and **alignment** based on rules/patterns/learned data and user settings.

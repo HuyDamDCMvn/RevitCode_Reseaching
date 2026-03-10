@@ -1,8 +1,8 @@
 # Training Data (Future Use)
 
-Thư mục này sẽ chứa processed data cho ML training khi chuyển sang Option B.
+This folder will contain processed data for ML training when transitioning to Option B.
 
-## Chưa implement - Kế hoạch
+## Not Yet Implemented — Plan
 
 ### Features (inputs)
 - Element bounding box (normalized)
@@ -18,7 +18,7 @@ Thư mục này sẽ chứa processed data cho ML training khi chuyển sang Opt
 - Position type classification
 - Leader required (boolean)
 
-## Data Pipeline (khi implement)
+## Data Pipeline (when implemented)
 
 ```
 Feedback/*.json → feature_extraction.py → Training/features/*.npy
@@ -31,9 +31,9 @@ Feedback/*.json → feature_extraction.py → Training/features/*.npy
 2. **Medium**: Gradient boosting (XGBoost/LightGBM)
 3. **Advanced**: Small neural network for regression
 
-## Khi nào bắt đầu?
+## When to Start?
 
-Chuyển sang ML training khi:
-- [ ] Có ít nhất 500 feedback samples
-- [ ] Option C rules đã ổn định
-- [ ] Có patterns rõ ràng từ data analysis
+Transition to ML training when:
+- [ ] At least 500 feedback samples collected
+- [ ] Option C rules are stable
+- [ ] Clear patterns emerge from data analysis

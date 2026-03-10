@@ -1,19 +1,19 @@
 # SmartTag Training Data Repository
 
-Thư mục này chứa tất cả rules, patterns, feedback để:
-1. Cải thiện rule-based algorithms (Option C)
-2. Chuẩn bị dữ liệu training cho ML model (Option B)
+This folder contains all rules, patterns, and feedback for:
+1. Improving rule-based algorithms (Option C)
+2. Preparing training data for ML models (Option B)
 
 ## Naming Convention Standard
 
-**QUYẾT ĐỊNH (2026-02-13):**
+**Decision (2026-02-13):**
 - **German Standard** (MunichRE style): PWC-TWK, SW, ZUL, HZG, KLT
 - **Separator**: Underscore `_` (e.g., `SW_DN100`, `L_ZUL-RLT20_DN125`)
-- **Elevation Datum**: Theo discipline
+- **Elevation Datum**: Per discipline
   - Water Supply: `RA = [value] m UKRD` (Rohrachse, Unterkante Rohdecke)
   - Drainage: `RS = [value] m (bez. ±0.00)` (Rohrsohle, reference to ground)
   - HVAC: `RA = [value] m UKRD`
-- **Dual-mode Equipment**: Phân biệt theo hệ thống đấu nối (HZG vs KLT)
+- **Dual-mode Equipment**: Differentiated by connected system (HZG vs KLT)
 
 ## Data Sources
 
@@ -33,11 +33,11 @@ Thư mục này chứa tất cả rules, patterns, feedback để:
 
 **Total Samples:** ~5600+ tag/dimension observations
 
-## Cấu trúc thư mục
+## Folder Structure
 
 ```
 Data/
-├── README.md                    # File này
+├── README.md                    # This file
 ├── Schema/                      # JSON Schema definitions
 │   ├── TaggingRule.schema.json
 │   ├── DimensionPattern.schema.json
@@ -135,45 +135,45 @@ Data/
 
 ## Workflow
 
-### 1. Thu thập dữ liệu
-- Tool chạy → ghi log placements/dimensions
-- User review → approve/reject/correct
-- Feedback được lưu tự động
+### 1. Data Collection
+- Tool runs and logs placements/dimensions
+- User reviews and approves/rejects/corrects
+- Feedback is saved automatically
 
 ### 2. Refine Rules (Option C)
-- Phân tích feedback patterns
+- Analyze feedback patterns
 - Update rule weights/thresholds
-- Test với new data
+- Test with new data
 
-### 3. Prepare Training (Option B - sau này)
-- Convert feedback → training samples
-- Extract features từ Revit context
+### 3. Prepare Training (Option B — future)
+- Convert feedback into training samples
+- Extract features from Revit context
 - Train ML model
 
-## Cách cập nhật
+## How to Update
 
-### Thêm Rule mới
-1. Tạo file JSON trong `Rules/[Category]/`
-2. Follow schema trong `Schema/`
-3. Tool sẽ auto-load khi khởi động
+### Adding New Rules
+1. Create a JSON file in `Rules/[Category]/`
+2. Follow the schema in `Schema/`
+3. The tool auto-loads rules on startup
 
-### Thêm Pattern mới
-1. Export từ Revit drawings
-2. Lưu vào `Patterns/[Type]/`
+### Adding New Patterns
+1. Export from Revit drawings
+2. Save to `Patterns/[Type]/`
 3. Include metadata (project, view type, etc.)
 
-### Ghi Feedback
-- Tự động qua UI (Approve/Reject buttons)
-- Hoặc manual: thêm file vào `Feedback/`
+### Recording Feedback
+- Automatically via UI (Approve/Reject buttons)
+- Or manually: add files to `Feedback/`
 
 ## Data Format Convention
 
-- Tất cả JSON files sử dụng UTF-8
+- All JSON files use UTF-8
 - Coordinates: Revit internal units (feet)
 - IDs: Element ID as long integer
 - Timestamps: ISO 8601 format
-- Separator: Underscore `_` cho tag patterns
-- Categories: Sử dụng `OST_` prefix nhất quán
+- Separator: Underscore `_` for tag patterns
+- Categories: Use `OST_` prefix consistently
 
 ---
 
@@ -181,30 +181,30 @@ Data/
 
 **Reference:** https://bimlogiq.com/product/smart-annotation
 
-### So sánh tính năng (2026-02-13)
+### Feature Comparison (2026-02-13)
 
-| Tính năng | BIMLOGIQ | SmartTag | Gap |
-|-----------|----------|----------|-----|
-| **Pricing** | $125/month ($1,500/year) | Free | ✅ Advantage |
-| **Processing** | Cloud (AWS) | 100% Local | ✅ Advantage (offline, privacy) |
-| **Quick Mode** | Cloud AI | Local heuristics | ✅ Equal |
-| **Full Mode (AI)** | Trained ML model | Rule-based | ❌ Need upgrade |
-| **German MEP Standards** | ❌ | ✅ Built-in | ✅ Advantage |
-| **Auto Tag** | ✅ | ✅ | ✅ Equal |
-| **Auto Dimension** | ✅ | ✅ | ✅ Equal |
-| **Collision Avoidance** | ✅ | ✅ | ✅ Equal |
-| **Tag Alignment** | ✅ | ✅ | ✅ Equal |
-| **Linear Element Split** | ? | ✅ | ✅ Advantage |
-| **Tag Rotation (0°/90°)** | ? | ✅ | ✅ Advantage |
-| **Linked File Tagging** | ✅ | ❌ | ❌ Gap |
-| **Batch Processing** | ✅ Multiple views | ❌ Single view | ❌ Gap |
-| **Custom Leader Shapes** | ✅ | ❌ | ❌ Gap |
-| **Fabrication Parts** | ✅ | ❌ | ❌ Gap |
-| **GUI Template Editor** | ✅ | ❌ JSON only | ❌ Gap |
+| Feature | BIMLOGIQ | SmartTag | Gap |
+|---------|----------|----------|-----|
+| **Pricing** | $125/month ($1,500/year) | Free | Advantage |
+| **Processing** | Cloud (AWS) | 100% Local | Advantage (offline, privacy) |
+| **Quick Mode** | Cloud AI | Local heuristics | Equal |
+| **Full Mode (AI)** | Trained ML model | Rule-based | Need upgrade |
+| **German MEP Standards** | No | Built-in | Advantage |
+| **Auto Tag** | Yes | Yes | Equal |
+| **Auto Dimension** | Yes | Yes | Equal |
+| **Collision Avoidance** | Yes | Yes | Equal |
+| **Tag Alignment** | Yes | Yes | Equal |
+| **Linear Element Split** | ? | Yes | Advantage |
+| **Tag Rotation (0/90)** | ? | Yes | Advantage |
+| **Linked File Tagging** | Yes | No | Gap |
+| **Batch Processing** | Yes (Multiple views) | No (Single view) | Gap |
+| **Custom Leader Shapes** | Yes | No | Gap |
+| **Fabrication Parts** | Yes | No | Gap |
+| **GUI Template Editor** | Yes | No (JSON only) | Gap |
 
 ### Estimated Feature Parity: ~70-80%
 
-### Roadmap để Close Gap
+### Roadmap to Close Gap
 
 | Priority | Feature | Effort | Phase |
 |----------|---------|--------|-------|

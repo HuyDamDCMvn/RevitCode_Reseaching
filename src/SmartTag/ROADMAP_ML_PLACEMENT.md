@@ -2,7 +2,7 @@
 
 ## Overview
 
-Triển khai hệ thống **CSP + KNN + RL** để tối ưu vị trí đặt tag tự động.
+Implementation of a **CSP + KNN + RL** system to optimize automatic tag placement positions.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -19,12 +19,12 @@ Triển khai hệ thống **CSP + KNN + RL** để tối ưu vị trí đặt ta
 
 ---
 
-## Phase 1: CSP Solver + Improved Rules (Tuần 1-2)
+## Phase 1: CSP Solver + Improved Rules (Weeks 1-2)
 
-### Mục tiêu
-- Implement CSP solver đảm bảo không collision
-- Cải thiện rule-based initial positions
-- Đạt **70-80% accuracy** so với bản vẽ mẫu
+### Goal
+- Implement CSP solver ensuring no collisions
+- Improve rule-based initial positions
+- Achieve **70-80% accuracy** compared to reference drawings
 
 ### Tasks
 
@@ -56,11 +56,8 @@ public class CSPSolver
 ```csharp
 public class AlignmentDetector
 {
-    // Detect existing alignment rows/columns
     public List<AlignmentLine> DetectHorizontalAlignments(List<TagPlacement> tags, double tolerance);
     public List<AlignmentLine> DetectVerticalAlignments(List<TagPlacement> tags, double tolerance);
-    
-    // Suggest alignment for new tag
     public AlignmentSuggestion SuggestAlignment(Point2D position, List<AlignmentLine> alignments);
 }
 ```
@@ -71,9 +68,7 @@ public class AlignmentDetector
 ```csharp
 public class ContextAnalyzer
 {
-    // Analyze element context
     public ElementContext Analyze(TaggableElement element, List<TaggableElement> neighbors);
-    
     // Context includes:
     // - Orientation (horizontal/vertical/diagonal)
     // - Density (low/medium/high)
@@ -87,16 +82,16 @@ public class ContextAnalyzer
 - [ ] `AlignmentDetector.cs` - Row/column detection
 - [ ] `ContextAnalyzer.cs` - Element context extraction
 - [ ] `CSPConstraints.cs` - Constraint definitions
-- [ ] Unit tests với 50+ test cases
+- [ ] Unit tests with 50+ test cases
 
 ---
 
-## Phase 2: KNN Template Matching (Tuần 3-4)
+## Phase 2: KNN Template Matching (Weeks 3-4)
 
-### Mục tiêu
-- Annotate training data từ bản vẽ mẫu
+### Goal
+- Annotate training data from reference drawings
 - Implement KNN matching
-- Đạt **85-90% accuracy**
+- Achieve **85-90% accuracy**
 
 ### Tasks
 
@@ -168,9 +163,7 @@ public class ContextAnalyzer
 ```csharp
 public class FeatureExtractor
 {
-    // Extract features from element + context
     public float[] ExtractFeatures(TaggableElement element, ElementContext context);
-    
     // Feature vector (20 dimensions):
     // [0-5]   Category one-hot (Pipe, Duct, Equipment, CableTray, Fitting, Other)
     // [6]     Orientation angle (normalized 0-1)
@@ -192,14 +185,8 @@ public class FeatureExtractor
 public class KNNMatcher
 {
     private readonly KDTree<TrainingSample> _kdTree;
-    
-    // Load training data
     public void LoadTrainingData(string path);
-    
-    // Find K nearest neighbors
     public List<(TrainingSample sample, double distance)> FindKNearest(float[] features, int k = 5);
-    
-    // Vote for best position
     public TagPositionVote Vote(List<(TrainingSample sample, double distance)> neighbors);
 }
 ```
@@ -207,7 +194,7 @@ public class KNNMatcher
 #### 2.4 Annotation Tool
 **File**: `tools/AnnotationHelper/`
 
-Python script để annotate training data từ Revit export:
+Python script to annotate training data from Revit exports:
 ```python
 # Extract tag positions from Revit views
 # Generate training samples in JSON format
@@ -233,12 +220,12 @@ Python script để annotate training data từ Revit export:
 
 ---
 
-## Phase 3: RL Integration (Tuần 5-6)
+## Phase 3: RL Integration (Weeks 5-6)
 
-### Mục tiêu
-- Train DQN network với user feedback
+### Goal
+- Train DQN network with user feedback
 - Integrate ONNX runtime
-- Đạt **90-95% accuracy**
+- Achieve **90-95% accuracy**
 
 ### Tasks
 
@@ -248,9 +235,6 @@ Python script để annotate training data từ Revit export:
 ```csharp
 public class RLEnvironment
 {
-    // State representation
-    public float[] GetState(TaggableElement element, List<TagPlacement> existingTags);
-    
     // State vector (50 dimensions):
     // [0-19]  Element features (from FeatureExtractor)
     // [20-24] KNN candidate scores (top 5)
@@ -258,24 +242,16 @@ public class RLEnvironment
     // [35-44] Collision map (10 directions, 0=free, 1=blocked)
     // [45-49] Alignment opportunities (5 nearest lines)
     
-    // Action space
+    public float[] GetState(TaggableElement element, List<TagPlacement> existingTags);
+    
     public enum Action
     {
-        SelectCandidate0,  // Use KNN candidate 0
-        SelectCandidate1,
-        SelectCandidate2,
-        SelectCandidate3,
-        SelectCandidate4,
-        ShiftLeft,         // Fine-tune position
-        ShiftRight,
-        ShiftUp,
-        ShiftDown,
-        AlignToRow,        // Snap to alignment
-        AlignToColumn,
-        ToggleLeader       // Add/remove leader
+        SelectCandidate0, SelectCandidate1, SelectCandidate2,
+        SelectCandidate3, SelectCandidate4,
+        ShiftLeft, ShiftRight, ShiftUp, ShiftDown,
+        AlignToRow, AlignToColumn, ToggleLeader
     }
     
-    // Reward function
     public double CalculateReward(TagPlacement placement, bool userApproved);
 }
 ```
@@ -318,10 +294,7 @@ public class RLAgent
         _session = new InferenceSession(modelPath);
     }
     
-    // Get action from policy network
     public RLAction GetAction(float[] state);
-    
-    // Epsilon-greedy exploration
     public RLAction GetActionWithExploration(float[] state, double epsilon);
 }
 ```
@@ -343,7 +316,7 @@ public class RewardCalculator
     // Delayed rewards (from user)
     public double UserApproved => +50.0;
     public double UserRejected => -50.0;
-    public double UserAdjusted => -10.0; // Proportional to adjustment distance
+    public double UserAdjusted => -10.0;
 }
 ```
 
@@ -362,12 +335,12 @@ public class RewardCalculator
 
 ---
 
-## Phase 4: Feedback System (Tuần 7)
+## Phase 4: Feedback System (Week 7)
 
-### Mục tiêu
-- UI cho approve/reject/adjust
-- Collect feedback cho continuous learning
-- Setup incremental training pipeline
+### Goal
+- UI for approve/reject/adjust
+- Collect feedback for continuous learning
+- Set up incremental training pipeline
 
 ### Tasks
 
@@ -375,7 +348,6 @@ public class RewardCalculator
 **File**: `src/SmartTag/Views/PreviewPanel.xaml`
 
 ```xml
-<!-- Per-tag feedback controls -->
 <ItemsControl ItemsSource="{Binding PreviewPlacements}">
     <ItemsControl.ItemTemplate>
         <DataTemplate>
@@ -397,22 +369,12 @@ public class RewardCalculator
 ```csharp
 public class FeedbackCollector
 {
-    // Record placement feedback
     public void RecordFeedback(TagPlacement placement, FeedbackType type, Point2D? adjustedPosition);
-    
-    // Save to file
     public void SaveBatch(string path);
-    
-    // Load for training
     public static List<FeedbackRecord> LoadFeedback(string path);
 }
 
-public enum FeedbackType
-{
-    Approved,
-    Rejected,
-    Adjusted
-}
+public enum FeedbackType { Approved, Rejected, Adjusted }
 ```
 
 #### 4.3 Incremental Training Pipeline
@@ -436,7 +398,7 @@ public enum FeedbackType
 
 ---
 
-## Phase 5: Integration & Testing (Tuần 8)
+## Phase 5: Integration & Testing (Week 8)
 
 ### Tasks
 
@@ -451,28 +413,19 @@ public class PlacementEngine
     private readonly CSPSolver _csp;
     
     public List<TagPlacement> CalculatePlacements(
-        List<TaggableElement> elements,
-        TagSettings settings)
+        List<TaggableElement> elements, TagSettings settings)
     {
         var placements = new List<TagPlacement>();
-        
         foreach (var element in elements)
         {
-            // Phase 1: KNN - Get candidate positions
             var features = _featureExtractor.Extract(element);
             var candidates = _knn.FindKNearest(features, k: 5);
-            
-            // Phase 2: RL - Refine selection
             var state = _env.GetState(element, placements);
             var action = _rl.GetAction(state);
             var refinedPosition = ApplyAction(candidates, action);
-            
-            // Phase 3: CSP - Ensure constraints
             var finalPosition = _csp.Solve(refinedPosition, placements);
-            
             placements.Add(finalPosition);
         }
-        
         return placements;
     }
 }
@@ -482,14 +435,8 @@ public class PlacementEngine
 ```csharp
 public class ABTestFramework
 {
-    // Compare old algorithm vs new
     public TestResult Compare(List<TaggableElement> elements, TagSettings settings);
-    
-    // Metrics:
-    // - Collision count
-    // - Alignment score
-    // - Average leader length
-    // - User approval rate
+    // Metrics: Collision count, Alignment score, Average leader length, User approval rate
 }
 ```
 
@@ -529,12 +476,7 @@ src/SmartTag/
 │   │   └── TrainingData.schema.json
 │   ├── Training/
 │   │   ├── annotated/
-│   │   │   ├── munichre_hvac.json
-│   │   │   ├── munichre_sanitary.json
-│   │   │   ├── arena_electrical.json
-│   │   │   └── ...
 │   │   └── feedback/
-│   │       └── user_feedback_*.json
 │   └── Models/
 │       └── placement_policy.onnx
 └── Views/
@@ -542,16 +484,8 @@ src/SmartTag/
 
 tools/
 ├── AnnotationHelper/
-│   ├── extract_tags.py
-│   ├── annotate.py
-│   └── validate.py
 ├── RLTraining/
-│   ├── train_dqn.py
-│   ├── export_onnx.py
-│   └── evaluate.py
 └── IncrementalTraining/
-    ├── finetune.py
-    └── deploy.py
 ```
 
 ---
@@ -602,7 +536,7 @@ numpy>=1.24
 1. **Immediate**: Start Phase 1 - CSP Solver implementation
 2. **Parallel**: Begin training data annotation
 3. **Week 3**: Start KNN implementation
-4. **Week 5**: Setup Python training environment
+4. **Week 5**: Set up Python training environment
 
 ---
 

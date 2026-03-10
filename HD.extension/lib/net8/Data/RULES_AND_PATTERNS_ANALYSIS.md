@@ -1,27 +1,27 @@
-# Phân tích Rules & Patterns trong Repo – Dùng được không?
+# Rules & Patterns in the Repo — Are They Usable?
 
-## Tóm tắt
+## Summary
 
-| Loại | Đường dẫn | Đang dùng trong code? | Dùng cho ML được không? |
-|------|-----------|------------------------|-------------------------|
-| **Rules (Tagging)** | `Data/Rules/Tagging/*.json` | **Có** – RuleEngine + TagPlacementService | **Có** – Ưu tiên vị trí, offset, scoring |
-| **Rules (Dimension)** | `Data/Rules/Dimension/*.json` | **Có** – RuleEngine | Không dùng cho tag placement |
-| **Patterns (TagPositions)** | `Data/Patterns/TagPositions/*.json` | **Có** – TagPositionPatternLoader | **Có** – position text → TagPosition, dùng khi không có Rule |
+| Type | Path | Currently Used in Code? | Usable for ML? |
+|------|------|------------------------|----------------|
+| **Rules (Tagging)** | `Data/Rules/Tagging/*.json` | **Yes** — RuleEngine + TagPlacementService | **Yes** — Preferred positions, offset, scoring |
+| **Rules (Dimension)** | `Data/Rules/Dimension/*.json` | **Yes** — RuleEngine | Not used for tag placement |
+| **Patterns (TagPositions)** | `Data/Patterns/TagPositions/*.json` | **Yes** — TagPositionPatternLoader | **Partially** — position text → TagPosition, used when no Rule matches |
 
 ---
 
-## 1. Rules – Đang dùng và dùng được
+## 1. Rules — Currently Used and Fully Usable
 
-### 1.1 Nơi load và dùng
+### 1.1 Where Loaded and Used
 
-- **RuleEngine** (`Services/RuleEngine.cs`) load tất cả file trong `Data/Rules/Tagging/*.json` khi `Initialize()`.
-- **TagPlacementService** dùng Rules cho:
-  - `GetPreferredPositionsFromRule(element)` → danh sách vị trí ưu tiên (TopCenter, BottomCenter, …).
+- **RuleEngine** (`Services/RuleEngine.cs`) loads all files from `Data/Rules/Tagging/*.json` during `Initialize()`.
+- **TagPlacementService** uses Rules for:
+  - `GetPreferredPositionsFromRule(element)` → list of preferred positions (TopCenter, BottomCenter, etc.).
   - `GetRuleSettings(element)` → offset, addLeader, collisionPenalty, preferenceBonus, alignmentBonus, avoidCollisionWith, groupAlignment.
 
-### 1.2 Nội dung Rules có gì (liên quan placement)
+### 1.2 Rule Content (Placement-Related)
 
-Trong mỗi file rule (ví dụ `mep_pipes_ducts.json`, `sanitary_drainage.json`):
+In each rule file (e.g., `mep_pipes_ducts.json`, `sanitary_drainage.json`):
 
 ```json
 "actions": {
@@ -39,94 +39,94 @@ Trong mỗi file rule (ví dụ `mep_pipes_ducts.json`, `sanitary_drainage.json`
 }
 ```
 
-- **preferredPositions**: dùng được trực tiếp cho placement (và đã dùng trong TagPlacementService).
-- **offsetDistance, addLeader, avoidCollisionWith, groupAlignment**: dùng được cho logic đặt tag và CSP.
-- **scoring**: dùng được cho điểm hóa candidate (đã dùng trong TagPlacementService).
+- **preferredPositions**: directly usable for placement (and already used in TagPlacementService).
+- **offsetDistance, addLeader, avoidCollisionWith, groupAlignment**: usable for tag placement logic and CSP.
+- **scoring**: usable for candidate scoring (already used in TagPlacementService).
 
-**Kết luận:** Rules **dùng được** và **đã đang dùng** trong placement. ML pipeline (PlacementEngine) nên **gọi thêm RuleEngine** để:
-- Sắp xếp/thêm candidate theo `preferredPositions`,
-- Áp dụng `offsetDistance` / `addLeader` / `avoidCollisionWith` khi tạo và chấm điểm candidate.
+**Conclusion:** Rules **are usable** and **are already being used** in placement. The ML pipeline (PlacementEngine) should **additionally call RuleEngine** to:
+- Sort/add candidates by `preferredPositions`,
+- Apply `offsetDistance` / `addLeader` / `avoidCollisionWith` when creating and scoring candidates.
 
 ---
 
-## 2. Patterns (TagPositions) – Chưa load, dùng được một phần
+## 2. Patterns (TagPositions) — Partially Usable
 
-### 2.1 Cấu trúc hiện tại
+### 2.1 Current Structure
 
-- Nằm trong `Data/Patterns/TagPositions/` (ví dụ: `hvac_rlt_munichre.json`, `sanitary_san_munichre.json`).
-- Mỗi file có:
+- Located in `Data/Patterns/TagPositions/` (e.g., `hvac_rlt_munichre.json`, `sanitary_san_munichre.json`).
+- Each file contains:
   - **source**: project, drawings, discipline, scale.
-  - **legend**: chú thích hệ thống (ZUL, ABL, SW, PWC-TWK, …).
-  - **observations**: mảng mô tả cách tag:
-    - `elementType`: "Duct Tag - Round", "Waste Pipe Tag - Horizontal", …
-    - `labelingPattern` / `labelingPatterns`: format chữ (không phải vị trí).
-    - `position`: **chuỗi mô tả** vị trí, ví dụ:
+  - **legend**: system annotations (ZUL, ABL, SW, PWC-TWK, etc.).
+  - **observations**: array describing tag placement:
+    - `elementType`: "Duct Tag - Round", "Waste Pipe Tag - Horizontal", etc.
+    - `labelingPattern` / `labelingPatterns`: text format (not position).
+    - `position`: **descriptive string**, e.g.:
       - `"Along duct centerline"`
       - `"Above/Below pipe"`
-    - `examples`: ví dụ text tag.
+    - `examples`: sample tag text.
 
-- **RuleEngine chỉ load Rules/Tagging và Rules/Dimension**, **không** load thư mục `Patterns/TagPositions`.
+- **RuleEngine only loads Rules/Tagging and Rules/Dimension**, **not** the `Patterns/TagPositions` directory.
 
-### 2.2 Loader đã triển khai (TagPositionPatternLoader)
+### 2.2 Implemented Loader (TagPositionPatternLoader)
 
-- **Services/TagPositionPatternLoader.cs** load tất cả file trong `Data/Patterns/TagPositions/*.json` (trừ file bắt đầu bằng `_`).
-- Mỗi observation có thể có:
-  - **position** (text, ví dụ "Along duct centerline") → map sang enum TagPosition.
-  - **tagPosition** (enum trực tiếp, ví dụ "Left", "Center").
-  - **hasLeader** (bool) → dùng cho gợi ý leader.
-- Match theo category + discipline (từ tên file) + scale (từ source).
-- **TagPlacementService** và **PlacementEngine** đều gọi pattern loader khi không có rule trùng: ưu tiên vị trí theo pattern.
+- **Services/TagPositionPatternLoader.cs** loads all files in `Data/Patterns/TagPositions/*.json` (excluding files starting with `_`).
+- Each observation may have:
+  - **position** (text, e.g., "Along duct centerline") → mapped to TagPosition enum.
+  - **tagPosition** (enum directly, e.g., "Left", "Center").
+  - **hasLeader** (bool) → used for leader suggestions.
+- Matches by category + discipline (from filename) + scale (from source).
+- **TagPlacementService** and **PlacementEngine** both call the pattern loader when no matching rule exists: preferred positions are sourced from patterns.
 
-### 2.3 So sánh với Training schema (ML)
+### 2.3 Comparison with Training Schema (ML)
 
-Training sample cần: **element** (category, orientation, size, …) + **context** (density, neighbors, …) + **tag** (position enum, offsetX, offsetY, hasLeader, …).
+Training samples need: **element** (category, orientation, size, etc.) + **context** (density, neighbors, etc.) + **tag** (position enum, offsetX, offsetY, hasLeader, etc.).
 
-Patterns hiện có:
-- Có: elementType (gần category), source (project, scale), position **dạng text**.
-- Không có: offsetX/offsetY, context (density, neighbors), bounding box.
+Current patterns have:
+- Available: elementType (close to category), source (project, scale), position **as text**.
+- Missing: offsetX/offsetY, context (density, neighbors), bounding box.
 
-**Kết luận:**  
-- **Không thể** dùng trực tiếp Patterns làm training sample đủ chuẩn (thiếu offset, context).  
-- **Có thể dùng một phần** bằng cách:
-  - Thêm loader đọc `Data/Patterns/TagPositions/*.json`.
-  - Map chuỗi `position` → enum TagPosition, ví dụ:
+**Conclusion:**
+- **Cannot** directly use Patterns as fully qualified training samples (missing offset, context).
+- **Can use partially** by:
+  - Adding a loader to read `Data/Patterns/TagPositions/*.json`.
+  - Mapping `position` strings → TagPosition enum, e.g.:
     - "Along duct centerline", "Along centerline" → **Center**
     - "Above", "Above pipe" → **TopCenter** / **TopRight**
     - "Below" → **BottomCenter** / **BottomLeft**
-  - Dùng làm **hint ưu tiên vị trí** theo discipline/scale (tương tự Rules), hoặc làm **pseudo-samples** cho KNN (với context/offset mặc định).
+  - Using as **position preference hints** by discipline/scale (similar to Rules), or as **pseudo-samples** for KNN (with default context/offset).
 
 ---
 
-## 3. Khuyến nghị
+## 3. Recommendations
 
 ### 3.1 Rules
 
-- **Giữ nguyên** cách dùng hiện tại trong TagPlacementService.
-- **Bổ sung**: cho **PlacementEngine** (ML pipeline) gọi RuleEngine để:
-  - Lấy `preferredPositions` và `GetRuleSettings` khi tạo/sắp xếp candidate và khi chạy CSP.
+- **Keep** the current usage in TagPlacementService.
+- **Extend**: have **PlacementEngine** (ML pipeline) call RuleEngine to:
+  - Get `preferredPositions` and `GetRuleSettings` when creating/sorting candidates and when running CSP.
 
-Như vậy Rules vừa dùng được, vừa được tận dụng tối đa cho cả heuristic và ML.
+This way Rules are both utilized and maximally leveraged for both heuristic and ML approaches.
 
 ### 3.2 Patterns (TagPositions)
 
-- **Option A (nhanh):** Thêm loader đọc Patterns, map `observations[].position` (text) → TagPosition, và dùng làm nguồn “ưu tiên vị trí” theo project/discipline/scale (bổ sung cho Rules).
-- **Option B (đầy đủ hơn):** Khi có export từ Revit (TrainingDataExporter), tạo thêm script convert Patterns → file training dạng “pseudo-samples” (position + context mặc định) để KNN có thêm dữ liệu, với ghi chú là confidence thấp.
+- **Option A (quick):** Add a loader for Patterns, map `observations[].position` (text) → TagPosition, and use as a "position preference" source by project/discipline/scale (supplementing Rules).
+- **Option B (more complete):** When Revit exports are available (TrainingDataExporter), create a script to convert Patterns → training file with "pseudo-samples" (position + default context) so KNN has more data, noting low confidence.
 
 ---
 
-## 4. File tham chiếu trong repo
+## 4. Reference Files in the Repo
 
-| Mục đích | File |
-|----------|------|
+| Purpose | File |
+|---------|------|
 | Load Rules | `Services/RuleEngine.cs` (Tagging + Dimension) |
-| Dùng Rules trong placement | `Services/TagPlacementService.cs` (GetPreferredPositionsFromRule, GetRuleSettings) |
-| Schema Rules | `Data/Schema/TaggingRule.schema.json` |
-| Ví dụ Rules | `Data/Rules/Tagging/mep_pipes_ducts.json`, `sanitary_drainage.json`, … |
-| Patterns (chưa load) | `Data/Patterns/TagPositions/*.json`, `_template.json` |
-| Template Pattern | `Data/Patterns/TagPositions/_template.json` |
+| Use Rules in placement | `Services/TagPlacementService.cs` (GetPreferredPositionsFromRule, GetRuleSettings) |
+| Rule Schema | `Data/Schema/TaggingRule.schema.json` |
+| Example Rules | `Data/Rules/Tagging/mep_pipes_ducts.json`, `sanitary_drainage.json`, etc. |
+| Patterns | `Data/Patterns/TagPositions/*.json`, `_template.json` |
+| Pattern Template | `Data/Patterns/TagPositions/_template.json` |
 
 ---
 
-**Kết luận chung:**  
-- **Rules:** Đang dùng, dùng được đầy đủ cho placement và nên tích hợp thêm vào PlacementEngine.  
-- **Patterns:** Chưa được load; dùng được một phần (position text → ưu tiên vị trí hoặc pseudo training) nếu thêm loader và mapping.
+**Overall Conclusion:**
+- **Rules:** Currently used, fully usable for placement, and should be additionally integrated into PlacementEngine.
+- **Patterns:** Partially usable (position text → position preference or pseudo training) if a loader and mapping are added.

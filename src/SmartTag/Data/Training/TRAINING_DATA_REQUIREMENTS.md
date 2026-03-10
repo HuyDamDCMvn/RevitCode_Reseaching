@@ -2,36 +2,36 @@
 
 ## Overview
 
-Để train hệ thống ML placement, cần thu thập dữ liệu từ các bản vẽ chuyên nghiệp đã được tag tốt.
+To train the ML placement system, training data must be collected from professionally tagged drawings.
 
 ---
 
-## 1. Dữ liệu cần thu thập
+## 1. Data to Collect
 
-### 1.1 Từ Revit Model (Export tự động)
+### 1.1 From Revit Model (Automatic Export)
 
-| Loại dữ liệu | Mô tả | Format |
-|--------------|-------|--------|
-| **Element data** | Thông tin element được tag | JSON |
-| **Tag data** | Vị trí tag thực tế | JSON |
+| Data Type | Description | Format |
+|-----------|-------------|--------|
+| **Element data** | Information about tagged elements | JSON |
+| **Tag data** | Actual tag positions | JSON |
 | **View data** | Scale, crop box | JSON |
 | **Context data** | Neighbors, density | JSON |
 
-### 1.2 File cần export từ mỗi View
+### 1.2 Files to Export per View
 
 ```
 📁 training_export_<project>_<view>/
-├── elements.json       # Tất cả elements trong view
-├── tags.json           # Tất cả tags đã đặt
+├── elements.json       # All elements in the view
+├── tags.json           # All placed tags
 ├── view_info.json      # View scale, crop, type
-└── screenshot.png      # Screenshot để verify (optional)
+└── screenshot.png      # Screenshot for verification (optional)
 ```
 
 ---
 
-## 2. Schema chi tiết cho Training Data
+## 2. Detailed Schema for Training Data
 
-### 2.1 File chính: `annotated_data.json`
+### 2.1 Main File: `annotated_data.json`
 
 ```json
 {
@@ -41,7 +41,7 @@
     "discipline": "Sanitary",
     "drawings": ["SAN_01_0001", "SAN_01_0002"],
     "viewScale": 50,
-    "annotatedBy": "Tên người annotate",
+    "annotatedBy": "Annotator name",
     "annotatedDate": "2026-02-13"
   },
   "samples": [
@@ -60,18 +60,18 @@
 ```json
 {
   "element": {
-    "category": "OST_PipeCurves",        // BuiltInCategory
-    "familyName": "Pipe Types",          // Family name
-    "typeName": "Standard",              // Type name
-    "orientation": 0,                    // Góc (degrees, 0-360)
-    "isLinear": true,                    // Pipe/Duct/Conduit = true
-    "length": 15.5,                      // Chiều dài (feet)
-    "width": 0.33,                       // Chiều rộng (feet)
-    "height": 0.33,                      // Chiều cao (feet)
-    "diameter": 0.33,                    // Đường kính (feet, nếu tròn)
-    "systemType": "Domestic Cold Water", // MEP System Type
-    "centerX": 10.5,                     // Tâm X trong view coords
-    "centerY": 25.3                      // Tâm Y trong view coords
+    "category": "OST_PipeCurves",
+    "familyName": "Pipe Types",
+    "typeName": "Standard",
+    "orientation": 0,
+    "isLinear": true,
+    "length": 15.5,
+    "width": 0.33,
+    "height": 0.33,
+    "diameter": 0.33,
+    "systemType": "Domestic Cold Water",
+    "centerX": 10.5,
+    "centerY": 25.3
   }
 }
 ```
@@ -81,19 +81,19 @@
 ```json
 {
   "context": {
-    "density": "medium",                 // low | medium | high
-    "neighborCount": 3,                  // Số neighbors trong radius
-    "hasNeighborAbove": true,            // Có neighbor phía trên?
+    "density": "medium",
+    "neighborCount": 3,
+    "hasNeighborAbove": true,
     "hasNeighborBelow": false,
     "hasNeighborLeft": false,
     "hasNeighborRight": true,
-    "distanceToNearestAbove": 2.5,       // Khoảng cách (feet)
+    "distanceToNearestAbove": 2.5,
     "distanceToNearestBelow": 10.0,
     "distanceToNearestLeft": 8.0,
     "distanceToNearestRight": 3.0,
-    "distanceToWall": 5.0,               // Khoảng cách đến tường gần nhất
-    "parallelElementsCount": 2,          // Số ống song song
-    "isInGroup": false                   // Element có trong group?
+    "distanceToWall": 5.0,
+    "parallelElementsCount": 2,
+    "isInGroup": false
   }
 }
 ```
@@ -103,33 +103,33 @@
 ```json
 {
   "tag": {
-    "position": "BottomCenter",          // Vị trí tương đối với element
-    "offsetX": 0,                        // Offset X từ center (feet)
-    "offsetY": -1.5,                     // Offset Y từ center (feet)
-    "hasLeader": false,                  // Có leader line?
-    "leaderLength": 0,                   // Chiều dài leader (feet)
-    "rotation": "Horizontal",            // Horizontal | Vertical
-    "alignedWithRow": true,              // Có align với row ngang?
-    "alignedWithColumn": false,          // Có align với column dọc?
-    "rowId": "row_01",                   // ID của row (nếu aligned)
+    "position": "BottomCenter",
+    "offsetX": 0,
+    "offsetY": -1.5,
+    "hasLeader": false,
+    "leaderLength": 0,
+    "rotation": "Horizontal",
+    "alignedWithRow": true,
+    "alignedWithColumn": false,
+    "rowId": "row_01",
     "columnId": null,
-    "tagText": "PWC-TWK DN100",          // Text hiển thị trong tag
-    "tagWidth": 2.5,                     // Chiều rộng tag thực tế (feet)
-    "tagHeight": 0.8                     // Chiều cao tag thực tế (feet)
+    "tagText": "PWC-TWK DN100",
+    "tagWidth": 2.5,
+    "tagHeight": 0.8
   }
 }
 ```
 
 ---
 
-## 3. Các Project Mẫu Cần Thu Thập
+## 3. Reference Projects for Data Collection
 
-### 3.1 Yêu cầu chung
-- **Bản vẽ chuyên nghiệp** đã được tag theo tiêu chuẩn Đức/châu Âu
-- **Các scale khác nhau**: 1:50, 1:100, 1:200
-- **Các discipline khác nhau**: Sanitary, HVAC, Electrical, Plumbing
+### 3.1 General Requirements
+- **Professional drawings** tagged according to German/European standards
+- **Multiple scales**: 1:50, 1:100, 1:200
+- **Multiple disciplines**: Sanitary, HVAC, Electrical, Plumbing
 
-### 3.2 Target số lượng
+### 3.2 Target Sample Counts
 
 | Discipline | Scale 1:50 | Scale 1:100 | Scale 1:200 | Total |
 |------------|------------|-------------|-------------|-------|
@@ -142,21 +142,21 @@
 
 ---
 
-## 4. Cách Thu Thập Dữ Liệu
+## 4. Data Collection Methods
 
-### 4.1 Export từ Revit (Automatic)
+### 4.1 Automatic Export from Revit
 
-Sẽ có tool export tự động trong SmartTag:
-1. Mở view đã được tag tốt
-2. Chạy "Export Training Data"
-3. Tool tự động extract element + tag + context
+An automatic export tool will be available in SmartTag:
+1. Open a well-tagged view
+2. Run "Export Training Data"
+3. The tool automatically extracts element + tag + context
 
-### 4.2 Manual Annotation (nếu cần)
+### 4.2 Manual Annotation (if needed)
 
-Nếu tag chưa có, cần annotate thủ công:
-1. Export elements từ view
-2. Dùng Annotation Tool để đánh dấu vị trí tag lý tưởng
-3. Tool tính toán offset, context tự động
+If tags are not yet placed, manual annotation is required:
+1. Export elements from the view
+2. Use the Annotation Tool to mark ideal tag positions
+3. The tool automatically calculates offset and context
 
 ---
 
@@ -164,7 +164,7 @@ Nếu tag chưa có, cần annotate thủ công:
 
 ```
 📁 src/SmartTag/Data/Training/
-├── 📁 annotated/                    # Training data đã annotate
+├── 📁 annotated/                    # Annotated training data
 │   ├── munichre_sanitary_50.json    # MunichRE, Sanitary, 1:50
 │   ├── munichre_hvac_50.json
 │   ├── arena_electrical_100.json
@@ -173,44 +173,44 @@ Nếu tag chưa có, cần annotate thủ công:
 ├── 📁 feedback/                     # User feedback (continuous learning)
 │   ├── feedback_2026-02-13.json
 │   └── ...
-├── 📁 raw_exports/                  # Raw exports từ Revit (chưa annotate)
+├── 📁 raw_exports/                  # Raw exports from Revit (not yet annotated)
 │   └── ...
-└── TRAINING_DATA_REQUIREMENTS.md   # File này
+└── TRAINING_DATA_REQUIREMENTS.md    # This file
 ```
 
 ---
 
 ## 6. Validation Checklist
 
-Mỗi sample cần pass các check sau:
+Each sample must pass these checks:
 
-- [ ] `element.category` là valid BuiltInCategory
-- [ ] `element.centerX/Y` trong view bounds
-- [ ] `tag.position` là 1 trong 9 positions hợp lệ
-- [ ] `tag.offsetX/Y` có giá trị hợp lý (< 20 feet)
-- [ ] `context.density` là low/medium/high
-- [ ] `tag.tagText` không rỗng
-- [ ] Nếu `hasLeader=true` thì `leaderLength > 0`
+- [ ] `element.category` is a valid BuiltInCategory
+- [ ] `element.centerX/Y` is within view bounds
+- [ ] `tag.position` is one of 9 valid positions
+- [ ] `tag.offsetX/Y` has a reasonable value (< 20 feet)
+- [ ] `context.density` is low/medium/high
+- [ ] `tag.tagText` is not empty
+- [ ] If `hasLeader=true` then `leaderLength > 0`
 
 ---
 
 ## 7. Next Steps
 
-1. **Bạn cung cấp**: 
-   - File Revit (.rvt) hoặc export từ các project mẫu
-   - Hoặc cho tôi biết project nào có sẵn trong repo
+1. **You provide**:
+   - Revit files (.rvt) or exports from reference projects
+   - Or let me know which projects are already in the repo
 
-2. **Tôi sẽ tạo**:
-   - Export tool trong SmartTag để tự động extract data
-   - Validation script để check data quality
+2. **I will create**:
+   - Export tool in SmartTag for automatic data extraction
+   - Validation script to check data quality
 
-3. **Cùng nhau**:
-   - Review và annotate data
+3. **Together**:
+   - Review and annotate data
    - Train model
 
 ---
 
-## 8. Ví dụ File Hoàn Chỉnh
+## 8. Complete File Example
 
-Xem file mẫu tại:
-- `annotated/sample_pipes.json` - 3 samples cho pipes
+See the sample file at:
+- `annotated/sample_pipes.json` - 3 samples for pipes
